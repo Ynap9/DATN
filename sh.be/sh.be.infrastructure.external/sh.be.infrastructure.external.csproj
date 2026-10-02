@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Mail\Templates\*.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\sh.be.shared\sh.be.shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Log\Logs\" />
+    <Folder Include="Log\Archive\" />
+  </ItemGroup>
+
+</Project>

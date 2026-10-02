@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="16.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\sh.be.infrastructure.data\sh.be.infrastructure.data.csproj" />
+    <ProjectReference Include="..\sh.be.infrastructure.external\sh.be.infrastructure.external.csproj" />
+  </ItemGroup>
+
+</Project>

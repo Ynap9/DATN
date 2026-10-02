@@ -1,0 +1,31 @@
+## Build output
+[Bb]in/
+[Oo]bj/
+publish/
+
+## Visual Studio (solution sh.be.api.sln nằm tại đây)
+.vs/
+*.user
+*.suo
+*.rsuser
+*.userprefs
+
+## Rider / VS Code
+.idea/
+.vscode/
+
+## Publish profiles
+Properties/PublishProfiles/
+*.pubxml
+*.pubxml.user
+
+## Secrets / local config
+*.pfx
+.env
+.env.*
+appsettings.*.local.json
+secrets.json
+
+## Logs
+*.log
+logs/
