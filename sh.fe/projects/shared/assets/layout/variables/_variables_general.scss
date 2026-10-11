@@ -1,0 +1,87 @@
+
+$blue_800: #002D8F;
+$blue_700: #0045DC;
+$blue_600: #2F71FF;
+$blue_400: #99B9FF;
+$blue_100: #F0F4FF;
+
+$grayMb200: #EAECF0;
+$grayMb300: #D0D5DD;
+$grayMb400: #98A2B3;
+$grayMb500: #667085;
+$grayMb700: #344054;
+$grayMb800: #1D2939;
+$grayMb900: #101828;
+
+$redMb500: #EB4C60;
+$green_700: #064;
+$purple_200: #F9F0FD;
+$purple_700: #99319A;
+$purple_800: #7A287A;
+$solid_500: #8590A2;
+
+$systemColor: $blue_700;
+$systemHoverOrPress: $blue_600;
+$systemBoxShadow: 0 0 0 0.2rem #adc9f9;
+$white: #ffffff;
+$red: red;
+$errorColor: #dc3545;
+$colorDisable: #98A2B3;
+
+$systemBorderRadiusButton: 10px;
+$systemBorderRadius: 8px;
+$disableColor: rgb(0 0 0 / 5%);
+$borderDefault: 1px solid $grayMb200;
+
+$disabledBackgroundButton: #EAECF0;
+$disabledTextColorButton: #98A2B3;
+$disabledInputColor: #EAECF0;
+$placeholderColor: #98A2B3;
+$systemTextcolor: #495057;
+
+$fontWeight: 500;
+$fontFamily: 'Google Sans', 'Google Sans Text', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+$topbarHeight: 60px;
+$layoutMainMarginTopBar: 20px;
+$bodyBackgroundColor: #F9F9F9;
+$sidebarWidth: 240px;
+$tablePadding: 16px;
+$blurOverlay: 1.5px;
+
+
+$active: #2E844A;
+$bgActive: #EBF7E6;
+
+$deactive: #DE350C;
+$bgDeactive: #FEF6F7;
+
+$request: #FFAB00;
+$bgRequest: #FBF3E0;
+
+$cancel: #E2483D;
+$bgCancel: #FFECEB;
+
+$init: #05628A;
+$bgInit: #CFE9FE;
+
+$delete: #475467;
+$bgDelete: #F9FAFB;
+
+$pending: #F08F35;
+$bgPending: #FEF9F5;
+
+$incomplete: #A11F16;
+$bgIncomplete: #FEF3F2;
+
+$confirm: #F04438;
+$bgConfirm: #FDF7F9;
+
+$lock: #44546F;
+$bgLock: #F7F8F9;
+
+$waitApprove: #05628A;
+$bgWaitApprove: #CFE9FE;
+
+$validation: #0B827C;
+$bgValidation: #DEF9F3;

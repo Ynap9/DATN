@@ -1,0 +1,29 @@
+<div class="flex items-center justify-between">
+
+    <nav>
+        <ul class="flex items-center space-x-2 text-sm text-[#0e7c66]">
+
+            <ng-container *ngFor="let item of items; let last = last">
+
+                <li>
+                    <a *ngIf="item.routerLink" [routerLink]="item.routerLink"
+                        [ngClass]="item.linkClass ?? 'text-2xl font-bold text-gray-900'"
+                        class="hover:text-[#0a5e4e] transition">
+                        {{ item.label }}
+                    </a>
+
+                    <span *ngIf="!item.routerLink">
+                        {{ item.label }}
+                    </span>
+                </li>
+
+                <li *ngIf="!last">
+                    <i class="pi pi-angle-right text-xs text-gray-400"></i>
+                </li>
+
+            </ng-container>
+
+        </ul>
+    </nav>
+
+</div>

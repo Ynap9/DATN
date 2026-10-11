@@ -6,9 +6,9 @@
 
     public interface ISoftDeleted
     {
-        public DateTime? DeletedDate { get; set; }
-        public bool Deleted { get; set; }
-        public string? DeletedBy { get; set; }
+        public DateTime? DeletedDate { get; }
+        public bool Deleted { get; }
+        public string? DeletedBy { get; }
     }
 
     public interface ICreatedBy

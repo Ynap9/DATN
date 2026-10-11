@@ -1,0 +1,25 @@
+$grayMb300: #d0d5dd;
+$grayMb400: #98a2b3;
+$grayMb700: #344054;
+$systemColor: #0e7c66;
+$disabledInputColor: #eaecf0;
+
+.label {
+    font-size: 14px;
+    font-weight: bold;
+    color: $grayMb700;
+    margin-bottom: 4px;
+    display: block;
+}
+
+::ng-deep .p-select-overlay .p-select-option {
+    color: #000 !important;
+}
+
+::ng-deep .p-select-overlay .p-select-option.p-focus {
+    color: #000 !important;
+}
+
+::ng-deep .p-select-overlay .p-select-option[data-p-highlight="true"] {
+    color: #000 !important;
+}

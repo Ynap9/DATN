@@ -1,0 +1,122 @@
+@use './variables/variables_general' as *;
+
+$fieldMarginBottom: 5px;
+%title-page {
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+    color: var(--h-text-primary);
+}
+
+%style-list-action {
+    text-align: right;
+    .p-button {
+        margin-left: 10px;
+        width: auto;
+        &:first-child {
+            button {
+                margin-left: 0;
+            }
+        }
+    }
+}
+
+.main-container {
+    margin-top: 10px;
+}
+.p-card-container {
+    background-color: var(--h-bg-surface) !important;
+}
+
+#page-content {
+    padding: 18px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    background: var(--h-bg-surface);
+    border-radius: 8px;
+    border: 1px solid var(--h-border-color);
+    #page-header {
+        .header {
+            margin-bottom: 24px;
+            min-height: 35px;
+
+            align-items: center;
+            display: flex;
+            justify-content: space-between;
+            &,
+            .title {
+                h3,
+                h4,
+                h5 {
+                    @extend %title-page;
+                }
+            }
+            .actions {
+                @extend %style-list-action;
+            }
+        }
+    }
+    &.page-detail {
+        #page-header {
+            .header {
+                min-height: 35px !important;
+                margin-bottom: 0;
+            }
+            .status-header {
+                margin-left: 1rem;
+                font-weight: 600;
+                font-size: 12px;
+                padding: 8px;
+                border-radius: 8px;
+            }
+        }
+    }
+}
+#page-header .header:has(h-table-filters) {
+    align-items: flex-end;
+
+    .action,
+    .actions {
+        padding-bottom: 16px;
+    }
+}
+
+#page-list {
+    border-radius: 4px;
+    width: 100%;
+    #page-header {
+        .header {
+            margin-bottom: 24px;
+            min-height: 35px;
+
+            align-items: center;
+            display: flex;
+            justify-content: space-between;
+            &,
+            .title {
+                h3,
+                h4,
+                h5 {
+                    @extend %title-page;
+                }
+            }
+            .actions {
+                @extend %style-list-action;
+            }
+        }
+    }
+    &.page-detail {
+        #page-header {
+            .header {
+                min-height: 35px !important;
+                margin-bottom: 0;
+            }
+            .status-header {
+                margin-left: 1rem;
+                font-weight: 600;
+                font-size: 12px;
+                padding: 8px;
+                border-radius: 8px;
+            }
+        }
+    }
+}

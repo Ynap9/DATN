@@ -1,74 +1,60 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Http;
+using AutoMapper;
 using Microsoft.Extensions.Logging;
-using sh.be.infrastructure.data.Persistence.Db;
-using sh.be.domain.Module.Core;
-using sh.be.shared.Constants.Auth;
+using sh.be.applications.Base.Interfaces;
+using sh.be.domain.Base;
+using sh.be.domain.Module.Core.Entities;
+using sh.be.domain.Module.Core.Repositories;
 using sh.be.shared.Constants.Core;
-using sh.be.shared.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace sh.be.applications.Base
 {
     public class BaseService
     {
         public static readonly TimeZoneInfo VietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-        public readonly ShDbContext _shDbContext;
+        public readonly IUnitOfWork _unitOfWork;
+        public readonly IAuditLogRepository _auditLogRepository;
         public readonly IMapper _mapper;
         public readonly ILogger<BaseService> _logger;
-        public readonly IHttpContextAccessor _httpContextAccessor;
+        public readonly IRequestContext _requestContext;
+        public readonly TimeProvider _timeProvider;
 
-        public BaseService(ShDbContext shDbContext, IMapper mapper, ILogger<BaseService> logger, IHttpContextAccessor httpContextAccessor)
+        public BaseService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<BaseService> logger, IRequestContext requestContext, TimeProvider timeProvider)
         {
-            _shDbContext = shDbContext;
+            _unitOfWork = unitOfWork;
+            _auditLogRepository = auditLogRepository;
             _mapper = mapper;
             _logger = logger;
-            _httpContextAccessor = httpContextAccessor;
+            _requestContext = requestContext;
+            _timeProvider = timeProvider;
         }
 
         protected string getCurrentUserId()
         {
-            var data = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(data))
-            {
-                data = _httpContextAccessor.HttpContext?.User.FindFirstValue(Claims.Subject);
-            }
-            //_logger.LogInformation($"getCurrentUserId: {data}");
-            return data!;
+            return _requestContext.UserId!;
         }
 
-        protected bool IsSuperAdmin()
+        protected DateTime GetVietnamTime()
         {
-            var roles = _httpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).ToList();
-            var isSuperAdmin = roles?.Any(r => r.Value == RoleConstants.ROLE_SUPER_ADMIN) ?? false;
-            return isSuperAdmin;
-        }
-        protected static DateTime GetVietnamTime()
-        {
-            return DateTimeUtils.GetVietnamTime();
+            return TimeZoneInfo.ConvertTime(_timeProvider.GetUtcNow(), VietnamTimeZone).DateTime;
         }
 
         protected void AddAuditLog(string action, string actionType, string content, object? oldData = null, object? newData = null, string? userId = null)
         {
-            var request = _httpContextAccessor.HttpContext?.Request;
-            _shDbContext.AuditLogs.Add(new AuditLog
-            {
-                UserId = userId ?? getCurrentUserId(),
-                Action = action,
-                ActionType = actionType,
-                Content = content,
-                OldData = AuditLogUtils.ToJson(oldData),
-                NewData = AuditLogUtils.ToJson(newData),
-                Source = request == null ? AuditLogConstants.SOURCE_SYSTEM : $"{request.Method} {request.Path}",
-                ContentType = request?.ContentType,
-                CreatedDate = GetVietnamTime(),
-            });
+            _auditLogRepository.Add(AuditLog.Create(
+                userId ?? getCurrentUserId(),
+                action,
+                actionType,
+                content,
+                oldData,
+                newData,
+                _requestContext.Source ?? AuditLogConstants.SOURCE_SYSTEM,
+                _requestContext.ContentType,
+                GetVietnamTime()));
         }
     }
 }

@@ -1,0 +1,14 @@
+::ng-deep {
+	.lib-textarea {
+		&.overflow-y-hidden {
+			overflow-y: hidden !important;
+		}
+	}
+
+	label.mb-2 {
+		font-size: 14px;
+		font-weight: 600;
+		line-height: 1.2;
+		color: var(--h-text-primary);
+	}
+}

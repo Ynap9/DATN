@@ -1,0 +1,302 @@
+@use './variables/variables_general' as * ;
+
+
+.required-field {
+    color: red;
+}
+
+
+.wrapper-upload {
+    .e-file-upload {
+        &.fix-height {
+            .p-fileupload-content {
+                height: 40vh;
+            }
+        }
+
+        &.check-show-upload {
+            .p-fileupload-buttonbar {
+                .p-fileupload-choose {
+                    pointer-events: none;
+                    background: $disabledInputColor;
+                    color: $grayMb400;
+                    border-color: $disabledInputColor;
+                }
+            }
+        }
+
+        .p-fileupload-content {
+            overflow-y: scroll;
+            display: flex;
+            flex-wrap: wrap;
+            .gallery {
+                margin: 5px;
+                border: 1px solid $grayMb300;
+
+                width: calc((100% - 30px) / 3);
+                border-radius: 3px;
+                &:hover {
+                    border: 1px solid $grayMb400;
+                }
+
+                .gallery-video {
+                    height: auto;
+                }
+
+                .gallery-image {
+                    height: 150px;
+                    width: 100%;
+                    background-size: cover !important;
+                    background-color: $bodyBackgroundColor;
+                    cursor: pointer;
+                    .overlay-preview {
+                        display: flex;
+                        opacity: 1;
+                        align-items: center;
+                        justify-content: center;
+                        background-color: #80808094;
+                        width: 100%;
+                        height: 100%;
+                        .pi-eye {
+                            font-size: 1.5rem;
+                            color: white;
+                        }
+                    }
+                }
+
+                .icon-actions {
+                    padding: 5px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    .icon {
+                        cursor: pointer;
+                        &.remove-img {
+                            cursor: pointer;
+                            color: $errorColor;
+                            &:hover {
+                                color: $errorColor;
+                            }
+                        }
+                        &.icon-crop {
+                            width: 16px;
+                            &:hover {
+                                filter: drop-shadow(2px 4px 6px blue);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#contentView {
+    display: flex;
+    justify-content: center;
+    .lib-preview-image {
+        .p-image-mask.p-component-overlay {
+            .p-image-toolbar {
+                z-index: 1103;
+            }
+        }
+    }
+    .content-mark-down {
+        img {
+            max-width: 100%;
+        }
+    }
+}
+
+.popup-confirm {
+    border-radius: 12px;
+    .field {
+        &-label {
+            display: block;
+            text-align: center;
+            margin: -1rem auto 0rem;
+            font-size: 20px;
+            font-weight: 400;
+            color: $grayMb900;
+        }
+    }
+    .p-dialog-header {
+        padding: 20px 40px !important;
+        border-bottom: 1px solid $grayMb300;
+        &-icons {
+            display: none !important;
+        }
+    }
+    .p-dialog-content {
+        padding-top: 44px !important;
+        padding-bottom: 88px !important;
+        .p-dialog-footer {
+            border-top: 1px solid $grayMb300;
+            .p-button:focus {
+                box-shadow: none;
+            }
+            .p-popup-confirm-reject {
+                .p-button-label {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: $systemColor;
+                }
+            }
+            .p-popup-confirm-approve {
+                background-color: $systemColor !important;
+                .p-button-label {
+                    font-size: 16px;
+                    font-weight: 400;
+                    color: $white;
+                }
+            }
+        }
+    }
+    .reason-popup-confirm {
+        border: 1px solid $grayMb200;
+        border-radius: 8px;
+    }
+}
+
+.label-markdown-html {
+    font-size: 20px;
+    font-weight: 700;
+    color: $grayMb700;
+    margin-bottom: 20px;
+    margin-bottom: 1rem !important;
+}
+
+.popup {
+    position: absolute;
+    background: var(--h-bg-surface);
+    box-shadow:
+        0 4px 6px rgba(0, 0, 0, 0.05),
+        0 1px 3px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    width: 113px;
+    height: 80px;
+    border-radius: 8px;
+    border: 1px;
+    margin-top: 10px;
+}
+
+lib-inputText,
+lib-inputNumber,
+lib-select,
+lib-multiSelect {
+    &.ng-invalid.ng-dirty,
+    &.ng-invalid-dirty {
+        .p-inputtext,
+        .p-dropdown:not(.p-dropdown-open),
+        .p-multiselect:not(.p-multiselect-open) {
+            border-color: $errorColor;
+        }
+    }
+}
+
+lib-calendar {
+    &.ng-invalid.ng-dirty,
+    &.ng-invalid-dirty {
+        p-calendar {
+            .p-calendar {
+                &:not(.open-datepicker) {
+                    .p-button-icon-only {
+                        border-color: $errorColor;
+                    }
+                    .p-inputtext {
+                        border-color: $errorColor;
+                    }
+                }
+            }
+        }
+    }
+    p-calendar {
+        &.ng-invalid.ng-dirty {
+            .p-calendar {
+                .p-button-icon-only {
+                    border-color: $errorColor !important;
+                }
+            }
+        }
+        .p-calendar {
+            &.open-datepicker {
+                .p-inputtext {
+                    &::placeholder {
+                        color: white !important;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.p-menu-item-label {
+    color: black !important;
+}
+
+.p-tag,
+span {
+    &.tag-active,
+    &.tag-create {
+        color: $active !important;
+        background: $bgActive !important;
+        border: none !important;
+    }
+
+    &.tag-deactive {
+        color: $deactive !important;
+        background: $bgDeactive !important;
+        border: none !important;
+    }
+    &.tag-request,
+    &.tag-update {
+        color: $request !important;
+        background: $bgRequest !important;
+        border: none !important;
+    }
+    &.tag-cancel {
+        color: $cancel !important;
+        background: $bgCancel !important;
+        border: none !important;
+    }
+    &.tag-init {
+        color: $init !important;
+        background: $bgInit !important;
+        border: none !important;
+    }
+    &.tag-delete {
+        color: $delete !important;
+        background: $bgDelete !important;
+        border: none !important;
+    }
+    &.tag-pending {
+        color: $pending !important;
+        background: $bgPending !important;
+        border: none !important;
+    }
+    &.tag-incomplete {
+        color: $incomplete !important;
+        background: $bgIncomplete !important;
+        border: none !important;
+    }
+    &.tag-confirm {
+        color: $confirm !important;
+        background: $bgConfirm !important;
+        border: none !important;
+    }
+    &.tag-lock {
+        color: $lock !important;
+        background: $bgLock !important;
+        border: none !important;
+    }
+    &.tag-wait-approve {
+        color: $waitApprove !important;
+        background: $bgWaitApprove !important;
+        border: none !important;
+    }
+    &.tag-expertise {
+        color: $validation !important;
+        background: $bgValidation !important;
+        border: none !important;
+    }
+}

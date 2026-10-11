@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using sh.be.domain.Module.Auth;
-using sh.be.domain.Module.Core;
+using sh.be.domain.Module.Auth.Entities;
+using sh.be.domain.Module.Core.Entities;
 using sh.be.infrastructure.data.Persistence.Db;
 using sh.be.shared.Constants.Core;
 using sh.be.shared.Utils;
@@ -21,26 +21,21 @@ namespace sh.be.infrastructure.data.Persistence.Seeder
         {
             var adminRoleName = "SuperAdmin";
             var adminRole = await dbContext.Roles
-                .FirstOrDefaultAsync(r => r.Name == adminRoleName && !r.Deleted);
+                .FirstOrDefaultAsync(r => r.Name == adminRoleName);
             if (adminRole == null)
             {
-                adminRole = new Role
-                {
-                    Name = adminRoleName,
-                    Description = "Super Administrator",
-                    IsSystem = 1,
-                    CreatedBy = "system",
-                };
+                adminRole = Role.Create(adminRoleName, "Super Administrator", "system", null);
                 dbContext.Roles.Add(adminRole);
-                dbContext.AuditLogs.Add(new AuditLog
-                {
-                    Action = AuditLogConstants.ACTION_SEED_ROLE,
-                    ActionType = AuditLogConstants.ACTION_TYPE_CREATE,
-                    Content = $"Khởi tạo vai trò mặc định: {adminRole.Name}",
-                    NewData = AuditLogUtils.ToJson(new { adminRole.Name, adminRole.Description }),
-                    Source = nameof(SeedUser),
-                    CreatedDate = DateTimeUtils.GetVietnamTime(),
-                });
+                dbContext.AuditLogs.Add(AuditLog.Create(
+                    null,
+                    AuditLogConstants.ACTION_SEED_ROLE,
+                    AuditLogConstants.ACTION_TYPE_CREATE,
+                    $"Khởi tạo vai trò mặc định: {adminRole.Name}",
+                    null,
+                    new { adminRole.Name, adminRole.Description },
+                    nameof(SeedUser),
+                    null,
+                    DateTimeUtils.GetVietnamTime()));
                 await dbContext.SaveChangesAsync();
             }
 
@@ -48,23 +43,18 @@ namespace sh.be.infrastructure.data.Persistence.Seeder
             var adminUser = await userManager.FindByEmailAsync(adminEmail);
             if (adminUser == null)
             {
-                adminUser = new AppUser
-                {
-                    UserName = "admin",
-                    Email = adminEmail,
-                    EmailConfirmed = true,
-                    FullName = "Super Administrator",
-                };
+                adminUser = AppUser.Create("admin", "Super Administrator", adminEmail, null);
 
-                dbContext.AuditLogs.Add(new AuditLog
-                {
-                    Action = AuditLogConstants.ACTION_SEED_USER,
-                    ActionType = AuditLogConstants.ACTION_TYPE_CREATE,
-                    Content = $"Khởi tạo tài khoản quản trị mặc định: {adminUser.UserName}",
-                    NewData = AuditLogUtils.ToJson(new { adminUser.Id, adminUser.UserName, adminUser.FullName, adminUser.Email }),
-                    Source = nameof(SeedUser),
-                    CreatedDate = DateTimeUtils.GetVietnamTime(),
-                });
+                dbContext.AuditLogs.Add(AuditLog.Create(
+                    null,
+                    AuditLogConstants.ACTION_SEED_USER,
+                    AuditLogConstants.ACTION_TYPE_CREATE,
+                    $"Khởi tạo tài khoản quản trị mặc định: {adminUser.UserName}",
+                    null,
+                    new { adminUser.Id, adminUser.UserName, adminUser.FullName, adminUser.Email },
+                    nameof(SeedUser),
+                    null,
+                    DateTimeUtils.GetVietnamTime()));
                 var result = await userManager.CreateAsync(adminUser, "123456Aa@");
                 if (!result.Succeeded)
                 {
@@ -74,24 +64,21 @@ namespace sh.be.infrastructure.data.Persistence.Seeder
             }
 
             var hasRole = await dbContext.UserRoles
+                .IgnoreQueryFilters()
                 .AnyAsync(ur => ur.UserId == adminUser.Id && ur.RoleId == adminRole.Id);
             if (!hasRole)
             {
-                dbContext.UserRoles.Add(new UserRole
-                {
-                    UserId = adminUser.Id,
-                    RoleId = adminRole.Id,
-                    CreatedBy = "system",
-                });
-                dbContext.AuditLogs.Add(new AuditLog
-                {
-                    Action = AuditLogConstants.ACTION_USER_UPDATE_ROLE,
-                    ActionType = AuditLogConstants.ACTION_TYPE_CREATE,
-                    Content = $"Gán vai trò {adminRole.Name} cho tài khoản {adminUser.UserName}",
-                    NewData = AuditLogUtils.ToJson(new { UserId = adminUser.Id, RoleId = adminRole.Id }),
-                    Source = nameof(SeedUser),
-                    CreatedDate = DateTimeUtils.GetVietnamTime(),
-                });
+                dbContext.UserRoles.Add(UserRole.Create(adminUser.Id, adminRole.Id, "system", null));
+                dbContext.AuditLogs.Add(AuditLog.Create(
+                    null,
+                    AuditLogConstants.ACTION_USER_UPDATE_ROLE,
+                    AuditLogConstants.ACTION_TYPE_CREATE,
+                    $"Gán vai trò {adminRole.Name} cho tài khoản {adminUser.UserName}",
+                    null,
+                    new { UserId = adminUser.Id, RoleId = adminRole.Id },
+                    nameof(SeedUser),
+                    null,
+                    DateTimeUtils.GetVietnamTime()));
                 await dbContext.SaveChangesAsync();
             }
         }

@@ -1,0 +1,101 @@
+
+<div class="filter-wrapper" [id]="wrapperId" *ngIf="items?.length">
+	<ng-container *ngFor="let item of items; let index = index">
+		<div class="filter" *ngIf="item?.isShow === undefined || item?.isShow">
+
+			<ng-container *ngIf="item.type === ETableTopBar.INPUT_TEXT">
+				<h-input-search
+					label="{{item?.label}}"
+					class="{{ widthClassInputSearchDefault  }} {{ item.styleClass }}"
+					[placeholder]="item?.placeholder === undefined ? 'Tìm kiếm' : item?.placeholder"
+					(_onChange)="emitChange()"
+					[(keyword)]="dataFilter[item.variableReference]">
+				</h-input-search>
+			</ng-container>
+
+			<ng-container *ngIf="item.type === ETableTopBar.INPUT_SELECT">
+				<h-dropdown-search
+					[filterArray]="item?.optionConfig?.data"
+					[dataFilter]="dataFilter"
+					[optionLabel]="item?.optionConfig?.label"
+					[optionValue]="item?.optionConfig?.value"
+					(_onChange)="changeInputGroup($event)">
+				</h-dropdown-search>
+			</ng-container>
+
+			<h-button
+				*ngIf="item.type === ETableTopBar.ACTION_BUTTON"
+				(onClick)="item.command(item.data)"
+				styleClass="{{ item.styleClass }}"
+				[icon]="item.icon || 'pi pi-ethereum'"
+				[label]="item.label" styleClass="add-single"
+			/>
+
+			<ng-container *ngIf="item.type === ETableTopBar.SELECT">
+				<span class="p-float-label w-60">
+					<h-select
+						[label]="item.label"
+						[id]="'select_'+index" styleClass="{{ widthClassDefault }} {{ item.styleClass }}"
+						[icon]="item?.icon"
+						[options]="item.optionConfig.data"
+						[genLabelCode]="item?.optionConfig?.genLabelCode"
+						[optionLabel]="item?.optionConfig?.label"
+						[optionValue]="item?.optionConfig?.value"
+						[filter]="item?.optionConfig?.filter"
+						[placeholder]="item?.placeholder === undefined ? 'Tất cả' : item?.placeholder"
+						[(ngModel)]="dataFilter[item.variableReference]"
+						(onChange)="emitChange()"
+						[showClear]="item?.optionConfig?.showClear ?? true"
+					/>
+				</span>
+			</ng-container>
+			<ng-container *ngIf="item.type === ETableTopBar.MULTIPLE_SELECT">
+				<span class="p-float-label">
+					<h-multi-select
+						[label]="item.label"
+						[inputId]="'select_'+index" styleClass="{{ widthClassMultiSelectDefault }} {{ item.styleClass }}"
+						[icon]="item?.icon"
+						[options]="item.optionConfig.data"
+						[optionLabel]="item?.optionConfig?.label"
+						[optionValue]="item?.optionConfig?.value"
+						[filter]="item?.optionConfig?.filter"
+						[placeholder]="item?.placeholder === undefined ? 'Tất cả' : item?.placeholder"
+						[(ngModel)]="dataFilter[item.variableReference]"
+						(onChange)="emitChange()"
+						[showClear]="item?.optionConfig?.showClear ?? true"
+					/>
+				</span>
+			</ng-container>
+			<ng-container *ngIf="item.type === ETableTopBar.DATE">
+				<div class="float-label">
+					<h-calendar
+						styleClass="{{ widthClassDefault }} {{ item.styleClass }}"
+						[label]="item.label"
+						[placeholder]="item.placeholder"
+						[(ngModel)]="dataFilter[item.variableReference]"
+						(onChange)="emitChange()"
+						[showClear]="true"
+						valueFormat="YYYY-MM-DD"
+					/>
+				</div>
+			</ng-container>
+
+
+			<ng-container *ngIf="item.type === ETableTopBar.DATE_TO_DATE">
+				<div class="float-label">
+					<h-calendar
+						[showClear]="true"
+						[label]="item.label"
+						placeholder="dd/mm/yyyy - dd/mm/yyyy"
+						[(ngModel)]="dataFilter[item.variableReference]"
+						(onChange)="emitChange()"
+						selectionMode="range"
+						styleClass="{{ widthClassInputSearchDefault  }} {{ item.styleClass }}"
+						valueFormat="YYYY-MM-DD"
+						[readonlyInput]="true"
+					/>
+				</div>
+			</ng-container>
+		</div>
+	</ng-container>
+</div>

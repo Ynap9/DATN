@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using sh.be.domain.Module.Auth;
-using sh.be.domain.Module.Core;
+using sh.be.domain.Module.Auth.Entities;
+using sh.be.domain.Module.Core.Entities;
 using sh.be.infrastructure.data.Persistence.Db;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Core;
@@ -19,16 +19,16 @@ namespace sh.be.infrastructure.data.Persistence.Seeder
         public static async Task SeedAsync(ShDbContext dbContext)
         {
             var roleIds = await dbContext.Roles
-                .Where(r => !r.Deleted && FullPermissionRoles.Contains(r.Name))
+                .Where(r => FullPermissionRoles.Contains(r.Name))
                 .Select(r => r.Id)
                 .ToListAsync();
 
             var permissions = await dbContext.Permissions
-                .Where(p => !p.Deleted)
                 .Select(p => new { p.Key, p.ParentKey })
                 .ToListAsync();
 
             var existingPairs = (await dbContext.RolePermissions
+                .IgnoreQueryFilters()
                 .Where(rp => roleIds.Contains(rp.RoleId))
                 .Select(rp => new { rp.RoleId, rp.PermissionKey })
                 .ToListAsync())
@@ -39,13 +39,7 @@ namespace sh.be.infrastructure.data.Persistence.Seeder
                 from roleId in roleIds
                 from permission in permissions
                 where !existingPairs.Contains((roleId, permission.Key))
-                select new RolePermission
-                {
-                    RoleId = roleId,
-                    PermissionParentKey = permission.ParentKey ?? String.Empty,
-                    PermissionKey = permission.Key,
-                    CreatedBy = "system",
-                })
+                select RolePermission.Create(roleId, permission.Key, permission.ParentKey ?? String.Empty, "system", null))
                 .ToList();
 
             if (newRolePermissions.Count == 0)
@@ -54,15 +48,16 @@ namespace sh.be.infrastructure.data.Persistence.Seeder
             }
 
             dbContext.RolePermissions.AddRange(newRolePermissions);
-            dbContext.AuditLogs.Add(new AuditLog
-            {
-                Action = AuditLogConstants.ACTION_SEED_ROLE_PERMISSION,
-                ActionType = AuditLogConstants.ACTION_TYPE_CREATE,
-                Content = $"Khởi tạo quyền cho vai trò mặc định: {string.Join(", ", FullPermissionRoles)}",
-                NewData = AuditLogUtils.ToJson(newRolePermissions.Select(rp => new { rp.RoleId, rp.PermissionKey })),
-                Source = nameof(SeedRolePermission),
-                CreatedDate = DateTimeUtils.GetVietnamTime(),
-            });
+            dbContext.AuditLogs.Add(AuditLog.Create(
+                null,
+                AuditLogConstants.ACTION_SEED_ROLE_PERMISSION,
+                AuditLogConstants.ACTION_TYPE_CREATE,
+                $"Khởi tạo quyền cho vai trò mặc định: {string.Join(", ", FullPermissionRoles)}",
+                null,
+                newRolePermissions.Select(rp => new { rp.RoleId, rp.PermissionKey }),
+                nameof(SeedRolePermission),
+                null,
+                DateTimeUtils.GetVietnamTime()));
             await dbContext.SaveChangesAsync();
         }
     }

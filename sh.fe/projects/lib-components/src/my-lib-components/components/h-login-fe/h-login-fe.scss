@@ -1,0 +1,144 @@
+.login-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+    background: #fff;
+
+    @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.login-left {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 380px;
+}
+
+.login-logo {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #0e7c66, #0a5e4e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+
+    i {
+        color: #fff;
+        font-size: 26px;
+    }
+}
+
+.login-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 4px;
+}
+
+.login-subtitle {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0 0 2rem;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.login-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+    }
+}
+
+.login-error {
+    font-size: 13px;
+    color: #b91c1c;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #fee2e2;
+    line-height: 1.45;
+}
+
+.login-btn {
+    width: 100%;
+    height: 44px;
+    background: #0e7c66 !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    margin-top: 4px;
+
+    &:hover:not(:disabled) {
+        background: #0a5e4e !important;
+    }
+
+    &:disabled {
+        opacity: 0.6;
+    }
+}
+
+.login-right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0e7c66 0%, #0a5e4e 100%);
+
+    @media (max-width: 768px) {
+        display: none;
+    }
+}
+
+.login-right__inner {
+    text-align: center;
+    padding: 2rem;
+}
+
+.login-right__icon {
+    font-size: 64px;
+    color: rgba(255, 255, 255, 0.25);
+    display: block;
+    margin-bottom: 1.5rem;
+}
+
+.login-right__title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 12px;
+}
+
+.login-right__desc {
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
+    line-height: 1.6;
+    max-width: 280px;
+}
+
+:host ::ng-deep .login-password-input {
+    padding: 10px 14px !important;
+    width: 100% !important;
+}

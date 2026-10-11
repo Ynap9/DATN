@@ -1,0 +1,66 @@
+{
+    "compileOnSave": false,
+    "compilerOptions": {
+        "strictNullChecks": false,
+        "strict": false,
+        "noImplicitAny": false,
+        "noImplicitOverride": true,
+        "forceConsistentCasingInFileNames": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "skipLibCheck": true,
+        "isolatedModules": true,
+        "experimentalDecorators": true,
+        "sourceMap": true,
+        "paths": {
+            "@lib-components/*": [
+                "./src/lib-components/*"
+            ],
+            "@shared/*": [
+                "./projects/shared/src/*"
+            ],
+            "lib-components": [
+                "./dist/lib-components"
+            ],
+            "shared": [
+                "./dist/shared"
+            ]
+        },
+        "declaration": false,
+        "moduleResolution": "bundler",
+        "resolveJsonModule": true,
+        "allowSyntheticDefaultImports": true,
+        "importHelpers": true,
+        "target": "ES2022",
+        "module": "preserve"
+    },
+    "angularCompilerOptions": {
+        "enableI18nLegacyMessageIdFormat": false,
+        "strictInjectionParameters": true,
+        "strictInputAccessModifiers": true,
+        "typeCheckHostBindings": true,
+        "strictTemplates": true
+    },
+    "files": [],
+    "references": [
+        {
+            "path": "./projects/admin/tsconfig.app.json"
+        },
+        {
+            "path": "./projects/admin/tsconfig.spec.json"
+        },
+        {
+            "path": "./projects/shared/tsconfig.lib.json"
+        },
+        {
+            "path": "./projects/shared/tsconfig.spec.json"
+        },
+        {
+            "path": "./projects/lib-components/tsconfig.lib.json"
+        },
+        {
+            "path": "./projects/lib-components/tsconfig.spec.json"
+        }
+    ]
+}

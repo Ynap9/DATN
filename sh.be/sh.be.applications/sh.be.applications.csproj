@@ -11,8 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\sh.be.infrastructure.data\sh.be.infrastructure.data.csproj" />
-    <ProjectReference Include="..\sh.be.infrastructure.external\sh.be.infrastructure.external.csproj" />
+    <ProjectReference Include="..\sh.be.domain\sh.be.domain.csproj" />
   </ItemGroup>
 
 </Project>

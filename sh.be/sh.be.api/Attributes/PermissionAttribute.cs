@@ -1,12 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using sh.be.applications.Module.Auth.Dtos.Role;
-using sh.be.infrastructure.data.Persistence.Db;
-using sh.be.shared.Constants.Auth;
-using sh.be.shared.Utils;
+using sh.be.applications.Module.Auth.Interfaces.Services;
 using System.Security.Claims;
-using Microsoft.EntityFrameworkCore;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 
@@ -39,49 +35,15 @@ namespace sh.be.api.Attributes
                 return;
             }
 
-            var dbContext = context.HttpContext
+            var permissionService = context.HttpContext
                 .RequestServices
-                .GetRequiredService(typeof(ShDbContext)) as ShDbContext;
+                .GetRequiredService<IPermissionService>();
 
-            if(dbContext != null)
+            var isPermit = await permissionService.HasAnyPermission(userId, Permissions);
+            if(!isPermit)
             {
-                var isSuperAdmin = await (from u in dbContext.Users
-                                    join ur in dbContext.UserRoles on u.Id equals ur.UserId
-                                    join r in dbContext.Roles on ur.RoleId equals r.Id
-                                    where u.Id == userId && r.Name == RoleConstants.ROLE_SUPER_ADMIN && !r.Deleted && !ur.Deleted
-                                    select r.Name).AnyAsync();
-                if (isSuperAdmin)
-                {
-                    return;
-                }
-
-                var grantedKeys = await (from ur in dbContext.UserRoles
-                                         join r in dbContext.Roles on ur.RoleId equals r.Id
-                                         join rp in dbContext.RolePermissions on ur.RoleId equals rp.RoleId
-                                         where ur.UserId == userId
-                                          && !r.Deleted && !ur.Deleted && !rp.Deleted
-                                         select rp.PermissionKey).Distinct().ToListAsync();
-
-                var permissions = await dbContext.Permissions
-                    .AsNoTracking()
-                    .Where(p => !p.Deleted)
-                    .Select(p => new GetRolePermissionTreeDto
-                    {
-                        Key = p.Key,
-                        ParentKey = p.ParentKey,
-                        IsChecked = grantedKeys.Contains(p.Key),
-                    }).ToListAsync();
-
-                var tree = TreeUtils.BuildTree(permissions, p => p.Key, p => p.ParentKey, p => p.Children);
-                TreeUtils.SyncChecked(tree, p => p.Children, p => p.IsChecked, (p, isChecked) => p.IsChecked = isChecked);
-
-                var isPermit = permissions.Any(p => p.IsChecked && Permissions.Contains(p.Key));
-               if(!isPermit)
-                {
-                    context.Result = new ForbidResult(JwtBearerDefaults.AuthenticationScheme);
-                }
+                context.Result = new ForbidResult(JwtBearerDefaults.AuthenticationScheme);
             }
-
         }
     }
 }

@@ -1,26 +1,22 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+using AutoMapper;
 using Microsoft.Extensions.Logging;
 using sh.be.applications.Base;
+using sh.be.applications.Base.Interfaces;
 using sh.be.applications.Module.Auth.Dtos.User;
-using sh.be.applications.Module.Auth.Interfaces;
-using sh.be.domain.Module.Auth;
-using sh.be.infrastructure.data.Persistence.Db;
-using sh.be.infrastructure.external.Mail.Interfaces;
-using sh.be.infrastructure.external.Mail.Templates;
-using sh.be.shared.Constants.Auth;
+using sh.be.applications.Module.Auth.Interfaces.Services;
+using sh.be.applications.Module.Auth.Interfaces.Queries;
+using sh.be.domain.Base;
+using sh.be.domain.Module.Auth.Entities;
+using sh.be.domain.Module.Auth.Repositories;
+using sh.be.domain.Module.Auth.Services;
+using sh.be.domain.Module.Core.Repositories;
 using sh.be.shared.Constants.Core;
-using sh.be.shared.Constants.Mail;
 using sh.be.shared.HttpRequest.BaseRequest;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
-using sh.be.shared.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -29,51 +25,31 @@ namespace sh.be.applications.Module.Auth.Implements
 {
     public class UserService : BaseService, IUserService
     {
-        private readonly UserManager<AppUser> _userManager;
+        private readonly IUserRepository _userRepository;
+        private readonly IRoleRepository _roleRepository;
+        private readonly IUserQuery _userQuery;
         private readonly IMailService _mailService;
+        private readonly UserDomainService _userDomainService;
+        private readonly RoleDomainService _roleDomainService;
 
-        public UserService(ShDbContext shDbContext, IMapper mapper, ILogger<UserService> logger, IHttpContextAccessor httpContextAccessor,
-            UserManager<AppUser> userManager, IMailService mailService
-        ) : base(shDbContext, mapper, logger, httpContextAccessor)
+        public UserService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<UserService> logger, IRequestContext requestContext, TimeProvider timeProvider,
+            IUserRepository userRepository, IRoleRepository roleRepository, IUserQuery userQuery, IMailService mailService,
+            UserDomainService userDomainService, RoleDomainService roleDomainService
+        ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
-            _userManager = userManager;
+            _userRepository = userRepository;
+            _roleRepository = roleRepository;
+            _userQuery = userQuery;
             _mailService = mailService;
+            _userDomainService = userDomainService;
+            _roleDomainService = roleDomainService;
         }
 
         public ViewMeDto GetMe()
         {
             _logger.LogInformation($"{nameof(GetMe)}");
             var currentUserId = getCurrentUserId();
-            var infor = _shDbContext.Users
-                .Where(u => u.Id == currentUserId)
-                .Select(u => new ViewMeDto
-                {
-                    Id = u.Id,
-                    UserName = u.UserName ?? "",
-                    FullName = u.FullName,
-                    Email = u.Email ?? "",
-                    Roles = _shDbContext.UserRoles
-                            .Where(ur => ur.UserId == u.Id)
-                            .Join(_shDbContext.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r)
-                            .Select(r => new UserRoleDto
-                            {
-                                Id = r.Id,
-                                Name = r.Name,
-                                Description = r.Description,
-                                Permissions = _shDbContext.RolePermissions
-                                .Where(rp => rp.RoleId == r.Id)
-                                .Join(_shDbContext.Permissions, rp => rp.PermissionKey, p => p.Key, (rp, p) => p)
-                                .Select(P => new UserPermissionDto
-                                {
-                                    Key = P.Key,
-                                    Description = P.Description,
-                                    ParentKey = P.ParentKey,
-                                    Module = P.Module
-                                }).ToList()
-
-
-                            }).ToList()
-                }).FirstOrDefault();
+            var infor = _userQuery.GetMe(currentUserId);
             if (infor == null)
             {
                 throw new UserFriendlyException(ErrorCodes.AuthErrorUserNotFound);
@@ -84,108 +60,34 @@ namespace sh.be.applications.Module.Auth.Implements
         public async Task<BaseResponsePagingDto<ViewUserDto>> FindPaging(FindPagingUserDto dto)
         {
             _logger.LogInformation($"{nameof(FindPaging)}, dto={JsonSerializer.Serialize(dto)}");
-            var query = _shDbContext.Users.AsNoTracking();
-            if (!string.IsNullOrEmpty(dto.Keyword))
-            {
-                query = query.Where(u => u.UserName!.Contains(dto.Keyword)
-                                    || u.FullName!.Contains(dto.Keyword)
-                                    || u.Email!.Contains(dto.Keyword)
-                                    ||_shDbContext.UserRoles.Any(ur => ur.UserId == u.Id && !ur.Deleted
-                                    && _shDbContext.Roles.Any(r => r.Id == ur.RoleId && !r.Deleted && r.Name!.Contains(dto.Keyword)))
-                );
-            }
-           
-            var totalCount = await query.CountAsync();
-
-            var user = await query
-                .Paging(dto)
-                .AsNoTracking()
-                .ToListAsync();
-            var userIds = user.Select(u=> u.Id).ToList();
-
-            var roles = await _shDbContext.UserRoles
-                .Where(ur => userIds.Contains(ur.UserId) && !ur.Deleted)
-                .Join(_shDbContext.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => new { ur.UserId, r.Id, r.Name })
-                .ToListAsync();
-            var roleByUser = roles.ToLookup( x=> x.UserId );
-            var items = user.Select( u => new ViewUserDto
-            {
-                Id = u.Id,
-                UserName = u.UserName ?? " ",
-                FullName = u.FullName,
-                Email = u.Email ?? " ",
-                Roles = roleByUser[u.Id]
-                        .Select(r => new UserRolePaging
-                        {
-                            Id = r.Id,
-                            Name = r.Name,
-                        }).ToList(),
-            }).ToList();
-            return new BaseResponsePagingDto<ViewUserDto>
-            {
-                Items = items,
-                TotalItems = totalCount,
-            };
-
-
-
+            return await _userQuery.FindPaging(dto);
         }
 
         public async Task Create(CreateUserDto dto)
         {
             _logger.LogInformation($"{nameof(Create)}, userName={dto.UserName}, email={dto.Email}, roleIds={string.Join(",", dto.RoleId)}, isRandomPassword={dto.IsRandomPassword}");
 
-            var password = dto.IsRandomPassword
-                ? CryptoUtils.GenerateRandomString(UserConstants.PasswordLength)
-                : ValidationUtils.ValidatePassword(dto.Password, dto.PasswordConfirm);
+            var password = _userDomainService.ResolveInitialPassword(dto.IsRandomPassword, dto.Password, dto.PasswordConfirm);
 
-            if (await _userManager.FindByNameAsync(dto.UserName) != null)
-            {
-                throw new UserFriendlyException(ErrorCodes.Found, "Tên đăng nhập đã tồn tại");
-            }
-            if (await _userManager.FindByEmailAsync(dto.Email) != null)
-            {
-                throw new UserFriendlyException(ErrorCodes.Found, "Email đã tồn tại");
-            }
+            await _userDomainService.EnsureUniqueAsync(dto.UserName, dto.Email);
 
             var roleIds = dto.RoleId.Distinct().ToList();
-            var existingRoleCount = await _shDbContext.Roles
-                .CountAsync(r => roleIds.Contains(r.Id) && !r.Deleted);
-            if (roleIds.Count == 0 || existingRoleCount != roleIds.Count)
-            {
-                throw new UserFriendlyException(ErrorCodes.AuthErrorRoleNotFound);
-            }
+            await _roleDomainService.EnsureAllExistAsync(roleIds);
 
-            var user = new AppUser
-            {
-                UserName = dto.UserName,
-                FullName = dto.FullName,
-                Email = dto.Email,
-                PhoneNumber = dto.PhoneNumber,
-                EmailConfirmed = true,
-            };
+            var user = AppUser.Create(dto.UserName, dto.FullName, dto.Email, dto.PhoneNumber);
 
-            await using var transaction = await _shDbContext.Database.BeginTransactionAsync();
+            await using var transaction = await _unitOfWork.BeginTransactionAsync();
             try
             {
-                var result = await _userManager.CreateAsync(user, password);
-                if (!result.Succeeded)
-                {
-                    throw new UserFriendlyException(ErrorCodes.AuthErrorCreateUser, string.Join(", ", result.Errors.Select(e => e.Description)));
-                }
+                await _userRepository.CreateAsync(user, password);
 
                 var currentUserId = getCurrentUserId();
-                _shDbContext.UserRoles.AddRange(roleIds.Select(roleId => new UserRole
-                {
-                    UserId = user.Id,
-                    RoleId = roleId,
-                    CreatedBy = currentUserId,
-                }));
+                _userRepository.AddUserRoles(user.AssignRoles(roleIds, currentUserId, null));
                 AddAuditLog(AuditLogConstants.ACTION_USER_CREATE, AuditLogConstants.ACTION_TYPE_CREATE, $"Tạo người dùng {user.UserName}",
                     null, new { user.Id, user.UserName, user.FullName, user.Email, user.PhoneNumber, RoleIds = roleIds });
-                await _shDbContext.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync();
 
-                await _mailService.SendAsync(dto.Email, MailTemplateConstants.SUBJECT_ACCOUNT_CREATED, AccountCreatedMailTemplate.Build(dto.UserName, password));
+                await _mailService.SendAccountCreatedAsync(dto.Email, dto.UserName, password);
 
                 await transaction.CommitAsync();
             }
@@ -203,42 +105,16 @@ namespace sh.be.applications.Module.Auth.Implements
             _logger.LogInformation($"{nameof(Update)}, userName={dto.UserName}, email={dto.Email}, fullName={dto.FullName}, phoneNumber={dto.PhoneNumber}");
 
             var userId = getCurrentUserId();
-            var user = await _userManager.FindByIdAsync(userId)
+            var user = await _userRepository.FindByIdAsync(userId)
                 ?? throw new UserFriendlyException(ErrorCodes.AuthErrorUserNotFound);
             var oldData = new { user.Id, user.UserName, user.FullName, user.Email, user.PhoneNumber };
 
-            if (!string.IsNullOrWhiteSpace(dto.UserName) && dto.UserName != user.UserName)
-            {
-                if (await _userManager.FindByNameAsync(dto.UserName) != null)
-                {
-                    throw new UserFriendlyException(ErrorCodes.Found, "Tên đăng nhập đã tồn tại");
-                }
-                user.UserName = dto.UserName;
-            }
-            if (!string.IsNullOrWhiteSpace(dto.Email) && dto.Email != user.Email)
-            {
-                if (await _userManager.FindByEmailAsync(dto.Email) != null)
-                {
-                    throw new UserFriendlyException(ErrorCodes.Found, "Email đã tồn tại");
-                }
-                user.Email = dto.Email;
-            }
-            if (!string.IsNullOrWhiteSpace(dto.FullName))
-            {
-                user.FullName = dto.FullName;
-            }
-            if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
-            {
-                user.PhoneNumber = dto.PhoneNumber;
-            }
+            await _userDomainService.EnsureProfileChangeAllowedAsync(user, dto.UserName, dto.Email);
+            user.UpdateProfile(dto.UserName, dto.FullName, dto.Email, dto.PhoneNumber);
 
             AddAuditLog(AuditLogConstants.ACTION_USER_UPDATE, AuditLogConstants.ACTION_TYPE_UPDATE, $"Cập nhật người dùng {user.UserName}",
                 oldData, new { user.Id, user.UserName, user.FullName, user.Email, user.PhoneNumber });
-            var result = await _userManager.UpdateAsync(user);
-            if (!result.Succeeded)
-            {
-                throw new UserFriendlyException(ErrorCodes.AuthErrorUpdateUser, string.Join(", ", result.Errors.Select(e => e.Description)));
-            }
+            await _userRepository.UpdateAsync(user);
         }
 
 
@@ -247,33 +123,22 @@ namespace sh.be.applications.Module.Auth.Implements
             _logger.LogInformation($"{nameof(Delete)}");
             var now = GetVietnamTime();
             var userIdDeleted = getCurrentUserId();
-            var user = await _shDbContext.Users.FirstOrDefaultAsync(u => u.Id == userId)
+            var user = await _userRepository.FindByIdAsync(userId)
                 ?? throw new UserFriendlyException(ErrorCodes.AuthErrorUserNotFound);
 
-            await using var transaction = await _shDbContext.Database.BeginTransactionAsync();
+            await using var transaction = await _unitOfWork.BeginTransactionAsync();
             try
             {
-                var result = await _userManager.DeleteAsync(user);
-                if (!result.Succeeded)
-                {
-                    throw new UserFriendlyException(ErrorCodes.AuthErrorDeleteUser, string.Join(", ", result.Errors.Select(e => e.Description)));
-                }
+                await _userRepository.DeleteAsync(user);
 
-                var userRoles = await _shDbContext.UserRoles
-                                      .Where(ur => ur.UserId == userId)
-                                      .ToListAsync();
+                var userRoles = await _userRepository.GetUserRolesAsync(userId);
                 foreach (var userRole in userRoles)
                 {
-                    userRole.Deleted = true;
-                    userRole.DeletedDate = now;
-                    userRole.DeletedBy = userIdDeleted;
-
-
-
+                    userRole.Delete(userIdDeleted, now);
                 }
                 AddAuditLog(AuditLogConstants.ACTION_USER_DELETE, AuditLogConstants.ACTION_TYPE_DELETE, $"Xóa người dùng {user.UserName}",
                     new { user.Id, user.UserName, user.FullName, user.Email, user.PhoneNumber, RoleIds = userRoles.Select(ur => ur.RoleId) }, null);
-                await _shDbContext.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync();
                 await transaction.CommitAsync();
             }
             catch(Exception ex)
@@ -290,26 +155,13 @@ namespace sh.be.applications.Module.Auth.Implements
             var userId = getCurrentUserId();
             _logger.LogInformation($"{nameof(ChangePassword)}, userId={userId}");
 
-            var user = await _userManager.FindByIdAsync(userId)
+            var user = await _userRepository.FindByIdAsync(userId)
                 ?? throw new UserFriendlyException(ErrorCodes.AuthErrorUserNotFound);
 
-            var newPassword = ValidationUtils.ValidatePassword(dto.NewPassword, dto.NewPasswordConfirm);
-
-            if (!await _userManager.CheckPasswordAsync(user, dto.CurrentPassword))
-            {
-                throw new UserFriendlyException(ErrorCodes.AuthInvalidPassword);
-            }
-            if (dto.CurrentPassword == newPassword)
-            {
-                throw new UserFriendlyException(ErrorCodes.BadRequest, "Mật khẩu mới phải khác mật khẩu hiện tại");
-            }
+            var newPassword = await _userDomainService.ValidatePasswordChangeAsync(user, dto.CurrentPassword, dto.NewPassword, dto.NewPasswordConfirm);
 
             AddAuditLog(AuditLogConstants.ACTION_USER_CHANGE_PASSWORD, AuditLogConstants.ACTION_TYPE_UPDATE, $"Người dùng {user.UserName} đổi mật khẩu");
-            var result = await _userManager.ChangePasswordAsync(user, dto.CurrentPassword, newPassword);
-            if (!result.Succeeded)
-            {
-                throw new UserFriendlyException(ErrorCodes.AuthErrorChangePassword, string.Join(", ", result.Errors.Select(e => e.Description)));
-            }
+            await _userRepository.ChangePasswordAsync(user, dto.CurrentPassword, newPassword);
         }
 
         public async Task UpdateRoleUser(UpdateRoleUserDto dto)
@@ -317,39 +169,36 @@ namespace sh.be.applications.Module.Auth.Implements
             _logger.LogInformation($"{nameof(UpdateRoleUser)}, dto = {JsonSerializer.Serialize(dto)}");
             var userId = getCurrentUserId();
             var now = GetVietnamTime();
-            var user = await _userManager.FindByIdAsync(dto.UserId)
+            var user = await _userRepository.FindByIdAsync(dto.UserId)
                 ?? throw new UserFriendlyException(ErrorCodes.AuthErrorUserNotFound);
-            var oldRoleIds = await _shDbContext.UserRoles
-                .Where(ur => ur.UserId == dto.UserId && !ur.Deleted)
-                .Select(ur => ur.RoleId)
-                .ToListAsync();
-            var roleByUser = await _shDbContext.UserRoles
-                             .Where(ur => ur.UserId == dto.UserId)
-                             .ExecuteDeleteAsync();
+            var oldRoleIds = await _userRepository.GetActiveRoleIdsAsync(dto.UserId);
+
             var roleIds = dto.RoleId.Distinct().ToList();
-            var existingRoleCount = await _shDbContext.Roles
-                .CountAsync( r => roleIds.Contains(r.Id) && !r.Deleted);
-            if (existingRoleCount == 0 || existingRoleCount != roleIds.Count) {
-                throw new UserFriendlyException(ErrorCodes.AuthErrorRoleNotFound);
-            }
+            await _roleDomainService.EnsureAllExistAsync(roleIds);
 
-            
-            _shDbContext.UserRoles.AddRange(roleIds.Select(roleId => new UserRole
+            await using var transaction = await _unitOfWork.BeginTransactionAsync();
+            try
             {
-                UserId = dto.UserId,
-                RoleId = roleId,
-                CreatedBy = userId,
-                CreatedDate = now,
+                await _userRepository.DeleteUserRolesAsync(dto.UserId);
+                _userRepository.AddUserRoles(user.AssignRoles(roleIds, userId, now));
+                AddAuditLog(AuditLogConstants.ACTION_USER_UPDATE_ROLE, AuditLogConstants.ACTION_TYPE_UPDATE, $"Cập nhật vai trò của người dùng {user.UserName}",
+                    new { dto.UserId, RoleIds = oldRoleIds }, new { dto.UserId, RoleIds = roleIds });
+                await _unitOfWork.SaveChangesAsync();
 
-            }));
-            AddAuditLog(AuditLogConstants.ACTION_USER_UPDATE_ROLE, AuditLogConstants.ACTION_TYPE_UPDATE, $"Cập nhật vai trò của người dùng {user.UserName}",
-                new { dto.UserId, RoleIds = oldRoleIds }, new { dto.UserId, RoleIds = roleIds });
-
-            await _shDbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{nameof(UpdateRoleUser)}, userId={dto.UserId}");
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
-   
 
-                             
+        public async Task<List<string>> GetRoleNames(string userId)
+        {
+            _logger.LogInformation($"{nameof(GetRoleNames)}, userId={userId}");
+            return await _roleRepository.GetRoleNamesByUserIdAsync(userId);
         }
     }
-
+}

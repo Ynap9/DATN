@@ -1,0 +1,50 @@
+.layout-menuitem-badge {
+    margin-left: auto;
+    min-width: 1.4rem;
+    height: 1.4rem;
+    padding: 0 .45rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .72rem;
+    font-weight: 600;
+    line-height: 1;
+    border-radius: 999px;
+    background: var(--surface-200, #eef2f1);
+    color: var(--text-color-secondary, #5d6b66);
+}
+.layout-menuitem.active-route .layout-menuitem-badge,
+a.active-route .layout-menuitem-badge {
+    background: #fff;
+    color: var(--primary-color, #0a5e4e);
+}
+
+.p-submenu-enter {
+    animation: p-animate-submenu-expand 450ms cubic-bezier(0.86, 0, 0.07, 1) forwards;
+}
+
+.p-submenu-leave {
+    animation: p-animate-submenu-collapse 450ms cubic-bezier(0.86, 0, 0.07, 1) forwards;
+}
+
+@keyframes p-animate-submenu-expand {
+    from {
+        max-height: 0;
+        overflow: hidden;
+    }
+    to {
+        max-height: 1000px;
+        overflow: visible;
+    }
+}
+
+@keyframes p-animate-submenu-collapse {
+    from {
+        max-height: 1000px;
+        overflow: hidden;
+    }
+    to {
+        max-height: 0;
+        overflow: hidden;
+    }
+}

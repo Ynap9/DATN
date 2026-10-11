@@ -1,0 +1,66 @@
+<p-toast></p-toast>
+<div class="login-wrapper">
+
+    <div class="login-left">
+        <div class="login-card">
+
+            <div class="login-logo">
+                <i class="pi pi-file-pdf"></i>
+            </div>
+
+            <h1 class="login-title">sh.fe</h1>
+            <p class="login-subtitle">Đăng nhập để tiếp tục</p>
+
+            <form *ngIf="postForm" [formGroup]="postForm" (ngSubmit)="onSubmit()" class="login-form">
+
+                <div class="login-field">
+                    <label for="username">Tên đăng nhập hoặc email</label>
+                    <h-input-text
+                        id="username"
+                        class="w-full"
+                        placeholder="Nhập tên đăng nhập hoặc email"
+                        formControlName="username"
+                        (keydown.enter)="focusPassword()">
+                    </h-input-text>
+                </div>
+
+                <div class="login-field">
+                    <label for="password">Mật khẩu</label>
+                    <p-password
+                        id="password"
+                        [toggleMask]="true"
+                        styleClass="w-full"
+                        inputStyleClass="w-full login-password-input"
+                        placeholder="Nhập mật khẩu"
+                        formControlName="password"
+                        [feedback]="false"
+                        (keydown.enter)="focusLogin()">
+                    </p-password>
+                </div>
+
+                <p *ngIf="messageError" class="login-error" role="alert">
+                    <i class="pi pi-exclamation-circle"></i> {{ messageError }}
+                </p>
+
+                <button
+                    id="login"
+                    pButton
+                    type="submit"
+                    class="login-btn"
+                    [icon]="submitting ? 'pi pi-spin pi-spinner' : ''"
+                    [label]="submitting ? 'Đang đăng nhập...' : 'Đăng nhập'"
+                    [disabled]="submitting">
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="login-right">
+        <div class="login-right__inner">
+            <i class="pi pi-file-pdf login-right__icon"></i>
+            <p class="login-right__title">sh.fe</p>
+            <p class="login-right__desc"></p>
+        </div>
+    </div>
+
+</div>

@@ -1,0 +1,260 @@
+@use '../variables/variables_general' as *;
+
+
+$table-border-radius: 12px;
+$table-header-font-size: 13px;
+$table-header-font-weight: 600;
+$table-header-padding: 12px 16px;
+$table-header-text-transform: uppercase;
+$table-header-letter-spacing: 0.03em;
+$table-body-font-size: 14px;
+$table-body-padding: 12px 16px;
+$table-link-font-weight: 500;
+$table-action-font-size: 18px;
+$table-checkbox-radius: 4px;
+$table-tag-font-size: 12px;
+$table-tag-font-weight: 600;
+$table-tag-padding: 4px 10px;
+$table-tag-radius: 16px;
+$table-paginator-btn-size: 32px;
+$table-paginator-btn-radius: 6px;
+$table-paginator-font-size: 13px;
+$table-empty-font-size: 14px;
+$table-empty-padding: 48px 16px;
+$table-scrollbar-width: 6px;
+$table-scrollbar-radius: 3px;
+
+
+.wrapper-lib-table {
+    border-radius: $table-border-radius;
+    border: 1px solid var(--h-table-border);
+    background: var(--h-bg-surface) !important;
+    overflow: hidden;
+    position: relative;
+
+    .lib-table {
+        &::-webkit-scrollbar {
+            width: $table-scrollbar-width;
+            height: $table-scrollbar-width;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: #f9fafb;
+            border-radius: $table-scrollbar-radius;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: $grayMb300;
+            border-radius: $table-scrollbar-radius;
+
+            &:hover {
+                background: $grayMb400;
+            }
+        }
+
+        > p-table {
+            overflow: visible !important;
+        }
+    }
+
+    .p-datatable {
+        overflow: visible !important;
+
+        .p-datatable-wrapper,
+        .p-datatable-table-container {
+            overflow: visible !important;
+            max-height: none !important;
+        }
+
+        .p-datatable-thead {
+            position: sticky !important;
+            top: 0;
+            z-index: 10;
+        }
+
+        .p-datatable-thead > tr > th {
+            position: sticky !important;
+            top: 0;
+            z-index: 10;
+            background: var(--h-table-header-bg);
+        }
+
+        th[pFrozenColumn],
+        td[pFrozenColumn] {
+            background: var(--h-bg-surface) !important;
+            z-index: 5 !important;
+            position: sticky !important;
+        }
+
+        th[pFrozenColumn][alignFrozen="right"],
+        td[pFrozenColumn][alignFrozen="right"] {
+            z-index: 6 !important;
+        }
+
+        th[pFrozenColumn] {
+            z-index: 12 !important;
+            box-shadow: 4px 0 8px rgba(0, 0, 0, 0.05);
+        }
+
+        th[pFrozenColumn][alignFrozen="right"] {
+            z-index: 13 !important;
+        }
+
+        .p-datatable-thead > tr > th {
+            background: var(--h-table-header-bg);
+            color: var(--h-table-header-color);
+            font-weight: $table-header-font-weight;
+            font-size: $table-header-font-size;
+            text-transform: $table-header-text-transform;
+            letter-spacing: $table-header-letter-spacing;
+            padding: $table-header-padding;
+            border-bottom: 1px solid var(--h-table-border);
+            white-space: nowrap;
+
+            .p-sortable-column-icon {
+                color: var(--h-text-muted);
+                font-size: 12px;
+            }
+
+            &.p-highlight {
+                color: var(--h-primary);
+
+                .p-sortable-column-icon {
+                    color: var(--h-primary);
+                }
+            }
+
+            &:hover {
+                background: var(--h-bg-surface-hover);
+            }
+        }
+
+        .p-datatable-tbody > tr {
+
+            transition: background-color 0.15s ease;
+
+            &:nth-child(odd) > td {
+                background: var(--h-table-row-odd) !important;
+            }
+
+            &:nth-child(even) > td {
+                background: var(--h-table-row-stripe) !important;
+            }
+
+            &:hover > td {
+                background: var(--h-table-row-hover) !important;
+            }
+
+            > td {
+                padding: $table-body-padding;
+                font-size: $table-body-font-size;
+                color: var(--h-table-body-color);
+                border-bottom: 1px solid var(--h-table-border);
+                vertical-align: middle;
+                transition: background-color 0.15s ease;
+                white-space: normal;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+
+                .link {
+                    color: var(--h-primary);
+                    font-weight: $table-link-font-weight;
+                    cursor: pointer;
+
+                    &:hover {
+                        text-decoration: underline;
+                    }
+                }
+            }
+
+            &:last-child > td {
+                border-bottom: none;
+            }
+        }
+
+        .p-datatable-emptymessage td {
+            text-align: center;
+            padding: $table-empty-padding;
+            color: var(--h-text-muted);
+            font-size: $table-empty-font-size;
+            border-bottom: none;
+        }
+    }
+
+    .header-action {
+        position: relative;
+        z-index: 10;
+        background: var(--h-bg-surface);
+        padding: 6px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s ease;
+
+        i {
+            font-size: $table-action-font-size;
+            color: var(--h-text-muted);
+        }
+
+        &:hover {
+            background: var(--h-bg-surface-hover);
+
+            i {
+                color: var(--h-text-secondary);
+            }
+        }
+    }
+
+    .p-checkbox .p-checkbox-box {
+        border-radius: $table-checkbox-radius;
+        border-color: var(--h-border-strong);
+
+        &.p-highlight {
+            background: var(--h-primary);
+            border-color: var(--h-primary);
+        }
+    }
+
+    .p-tag {
+        font-size: $table-tag-font-size;
+        font-weight: $table-tag-font-weight;
+        padding: $table-tag-padding;
+        border-radius: $table-tag-radius;
+    }
+}
+
+.paginator {
+    border-top: 1px solid var(--h-table-border);
+    padding: 0 8px;
+
+    .p-paginator {
+        padding: 8px 0;
+        background: transparent;
+        border: none;
+
+        .p-paginator-element {
+            min-width: $table-paginator-btn-size;
+            height: $table-paginator-btn-size;
+            border-radius: $table-paginator-btn-radius;
+            font-size: $table-paginator-font-size;
+            color: var(--h-text-tertiary);
+
+            &:hover {
+                background: var(--h-bg-surface-hover);
+                color: var(--h-text-secondary);
+            }
+
+            &.p-highlight {
+                background: var(--h-primary-light);
+                color: var(--h-primary);
+                font-weight: 600;
+            }
+        }
+
+        .p-paginator-current {
+            color: var(--h-text-tertiary);
+            font-size: $table-paginator-font-size;
+        }
+    }
+}

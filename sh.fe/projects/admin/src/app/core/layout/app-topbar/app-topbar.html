@@ -1,0 +1,15 @@
+<div class="layout-topbar">
+
+    <div class="app-topbar-title" *ngIf="!layoutService.breadcrumbInTopbar()">
+        <h2>{{ pageTitle }}</h2>
+        <p>{{ today }}</p>
+    </div>
+    <div class="app-topbar-breadcrumb" *ngIf="layoutService.breadcrumbInTopbar()">
+        <h-breadcrumb-component></h-breadcrumb-component>
+    </div>
+
+
+    <div class="app-topbar-live">
+        <span class="app-topbar-dot"></span> Trực tuyến
+    </div>
+</div>

@@ -1,0 +1,43 @@
+<div class="layout-sidebar">
+    <a class="app-brand" routerLink="/admin" routerLinkActive="app-brand-active">
+        <span class="app-brand-mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M4 7V5a1 1 0 0 1 1-1h2M20 7V5a1 1 0 0 0-1-1h-2M4 17v2a1 1 0 0 0 1 1h2M20 17v2a1 1 0 0 1-1 1h-2" />
+                <path d="M8 12h8" />
+            </svg>
+        </span>
+        <div class="app-brand-text">
+            <h1>sh.fe</h1>
+        </div>
+    </a>
+
+    <app-menu></app-menu>
+
+    <div class="app-side-footer">
+        <button type="button" class="app-side-user" (click)="toggleUserMenu($event)"
+            title="Tài khoản" aria-label="Mở menu tài khoản" aria-haspopup="true" [attr.aria-expanded]="userMenuOpen">
+            <span class="app-side-av">{{ userInitial }}</span>
+            <span class="app-side-info">
+                <b>{{ displayName }}</b>
+                <span>{{ user?.email }}</span>
+            </span>
+        </button>
+        <button type="button" class="app-side-toggle" (click)="toggleMenu()"
+            [title]="collapsed() ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên'" aria-label="Thu gọn thanh bên">
+            <i class="pi" [ngClass]="collapsed() ? 'pi-angle-right' : 'pi-angle-left'"></i>
+        </button>
+
+        @if (userMenuOpen) {
+        <div class="app-user-pop" (click)="$event.stopPropagation()">
+            <div class="app-user-pop-head">
+                <b>{{ displayName }}</b>
+                <span>{{ user?.email }}</span>
+            </div>
+            <button type="button" class="app-user-pop-item danger" (click)="logout()">
+                <i class="pi pi-sign-out"></i> Đăng xuất
+            </button>
+        </div>
+        }
+    </div>
+</div>

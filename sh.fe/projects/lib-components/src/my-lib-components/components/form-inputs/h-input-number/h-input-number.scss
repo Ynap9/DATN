@@ -1,0 +1,16 @@
+::ng-deep lib-inputNumber {
+
+	p-inputnumber {
+		&.p-inputwrapper-focus.ng-dirty.ng-invalid  {
+			.p-inputnumber {
+				.p-inputtext {
+					border-color: #0e7c66 !important;
+					width: 100%;
+				}
+			}
+		}
+		.p-inputtext {
+			width: 100%;
+		}
+	}
+}

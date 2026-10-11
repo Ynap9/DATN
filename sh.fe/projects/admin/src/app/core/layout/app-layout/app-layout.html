@@ -1,0 +1,12 @@
+<p-toast position="top-right"></p-toast>
+<div class="layout-wrapper" [ngClass]="containerClass()">
+    <app-topbar></app-topbar>
+    <app-sidebar></app-sidebar>
+    <div class="layout-main-container">
+        <h-breadcrumb-component *ngIf="!layoutService.breadcrumbInTopbar()"></h-breadcrumb-component>
+        <div class="layout-main">
+            <router-outlet></router-outlet>
+        </div>
+    </div>
+    <div class="layout-mask"></div>
+</div>

@@ -1,0 +1,59 @@
+<ng-container>
+	<label class="mb-2" [pTooltip]="pTooltipLabel" *ngIf="label">
+		{{ label }}
+		<h-icon-required *ngIf="isRequired || required" />
+	</label>
+	<div class="mt-2" [pTooltip]="(showTooltip && (value || value === 0)) ? (tooltip || value) : ''" [tooltipPosition]="tooltipPosition">
+		<input
+			*ngIf="!textarea"
+			#inputText
+			pInputText
+			[id]="inputId"
+			(input)="_onChange($any($event.target).value?.trim() || firstValue); onInput.emit($event)"
+			(keyup)="keyup.emit($event)"
+			(blur)="onTouched(); blur.emit()"
+			[disabled]="isDisabled || disabled"
+			[placeholder]="placeholder"
+			class="custom-disabled w-full h-input-text"
+			[type]="type"
+			[attr.maxlength]="maxlength || '200'"
+			[attr.name]="name"
+			[attr.autocomplete]="autocomplete"
+			[attr.required]="required"
+			[(ngModel)]="value"
+			[ngClass]="{
+				'ng-invalid ng-dirty': controlDir?.control?.touched && controlDir?.control?.invalid
+			}"
+		/>
+		<textarea
+			*ngIf="textarea"
+			#inputTextarea
+			pInputTextarea
+			class="custom-disabled w-full lib-textarea"
+			[id]="inputId"
+			(input)="_onChange($any($event.target).value?.trim() || firstValue); onInput.emit($event)"
+			(keyup)="keyup.emit($event)"
+			(blur)="onTouched(); blur.emit()"
+			(onResize)="_onResize($event)"
+			[disabled]="isDisabled || disabled"
+			[placeholder]="placeholder"
+			[autoResize]="autoResize"
+			[attr.maxlength]="maxlength || '2000'"
+			[attr.name]="name"
+			[attr.autocomplete]="autocomplete"
+			[attr.required]="required"
+			[(ngModel)]="value"
+			[rows]="rows"
+			[ngClass]="{
+				'ng-invalid ng-dirty': controlDir?.control?.touched && controlDir?.control?.invalid,
+				'overflow-y-hidden': autoResize
+			}"
+		>
+		</textarea>
+	</div>
+
+	<small *ngIf="controlDir?.control?.touched && controlDir?.control?.invalid && (controlDir?.control?.hasError('errorMessage') || this.control.errors) && isShowMessageInvalid" class="text-red-600">
+		{{ this.control.errors['required'] ? 'Trường bắt buộc nhập' : controlDir?.control?.getError('errorMessage') }}
+	</small>
+</ng-container>
+

@@ -1,0 +1,13 @@
+<div class="float-label input-search">
+	<label *ngIf="isShowLabel" class="label"> {{ label }} </label>
+    <span class="block mt-2 md:mt-0 p-input-icon-right" *ngIf="isShow">
+        <i class="pi pi-search" *ngIf="!(!!keyword) || !showClear"></i>
+        <i class="pi pi-times clear-data" *ngIf="!!keyword && showClear" (click)="changeKeyword('',true)"></i>
+        <input
+            class="custom-disabled" pInputText type="text" [class]="class" [id]="id"
+            [maxlength]="maxLength" [disabled]="disabled" (blur)="checkValid()"
+            [placeholder]="placeholder" [style.width.px]="width" [style.width.%]="!width && 100"
+            [(ngModel)]="keyword" (input)="inputChange($event.target.value)"
+        />
+    </span>
+</div>

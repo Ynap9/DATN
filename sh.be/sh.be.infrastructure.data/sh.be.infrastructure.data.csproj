@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\sh.be.applications\sh.be.applications.csproj" />
     <ProjectReference Include="..\sh.be.domain\sh.be.domain.csproj" />
   </ItemGroup>
 

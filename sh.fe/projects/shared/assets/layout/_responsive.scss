@@ -1,0 +1,102 @@
+@media screen and (min-width: 3000px) {
+    .layout-main,
+    .landing-wrapper {
+        width: 1504px;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+}
+
+@media (min-width: 992px) {
+    .layout-wrapper {
+        &.layout-static {
+            .layout-main-container {
+                margin-left: var(--app-sidebar-w);
+            }
+
+            &.layout-static-inactive {
+                .layout-sidebar {
+                    width: var(--app-sidebar-w-collapsed);
+                }
+
+                .layout-topbar {
+                    left: var(--app-sidebar-w-collapsed);
+                    width: calc(100% - var(--app-sidebar-w-collapsed));
+                }
+
+                .layout-main-container {
+                    margin-left: var(--app-sidebar-w-collapsed);
+                }
+            }
+        }
+
+        &.layout-overlay {
+            .layout-sidebar {
+                transform: translateX(-100%);
+            }
+
+            .layout-topbar {
+                left: 0;
+                width: 100%;
+            }
+
+            .layout-main-container {
+                margin-left: 0;
+            }
+
+            &.layout-overlay-active {
+                .layout-sidebar {
+                    transform: translateX(0);
+                }
+            }
+        }
+
+        .layout-mask {
+            display: none;
+        }
+    }
+}
+
+@media (max-width: 991px) {
+    .blocked-scroll {
+        overflow: hidden;
+    }
+
+    .layout-wrapper {
+        .layout-main-container {
+            margin-left: 0;
+        }
+
+        .layout-topbar {
+            left: 0;
+            width: 100%;
+        }
+
+        .layout-sidebar {
+            width: var(--app-sidebar-w);
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.05, 0.74, 0.2, 0.99);
+        }
+
+        .layout-mask {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            width: 100%;
+            height: 100%;
+            background-color: var(--maskbg);
+        }
+
+        &.layout-mobile-active {
+            .layout-sidebar {
+                transform: translateX(0);
+            }
+
+            .layout-mask {
+                display: block;
+            }
+        }
+    }
+}

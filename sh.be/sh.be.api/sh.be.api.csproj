@@ -36,6 +36,7 @@
   <ItemGroup>
     <ProjectReference Include="..\sh.be.applications\sh.be.applications.csproj" />
     <ProjectReference Include="..\sh.be.infrastructure.data\sh.be.infrastructure.data.csproj" />
+    <ProjectReference Include="..\sh.be.infrastructure.external\sh.be.infrastructure.external.csproj" />
   </ItemGroup>
 
 </Project>

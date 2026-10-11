@@ -1,0 +1,118 @@
+$systemColor: #3b82f6;
+
+::ng-deep lib-button {
+	.p-button {
+		min-width: 80px;
+		background-color: #3b82f6 !important;
+		border-radius: 12px;
+		color: white;
+		border: none;
+		box-shadow: none !important;
+		&:focus {
+			box-shadow: none !important;
+		}
+	}
+
+	p-button.button-crud {
+		.p-button {
+			&.p-button-cancel {
+				background: white !important;
+				color: $systemColor;
+				border: none;
+				font-weight: bold;
+				&:hover {
+					background-color: #ebebeb !important;
+				}
+			}
+		}
+
+	}
+	.p-button-secondary {
+		color: #475569 !important;
+		background: #f1f5f9 !important;
+		border: 1px solid #f1f5f9 !important;
+		&:not(:disabled):hover {
+			background: #e2e8f0 !important;
+			color: #334155 !important;
+			border-color: #e2e8f0 !important;
+		}
+	}
+	.p-button-success {
+		color: #ffffff !important;
+		background: #22c55e !important;
+		border: 1px solid #22c55e !important;
+		&:not(:disabled):hover {
+			background: #16a34a !important;
+			color: #ffffff !important;
+			border-color: #16a34a !important;
+		}
+	}
+	.p-button-info {
+		color: #ffffff !important;
+		background: #0ea5e9 !important;
+		border: 1px solid #0ea5e9 !important;
+		&:not(:disabled):hover {
+			background: #0284c7 !important;
+			color: #ffffff !important;
+			border-color: #0284c7 !important;
+		}
+	}
+	.p-button-warning {
+		color: #ffffff !important;
+		background: #f97316 !important;
+		border: 1px solid #f97316 !important;
+		&:not(:disabled):hover {
+			background: #ea580c !important;
+			color: #ffffff !important;
+			border-color: #ea580c !important;
+		}
+	}
+	.p-button-help {
+		color: #ffffff !important;
+		background: #a855f7 !important;
+		border: 1px solid #a855f7 !important;
+		&:not(:disabled):hover {
+			background: #9333ea !important;
+			color: #ffffff !important;
+			border-color: #9333ea !important;
+		}
+	}
+	.p-button-danger {
+		color: #ffffff !important;
+		background: #ef4444 !important;
+		border: 1px solid #ef4444 !important;
+		&:not(:disabled):hover {
+			background: #dc2626 !important;
+			color: #ffffff !important;
+			border-color: #dc2626 !important;
+		}
+	}
+	.p-button-contrast {
+		color: #ffffff !important;
+		background: #020617 !important;
+		border: 1px solid #020617 !important;
+		&:not(:disabled):hover {
+			background: #1e293b !important;
+			color: #ffffff !important;
+			border-color: #1e293b !important;
+		}
+	}
+
+	.p-button-rounded {
+		border-radius: 2rem !important;
+	}
+
+	.p-button-raised {
+		box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12) !important;
+	}
+
+	.p-button-small {
+		font-size: 0.875rem !important;
+    	padding: 0.4375rem 0.875rem !important;
+	}
+
+	.p-button-large {
+		font-size: 1.25rem !important;
+    	padding: 0.625rem 1.25rem !important;
+	}
+}

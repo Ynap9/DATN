@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\sh.be.shared\sh.be.shared.csproj" />
+    <ProjectReference Include="..\sh.be.applications\sh.be.applications.csproj" />
   </ItemGroup>
 
   <ItemGroup>

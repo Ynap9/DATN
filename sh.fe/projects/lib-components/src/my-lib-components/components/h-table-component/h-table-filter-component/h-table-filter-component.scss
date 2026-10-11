@@ -1,0 +1,88 @@
+$grayMb300: #d0d5dd;
+$grayMb400: #98a2b3;
+$grayMb700: #344054;
+$systemColor: #0e7c66;
+
+:host {
+    display: block;
+    width: 100%;
+}
+
+.filter-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+    padding: 16px 0;
+
+    .filter {
+        display: flex;
+        align-items: flex-end;
+
+        .p-float-label {
+            label {
+                margin-left: 0 !important;
+                font-size: 13px;
+                font-weight: 500;
+                color: $grayMb700;
+            }
+        }
+
+        .float-label {
+            label {
+                font-size: 13px;
+                font-weight: 500;
+                color: $grayMb700;
+            }
+        }
+    }
+}
+
+::ng-deep {
+    .filter-wrapper {
+        .p-inputtext {
+            border-radius: 8px;
+            border-color: $grayMb300;
+            font-size: 14px;
+            height: 40px;
+
+            &:focus {
+                border-color: $systemColor;
+                box-shadow: 0 0 0 2px rgba(14, 124, 102, 0.15);
+            }
+
+            &::placeholder {
+                color: $grayMb400;
+                font-size: 14px;
+            }
+        }
+
+        .p-select {
+            border-radius: 8px;
+            border-color: $grayMb300;
+            height: 40px;
+
+            &:not(.p-disabled):hover {
+                border-color: $systemColor;
+            }
+
+            &:not(.p-disabled).p-focus {
+                border-color: $systemColor;
+                box-shadow: 0 0 0 2px rgba(14, 124, 102, 0.15);
+            }
+        }
+
+        .p-datepicker {
+            .p-inputtext {
+                border-radius: 8px;
+            }
+        }
+
+        h-button {
+            .p-button {
+                height: 40px;
+                border-radius: 8px;
+            }
+        }
+    }
+}

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using sh.be.api.Attributes;
 using sh.be.api.Base;
 using sh.be.applications.Module.Auth.Dtos.Role;
-using sh.be.applications.Module.Auth.Interfaces;
+using sh.be.applications.Module.Auth.Interfaces.Services;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.HttpRequest;
 

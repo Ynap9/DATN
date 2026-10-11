@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using sh.be.infrastructure.external.Mail.Interfaces;
+using sh.be.applications.Base.Interfaces;
+using sh.be.infrastructure.external.Mail.Templates;
+using sh.be.shared.Constants.Mail;
 using sh.be.shared.Settings;
 using System.Net;
 using System.Net.Mail;
@@ -43,6 +45,11 @@ namespace sh.be.infrastructure.external.Mail.Implements
             message.To.Add(toAddress);
 
             await client.SendMailAsync(message);
+        }
+
+        public Task SendAccountCreatedAsync(string toAddress, string userName, string password)
+        {
+            return SendAsync(toAddress, MailTemplateConstants.SUBJECT_ACCOUNT_CREATED, AccountCreatedMailTemplate.Build(userName, password));
         }
     }
 }

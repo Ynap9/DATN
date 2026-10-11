@@ -1,0 +1,74 @@
+<ng-container>
+	<label class="mb-2" [pTooltip]="pTooltipLabel" *ngIf="label" style="padding-bottom: 0px;">
+		{{ label }}
+		<h-icon-required *ngIf="isRequired || required" />
+	</label>
+	<div [pTooltip]="(showTooltip && (value || value === 0)) ? tooltip : ''" tooltipPosition="top" [escape]="false">
+		<p-multiSelect
+			#multiSelect
+			class="custom-disabled w-full mt-2"
+			[(ngModel)]="value"
+			[name]="name"
+			[style]="style"
+			styleClass="w-full {{ styleClass }}"
+			[panelStyle]="panelStyle"
+			[panelStyleClass]="panelStyleClass"
+			[inputId]="inputId"
+			[options]="options" [optionLabel]="optionLabel" [optionValue]="optionValue"
+			[disabled]="isDisabled || disabled"
+			[appendTo]="appendTo"
+			[placeholder]="placeholder"
+			[optionDisabled]="optionDisabled"
+			[display]="display"
+			[selectionLimit]="selectionLimit"
+			[displaySelectedLabel]="displaySelectedLabel"
+			[maxSelectedLabels]="maxSelectedLabels"
+			[showToggleAll]="showToggleAll"
+			[resetFilterOnHide]="resetFilterOnHide"
+			[showClear]="showClear"
+			[filterValue]="filterValue"
+			[showHeader]="showHeader"
+			[scrollHeight]="scrollHeight"
+			[filter]="filter"
+			[filterBy]="filterBy"
+			[readonly]="readonly"
+			[required]="required"
+			[filterPlaceHolder]="filterPlaceHolder"
+			[filterLocale]="filterLocale"
+			[dataKey]="dataKey"
+			[group]="groupConfig.group"
+			[optionGroupLabel]="groupConfig.optionGroupLabel"
+			[optionGroupChildren]="groupConfig.optionGroupChildren"
+			[emptyFilterMessage]="emptyFilterMessage"
+			[emptyMessage]="emptyMessage"
+			[filterMatchMode]="filterMatchMode"
+			[ngClass]="{
+				'ng-invalid ng-dirty': controlDir?.control?.touched && controlDir?.control?.invalid && !isShowDropdown
+			}"
+			(onChange)="_onChange($event.value); onChange.emit($event.value); setTooltip($event.value)"
+			(onFilter)="onFilter.emit($event)"
+			(onFocus)="onFocus.emit($event);"
+			(onBlur)="onTouched(); onBlur.emit($event);"
+			(onClick)="onClick.emit($event);"
+			(onClear)="onClear.emit($event)"
+			(onPanelShow)="onPanelShow.emit($event); _onPanelShow($event)"
+			(onPanelHide)="onPanelHide.emit($event); _onPanelHide($event)"
+			(onLazyLoad)="onLazyLoad.emit($event)"
+			(onRemove)="onRemove.emit($event)"
+			(onSelectAllChange)="onSelectAllChange.emit($event)"
+		>
+			<ng-template pTemplate="selectedItem" *ngIf="selectedItemTemplate" let-selectedItem>
+				<ng-container *ngTemplateOutlet="selectedItemTemplate; context: {$implicit: selectedItem}"></ng-container>
+			</ng-template>
+			<ng-template let-item pTemplate="item" *ngIf="itemTemplate">
+				<ng-container *ngTemplateOutlet="itemTemplate; context: { $implicit: item }"></ng-container>
+			</ng-template>
+			<ng-template let-country pTemplate="footer" *ngIf="footerTemplate" let-footer>
+				<ng-container *ngTemplateOutlet="footerTemplate; context: { $implicit: footer }"></ng-container>
+			</ng-template>
+		</p-multiSelect>
+	</div>
+	<small *ngIf="controlDir?.control?.touched && controlDir?.control?.invalid && (controlDir?.control?.hasError('errorMessage') || this.control.errors) && isShowMessageInvalid" class="text-red-600">
+		{{ this.control.errors['required'] ? 'Trường bắt buộc nhập' : controlDir?.control?.getError('errorMessage') }}
+	</small>
+</ng-container>

@@ -1,0 +1,16 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "strict": false,
+        "strictNullChecks": false,
+        "outDir": "../../out-tsc/app",
+        "rootDir": "..",
+        "types": []
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "exclude": [
+        "src/**/*.spec.ts"
+    ]
+}

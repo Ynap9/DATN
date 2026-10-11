@@ -1,0 +1,8 @@
+ <p-checkbox *ngIf="!isCheckboxIcon"
+            [binary]="true" [readonly]="readonly" [inputId]="id"
+            [styleClass]="styleClass + ' ' + 'custom-disabled'"
+            [disabled]="disabled"
+            [(ngModel)]="checked"
+            (onChange)="onChange($event)">
+</p-checkbox>
+<i *ngIf="checked && isCheckboxIcon" class="pi pi-check"></i>

@@ -1,0 +1,179 @@
+{
+    "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+    "version": 1,
+    "newProjectRoot": "projects",
+    "projects": {
+        "admin": {
+            "projectType": "application",
+            "schematics": {
+                "@schematics/angular:component": {
+                    "style": "scss",
+                    "standalone": false
+                },
+                "@schematics/angular:directive": {
+                    "standalone": false
+                },
+                "@schematics/angular:pipe": {
+                    "standalone": false
+                }
+            },
+            "root": "projects/admin",
+            "sourceRoot": "projects/admin/src",
+            "prefix": "app",
+            "architect": {
+                "build": {
+                    "builder": "@angular/build:application",
+                    "options": {
+                        "browser": "projects/admin/src/main.ts",
+                        "tsConfig": "projects/admin/tsconfig.app.json",
+                        "inlineStyleLanguage": "scss",
+                        "assets": [
+                            {
+                                "glob": "**/*",
+                                "input": "projects/shared/assets",
+                                "output": "shared/assets"
+                            }
+                        ],
+                        "stylePreprocessorOptions": {
+                            "includePaths": [
+                                "projects/shared/assets",
+                                "projects/shared/assets/layout"
+                            ]
+                        },
+                        "styles": [
+                            "projects/admin/src/tailwind.css",
+                            "projects/admin/src/styles.scss"
+                        ]
+                    },
+                    "configurations": {
+                        "production": {
+                            "budgets": [
+                                {
+                                    "type": "initial",
+                                    "maximumWarning": "2mb",
+                                    "maximumError": "3mb"
+                                },
+                                {
+                                    "type": "anyComponentStyle",
+                                    "maximumWarning": "8kB",
+                                    "maximumError": "16kB"
+                                }
+                            ],
+                            "fileReplacements": [
+                                {
+                                    "replace": "projects/shared/environments/environment.ts",
+                                    "with": "projects/shared/environments/environment.prod.ts"
+                                }
+                            ],
+                            "outputHashing": "all"
+                        },
+                        "development": {
+                            "optimization": false,
+                            "extractLicenses": false,
+                            "sourceMap": true
+                        }
+                    },
+                    "defaultConfiguration": "production"
+                },
+                "serve": {
+                    "builder": "@angular/build:dev-server",
+                    "options": {
+                        "host": "0.0.0.0",
+                        "port": 4200
+                    },
+                    "configurations": {
+                        "production": {
+                            "buildTarget": "admin:build:production"
+                        },
+                        "development": {
+                            "buildTarget": "admin:build:development"
+                        }
+                    },
+                    "defaultConfiguration": "development"
+                },
+                "extract-i18n": {
+                    "builder": "@angular/build:extract-i18n"
+                },
+                "test": {
+                    "builder": "@angular/build:karma",
+                    "options": {
+                        "tsConfig": "projects/admin/tsconfig.spec.json",
+                        "inlineStyleLanguage": "scss",
+                        "assets": [
+                            {
+                                "glob": "**/*",
+                                "input": "projects/admin/public"
+                            }
+                        ],
+                        "stylePreprocessorOptions": {
+                            "includePaths": [
+                                "projects/shared/assets",
+                                "projects/shared/assets/layout"
+                            ]
+                        },
+                        "styles": [
+                            "projects/admin/src/tailwind.css",
+                            "projects/admin/src/styles.scss",
+                            "./node_modules/leaflet/dist/leaflet.css"
+                        ]
+                    }
+                }
+            }
+        },
+        "shared": {
+            "projectType": "library",
+            "root": "projects/shared",
+            "sourceRoot": "projects/shared/src",
+            "prefix": "lib",
+            "architect": {
+                "build": {
+                    "builder": "@angular/build:ng-packagr",
+                    "configurations": {
+                        "production": {
+                            "tsConfig": "projects/shared/tsconfig.lib.prod.json"
+                        },
+                        "development": {
+                            "tsConfig": "projects/shared/tsconfig.lib.json"
+                        }
+                    },
+                    "defaultConfiguration": "production"
+                },
+                "test": {
+                    "builder": "@angular/build:karma",
+                    "options": {
+                        "tsConfig": "projects/shared/tsconfig.spec.json"
+                    }
+                }
+            }
+        },
+        "lib-components": {
+            "projectType": "library",
+            "root": "projects/lib-components",
+            "sourceRoot": "projects/lib-components/src",
+            "prefix": "lib",
+            "architect": {
+                "build": {
+                    "builder": "@angular/build:ng-packagr",
+                    "configurations": {
+                        "production": {
+                            "tsConfig": "projects/lib-components/tsconfig.lib.prod.json"
+                        },
+                        "development": {
+                            "tsConfig": "projects/lib-components/tsconfig.lib.json"
+                        }
+                    },
+                    "defaultConfiguration": "production"
+                },
+                "test": {
+                    "builder": "@angular/build:karma",
+                    "options": {
+                        "tsConfig": "projects/lib-components/tsconfig.spec.json"
+                    }
+                }
+            }
+        }
+    },
+    "cli": {
+        "analytics": false
+    }
+}

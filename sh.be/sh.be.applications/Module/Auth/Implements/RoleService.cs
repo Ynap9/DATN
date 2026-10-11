@@ -1,12 +1,15 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
+using AutoMapper;
 using Microsoft.Extensions.Logging;
 using sh.be.applications.Base;
+using sh.be.applications.Base.Interfaces;
 using sh.be.applications.Module.Auth.Dtos.Role;
-using sh.be.applications.Module.Auth.Interfaces;
-using sh.be.domain.Module.Auth;
-using sh.be.infrastructure.data.Persistence.Db;
+using sh.be.applications.Module.Auth.Interfaces.Services;
+using sh.be.applications.Module.Auth.Interfaces.Queries;
+using sh.be.domain.Base;
+using sh.be.domain.Module.Auth.Entities;
+using sh.be.domain.Module.Auth.Repositories;
+using sh.be.domain.Module.Auth.Services;
+using sh.be.domain.Module.Core.Repositories;
 using sh.be.shared.Constants.Core;
 using sh.be.shared.HttpRequest.BaseRequest;
 using sh.be.shared.HttpRequest.Error;
@@ -23,104 +26,65 @@ namespace sh.be.applications.Module.Auth.Implements
 {
     public class RoleService : BaseService, IRoleService
     {
-        public RoleService(ShDbContext shDbContext, IMapper mapper, ILogger<RoleService> logger, IHttpContextAccessor httpContextAccessor
-        ) : base(shDbContext, mapper, logger, httpContextAccessor)
+        private readonly IRoleRepository _roleRepository;
+        private readonly IPermissionRepository _permissionRepository;
+        private readonly IRoleQuery _roleQuery;
+        private readonly RoleDomainService _roleDomainService;
+
+        public RoleService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<RoleService> logger, IRequestContext requestContext, TimeProvider timeProvider,
+            IRoleRepository roleRepository, IPermissionRepository permissionRepository, IRoleQuery roleQuery, RoleDomainService roleDomainService
+        ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
+            _roleRepository = roleRepository;
+            _permissionRepository = permissionRepository;
+            _roleQuery = roleQuery;
+            _roleDomainService = roleDomainService;
         }
 
         public List<GetListRoleDropDownDto> GetRoleDropDown()
         {
             _logger.LogInformation($"{nameof(GetRoleDropDown)}");
-            var roles = _shDbContext.Roles
-                .Where(r => !r.Deleted)
-                .Select(r => new GetListRoleDropDownDto
-                {
-                    Id = r.Id,
-                    Name = r.Name,
-                }).ToList();
-            return roles;
+            return _roleQuery.GetRoleDropDown();
         }
 
         public FindRoleByIdDto FindById(int id)
         {
             _logger.LogInformation($"{nameof(FindById)} id ={JsonSerializer.Serialize(id)}");
-            var role = _shDbContext.Roles
-                .Where(r => r.Id == id && !r.Deleted)
-                .AsNoTracking()
-                .Select(r => new FindRoleByIdDto
-                {
-                    Id = r.Id,
-                    Name = r.Name,
-                    Description = r.Description,
-                }).FirstOrDefault();
+            var role = _roleQuery.FindById(id);
             if (role == null) {
                 throw new UserFriendlyException(ErrorCodes.AuthErrorRoleNotFound);
             }
             return role;
         }
-        
 
         public BaseResponsePagingDto<GetListRoleDto> FindPaging(FindPagingRoleDto dto)
         {
             _logger.LogInformation($"{nameof(FindPaging)} , dto ={JsonSerializer.Serialize(dto)}");
-            var query = _shDbContext.Roles.AsNoTracking().Where(r => !r.Deleted);
-            if (!string.IsNullOrEmpty(dto.Keyword))
-            {
-                query = query.Where(r => r.Name!.Contains(dto.Keyword) && !r.Deleted);
-            }
-
-            var totalCount = query.Count();
-            var roles = query
-                .Paging(dto)
-                .AsNoTracking()
-                .ToList();
-            
-            
-            
-            var items = roles.Select(r => new GetListRoleDto
-            {
-                Id = r.Id,
-                Name = r.Name,
-                Description = r.Description,
-               
-
-            });
-
-            return new BaseResponsePagingDto<GetListRoleDto>
-            {
-                Items = items,
-                TotalItems = totalCount,
-            };
-
-
-
+            return _roleQuery.FindPaging(dto);
         }
 
         public List<GetRolePermissionTreeDto> GetPermissionTree(int roleId)
         {
             _logger.LogInformation($"{nameof(GetPermissionTree)} roleId ={JsonSerializer.Serialize(roleId)}");
-            var isRoleExist = _shDbContext.Roles.Any(r => r.Id == roleId && !r.Deleted);
-            if (!isRoleExist)
+            if (!_roleRepository.Exists(roleId))
             {
                 throw new UserFriendlyException(ErrorCodes.AuthErrorRoleNotFound);
             }
 
-            var permissions = _shDbContext.Permissions
-                .AsNoTracking()
-                .Where(p => !p.Deleted)
-                .OrderBy(p => p.Key)
+            var permissions = _permissionRepository.GetActive();
+            var grantedKeys = PermissionGrantPolicy.ResolveGrantedKeys(permissions, _roleRepository.GetPermissionKeys(roleId));
+
+            var nodes = permissions
                 .Select(p => new GetRolePermissionTreeDto
                 {
                     Key = p.Key,
                     ParentKey = p.ParentKey,
                     Description = p.Description,
                     Module = p.Module,
-                    IsChecked = _shDbContext.RolePermissions.Any(rp => rp.RoleId == roleId && rp.PermissionKey == p.Key && !rp.Deleted),
+                    IsChecked = grantedKeys.Contains(p.Key),
                 }).ToList();
 
-            var tree = TreeUtils.BuildTree(permissions, p => p.Key, p => p.ParentKey, p => p.Children);
-            TreeUtils.SyncChecked(tree, p => p.Children, p => p.IsChecked, (p, isChecked) => p.IsChecked = isChecked);
-            return tree;
+            return TreeUtils.BuildTree(nodes, p => p.Key, p => p.ParentKey, p => p.Children);
         }
 
         public async Task UpdatePermission(UpdateRolePermissionDto dto)
@@ -129,16 +93,10 @@ namespace sh.be.applications.Module.Auth.Implements
             var currentUserId = getCurrentUserId();
             var now = GetVietnamTime();
 
-            var isRoleExist = await _shDbContext.Roles.AnyAsync(r => r.Id == dto.RoleId && !r.Deleted);
-            if (!isRoleExist)
-            {
-                throw new UserFriendlyException(ErrorCodes.AuthErrorRoleNotFound);
-            }
+            var role = await _roleRepository.FindByIdAsync(dto.RoleId)
+                ?? throw new UserFriendlyException(ErrorCodes.AuthErrorRoleNotFound);
 
-            var oldPermissionKeys = await _shDbContext.RolePermissions
-                .Where(rp => rp.RoleId == dto.RoleId && !rp.Deleted)
-                .Select(rp => rp.PermissionKey)
-                .ToListAsync();
+            var oldPermissionKeys = await _roleRepository.GetPermissionKeysAsync(dto.RoleId);
 
             var checkedKeys = TreeUtils.Flatten(dto.Permissions, p => p.Children)
                 .Where(p => p.IsChecked)
@@ -146,41 +104,16 @@ namespace sh.be.applications.Module.Auth.Implements
                 .Distinct()
                 .ToList();
 
-            var permissions = await _shDbContext.Permissions
-                .AsNoTracking()
-                .Where(p => !p.Deleted)
-                .Select(p => new GetRolePermissionTreeDto
-                {
-                    Key = p.Key,
-                    ParentKey = p.ParentKey,
-                    IsChecked = checkedKeys.Contains(p.Key),
-                }).ToListAsync();
+            var permissions = await _permissionRepository.GetActiveAsync();
+            var rolePermissions = role.AssignPermissions(permissions, checkedKeys, currentUserId, now);
 
-            var tree = TreeUtils.BuildTree(permissions, p => p.Key, p => p.ParentKey, p => p.Children);
-            TreeUtils.SyncChecked(tree, p => p.Children, p => p.IsChecked, (p, isChecked) => p.IsChecked = isChecked);
-
-            var checkedPermissions = TreeUtils.Flatten(tree, p => p.Children)
-                .Where(p => p.IsChecked)
-                .ToList();
-
-            await using var transaction = await _shDbContext.Database.BeginTransactionAsync();
+            await using var transaction = await _unitOfWork.BeginTransactionAsync();
             try
             {
-                await _shDbContext.RolePermissions
-                    .Where(rp => rp.RoleId == dto.RoleId)
-                    .ExecuteDeleteAsync();
-
-                _shDbContext.RolePermissions.AddRange(checkedPermissions.Select(p => new RolePermission
-                {
-                    RoleId = dto.RoleId,
-                    PermissionParentKey = p.ParentKey ?? String.Empty,
-                    PermissionKey = p.Key,
-                    CreatedBy = currentUserId,
-                    CreatedDate = now,
-                }));
+                await _roleRepository.ReplacePermissionsAsync(dto.RoleId, rolePermissions);
                 AddAuditLog(AuditLogConstants.ACTION_ROLE_UPDATE_PERMISSION, AuditLogConstants.ACTION_TYPE_UPDATE, $"Cập nhật quyền của vai trò có Id = {dto.RoleId}",
-                    new { dto.RoleId, PermissionKeys = oldPermissionKeys }, new { dto.RoleId, PermissionKeys = checkedPermissions.Select(p => p.Key) });
-                await _shDbContext.SaveChangesAsync();
+                    new { dto.RoleId, PermissionKeys = oldPermissionKeys }, new { dto.RoleId, PermissionKeys = rolePermissions.Select(p => p.PermissionKey) });
+                await _unitOfWork.SaveChangesAsync();
 
                 await transaction.CommitAsync();
             }
@@ -198,29 +131,14 @@ namespace sh.be.applications.Module.Auth.Implements
             _logger.LogInformation($"{nameof(Create)} ,dto = {JsonSerializer.Serialize(dto)}");
             var currentUserId = getCurrentUserId();
             var now = GetVietnamTime();
-            var roleExisted = _shDbContext.Roles
-                .Where(r => r.Id == dto.Id && !r.Deleted)
-                .Any();
-            if (roleExisted) {
-                throw new UserFriendlyException(ErrorCodes.Found, "Role đã tồn tại");
-            }
-            else
-            {
-                var role = new Role
-                {
-                    Id = dto.Id,
-                    Name = dto.Name,
-                    Description = dto.Description,
-                    IsSystem = 1,
-                    CreatedBy = currentUserId,
-                    CreatedDate = now,
-                };
+            _roleDomainService.EnsureNotExists(dto.Id);
 
-                _shDbContext.Roles.Add(role);
-                AddAuditLog(AuditLogConstants.ACTION_ROLE_CREATE, AuditLogConstants.ACTION_TYPE_CREATE, $"Tạo vai trò {role.Name}",
-                    null, new { role.Name, role.Description });
-                _shDbContext.SaveChanges();
-            }
+            var role = Role.Create(dto.Name, dto.Description, currentUserId, now, dto.Id);
+
+            _roleRepository.Add(role);
+            AddAuditLog(AuditLogConstants.ACTION_ROLE_CREATE, AuditLogConstants.ACTION_TYPE_CREATE, $"Tạo vai trò {role.Name}",
+                null, new { role.Name, role.Description });
+            _unitOfWork.SaveChanges();
         }
 
         public void Delete(int id)
@@ -229,17 +147,15 @@ namespace sh.be.applications.Module.Auth.Implements
 
             var currentUserId = getCurrentUserId();
             var vietnamTime = GetVietnamTime();
-            var role = _shDbContext.Roles.FirstOrDefault(r => r.Id == id && !r.Deleted)
+            var role = _roleRepository.FindById(id)
                 ??throw new UserFriendlyException(ErrorCodes.AuthErrorRoleNotFound);
 
-            role.Deleted = true;
-            role.DeletedDate = vietnamTime;
-            role.DeletedBy = currentUserId;
+            role.Delete(currentUserId, vietnamTime);
 
-            _shDbContext.Roles.Update(role);
+            _roleRepository.Update(role);
             AddAuditLog(AuditLogConstants.ACTION_ROLE_DELETE, AuditLogConstants.ACTION_TYPE_DELETE, $"Xóa vai trò {role.Name}",
                 new { role.Id, role.Name, role.Description }, null);
-            _shDbContext.SaveChanges();
+            _unitOfWork.SaveChanges();
         }
 
 
@@ -248,20 +164,16 @@ namespace sh.be.applications.Module.Auth.Implements
             _logger.LogInformation($"{nameof(Update)}, dto ={JsonSerializer.Serialize(dto)}, id ={JsonSerializer.Serialize(id)}");
             var currentUserId = getCurrentUserId();
             var vietnamTime = GetVietnamTime();
-            var role = _shDbContext.Roles.FirstOrDefault(r => r.Id == id && !r.Deleted)
+            var role = _roleRepository.FindById(id)
                 ?? throw new UserFriendlyException(ErrorCodes.AuthErrorRoleNotFound);
             var oldData = new { role.Id, role.Name, role.Description };
 
-            role.Name = dto.Name;
-            role.Description = dto.Description;
-            role.ModifiedDate = vietnamTime;
-            role.ModifiedBy = currentUserId;
+            role.Update(dto.Name, dto.Description, currentUserId, vietnamTime);
 
-
-            _shDbContext.Roles.Update(role);
+            _roleRepository.Update(role);
             AddAuditLog(AuditLogConstants.ACTION_ROLE_UPDATE, AuditLogConstants.ACTION_TYPE_UPDATE, $"Cập nhật vai trò {role.Name}",
                 oldData, new { role.Id, role.Name, role.Description });
-            _shDbContext.SaveChanges();
+            _unitOfWork.SaveChanges();
         }
     }
 }

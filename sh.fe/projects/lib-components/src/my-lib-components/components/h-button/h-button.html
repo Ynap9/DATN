@@ -1,0 +1,20 @@
+<ng-container>
+	<p-button
+		[label]="label"
+		[type]="type"
+		[icon]="icon"
+		[iconPos]="iconPos"
+		[badge]="badge"
+		[disabled]="disabled"
+		[loading]="loading"
+		[styleClass]="[systemStyleClass, severityClass, raisedClass, textClass, outlinedClass, roundedClass, sizeClass, cancelClass, fullWidthClass, styleClass].join(' ')"
+		[ngClass]="{ 'button-crud' : iconType }"
+		[style]="style"
+		[badgeClass]="badgeClass"
+		(onClick)="onClick.emit($event)"
+		(onFocus)="onFocus.emit()"
+		(onBlur)="onBlur.emit()"
+	>
+		<img *ngIf="imgIcon" style="height: 20px;" [src]="imgIcon">
+	</p-button>
+</ng-container>

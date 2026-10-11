@@ -3,15 +3,14 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
+using sh.be.applications.Module.Auth.Interfaces.Services;
 using sh.be.applications.Module.Core.Dtos.AuditLog;
-using sh.be.applications.Module.Core.Interfaces;
-using sh.be.domain.Module.Auth;
-using sh.be.infrastructure.data.Persistence.Db;
+using sh.be.applications.Module.Core.Interfaces.Services;
+using sh.be.domain.Module.Auth.Entities;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Core;
 using sh.be.shared.HttpRequest.Error;
@@ -29,20 +28,20 @@ namespace sh.be.api.Controllers.Module.Auth
         private readonly IOpenIddictApplicationManager _applicationManager;
         private readonly AuthServerSettings _authServerSettings;
         private readonly ILogger<AuthorizationController> _logger;
-        private readonly ShDbContext _shDbContext;
+        private readonly IUserService _userService;
         private readonly IAuditLogService _auditLogService;
 
         public AuthorizationController(
            IOpenIddictApplicationManager applicationManager,
            IOptions<AuthServerSettings> options,
            ILogger<AuthorizationController> logger,
-           ShDbContext shDbContext,
+           IUserService userService,
            IAuditLogService auditLogService)
         {
             _applicationManager = applicationManager;
             _authServerSettings = options.Value;
             _logger = logger;
-            _shDbContext = shDbContext;
+            _userService = userService;
             _auditLogService = auditLogService;
         }
     
@@ -108,10 +107,7 @@ namespace sh.be.api.Controllers.Module.Auth
                     identity.SetClaim(Claims.Name, user.FullName);
                     identity.SetClaim(Claims.Username, user.UserName);
                     identity.SetClaim(CustomClaimTypes.SecurityStamp, await userManager.GetSecurityStampAsync(user));
-                    var roles = await (from ur in _shDbContext.UserRoles
-                                 join r in _shDbContext.Roles on ur.RoleId equals r.Id
-                                 where ur.UserId == user.Id && !ur.Deleted
-                                 select r.Name).ToListAsync();
+                    var roles = await _userService.GetRoleNames(user.Id);
                     foreach (var role in roles)
                     {
                         identity.AddClaim(new Claim(ClaimTypes.Role, role));
@@ -187,10 +183,7 @@ namespace sh.be.api.Controllers.Module.Auth
                     identity.SetClaim(Claims.Name, user.FullName);
                     identity.SetClaim(Claims.Username, user.UserName);
                     identity.SetClaim(CustomClaimTypes.SecurityStamp, await userManager.GetSecurityStampAsync(user));
-                    var roles = await (from ur in _shDbContext.UserRoles
-                                 join r in _shDbContext.Roles on ur.RoleId equals r.Id
-                                 where ur.UserId == user.Id && !ur.Deleted
-                                 select r.Name).ToListAsync();
+                    var roles = await _userService.GetRoleNames(user.Id);
                     foreach (var role in roles)
                     {
                         identity.AddClaim(new Claim(ClaimTypes.Role, role));
@@ -262,10 +255,7 @@ namespace sh.be.api.Controllers.Module.Auth
                     identity.SetClaim(Claims.Name, user.FullName);
                     identity.SetClaim(Claims.Username, user.UserName);
                     identity.SetClaim(CustomClaimTypes.SecurityStamp, await userManager.GetSecurityStampAsync(user));
-                    var roles  = await (from ur in _shDbContext.UserRoles
-                                             join r in _shDbContext.Roles on ur.RoleId equals r.Id
-                                             where ur.UserId == user.Id && !ur.Deleted
-                                             select r.Name).ToListAsync();
+                    var roles = await _userService.GetRoleNames(user.Id);
                     foreach (var role in roles)
                     {
                         identity.AddClaim(new Claim(ClaimTypes.Role, role));

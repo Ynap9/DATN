@@ -1,0 +1,19 @@
+<div class="input-dropdown-search">
+    <span class="p-float-label">
+        <p-select
+            [showClear]="false"
+            id="dropdownStatus" [style]="{'width':'12rem'}" [optionLabel]="optionLabel"
+            [optionValue]="optionValue" appendTo="body"
+            [options]="filterArray"
+            [(ngModel)]="dataFilter.keywordType" (onChange)="dataFilter.keyword && onChange()"
+        >
+        </p-select>
+    </span>
+    <h-input-search
+        [placeholder]="'Nhập thông tin'"
+        (_onChange)="onChange()"
+        [(keyword)]="dataFilter.keyword"
+        [isShowLabel]="false"
+    >
+    </h-input-search>
+</div>
