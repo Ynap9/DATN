@@ -1,6 +1,6 @@
 # Loại văn bản (Construction)
 
-> **Phần 5/5** · trước: [04-nhat-ky-he-thong.md](04-nhat-ky-he-thong.md) · mục lục: [README.md](README.md)
+> **Phần 5/6** · trước: [04-nhat-ky-he-thong.md](04-nhat-ky-he-thong.md) · mục lục: [README.md](README.md)
 
 Danh mục loại văn bản, bảng `construction.DocumentType`. Entity `DocumentType` có `Id`, `Name`, `DefaultView`
 (mặc định `1`), cột tạo / sửa và xoá mềm.
@@ -11,6 +11,7 @@ Danh mục loại văn bản, bảng `construction.DocumentType`. Entity `Docume
 |---|---|---|
 | Danh sách có phân trang | `GET api/construction/document-type/paging` | `Function.Construction.DocumentType.View` |
 | Xem chi tiết | `GET api/construction/document-type/{id}` | `Function.Construction.DocumentType.View` |
+| Danh sách đầy đủ các trường của loại văn bản | `GET api/construction/document-type/{id}/document-fields` | `Function.Construction.DocumentType.View` |
 | Tạo mới | `POST api/construction/document-type` | `Function.Construction.DocumentType.Create` |
 | Cập nhật | `PUT api/construction/document-type/{id}` | `Function.Construction.DocumentType.Update` |
 | Xoá | `DELETE api/construction/document-type/{id}` | `Function.Construction.DocumentType.Delete` |
@@ -24,6 +25,9 @@ Body tạo / sửa: `{ "name": "...", "defaultView": 1 }`. Bỏ `defaultView` kh
 - So khớp tên **không phân biệt hoa thường** (theo collation mặc định của SQL Server).
 - Xoá là **xoá mềm**: bản ghi biến mất khỏi danh sách và chi tiết (lỗi `301`), tên được dùng lại.
 - Danh sách lọc `keyword` theo `Name`, sắp mới tạo trước; `pageSize = -1` lấy tất cả.
+- `{id}/document-fields` trả **mọi cột** (`GetListDocumentFieldDto`) của các trường chưa xoá thuộc loại văn bản, không phân
+  trang, sắp theo `OrderTableView` rồi `Id`. Loại văn bản không tồn tại hoặc đã xoá → `301`; chưa có trường → `[]`. Nằm ở
+  `DocumentTypeService` / `DocumentTypeQuery` (theo yêu cầu), không ở `DocumentFieldService`.
 - Mỗi thao tác ghi để lại audit log `Tạo / Cập nhật / Xóa loại văn bản` kèm giá trị cũ và mới.
 
 ## Đã kiểm thực tế
@@ -39,4 +43,4 @@ cần index có lọc `Deleted = 0` — là đổi schema, hỏi trước.
 
 ⚠️ Chưa kiểm `Name` rỗng; `POST` với `name` rỗng hiện vẫn tạo được bản ghi.
 
-> **Hết** · mục lục: [README.md](README.md)
+> **Tiếp:** [06-truong-van-ban.md](06-truong-van-ban.md) — các trường của một loại văn bản.

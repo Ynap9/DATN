@@ -1,6 +1,6 @@
 # Phân quyền
 
-> **Phần 2/5** · trước: [01-nguoi-dung.md](01-nguoi-dung.md) · mục lục: [README.md](README.md)
+> **Phần 2/6** · trước: [01-nguoi-dung.md](01-nguoi-dung.md) · mục lục: [README.md](README.md)
 
 Quyền là một **cây** định danh bằng `Key`. Vai trò giữ một tập key; user có quyền = hợp quyền của các vai trò còn hoạt động.
 Hằng số key nằm ở `PermissionConstants` (shared); cây được seed bởi `SeedPermission`.
@@ -28,11 +28,16 @@ Menu.Core                          Menu hệ thống
     └── Function.Core.AuditLog.View
 
 Menu.Construction                  Menu nghiệp vụ xây dựng
-└── Menu.Construction.DocumentType Menu quản lý loại văn bản
-    ├── Function.Construction.DocumentType.View
-    ├── Function.Construction.DocumentType.Create
-    ├── Function.Construction.DocumentType.Update
-    └── Function.Construction.DocumentType.Delete
+├── Menu.Construction.DocumentType Menu quản lý loại văn bản
+│   ├── Function.Construction.DocumentType.View
+│   ├── Function.Construction.DocumentType.Create
+│   ├── Function.Construction.DocumentType.Update
+│   └── Function.Construction.DocumentType.Delete
+└── Menu.Construction.DocumentField Menu quản lý trường của loại văn bản
+    ├── Function.Construction.DocumentField.View
+    ├── Function.Construction.DocumentField.Create
+    ├── Function.Construction.DocumentField.Update
+    └── Function.Construction.DocumentField.Delete
 ```
 
 Quy ước đặt key: `Menu.<Module>.<Tên>` cho mục menu, `Function.<Module>.<Tên>.<Hành động>` cho thao tác.
@@ -77,10 +82,14 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `GET api/auth/permission` | `Menu.Auth` |
 | `GET api/core/audit-log/paging` | `Function.Core.AuditLog.View` |
 | `GET api/core/audit-log/{id}` | `Function.Core.AuditLog.View` |
-| `GET api/construction/document-type/paging`, `GET .../{id}` | `Function.Construction.DocumentType.View` |
+| `GET api/construction/document-type/paging`, `GET .../{id}`, `GET .../{id}/document-fields` | `Function.Construction.DocumentType.View` |
 | `POST api/construction/document-type` | `Function.Construction.DocumentType.Create` |
 | `PUT api/construction/document-type/{id}` | `Function.Construction.DocumentType.Update` |
 | `DELETE api/construction/document-type/{id}` | `Function.Construction.DocumentType.Delete` |
+| `GET api/construction/document-field/paging`, `GET .../dropdown`, `GET .../{id}` | `Function.Construction.DocumentField.View` |
+| `POST api/construction/document-field`, `POST .../quick-create` | `Function.Construction.DocumentField.Create` |
+| `PUT api/construction/document-field/{id}` | `Function.Construction.DocumentField.Update` |
+| `DELETE api/construction/document-field/{id}`, `DELETE .../quick-delete` | `Function.Construction.DocumentField.Delete` |
 
 ## Quyền người dùng: đang lệch so với cây
 

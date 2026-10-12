@@ -13,6 +13,7 @@
 | [03-vai-tro-mac-dinh.md](03-vai-tro-mac-dinh.md) | Vai trò, quyền mặc định, tài khoản khởi tạo, luật tạo / xoá vai trò |
 | [04-nhat-ky-he-thong.md](04-nhat-ky-he-thong.md) | Các thao tác được ghi nhật ký và cách đọc nhật ký |
 | [05-loai-van-ban.md](05-loai-van-ban.md) | Danh mục loại văn bản (`DocumentType`): CRUD, tên duy nhất, xoá mềm |
+| [06-truong-van-ban.md](06-truong-van-ban.md) | Trường của loại văn bản (`DocumentField`): CRUD, `Field` duy nhất, thứ tự tự tăng |
 
 ## Thuật ngữ
 

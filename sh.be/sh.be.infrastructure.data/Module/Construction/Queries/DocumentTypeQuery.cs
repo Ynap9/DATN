@@ -1,6 +1,7 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
+using sh.be.applications.Module.Construction.Dtos.DocumentField;
 using sh.be.applications.Module.Construction.Dtos.DocumentType;
 using sh.be.applications.Module.Construction.Interfaces.Queries;
 using sh.be.infrastructure.data.Base;
@@ -55,6 +56,17 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 .Where(d => d.Id == id)
                 .ProjectTo<FindDocumentTypeByIdDto>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync();
+        }
+
+        public Task<List<GetListDocumentFieldDto>> GetListDocumentField(int id)
+        {
+            return _shDbContext.DocumentFields
+                .AsNoTracking()
+                .Where(d => d.DocumentTypeId == id)
+                .OrderBy(d => d.OrderTableView)
+                .ThenBy(d => d.Id)
+                .ProjectTo<GetListDocumentFieldDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
         }
     }
 }

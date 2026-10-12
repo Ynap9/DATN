@@ -19,6 +19,12 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
             return _shDbContext.DocumentTypes.FirstOrDefaultAsync(d => d.Id == id);
         }
 
+        public Task LockAsync(int id)
+        {
+            return _shDbContext.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT Id FROM [construction].[DocumentType] WITH (UPDLOCK, HOLDLOCK) WHERE Id = {id}");
+        }
+
         public Task<bool> ExistsByNameAsync(string name, int? excludedId = null)
         {
             return _shDbContext.DocumentTypes.AnyAsync(d => d.Name == name && d.Id != excludedId);

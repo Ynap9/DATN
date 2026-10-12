@@ -42,6 +42,12 @@ namespace sh.be.infrastructure.data.Persistence.Seeder
             Permission.Create(PermissionConstants.FUNCTION_DOCUMENT_TYPE_CREATE, "Tạo mới loại văn bản", PermissionConstants.MENU_DOCUMENT_TYPE, PermissionConstants.MODULE_CONSTRUCTION, null),
             Permission.Create(PermissionConstants.FUNCTION_DOCUMENT_TYPE_UPDATE, "Cập nhật loại văn bản", PermissionConstants.MENU_DOCUMENT_TYPE, PermissionConstants.MODULE_CONSTRUCTION, null),
             Permission.Create(PermissionConstants.FUNCTION_DOCUMENT_TYPE_DELETE, "Xóa loại văn bản", PermissionConstants.MENU_DOCUMENT_TYPE, PermissionConstants.MODULE_CONSTRUCTION, null),
+
+            Permission.Create(PermissionConstants.MENU_DOCUMENT_FIELD, "Menu quản lý trường của loại văn bản", PermissionConstants.MENU_CONSTRUCTION, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_DOCUMENT_FIELD_VIEW, "Xem danh sách và chi tiết trường của loại văn bản", PermissionConstants.MENU_DOCUMENT_FIELD, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_DOCUMENT_FIELD_CREATE, "Tạo mới trường của loại văn bản", PermissionConstants.MENU_DOCUMENT_FIELD, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_DOCUMENT_FIELD_UPDATE, "Cập nhật trường của loại văn bản", PermissionConstants.MENU_DOCUMENT_FIELD, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_DOCUMENT_FIELD_DELETE, "Xóa trường của loại văn bản", PermissionConstants.MENU_DOCUMENT_FIELD, PermissionConstants.MODULE_CONSTRUCTION, null),
         ];
 
         public static async Task SeedAsync(ShDbContext dbContext)

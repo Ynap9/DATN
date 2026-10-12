@@ -38,5 +38,11 @@ namespace sh.be.shared.Constants.Auth
         public const string FUNCTION_DOCUMENT_TYPE_CREATE = "Function.Construction.DocumentType.Create";
         public const string FUNCTION_DOCUMENT_TYPE_UPDATE = "Function.Construction.DocumentType.Update";
         public const string FUNCTION_DOCUMENT_TYPE_DELETE = "Function.Construction.DocumentType.Delete";
+
+        public const string MENU_DOCUMENT_FIELD = "Menu.Construction.DocumentField";
+        public const string FUNCTION_DOCUMENT_FIELD_VIEW = "Function.Construction.DocumentField.View";
+        public const string FUNCTION_DOCUMENT_FIELD_CREATE = "Function.Construction.DocumentField.Create";
+        public const string FUNCTION_DOCUMENT_FIELD_UPDATE = "Function.Construction.DocumentField.Update";
+        public const string FUNCTION_DOCUMENT_FIELD_DELETE = "Function.Construction.DocumentField.Delete";
     }
 }

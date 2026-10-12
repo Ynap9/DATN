@@ -66,6 +66,21 @@ namespace sh.be.api.Controllers.Module.Construction
             }
         }
 
+        [HttpGet("{id}/document-fields")]
+        [Permission(PermissionConstants.FUNCTION_DOCUMENT_TYPE_VIEW)]
+        public async Task<ApiResponse> GetListDocumentField([FromRoute] int id)
+        {
+            try
+            {
+                var data = await _documentTypeService.GetListDocumentField(id);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
         [HttpPost("")]
         [Permission(PermissionConstants.FUNCTION_DOCUMENT_TYPE_CREATE)]
         public async Task<ApiResponse> Create([FromBody] CreateDocumentTypeDto dto)

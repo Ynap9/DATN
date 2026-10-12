@@ -25,6 +25,12 @@ namespace sh.be.shared.Constants.Core
         public const string ACTION_DOCUMENT_TYPE_UPDATE = "Cập nhật loại văn bản";
         public const string ACTION_DOCUMENT_TYPE_DELETE = "Xóa loại văn bản";
 
+        public const string ACTION_DOCUMENT_FIELD_CREATE = "Tạo trường của loại văn bản";
+        public const string ACTION_DOCUMENT_FIELD_QUICK_CREATE = "Thêm nhanh trường của loại văn bản";
+        public const string ACTION_DOCUMENT_FIELD_UPDATE = "Cập nhật trường của loại văn bản";
+        public const string ACTION_DOCUMENT_FIELD_DELETE = "Xóa trường của loại văn bản";
+        public const string ACTION_DOCUMENT_FIELD_QUICK_DELETE = "Xóa nhanh trường của loại văn bản";
+
         public const string ACTION_SEED_ROLE = "Khởi tạo vai trò mặc định";
         public const string ACTION_SEED_PERMISSION = "Đồng bộ danh sách quyền";
         public const string ACTION_SEED_USER = "Khởi tạo tài khoản quản trị mặc định";

@@ -1,6 +1,6 @@
 # Nhật ký hệ thống (Core)
 
-> **Phần 4/5** · trước: [03-vai-tro-mac-dinh.md](03-vai-tro-mac-dinh.md) · mục lục: [README.md](README.md)
+> **Phần 4/6** · trước: [03-vai-tro-mac-dinh.md](03-vai-tro-mac-dinh.md) · mục lục: [README.md](README.md)
 
 Mọi thao tác ghi nghiệp vụ để lại một `AuditLog`. Module `Core` chỉ **đọc** nhật ký qua API; việc ghi nằm trong
 `BaseService.AddAuditLog` và được gọi từ các service nghiệp vụ.
@@ -27,6 +27,7 @@ Mọi thao tác ghi nghiệp vụ để lại một `AuditLog`. Module `Core` ch
 | Tạo / sửa / xoá vai trò | Create / Update / Delete | `RoleService` |
 | Cập nhật quyền của vai trò | Update | `RoleService.UpdatePermission` |
 | Tạo / cập nhật / xoá loại văn bản | Create / Update / Delete | `DocumentTypeService` |
+| Tạo / thêm nhanh / cập nhật / xoá / xoá nhanh trường của loại văn bản | Create / Create / Update / Delete / Delete | `DocumentFieldService` |
 | Đăng nhập thành công | Login | `AuthorizationController.Exchange` |
 | Đăng nhập thất bại (sai tên hoặc sai mật khẩu) | Login | `AuthorizationController.Exchange` |
 | Khởi tạo vai trò / quyền / tài khoản mặc định, đồng bộ danh sách quyền | Create / Update | Các seeder khi khởi động |

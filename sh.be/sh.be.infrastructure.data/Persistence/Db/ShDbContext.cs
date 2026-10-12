@@ -23,6 +23,7 @@ namespace sh.be.infrastructure.data.Persistence.Db
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<DocumentType> DocumentTypes { get; set; }
+        public DbSet<DocumentField> DocumentFields { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.UseOpenIddict();
@@ -59,6 +60,15 @@ namespace sh.be.infrastructure.data.Persistence.Db
                 entity.Property(e => e.Deleted).HasDefaultValue(0);
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
                 entity.Property(e => e.DefaultView).HasDefaultValue(1).HasSentinel(-1);
+            });
+            modelBuilder.Entity<DocumentField>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.Property(e => e.FieldType).HasDefaultValue("string");
+                entity.Property(e => e.IsShowTableView).HasDefaultValue(true).HasSentinel(true);
+                entity.Property(e => e.IsShowListView).HasDefaultValue(true).HasSentinel(true);
             });
             modelBuilder.Entity<RolePermission>()
                 .HasKey(rp => new { rp.RoleId, rp.PermissionKey });

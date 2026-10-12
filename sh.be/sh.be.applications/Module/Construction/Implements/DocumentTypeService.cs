@@ -2,6 +2,7 @@ using AutoMapper;
 using Microsoft.Extensions.Logging;
 using sh.be.applications.Base;
 using sh.be.applications.Base.Interfaces;
+using sh.be.applications.Module.Construction.Dtos.DocumentField;
 using sh.be.applications.Module.Construction.Dtos.DocumentType;
 using sh.be.applications.Module.Construction.Interfaces.Queries;
 using sh.be.applications.Module.Construction.Interfaces.Services;
@@ -50,6 +51,14 @@ namespace sh.be.applications.Module.Construction.Implements
             _logger.LogInformation($"{nameof(FindById)}, id={id}");
             return await _documentTypeQuery.FindById(id)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentTypeNotFound);
+        }
+
+        public async Task<List<GetListDocumentFieldDto>> GetListDocumentField(int id)
+        {
+            _logger.LogInformation($"{nameof(GetListDocumentField)}, id={id}");
+            _ = await _documentTypeRepository.FindByIdAsync(id)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentTypeNotFound);
+            return await _documentTypeQuery.GetListDocumentField(id);
         }
 
         public async Task Create(CreateDocumentTypeDto dto)

@@ -29,6 +29,7 @@ Module/<TenModule>/
 | `AppUser : IdentityUser` | Auth | `Create` (`EmailConfirmed = true`), `UpdateProfile`, `AssignRoles` |
 | `AuditLog` | Core | `Create` (tự serialize `oldData`/`newData` sang JSON) |
 | `DocumentType` | Construction | `Create` (`DefaultView` mặc định `1`), `Update`, `Delete` (xoá mềm); `Name` duy nhất qua `DocumentTypeDomainService.EnsureUniqueNameAsync` |
+| `DocumentField` | Construction | `Create` (`FieldType = "string"`, hai cờ hiển thị `true`), `Update` (không đổi `DocumentTypeId`, không đổi thứ tự), `ChangeOrder` (gán một thứ tự cho cả hai cột), `Delete` (xoá mềm, giữ nguyên thứ tự); `DocumentFieldDomainService` kiểm loại văn bản tồn tại, `Field` duy nhất, thứ tự không trùng (tạo = lớn nhất kể cả trường đã xoá + 1, chuyển thì đánh lại `1..n`, xoá không đổi thứ tự) |
 
 **Vì sao hành vi nằm trong entity:** setter `private` chỉ có nghĩa khi entity tự cung cấp cách thay đổi. Tách
 các method này ra class khác thì setter phải mở `public` — entity thành anemic model, ai cũng gán được

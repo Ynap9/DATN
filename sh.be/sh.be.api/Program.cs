@@ -236,6 +236,10 @@ builder.Services.AddScoped<IDocumentTypeRepository, DocumentTypeRepository>();
 builder.Services.AddScoped<IDocumentTypeQuery, DocumentTypeQuery>();
 builder.Services.AddScoped<DocumentTypeDomainService>();
 builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();
+builder.Services.AddScoped<IDocumentFieldRepository, DocumentFieldRepository>();
+builder.Services.AddScoped<IDocumentFieldQuery, DocumentFieldQuery>();
+builder.Services.AddScoped<DocumentFieldDomainService>();
+builder.Services.AddScoped<IDocumentFieldService, DocumentFieldService>();
 #endregion
 
 

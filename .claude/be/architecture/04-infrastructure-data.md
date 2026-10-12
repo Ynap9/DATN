@@ -38,16 +38,21 @@ trong các luồng đó.
 - EF map được setter/constructor `private` của entity, nên entity giàu hành vi không đổi schema.
 
 ⚠️ Bẫy: cột `int` có `HasDefaultValue(x)` thì EF bỏ qua giá trị bằng `0` (giá trị mặc định CLR) khi insert, nên DB tự
-điền `x` → gán `0` thành `x`. `DocumentType.DefaultView` vì vậy dùng `HasDefaultValue(1).HasSentinel(-1)`. Đừng bỏ `HasSentinel`.
+điền `x` → gán `0` thành `x`. `DocumentType.DefaultView` vì vậy dùng `HasDefaultValue(1).HasSentinel(-1)`. Cột `bool` default `true` cũng vậy:
+`DocumentField.IsShowTableView` / `IsShowListView` dùng `HasDefaultValue(true).HasSentinel(true)`. Đừng bỏ `HasSentinel`.
+
+`DocumentTypeRepository.LockAsync` khoá dòng loại văn bản (`UPDLOCK, HOLDLOCK`) để tuần tự hoá việc ghi thứ tự trường;
+chỉ có tác dụng **bên trong transaction** (xem [../nghiep-vu/06-truong-van-ban.md](../nghiep-vu/06-truong-van-ban.md)).
 
 ## Xoá mềm — global query filter
 
-`Role`, `Permission`, `UserRole`, `RolePermission`, `DocumentType` có `HasQueryFilter(e => !e.Deleted)` trong `ShDbContext`.
+`Role`, `Permission`, `UserRole`, `RolePermission`, `DocumentType`, `DocumentField` có `HasQueryFilter(e => !e.Deleted)` trong `ShDbContext`.
 Mọi truy vấn LINQ (kể cả `join`, subquery, `Any`, `Count`) tự loại bản ghi đã xoá mềm.
 
 - **Không** viết tay `!x.Deleted` nữa.
 - Cần thấy cả bản ghi đã xoá ⇒ `.IgnoreQueryFilters()`. Hiện dùng ở: `ReplacePermissionsAsync`,
-  `DeleteUserRolesAsync` (xoá cứng theo khoá ghép), `SeedPermission` (khôi phục quyền), `SeedRolePermission`,
+  `DeleteUserRolesAsync` (xoá cứng theo khoá ghép), `DocumentFieldRepository.GetMaxOrderAsync` (thứ tự mới tính cả trường
+đã xoá), `SeedPermission` (khôi phục quyền), `SeedRolePermission`,
   `SeedUser` (kiểm cặp khoá đã có).
 
 ⚠️ Bẫy: `ExecuteDeleteAsync` cũng bị filter lọc. Xoá cứng mà quên `IgnoreQueryFilters()` thì bản ghi xoá mềm

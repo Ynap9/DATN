@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using sh.be.applications.Module.Construction.Dtos.DocumentField;
 using sh.be.applications.Module.Construction.Dtos.DocumentType;
 using sh.be.domain.Module.Construction.Entities;
 using System;
@@ -17,6 +18,9 @@ namespace sh.be.applications.Base
             CreateMap<DocumentType, GetListDocumentTypeDto>();
             CreateMap<DocumentType, FindDocumentTypeByIdDto>();
             CreateMap<DocumentType, GetListDocumentTypeDropDownDto>();
+            CreateMap<DocumentField, GetListDocumentFieldDto>();
+            CreateMap<DocumentField, FindDocumentFieldByIdDto>();
+            CreateMap<DocumentField, GetListDocumentFieldDropDownDto>();
         }
     }
 }
