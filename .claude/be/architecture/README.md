@@ -52,6 +52,7 @@ Chiều này do `.csproj` cưỡng chế: domain gọi `ShDbContext` là build l
 | [07-conventions.md](07-conventions.md) | **Quy ước code bắt buộc** |
 | [08-them-chuc-nang.md](08-them-chuc-nang.md) | Các bước thêm một use case hoặc một module mới |
 | [../db/README.md](../db/README.md) | Lệnh migration và cập nhật database |
+| [../nghiep-vu/README.md](../nghiep-vu/README.md) | **Nghiệp vụ**: người dùng, phân quyền, vai trò mặc định, nhật ký hệ thống |
 
 ## Nguyên tắc không đổi
 

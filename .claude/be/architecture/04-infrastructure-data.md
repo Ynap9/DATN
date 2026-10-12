@@ -10,17 +10,18 @@ repository, `IUnitOfWork`).
 | Thư mục | Chứa gì |
 |---|---|
 | `Base/UnitOfWork.cs` | `UnitOfWork` + `UnitOfWorkTransaction` bọc `IDbContextTransaction` |
+| `Base/BaseQuery.cs` | Lớp cha của query: `_shDbContext`, `_mapper`. Query mới kế thừa, không tự inject |
 | `Module/<TenModule>/Repositories/` | Implement `I...Repository` của domain |
 | `Module/<TenModule>/Queries/` | Implement `I...Query` của applications, trả DTO |
 | `Persistence/Db/ShDbContext.cs` | `IdentityUserContext<AppUser>` + `DbSet` + cấu hình model + OpenIddict |
 | `Persistence/Seeder/` | `SeedRole`, `SeedPermission`, `SeedUser`, `SeedRolePermission` |
-| `Migrations/Auth/`, `Migrations/Core/` | Migration tách theo module; `ShDbContextModelSnapshot.cs` chung |
+| `Migrations/Auth/`, `Migrations/Core/`, `Migrations/Construction/` | Migration tách theo module; `ShDbContextModelSnapshot.cs` chung |
 
 ## Repository vs Query
 
 | | Repository | Query |
 |---|---|---|
-| Trả về | Entity domain (có tracking) | DTO (`AsNoTracking`, `Select` thẳng) |
+| Trả về | Entity domain (có tracking) | DTO (`AsNoTracking`, `ProjectTo` hoặc `Select` thẳng) |
 | Được join nhiều bảng | Chỉ khi phục vụ aggregate | Thoải mái, kể cả bảng `Users` |
 | Lưu | Không tự `SaveChanges`; để `IUnitOfWork` | Không ghi gì |
 
@@ -31,14 +32,17 @@ trong các luồng đó.
 
 ## Schema
 
-- Bảng Auth ở schema `auth`, bảng Core ở schema `core` (`[Table(..., Schema = DbSchemas.X)]` trên entity).
+- Bảng Auth ở schema `auth`, Core ở `core`, Construction ở `construction` (`[Table(..., Schema = DbSchemas.X)]` trên entity).
 - Khoá ghép: `RolePermission (RoleId, PermissionKey)`, `UserRole (UserId, RoleId)`.
 - `Deleted` mặc định `0`, `CreatedDate` mặc định `getdate()` (cấu hình trong `OnModelCreating`).
 - EF map được setter/constructor `private` của entity, nên entity giàu hành vi không đổi schema.
 
+⚠️ Bẫy: cột `int` có `HasDefaultValue(x)` thì EF bỏ qua giá trị bằng `0` (giá trị mặc định CLR) khi insert, nên DB tự
+điền `x` → gán `0` thành `x`. `DocumentType.DefaultView` vì vậy dùng `HasDefaultValue(1).HasSentinel(-1)`. Đừng bỏ `HasSentinel`.
+
 ## Xoá mềm — global query filter
 
-`Role`, `Permission`, `UserRole`, `RolePermission` có `HasQueryFilter(e => !e.Deleted)` trong `ShDbContext`.
+`Role`, `Permission`, `UserRole`, `RolePermission`, `DocumentType` có `HasQueryFilter(e => !e.Deleted)` trong `ShDbContext`.
 Mọi truy vấn LINQ (kể cả `join`, subquery, `Any`, `Count`) tự loại bản ghi đã xoá mềm.
 
 - **Không** viết tay `!x.Deleted` nữa.
@@ -54,7 +58,7 @@ còn nằm lại và lần `Add` sau trùng khoá ghép. Đừng "sửa" bằng 
 Đổi entity hoặc `OnModelCreating` là **đổi schema** — phải hỏi trước (skill `task-workflow`). Khi đã được duyệt:
 
 ```bash
-dotnet ef migrations add <Ten> --project sh.be/sh.be.infrastructure.data --startup-project sh.be/sh.be.api --output-dir Migrations/<Auth|Core>
+dotnet ef migrations add <Ten> --project sh.be/sh.be.infrastructure.data --startup-project sh.be/sh.be.api --output-dir Migrations/<Auth|Core|Construction>
 dotnet ef migrations has-pending-model-changes --project sh.be/sh.be.infrastructure.data --startup-project sh.be/sh.be.api
 ```
 

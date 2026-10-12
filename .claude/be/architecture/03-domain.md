@@ -28,6 +28,7 @@ Module/<TenModule>/
 | `UserRole` | Auth | `Create`, `Delete` (xoá mềm) |
 | `AppUser : IdentityUser` | Auth | `Create` (`EmailConfirmed = true`), `UpdateProfile`, `AssignRoles` |
 | `AuditLog` | Core | `Create` (tự serialize `oldData`/`newData` sang JSON) |
+| `DocumentType` | Construction | `Create` (`DefaultView` mặc định `1`), `Update`, `Delete` (xoá mềm); `Name` duy nhất qua `DocumentTypeDomainService.EnsureUniqueNameAsync` |
 
 **Vì sao hành vi nằm trong entity:** setter `private` chỉ có nghĩa khi entity tự cung cấp cách thay đổi. Tách
 các method này ra class khác thì setter phải mở `public` — entity thành anemic model, ai cũng gán được

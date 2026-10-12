@@ -29,6 +29,7 @@ namespace sh.be.shared.HttpRequest.Error
 
             //Core
             { ErrorCodes.CoreErrorAuditLogNotFound, "Audit log không tồn tại" },
+            { ErrorCodes.ConstructionErrorDocumentTypeNotFound, "Loại văn bản không tồn tại" },
         };
         public static string GetMessage(int code)
         {

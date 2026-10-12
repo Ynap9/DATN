@@ -299,7 +299,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("OpenIddictTokens", (string)null);
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Auth.AppUser", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Auth.Entities.AppUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -369,7 +369,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Auth.Permission", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Auth.Entities.Permission", b =>
                 {
                     b.Property<string>("Key")
                         .ValueGeneratedOnAdd()
@@ -419,7 +419,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("Permission", "auth");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Auth.Role", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Auth.Entities.Role", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -468,7 +468,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("Role", "auth");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Auth.RolePermission", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Auth.Entities.RolePermission", b =>
                 {
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
@@ -510,7 +510,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("RolePermission", "auth");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Auth.UserRole", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Auth.Entities.UserRole", b =>
                 {
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
@@ -548,7 +548,54 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("UserRole", "auth");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Core.AuditLog", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.DocumentType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<int>("DefaultView")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<bool>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DocumentType", "construction");
+                });
+
+            modelBuilder.Entity("sh.be.domain.Module.Core.Entities.AuditLog", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -605,7 +652,7 @@ namespace sh.be.infrastructure.data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("sh.be.domain.Module.Auth.AppUser", null)
+                    b.HasOne("sh.be.domain.Module.Auth.Entities.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -614,7 +661,7 @@ namespace sh.be.infrastructure.data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("sh.be.domain.Module.Auth.AppUser", null)
+                    b.HasOne("sh.be.domain.Module.Auth.Entities.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -623,7 +670,7 @@ namespace sh.be.infrastructure.data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("sh.be.domain.Module.Auth.AppUser", null)
+                    b.HasOne("sh.be.domain.Module.Auth.Entities.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

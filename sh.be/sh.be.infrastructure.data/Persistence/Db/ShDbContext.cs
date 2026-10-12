@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using sh.be.domain.Module.Auth.Entities;
 using sh.be.domain.Module.Core.Entities;
+using sh.be.domain.Module.Construction.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +22,7 @@ namespace sh.be.infrastructure.data.Persistence.Db
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<DocumentType> DocumentTypes { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.UseOpenIddict();
@@ -50,6 +52,13 @@ namespace sh.be.infrastructure.data.Persistence.Db
                 entity.HasQueryFilter(e => !e.Deleted);
                 entity.Property(e => e.Deleted).HasDefaultValue(0);
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
+            modelBuilder.Entity<DocumentType>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.Property(e => e.DefaultView).HasDefaultValue(1).HasSentinel(-1);
             });
             modelBuilder.Entity<RolePermission>()
                 .HasKey(rp => new { rp.RoleId, rp.PermissionKey });

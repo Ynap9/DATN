@@ -29,5 +29,7 @@ namespace sh.be.shared.HttpRequest.Error
         //Core
         public const int CoreErrorAuditLogNotFound = 201;
 
+        public const int ConstructionErrorDocumentTypeNotFound = 301;
+
     }
 }

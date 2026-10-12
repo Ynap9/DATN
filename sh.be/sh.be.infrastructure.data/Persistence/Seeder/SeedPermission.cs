@@ -34,6 +34,14 @@ namespace sh.be.infrastructure.data.Persistence.Seeder
 
             Permission.Create(PermissionConstants.MENU_AUDIT_LOG, "Menu nhật ký hệ thống", PermissionConstants.MENU_CORE, PermissionConstants.MODULE_CORE, null),
             Permission.Create(PermissionConstants.FUNCTION_AUDIT_LOG_VIEW, "Xem danh sách và thông tin chi tiết nhật ký hệ thống", PermissionConstants.MENU_AUDIT_LOG, PermissionConstants.MODULE_CORE, null),
+
+            Permission.Create(PermissionConstants.MENU_CONSTRUCTION, "Menu nghiệp vụ xây dựng", null, PermissionConstants.MODULE_CONSTRUCTION, null),
+
+            Permission.Create(PermissionConstants.MENU_DOCUMENT_TYPE, "Menu quản lý loại văn bản", PermissionConstants.MENU_CONSTRUCTION, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_DOCUMENT_TYPE_VIEW, "Xem danh sách và chi tiết loại văn bản", PermissionConstants.MENU_DOCUMENT_TYPE, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_DOCUMENT_TYPE_CREATE, "Tạo mới loại văn bản", PermissionConstants.MENU_DOCUMENT_TYPE, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_DOCUMENT_TYPE_UPDATE, "Cập nhật loại văn bản", PermissionConstants.MENU_DOCUMENT_TYPE, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_DOCUMENT_TYPE_DELETE, "Xóa loại văn bản", PermissionConstants.MENU_DOCUMENT_TYPE, PermissionConstants.MODULE_CONSTRUCTION, null),
         ];
 
         public static async Task SeedAsync(ShDbContext dbContext)

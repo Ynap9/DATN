@@ -21,6 +21,10 @@ namespace sh.be.shared.Constants.Core
         public const string ACTION_ROLE_DELETE = "Xóa vai trò";
         public const string ACTION_ROLE_UPDATE_PERMISSION = "Cập nhật quyền của vai trò";
 
+        public const string ACTION_DOCUMENT_TYPE_CREATE = "Tạo loại văn bản";
+        public const string ACTION_DOCUMENT_TYPE_UPDATE = "Cập nhật loại văn bản";
+        public const string ACTION_DOCUMENT_TYPE_DELETE = "Xóa loại văn bản";
+
         public const string ACTION_SEED_ROLE = "Khởi tạo vai trò mặc định";
         public const string ACTION_SEED_PERMISSION = "Đồng bộ danh sách quyền";
         public const string ACTION_SEED_USER = "Khởi tạo tài khoản quản trị mặc định";

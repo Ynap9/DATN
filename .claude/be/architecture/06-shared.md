@@ -30,6 +30,7 @@ Phần dùng chung cho mọi project. Không tham chiếu project nào khác.
 | `1`, `400`–`500` | Chung | `NotFound = 404`, `Found = 409`, `InternalServerError = 500` |
 | `101`–`199` | Auth | `AuthErrorUserNotFound = 103`, `AuthErrorRoleNotFound = 105` |
 | `201`–`299` | Core | `CoreErrorAuditLogNotFound = 201` |
+| `301`–`399` | Construction | `ConstructionErrorDocumentTypeNotFound = 301` |
 
 Thêm mã mới: hằng trong `ErrorCodes` (đúng dải module) + message trong `ErrorMessages`.
 

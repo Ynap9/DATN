@@ -18,16 +18,23 @@ using sh.be.applications.Module.Auth.Interfaces.Queries;
 using sh.be.applications.Module.Core.Implements;
 using sh.be.applications.Module.Core.Interfaces.Services;
 using sh.be.applications.Module.Core.Interfaces.Queries;
+using sh.be.applications.Module.Construction.Implements;
+using sh.be.applications.Module.Construction.Interfaces.Queries;
+using sh.be.applications.Module.Construction.Interfaces.Services;
 using sh.be.domain.Base;
 using sh.be.domain.Module.Auth.Entities;
 using sh.be.domain.Module.Auth.Repositories;
 using sh.be.domain.Module.Auth.Services;
 using sh.be.domain.Module.Core.Repositories;
+using sh.be.domain.Module.Construction.Repositories;
+using sh.be.domain.Module.Construction.Services;
 using sh.be.infrastructure.data.Base;
 using sh.be.infrastructure.data.Module.Auth.Queries;
 using sh.be.infrastructure.data.Module.Auth.Repositories;
 using sh.be.infrastructure.data.Module.Core.Queries;
 using sh.be.infrastructure.data.Module.Core.Repositories;
+using sh.be.infrastructure.data.Module.Construction.Queries;
+using sh.be.infrastructure.data.Module.Construction.Repositories;
 using sh.be.infrastructure.data.Persistence.Db;
 using sh.be.infrastructure.data.Persistence.Seeder;
 using sh.be.infrastructure.external.Mail.Implements;
@@ -225,6 +232,10 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+builder.Services.AddScoped<IDocumentTypeRepository, DocumentTypeRepository>();
+builder.Services.AddScoped<IDocumentTypeQuery, DocumentTypeQuery>();
+builder.Services.AddScoped<DocumentTypeDomainService>();
+builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();
 #endregion
 
 

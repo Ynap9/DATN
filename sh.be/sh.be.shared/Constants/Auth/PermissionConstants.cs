@@ -28,5 +28,15 @@ namespace sh.be.shared.Constants.Auth
 
         public const string MENU_AUDIT_LOG = "Menu.Core.AuditLog";
         public const string FUNCTION_AUDIT_LOG_VIEW = "Function.Core.AuditLog.View";
+
+        public const string MODULE_CONSTRUCTION = "Construction";
+
+        public const string MENU_CONSTRUCTION = "Menu.Construction";
+
+        public const string MENU_DOCUMENT_TYPE = "Menu.Construction.DocumentType";
+        public const string FUNCTION_DOCUMENT_TYPE_VIEW = "Function.Construction.DocumentType.View";
+        public const string FUNCTION_DOCUMENT_TYPE_CREATE = "Function.Construction.DocumentType.Create";
+        public const string FUNCTION_DOCUMENT_TYPE_UPDATE = "Function.Construction.DocumentType.Update";
+        public const string FUNCTION_DOCUMENT_TYPE_DELETE = "Function.Construction.DocumentType.Delete";
     }
 }
