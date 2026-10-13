@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using sh.be.applications.Base;
+using sh.be.applications.Base.Dtos.DataReader;
 using sh.be.applications.Base.Interfaces;
 using sh.be.applications.Module.Construction.Dtos.DocumentField;
 using sh.be.applications.Module.Construction.Interfaces.Queries;
@@ -23,14 +24,16 @@ namespace sh.be.applications.Module.Construction.Implements
         private readonly IDocumentFieldRepository _documentFieldRepository;
         private readonly IDocumentFieldQuery _documentFieldQuery;
         private readonly DocumentFieldDomainService _documentFieldDomainService;
+        private readonly IDataReader _dataReader;
 
         public DocumentFieldService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<DocumentFieldService> logger, IRequestContext requestContext, TimeProvider timeProvider,
-            IDocumentFieldRepository documentFieldRepository, IDocumentFieldQuery documentFieldQuery, DocumentFieldDomainService documentFieldDomainService
+            IDocumentFieldRepository documentFieldRepository, IDocumentFieldQuery documentFieldQuery, DocumentFieldDomainService documentFieldDomainService, IDataReader dataReader
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _documentFieldRepository = documentFieldRepository;
             _documentFieldQuery = documentFieldQuery;
             _documentFieldDomainService = documentFieldDomainService;
+            _dataReader = dataReader;
         }
 
         public async Task<List<GetListDocumentFieldDropDownDto>> GetDocumentFieldDropDown(int documentTypeId)
@@ -50,6 +53,12 @@ namespace sh.be.applications.Module.Construction.Implements
             _logger.LogInformation($"{nameof(FindById)}, id={id}");
             return await _documentFieldQuery.FindById(id)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentFieldNotFound);
+        }
+
+        public async Task<List<SheetHeaderDto>> GetSheetHeaders(GetSheetHeaderDto dto)
+        {
+            _logger.LogInformation($"{nameof(GetSheetHeaders)}, dto={JsonSerializer.Serialize(dto)}");
+            return await _dataReader.GetSheetHeadersAsync(dto.Url);
         }
 
         public async Task Create(CreateDocumentFieldDto dto)
@@ -133,7 +142,6 @@ namespace sh.be.applications.Module.Construction.Implements
                 documentField.Update(dto.Name, dto.Field, dto.FieldType, dto.FieldImport, dto.IsShow,
                     dto.IsShowTableView, dto.IsShowListView, dto.Width,
                     dto.IsChargeable, dto.FieldNameOcr, dto.IsFieldOcr, currentUserId, now);
-                await _documentFieldDomainService.MoveToOrderAsync(documentField, dto.Order, currentUserId, now);
 
                 _documentFieldRepository.Update(documentField);
                 AddAuditLog(AuditLogConstants.ACTION_DOCUMENT_FIELD_UPDATE, AuditLogConstants.ACTION_TYPE_UPDATE, $"Cập nhật trường {documentField.Name} của loại văn bản có Id = {documentField.DocumentTypeId}",
@@ -144,6 +152,67 @@ namespace sh.be.applications.Module.Construction.Implements
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"{nameof(Update)}, id={id}");
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        public async Task UpdateSetting(int id, UpdateSettingDocumentFieldDto dto)
+        {
+            _logger.LogInformation($"{nameof(UpdateSetting)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
+            var documentField = await _documentFieldRepository.FindByIdAsync(id)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentFieldNotFound);
+            var oldData = ToAuditData(documentField);
+
+            documentField.UpdateSetting(dto.IsShow, dto.IsChargeable, dto.IsFieldOcr, dto.FieldNameOcr,
+                getCurrentUserId(), GetVietnamTime());
+
+            _documentFieldRepository.Update(documentField);
+            AddAuditLog(AuditLogConstants.ACTION_DOCUMENT_FIELD_UPDATE_SETTING, AuditLogConstants.ACTION_TYPE_UPDATE, $"Cập nhật cấu hình trường {documentField.Name} của loại văn bản có Id = {documentField.DocumentTypeId}",
+                oldData, ToAuditData(documentField));
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        public Task ChangeOrderTableView(int id, ChangeOrderDocumentFieldDto dto)
+        {
+            _logger.LogInformation($"{nameof(ChangeOrderTableView)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
+            return ChangeOrderAsync(id, AuditLogConstants.ACTION_DOCUMENT_FIELD_CHANGE_ORDER_TABLE_VIEW, "thứ tự hiển thị dạng bảng",
+                (documentField, modifiedBy, modifiedDate) => _documentFieldDomainService.MoveOrderTableViewAsync(documentField, dto.TargetOrder, modifiedBy, modifiedDate));
+        }
+
+        public Task ChangeOrderListView(int id, ChangeOrderDocumentFieldDto dto)
+        {
+            _logger.LogInformation($"{nameof(ChangeOrderListView)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
+            return ChangeOrderAsync(id, AuditLogConstants.ACTION_DOCUMENT_FIELD_CHANGE_ORDER_LIST_VIEW, "thứ tự hiển thị dạng danh sách",
+                (documentField, modifiedBy, modifiedDate) => _documentFieldDomainService.MoveOrderListViewAsync(documentField, dto.TargetOrder, modifiedBy, modifiedDate));
+        }
+
+        private async Task ChangeOrderAsync(int id, string action, string orderName, Func<DocumentField, string?, DateTime, Task> moveOrder)
+        {
+            var documentTypeId = await _documentFieldRepository.FindDocumentTypeIdAsync(id)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentFieldNotFound);
+            var currentUserId = getCurrentUserId();
+            var now = GetVietnamTime();
+
+            await using var transaction = await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                await _documentFieldDomainService.LockOrderAsync(documentTypeId);
+                var documentField = await _documentFieldRepository.FindByIdAsync(id)
+                    ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentFieldNotFound);
+                var oldData = ToAuditData(documentField);
+
+                await moveOrder(documentField, currentUserId, now);
+
+                _documentFieldRepository.Update(documentField);
+                AddAuditLog(action, AuditLogConstants.ACTION_TYPE_UPDATE, $"Cập nhật {orderName} của trường {documentField.Name} của loại văn bản có Id = {documentField.DocumentTypeId}",
+                    oldData, ToAuditData(documentField));
+                await _unitOfWork.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{nameof(ChangeOrderAsync)}, id={id}");
                 await transaction.RollbackAsync();
                 throw;
             }

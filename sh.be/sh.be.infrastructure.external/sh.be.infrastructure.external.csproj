@@ -20,4 +20,8 @@
     <Folder Include="Log\Archive\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Google.Apis.Sheets.v4" Version="1.77.0.4290" />
+  </ItemGroup>
+
 </Project>

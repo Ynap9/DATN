@@ -28,6 +28,9 @@ namespace sh.be.shared.Constants.Core
         public const string ACTION_DOCUMENT_FIELD_CREATE = "Tạo trường của loại văn bản";
         public const string ACTION_DOCUMENT_FIELD_QUICK_CREATE = "Thêm nhanh trường của loại văn bản";
         public const string ACTION_DOCUMENT_FIELD_UPDATE = "Cập nhật trường của loại văn bản";
+        public const string ACTION_DOCUMENT_FIELD_UPDATE_SETTING = "Cập nhật cấu hình trường của loại văn bản";
+        public const string ACTION_DOCUMENT_FIELD_CHANGE_ORDER_TABLE_VIEW = "Cập nhật thứ tự hiển thị dạng bảng của trường";
+        public const string ACTION_DOCUMENT_FIELD_CHANGE_ORDER_LIST_VIEW = "Cập nhật thứ tự hiển thị dạng danh sách của trường";
         public const string ACTION_DOCUMENT_FIELD_DELETE = "Xóa trường của loại văn bản";
         public const string ACTION_DOCUMENT_FIELD_QUICK_DELETE = "Xóa nhanh trường của loại văn bản";
 

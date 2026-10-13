@@ -76,31 +76,41 @@ namespace sh.be.domain.Module.Construction.Services
             return await _documentFieldRepository.GetMaxOrderAsync(documentTypeId) + 1;
         }
 
-        public async Task MoveToOrderAsync(DocumentField movedField, int order, string? modifiedBy, DateTime modifiedDate)
+        public Task MoveOrderTableViewAsync(DocumentField movedField, int targetOrder, string? modifiedBy, DateTime modifiedDate)
         {
-            var orderedFields = await GetOrderedFieldsExceptAsync(movedField);
-            var position = Math.Clamp(order, 1, orderedFields.Count + 1);
-            orderedFields.Insert(position - 1, movedField);
-            RenumberOrders(orderedFields, modifiedBy, modifiedDate);
+            return MoveOrderAsync(movedField, targetOrder, d => d.OrderTableView,
+                (d, order) => d.ChangeOrderTableView(order, modifiedBy, modifiedDate));
         }
 
-        private async Task<List<DocumentField>> GetOrderedFieldsExceptAsync(DocumentField excludedField)
+        public Task MoveOrderListViewAsync(DocumentField movedField, int targetOrder, string? modifiedBy, DateTime modifiedDate)
         {
-            var documentFields = await _documentFieldRepository.GetByDocumentTypeIdAsync(excludedField.DocumentTypeId);
-            return documentFields.Where(d => d.Id != excludedField.Id).ToList();
+            return MoveOrderAsync(movedField, targetOrder, d => d.OrderListView,
+                (d, order) => d.ChangeOrderListView(order, modifiedBy, modifiedDate));
         }
 
-        private static void RenumberOrders(List<DocumentField> orderedFields, string? modifiedBy, DateTime modifiedDate)
+        private async Task MoveOrderAsync(DocumentField movedField, int targetOrder,
+            Func<DocumentField, int> getOrder, Action<DocumentField, int> changeOrder)
         {
-            for (var index = 0; index < orderedFields.Count; index++)
+            var documentFields = await _documentFieldRepository.GetByDocumentTypeIdAsync(movedField.DocumentTypeId);
+            var fromOrder = getOrder(movedField);
+            var toOrder = Math.Clamp(targetOrder, 1, documentFields.Max(getOrder));
+            if (fromOrder == toOrder)
             {
-                var order = index + 1;
-                var documentField = orderedFields[index];
-                if (documentField.OrderTableView != order || documentField.OrderListView != order)
-                {
-                    documentField.ChangeOrder(order, modifiedBy, modifiedDate);
-                }
+                return;
             }
+
+            var shift = fromOrder < toOrder ? -1 : 1;
+            var minOrder = Math.Min(fromOrder, toOrder);
+            var maxOrder = Math.Max(fromOrder, toOrder);
+            var shiftedFields = documentFields
+                .Where(d => d.Id != movedField.Id && getOrder(d) >= minOrder && getOrder(d) <= maxOrder)
+                .ToList();
+
+            foreach (var documentField in shiftedFields)
+            {
+                changeOrder(documentField, getOrder(documentField) + shift);
+            }
+            changeOrder(movedField, toOrder);
         }
     }
 }

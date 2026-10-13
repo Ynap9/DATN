@@ -37,6 +37,7 @@ using sh.be.infrastructure.data.Module.Construction.Queries;
 using sh.be.infrastructure.data.Module.Construction.Repositories;
 using sh.be.infrastructure.data.Persistence.Db;
 using sh.be.infrastructure.data.Persistence.Seeder;
+using sh.be.infrastructure.external.DataReader.Implements;
 using sh.be.infrastructure.external.Mail.Implements;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Swagger;
@@ -124,6 +125,7 @@ string secretKey = builder.Configuration.GetSection("AuthServer:SecretKey").Valu
 
 builder.Services.Configure<AuthServerSettings>(builder.Configuration.GetSection("AuthServer"));
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
+builder.Services.Configure<GoogleSheetSettings>(builder.Configuration.GetSection("GoogleSheet"));
 //builder.Services.Configure<S3Settings>(builder.Configuration.GetSection("S3"));
 
 builder.Services.AddOpenIddict()
@@ -230,6 +232,7 @@ builder.Services.AddScoped<UserDomainService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IMailService, MailService>();
+builder.Services.AddScoped<IDataReader, GoogleSheetReader>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IDocumentTypeRepository, DocumentTypeRepository>();

@@ -87,8 +87,8 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `PUT api/construction/document-type/{id}` | `Function.Construction.DocumentType.Update` |
 | `DELETE api/construction/document-type/{id}` | `Function.Construction.DocumentType.Delete` |
 | `GET api/construction/document-field/paging`, `GET .../dropdown`, `GET .../{id}` | `Function.Construction.DocumentField.View` |
-| `POST api/construction/document-field`, `POST .../quick-create` | `Function.Construction.DocumentField.Create` |
-| `PUT api/construction/document-field/{id}` | `Function.Construction.DocumentField.Update` |
+| `POST api/construction/document-field`, `POST .../quick-create`, `GET .../sheet-header` | `Function.Construction.DocumentField.Create` |
+| `PUT api/construction/document-field/{id}`, `PUT .../{id}/setting`, `PUT .../{id}/order-table-view`, `PUT .../{id}/order-list-view` | `Function.Construction.DocumentField.Update` |
 | `DELETE api/construction/document-field/{id}`, `DELETE .../quick-delete` | `Function.Construction.DocumentField.Delete` |
 
 ## Quyền người dùng: đang lệch so với cây

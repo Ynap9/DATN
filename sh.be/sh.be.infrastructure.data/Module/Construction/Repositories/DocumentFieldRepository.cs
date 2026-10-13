@@ -19,6 +19,14 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
             return _shDbContext.DocumentFields.FirstOrDefaultAsync(d => d.Id == id);
         }
 
+        public Task<int?> FindDocumentTypeIdAsync(int id)
+        {
+            return _shDbContext.DocumentFields
+                .Where(d => d.Id == id)
+                .Select(d => (int?)d.DocumentTypeId)
+                .FirstOrDefaultAsync();
+        }
+
         public Task<List<DocumentField>> FindByDocumentTypeIdAndIdsAsync(int documentTypeId, IReadOnlyCollection<int> ids)
         {
             return _shDbContext.DocumentFields
@@ -36,7 +44,7 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
             return await _shDbContext.DocumentFields
                 .IgnoreQueryFilters()
                 .Where(d => d.DocumentTypeId == documentTypeId)
-                .MaxAsync(d => (int?)d.OrderTableView) ?? 0;
+                .MaxAsync(d => (int?)(d.OrderTableView > d.OrderListView ? d.OrderTableView : d.OrderListView)) ?? 0;
         }
 
         public Task<List<DocumentField>> GetByDocumentTypeIdAsync(int documentTypeId)

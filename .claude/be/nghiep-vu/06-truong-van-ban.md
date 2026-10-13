@@ -13,15 +13,19 @@ phí, tên trường OCR, cột tạo / sửa và xoá mềm.
 | Dropdown theo loại văn bản | `GET api/construction/document-field/dropdown/{documentTypeId}` | `Function.Construction.DocumentField.View` |
 | Danh sách có phân trang | `GET api/construction/document-field/paging` | `Function.Construction.DocumentField.View` |
 | Xem chi tiết | `GET api/construction/document-field/{id}` | `Function.Construction.DocumentField.View` |
+| Lấy header từng sheet của Google Sheet | `GET api/construction/document-field/sheet-header?url=...` | `Function.Construction.DocumentField.Create` |
 | Tạo mới | `POST api/construction/document-field` | `Function.Construction.DocumentField.Create` |
 | Thêm nhanh nhiều trường | `POST api/construction/document-field/quick-create` | `Function.Construction.DocumentField.Create` |
 | Cập nhật | `PUT api/construction/document-field/{id}` | `Function.Construction.DocumentField.Update` |
+| Cập nhật cấu hình một trường | `PUT api/construction/document-field/{id}/setting` | `Function.Construction.DocumentField.Update` |
+| Kéo thả thứ tự dạng bảng | `PUT api/construction/document-field/{id}/order-table-view` | `Function.Construction.DocumentField.Update` |
+| Kéo thả thứ tự dạng danh sách | `PUT api/construction/document-field/{id}/order-list-view` | `Function.Construction.DocumentField.Update` |
 | Xoá | `DELETE api/construction/document-field/{id}` | `Function.Construction.DocumentField.Delete` |
 | Xoá nhanh nhiều trường | `DELETE api/construction/document-field/quick-delete` | `Function.Construction.DocumentField.Delete` |
 
 Body tạo: `documentTypeId`, `name`, `field`, `fieldImport`, `isShow`, `isChargeable`, `fieldNameOcr`, `isFieldOcr`.
-Body sửa: mọi trường trừ `documentTypeId`, với **một** trường `order` thay cho hai thứ tự (kể cả `fieldType`,
-`isShowTableView`, `isShowListView`, `width`).
+Body sửa: mọi trường trừ `documentTypeId` (kể cả `fieldType`, `isShowTableView`, `isShowListView`, `width`). Thuộc tính
+`order` vẫn còn trong DTO cho FE cũ nhưng **bị bỏ qua** — thứ tự chỉ đổi qua hai API kéo thả.
 
 ## Luật nghiệp vụ
 
@@ -53,31 +57,64 @@ Body (gửi kèm `DELETE`): `{ "documentTypeId": 1, "ids": [1, 2, 3] }` — xoá
 - Như xoá một trường: xoá mềm, **không đổi thứ tự** của trường nào. Một bản ghi audit "Xóa nhanh trường của loại văn bản"
   chứa dữ liệu các trường trước khi xoá.
 
+### Cập nhật cấu hình
+
+Body: `{ "isShow": true, "isChargeable": false, "isFieldOcr": true, "fieldNameOcr": "so_hieu" }` — **một** trường mỗi lần.
+
+- Chỉ ghi đè bốn cột `IsShow`, `IsChargeable`, `IsFieldOcr`, `FieldNameOcr` qua `DocumentField.UpdateSetting`; tên, `Field`,
+  thứ tự giữ nguyên, nên không kiểm `Field` trùng và không `LockOrderAsync`.
+- `fieldNameOcr` chỉ được ghi khi `isFieldOcr = true`; gửi `isFieldOcr = false` thì `FieldNameOcr` **giữ nguyên giá trị cũ**
+  (FE không cần gửi), để bật lại OCR không phải nhập lại tên.
+- Trường không tồn tại hoặc đã xoá → `302`. Một `SaveChanges`, không transaction; audit "Cập nhật cấu hình trường của loại
+  văn bản" kèm giá trị cũ và mới.
+- Chưa gọi thử API thật (người dùng tự kiểm).
+
+### Header từ Google Sheet
+
+`?url=<link Google Sheet>` → `[{ "sheetName": "Sheet1", "headers": ["Số hiệu", "Ngày ký"] }]`: mọi sheet theo đúng thứ tự,
+header là dòng `1` đã bỏ ô trống và trim. Chỉ đọc, không ghi DB, không audit. Link sai → `202`; sheet chưa chia sẻ cho
+service account hoặc không tồn tại → `203`. Cơ chế đọc: [../architecture/05-infrastructure-external.md](../architecture/05-infrastructure-external.md).
+
 ### Thứ tự
 
-Trong một loại văn bản, các trường chưa xoá có thứ tự **không trùng**, bắt đầu từ `1`, và
-`OrderTableView = OrderListView` ở mọi bản ghi. Entity chỉ đổi thứ tự qua `ChangeOrder`, gán một giá trị cho cả hai cột.
-Thứ tự **không bắt buộc liên tục**: xoá để lại chỗ hở.
+Hai cột `OrderTableView` (dạng bảng) và `OrderListView` (dạng danh sách) **độc lập**: lúc tạo bằng nhau, kéo thả cột nào
+chỉ đổi cột đó. Trong một loại văn bản, mỗi cột của các trường chưa xoá **không trùng**, bắt đầu từ `1`, **không bắt buộc
+liên tục** (xoá để lại chỗ hở). Entity đổi từng cột qua `ChangeOrderTableView` / `ChangeOrderListView`.
 
 | Thao tác | Thứ tự |
 |---|---|
-| Tạo | Thứ tự lớn nhất trong loại văn bản `+ 1`, **tính cả trường đã xoá mềm**; chưa từng có trường nào thì `1` |
-| Sửa với `order = k` | Chuyển trường tới vị trí `k` trong danh sách, rồi đánh lại cả loại văn bản thành `1..n` (lấp luôn chỗ hở); `k` ngoài `[1, n]` thì kẹp về đầu / cuối |
+| Tạo | Số lớn nhất **của cả hai cột** trong loại văn bản `+ 1`, tính cả trường đã xoá mềm, gán cho cả hai cột; chưa có trường nào thì `1` |
+| Kéo thả | Xem bảng dưới; chỉ cột ứng với API |
+| Sửa (`PUT {id}`) | **Không đổi** thứ tự |
 | Xoá | **Không đổi thứ tự của trường nào**: trường bị xoá giữ thứ tự cũ, các trường khác giữ nguyên |
 
-Đánh số lại khi sửa nằm ở `DocumentFieldDomainService.MoveToOrderAsync`; chỉ trường đổi thứ tự mới bị cập nhật, và audit
-chỉ ghi trường đang sửa, không ghi các trường bị dồn.
+**Kéo thả** — body `{ "targetOrder": n }`; `from` là thứ tự hiện tại của trường được kéo, `to = targetOrder` kẹp vào
+`[1, số lớn nhất của cột đó trong các trường chưa xoá]`:
+
+| Trường hợp | Trường được kéo | Các trường chưa xoá khác |
+|---|---|---|
+| Kéo xuống (`from < to`) | thành `to` | thứ tự trong `(from, to]` giảm `1`; lớn hơn `to` giữ nguyên |
+| Kéo lên (`from > to`) | thành `to` | thứ tự trong `[to, from)` tăng `1`; nhỏ hơn `to` giữ nguyên |
+| `from = to` | không đổi | không đổi |
+
+Ví dụ `1..6`, kéo trường `1` tới `5` → trường đó thành `5`, `2..5` thành `1..4`, `6` giữ nguyên. Luật nằm ở
+`DocumentFieldDomainService.MoveOrderAsync` (dùng chung cho hai cột); audit chỉ ghi trường được kéo, không ghi trường bị dịch.
+Trường không tồn tại hoặc đã xoá → `302`. Chưa gọi thử API thật (người dùng tự kiểm).
 
 ⚠️ Tạo mới phải lấy `MAX + 1`, **không** lấy `COUNT + 1`: khi đã có chỗ hở (còn `3, 4, 5`), `COUNT + 1 = 4` trùng thứ tự
-đang dùng. `MAX` tính cả trường đã xoá (`DocumentFieldRepository.GetMaxOrderAsync` dùng `IgnoreQueryFilters()`): xoá trường
-cuối `6` rồi tạo mới ra `7`, không dùng lại `6`. Bỏ `IgnoreQueryFilters()` ở đây là trùng thứ tự với trường đã xoá.
+đang dùng. `MAX` tính cả trường đã xoá (`GetMaxOrderAsync` dùng `IgnoreQueryFilters()`) và lấy **cột lớn hơn** của mỗi dòng:
+kéo lên có thể làm số lớn nhất của một cột giảm (`1, 3, 5` kéo `5` lên `1` → `1, 2, 4`), chỉ lấy một cột thì trường mới
+trùng ở cột kia.
 
-Sau tạo / xoá, mọi trường của loại văn bản (kể cả đã xoá) có thứ tự khác nhau. Riêng **sửa với `order`** đánh lại các trường
-chưa xoá thành `1..n`, nên có thể trùng số với trường đã xoá (trường đang dùng thì vẫn không trùng nhau).
+Kéo thả chỉ dịch giá trị trong khoảng giữa nên trường đang dùng không trùng nhau, nhưng có thể trùng số với trường đã xoá.
 
-**Không trùng khi ghi đồng thời:** tạo / sửa / xoá chạy trong transaction và mở đầu bằng `LockOrderAsync`, khoá dòng
+**Không trùng khi ghi đồng thời:** tạo / sửa / xoá / kéo thả chạy trong transaction và mở đầu bằng `LockOrderAsync`, khoá dòng
 `DocumentType` cha (`UPDLOCK, HOLDLOCK`). Request cùng loại văn bản xếp hàng, request sau đọc thứ tự request trước đã lưu;
 khác loại văn bản thì không chặn nhau. Cũng nhờ khoá này mà kiểm `Field` trùng không lọt khi đồng thời.
+
+⚠️ Kéo thả phải nạp trường **sau** khi khoá: service lấy `DocumentTypeId` bằng `FindDocumentTypeIdAsync` (không theo dõi
+entity), khoá, rồi mới `FindByIdAsync`. Nạp entity trước khoá thì `from` có thể là số cũ, và EF không nạp lại entity đang
+theo dõi khi đọc danh sách trong khoá → dịch sai, trùng thứ tự. Đừng "gọn code" bằng cách gộp về một lần `FindByIdAsync`.
 
 ⚠️ Không dùng unique index cho cột thứ tự: đánh lại thứ tự cập nhật từng dòng, SQL Server kiểm unique sau mỗi `UPDATE`,
 nên lúc hai trường đổi chỗ sẽ trùng tạm thời và báo lỗi. Ghi trường mới mà bỏ `LockOrderAsync` là mở lại lỗi trùng thứ tự.
@@ -96,6 +133,9 @@ nên lúc hai trường đổi chỗ sẽ trùng tạm thời và báo lỗi. Gh
 - Xoá là xoá mềm; xem lại sau xoá trả `302`. Mỗi thao tác ghi để lại audit log kèm giá trị cũ và mới.
 
 ## Đã kiểm thực tế
+
+> Các bước "chuyển thứ tự", `order = 99`, `order = 0` dưới đây kiểm luật **cũ** của `PUT {id}` (đánh lại cả hai cột `1..n`),
+> nay đã thay bằng kéo thả — không còn đúng với code hiện tại.
 
 Ngày 2026-10-12, gọi API thật bằng `admin`: tạo 2 trường (thứ tự `1`, `2`), tạo trùng `Field` (`409`), loại văn bản
 không tồn tại (`301`), phân trang lọc theo loại văn bản, xem chi tiết, xoá, xem lại sau xoá (`302`), seeder thêm đủ 5

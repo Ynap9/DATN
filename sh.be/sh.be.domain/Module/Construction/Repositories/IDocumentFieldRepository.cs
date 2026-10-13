@@ -5,6 +5,7 @@ namespace sh.be.domain.Module.Construction.Repositories
     public interface IDocumentFieldRepository
     {
         Task<DocumentField?> FindByIdAsync(int id);
+        Task<int?> FindDocumentTypeIdAsync(int id);
         Task<List<DocumentField>> FindByDocumentTypeIdAndIdsAsync(int documentTypeId, IReadOnlyCollection<int> ids);
         Task<bool> ExistsByFieldAsync(int documentTypeId, string field, int? excludedId = null);
         Task<int> GetMaxOrderAsync(int documentTypeId);

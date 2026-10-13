@@ -79,9 +79,29 @@ namespace sh.be.domain.Module.Construction.Entities
             ModifiedDate = modifiedDate;
         }
 
-        public void ChangeOrder(int order, string? modifiedBy, DateTime modifiedDate)
+        public void UpdateSetting(bool isShow, bool isChargeable, bool isFieldOcr, string? fieldNameOcr,
+            string? modifiedBy, DateTime modifiedDate)
+        {
+            IsShow = isShow;
+            IsChargeable = isChargeable;
+            IsFieldOcr = isFieldOcr;
+            if (isFieldOcr)
+            {
+                FieldNameOcr = fieldNameOcr;
+            }
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
+        }
+
+        public void ChangeOrderTableView(int order, string? modifiedBy, DateTime modifiedDate)
         {
             OrderTableView = order;
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
+        }
+
+        public void ChangeOrderListView(int order, string? modifiedBy, DateTime modifiedDate)
+        {
             OrderListView = order;
             ModifiedBy = modifiedBy;
             ModifiedDate = modifiedDate;

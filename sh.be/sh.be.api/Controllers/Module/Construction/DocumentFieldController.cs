@@ -51,6 +51,21 @@ namespace sh.be.api.Controllers.Module.Construction
             }
         }
 
+        [HttpGet("sheet-header")]
+        [Permission(PermissionConstants.FUNCTION_DOCUMENT_FIELD_CREATE)]
+        public async Task<ApiResponse> GetSheetHeaders([FromQuery] GetSheetHeaderDto dto)
+        {
+            try
+            {
+                var data = await _documentFieldService.GetSheetHeaders(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
         [HttpGet("{id}")]
         [Permission(PermissionConstants.FUNCTION_DOCUMENT_FIELD_VIEW)]
         public async Task<ApiResponse> FindById([FromRoute] int id)
@@ -103,6 +118,51 @@ namespace sh.be.api.Controllers.Module.Construction
             try
             {
                 await _documentFieldService.Update(id, dto);
+                return new();
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPut("{id}/setting")]
+        [Permission(PermissionConstants.FUNCTION_DOCUMENT_FIELD_UPDATE)]
+        public async Task<ApiResponse> UpdateSetting([FromRoute] int id, [FromBody] UpdateSettingDocumentFieldDto dto)
+        {
+            try
+            {
+                await _documentFieldService.UpdateSetting(id, dto);
+                return new();
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPut("{id}/order-table-view")]
+        [Permission(PermissionConstants.FUNCTION_DOCUMENT_FIELD_UPDATE)]
+        public async Task<ApiResponse> ChangeOrderTableView([FromRoute] int id, [FromBody] ChangeOrderDocumentFieldDto dto)
+        {
+            try
+            {
+                await _documentFieldService.ChangeOrderTableView(id, dto);
+                return new();
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPut("{id}/order-list-view")]
+        [Permission(PermissionConstants.FUNCTION_DOCUMENT_FIELD_UPDATE)]
+        public async Task<ApiResponse> ChangeOrderListView([FromRoute] int id, [FromBody] ChangeOrderDocumentFieldDto dto)
+        {
+            try
+            {
+                await _documentFieldService.ChangeOrderListView(id, dto);
                 return new();
             }
             catch (Exception ex)
