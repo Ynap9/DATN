@@ -30,6 +30,7 @@ namespace sh.be.shared.HttpRequest.Error
         public const int CoreErrorAuditLogNotFound = 201;
         public const int CoreErrorInvalidDataSource = 202;
         public const int CoreErrorReadDataSourceFailed = 203;
+        public const int CoreErrorSheetNotFound = 204;
 
         public const int ConstructionErrorDocumentTypeNotFound = 301;
         public const int ConstructionErrorDocumentFieldNotFound = 302;

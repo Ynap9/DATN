@@ -13,6 +13,7 @@ application khai báo.
 | `Mail/Templates/AccountCreatedMailTemplate.cs` | HTML email báo tạo tài khoản |
 | `DataReader/Base/DataReaderBase.cs` | Lớp nền abstract implement `IDataReader`: luồng chung + chuẩn hoá header |
 | `DataReader/Implements/GoogleSheetReader.cs` | Đọc header từ Google Sheet bằng service account (`Google.Apis.Sheets.v4`) |
+| `Excel/Implements/ExcelTemplateWriter.cs` | Implement `IExcelTemplateWriter`: sinh file `.xlsx` template bằng ClosedXML |
 | `DataReader/Models/SheetHeaderRow.cs` | Dữ liệu thô lớp con trả cho lớp nền: tên sheet + các ô dòng `1` |
 
 ## IMailService
@@ -43,6 +44,10 @@ Interface ở `sh.be.applications/Base/Interfaces/IDataReader.cs`: `GetSheetHead
 | `DataReaderBase` | `GetSheetHeadersAsync` gọi `ReadHeaderRowsAsync` rồi bỏ ô trống, trim — viết **một lần** cho mọi nguồn |
 | `GoogleSheetReader` | Override `ReadHeaderRowsAsync`: tách `spreadsheetId` từ link (sai → `202`), `spreadsheets.get` lấy tên sheet, một lần `values.batchGet` range `'Tên sheet'!1:1` cho mọi sheet; `GoogleApiException` → `203` |
 
+Method thứ hai `GetHeadersAsync(source, sheetName, headerRowIndex)` trả header **một** sheet ở dòng tuỳ chọn (đếm từ `1`):
+lớp nền kiểm `headerRowIndex >= 1` (sai → `400`) rồi chuẩn hoá như trên; `GoogleSheetReader.ReadHeaderCellsAsync` kiểm sheet có
+trong danh sách tên (so đúng chữ, không có → `204`) rồi `values.get` range `'Tên sheet'!n:n`.
+
 Thêm nguồn mới (ví dụ Excel): tạo `DataReader/Implements/ExcelReader : DataReaderBase`, chỉ override
 `ReadHeaderRowsAsync`. ⚠️ Khi có từ hai reader trở lên, `IDataReader` không còn biết lấy implement nào (DI trả cái đăng ký
 sau cùng) — cần keyed service hoặc factory theo loại nguồn; đừng đăng ký thêm `AddScoped<IDataReader, ...>` rồi để vậy.
@@ -53,6 +58,13 @@ nằm trong `.gitignore` vì file chứa private key. Sheet phải được chia
 
 ⚠️ Dùng `CredentialFactory.FromFile<ServiceAccountCredential>(...)`, **không** `GoogleCredential.FromFile`: method sau bị
 Google đánh dấu lỗi thời (nhận mọi loại credential, rủi ro bảo mật) và sinh warning CS0618.
+
+## IExcelTemplateWriter — sinh file Excel template
+
+Interface ở `sh.be.applications/Base/Interfaces/IExcelTemplateWriter.cs`: `CreateTemplate(templateName, headers)` trả
+`ExportFileDto` (`FileName`, `ContentType`, `Content`). Implement `Excel/Implements/ExcelTemplateWriter` bằng **ClosedXML**
+(MIT): một sheet, header dòng `1` in đậm + freeze, tự giãn cột. Luật tên sheet / tên file của Excel (31 ký tự, ký tự cấm)
+nằm ở đây, không ở service. Controller trả `File(...)`; lỗi vẫn trả `Ok(OkException(ex))` để giữ envelope `ApiResponse`.
 
 ## Thêm một dịch vụ ngoài
 

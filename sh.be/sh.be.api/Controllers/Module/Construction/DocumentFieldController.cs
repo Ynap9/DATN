@@ -66,6 +66,21 @@ namespace sh.be.api.Controllers.Module.Construction
             }
         }
 
+        [HttpGet("map-field-import")]
+        [Permission(PermissionConstants.FUNCTION_DOCUMENT_FIELD_CREATE)]
+        public async Task<ApiResponse> MapFieldImport([FromQuery] MapFieldImportDto dto)
+        {
+            try
+            {
+                var data = await _documentFieldService.MapFieldImport(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
         [HttpGet("{id}")]
         [Permission(PermissionConstants.FUNCTION_DOCUMENT_FIELD_VIEW)]
         public async Task<ApiResponse> FindById([FromRoute] int id)

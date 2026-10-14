@@ -18,6 +18,7 @@ namespace sh.be.infrastructure.external.DataReader.Implements
     public class GoogleSheetReader : DataReaderBase
     {
         private const string SheetTitleFields = "sheets.properties.title";
+        private const int FirstRowIndex = 1;
         private static readonly Regex SpreadsheetIdRegex = new(@"/spreadsheets/d/([a-zA-Z0-9-_]+)", RegexOptions.Compiled);
 
         private readonly GoogleSheetSettings _googleSheetSettings;
@@ -51,6 +52,32 @@ namespace sh.be.infrastructure.external.DataReader.Implements
             catch (GoogleApiException ex)
             {
                 _logger.LogError(ex, $"{nameof(ReadHeaderRowsAsync)}, spreadsheetId={spreadsheetId}");
+                throw new UserFriendlyException(ErrorCodes.CoreErrorReadDataSourceFailed);
+            }
+        }
+
+        protected override async Task<List<string?>> ReadHeaderCellsAsync(string source, string sheetName, int headerRowIndex)
+        {
+            _logger.LogInformation($"{nameof(ReadHeaderCellsAsync)}, source={source}, sheetName={sheetName}, headerRowIndex={headerRowIndex}");
+            var spreadsheetId = ExtractSpreadsheetId(source);
+
+            using var sheetsService = CreateSheetsService();
+            try
+            {
+                var sheetNames = await GetSheetNamesAsync(sheetsService, spreadsheetId);
+                if (!sheetNames.Contains(sheetName))
+                {
+                    throw new UserFriendlyException(ErrorCodes.CoreErrorSheetNotFound);
+                }
+
+                var headerRange = await sheetsService.Spreadsheets.Values
+                    .Get(spreadsheetId, ToHeaderRange(sheetName, headerRowIndex))
+                    .ExecuteAsync();
+                return ToCells(headerRange);
+            }
+            catch (GoogleApiException ex)
+            {
+                _logger.LogError(ex, $"{nameof(ReadHeaderCellsAsync)}, spreadsheetId={spreadsheetId}, sheetName={sheetName}");
                 throw new UserFriendlyException(ErrorCodes.CoreErrorReadDataSourceFailed);
             }
         }
@@ -92,14 +119,14 @@ namespace sh.be.infrastructure.external.DataReader.Implements
         private static async Task<IList<ValueRange>> GetHeaderRangesAsync(SheetsService sheetsService, string spreadsheetId, List<string> sheetNames)
         {
             var valuesRequest = sheetsService.Spreadsheets.Values.BatchGet(spreadsheetId);
-            valuesRequest.Ranges = new Repeatable<string>(sheetNames.Select(ToHeaderRange));
+            valuesRequest.Ranges = new Repeatable<string>(sheetNames.Select(sheetName => ToHeaderRange(sheetName, FirstRowIndex)));
             var batchResponse = await valuesRequest.ExecuteAsync();
             return batchResponse.ValueRanges;
         }
 
-        private static string ToHeaderRange(string sheetName)
+        private static string ToHeaderRange(string sheetName, int rowIndex)
         {
-            return $"'{sheetName.Replace("'", "''")}'!1:1";
+            return $"'{sheetName.Replace("'", "''")}'!{rowIndex}:{rowIndex}";
         }
 
         private static List<string?> ToCells(ValueRange headerRange)

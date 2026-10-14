@@ -63,5 +63,16 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 .ProjectTo<FindDocumentFieldByIdDto>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync();
         }
+
+        public Task<List<FieldImportHeaderDto>> GetListFieldImport(int documentTypeId)
+        {
+            return _shDbContext.DocumentFields
+                .AsNoTracking()
+                .Where(d => d.DocumentTypeId == documentTypeId)
+                .OrderBy(d => d.OrderTableView)
+                .ThenBy(d => d.Id)
+                .ProjectTo<FieldImportHeaderDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+        }
     }
 }

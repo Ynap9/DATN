@@ -31,7 +31,7 @@
 ## Ba quy tắc xuyên suốt
 
 - Mọi thao tác ghi đều tạo `AuditLog` **trong cùng transaction** với thay đổi dữ liệu (xem [04-nhat-ky-he-thong.md](04-nhat-ky-he-thong.md)).
-- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`108` (Auth) hoặc `201` (Core).
+- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`108` (Auth), `201`–`204` (Core) hoặc `301`–`302` (Construction).
 - Thời gian thao tác lấy theo giờ Việt Nam, người thao tác lấy từ token đăng nhập.
 
 ## Giới hạn đã biết

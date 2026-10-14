@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using sh.be.applications.Base;
+using sh.be.applications.Base.Dtos.Excel;
 using sh.be.applications.Base.Interfaces;
 using sh.be.applications.Module.Construction.Dtos.DocumentField;
 using sh.be.applications.Module.Construction.Dtos.DocumentType;
@@ -24,14 +25,16 @@ namespace sh.be.applications.Module.Construction.Implements
         private readonly IDocumentTypeRepository _documentTypeRepository;
         private readonly IDocumentTypeQuery _documentTypeQuery;
         private readonly DocumentTypeDomainService _documentTypeDomainService;
+        private readonly IExcelTemplateWriter _excelTemplateWriter;
 
         public DocumentTypeService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<DocumentTypeService> logger, IRequestContext requestContext, TimeProvider timeProvider,
-            IDocumentTypeRepository documentTypeRepository, IDocumentTypeQuery documentTypeQuery, DocumentTypeDomainService documentTypeDomainService
+            IDocumentTypeRepository documentTypeRepository, IDocumentTypeQuery documentTypeQuery, DocumentTypeDomainService documentTypeDomainService, IExcelTemplateWriter excelTemplateWriter
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _documentTypeRepository = documentTypeRepository;
             _documentTypeQuery = documentTypeQuery;
             _documentTypeDomainService = documentTypeDomainService;
+            _excelTemplateWriter = excelTemplateWriter;
         }
 
         public async Task<List<GetListDocumentTypeDropDownDto>> GetDocumentTypeDropDown()
@@ -59,6 +62,15 @@ namespace sh.be.applications.Module.Construction.Implements
             _ = await _documentTypeRepository.FindByIdAsync(id)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentTypeNotFound);
             return await _documentTypeQuery.GetListDocumentField(id);
+        }
+
+        public async Task<ExportFileDto> ExportExcelTemplate(int id)
+        {
+            _logger.LogInformation($"{nameof(ExportExcelTemplate)}, id={id}");
+            var documentType = await _documentTypeQuery.FindById(id)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentTypeNotFound);
+            var headers = await _documentTypeQuery.GetListTemplateHeader(id);
+            return _excelTemplateWriter.CreateTemplate(documentType.Name, headers);
         }
 
         public async Task Create(CreateDocumentTypeDto dto)

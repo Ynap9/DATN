@@ -21,6 +21,8 @@ namespace sh.be.applications.Base
             CreateMap<DocumentField, GetListDocumentFieldDto>();
             CreateMap<DocumentField, FindDocumentFieldByIdDto>();
             CreateMap<DocumentField, GetListDocumentFieldDropDownDto>();
+            CreateMap<DocumentField, FieldImportHeaderDto>()
+                .ForMember(d => d.Headers, o => o.Ignore());
         }
     }
 }

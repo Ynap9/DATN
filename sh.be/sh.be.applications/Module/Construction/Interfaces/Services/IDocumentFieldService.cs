@@ -9,6 +9,7 @@ namespace sh.be.applications.Module.Construction.Interfaces.Services
         Task<List<GetListDocumentFieldDropDownDto>> GetDocumentFieldDropDown(int documentTypeId);        Task<BaseResponsePagingDto<GetListDocumentFieldDto>> FindPaging(FindPagingDocumentFieldDto dto);
         Task<FindDocumentFieldByIdDto> FindById(int id);
         Task<List<SheetHeaderDto>> GetSheetHeaders(GetSheetHeaderDto dto);
+        Task<List<FieldImportHeaderDto>> MapFieldImport(MapFieldImportDto dto);
         Task Create(CreateDocumentFieldDto dto);
         Task QuickCreate(QuickCreateDocumentFieldDto dto);
         Task Update(int id, UpdateDocumentFieldDto dto);

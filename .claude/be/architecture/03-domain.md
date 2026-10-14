@@ -50,7 +50,7 @@ gọi chúng bên trong method của aggregate gốc hoặc seeder; đừng gọ
 |---|---|---|
 | Chỉ dữ liệu của chính entity | Method của entity | `Role.Update`, `AppUser.UpdateProfile` |
 | Tra cứu dữ liệu khác (qua repository) | Domain service | `UserDomainService.EnsureUniqueAsync`, `RoleDomainService.EnsureAllExistAsync` |
-| Phép tính thuần, không I/O | Policy tĩnh | `PermissionGrantPolicy.ResolveGrantedKeys`, `IsSuperAdmin`, `HasAnyPermission` |
+| Phép tính thuần, không I/O | Policy tĩnh | `PermissionGrantPolicy.ResolveGrantedKeys`, `IsSuperAdmin`, `HasAnyPermission`; `FieldImportMatchPolicy.IsMatch` |
 
 Entity **không** được giữ repository. Domain service nhận repository qua constructor và được đăng ký DI dạng
 class cụ thể.

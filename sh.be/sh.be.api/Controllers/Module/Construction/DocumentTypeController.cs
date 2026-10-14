@@ -81,6 +81,21 @@ namespace sh.be.api.Controllers.Module.Construction
             }
         }
 
+        [HttpGet("{id}/excel-template")]
+        [Permission(PermissionConstants.FUNCTION_DOCUMENT_TYPE_VIEW)]
+        public async Task<IActionResult> ExportExcelTemplate([FromRoute] int id)
+        {
+            try
+            {
+                var file = await _documentTypeService.ExportExcelTemplate(id);
+                return File(file.Content, file.ContentType, file.FileName);
+            }
+            catch (Exception ex)
+            {
+                return Ok(OkException(ex));
+            }
+        }
+
         [HttpPost("")]
         [Permission(PermissionConstants.FUNCTION_DOCUMENT_TYPE_CREATE)]
         public async Task<ApiResponse> Create([FromBody] CreateDocumentTypeDto dto)

@@ -60,7 +60,8 @@ Chiều này do `.csproj` cưỡng chế: domain gọi `ShDbContext` là build l
 - **Nghiệp vụ nằm ở domain.** Service chỉ nạp dữ liệu, giao cho entity / domain service quyết định, rồi lưu.
 - **Ghi đi qua repository + aggregate, đọc đi qua query trả thẳng DTO** (CQRS-lite, chung một DB).
 - Controller **không có nghiệp vụ** — gọi service rồi bọc `ApiResponse`.
-- Mọi REST trả **HTTP 200**; trạng thái thật nằm trong `ApiResponse.Status` (`1` ok, `0` lỗi) và `Code`.
+- Mọi REST trả **HTTP 200**; trạng thái thật nằm trong `ApiResponse.Status` (`1` ok, `0` lỗi) và `Code`. Ngoại lệ: API tải
+  file (`excel-template`) trả thẳng file khi thành công, lỗi vẫn là `ApiResponse`.
 - Lỗi nghiệp vụ ⇒ `throw new UserFriendlyException(ErrorCodes.X)`; controller bắt bằng `OkException(ex)`.
 - Bản ghi xoá mềm bị **global query filter** ẩn đi; không viết tay `!x.Deleted`.
 - Giờ trong service lấy qua `GetVietnamTime()` (dùng `TimeProvider`), không gọi `DateTime.Now`.

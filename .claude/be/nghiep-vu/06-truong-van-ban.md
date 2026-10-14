@@ -14,6 +14,7 @@ phí, tên trường OCR, cột tạo / sửa và xoá mềm.
 | Danh sách có phân trang | `GET api/construction/document-field/paging` | `Function.Construction.DocumentField.View` |
 | Xem chi tiết | `GET api/construction/document-field/{id}` | `Function.Construction.DocumentField.View` |
 | Lấy header từng sheet của Google Sheet | `GET api/construction/document-field/sheet-header?url=...` | `Function.Construction.DocumentField.Create` |
+| Map `fieldImport` với header một sheet | `GET api/construction/document-field/map-field-import?...` | `Function.Construction.DocumentField.Create` |
 | Tạo mới | `POST api/construction/document-field` | `Function.Construction.DocumentField.Create` |
 | Thêm nhanh nhiều trường | `POST api/construction/document-field/quick-create` | `Function.Construction.DocumentField.Create` |
 | Cập nhật | `PUT api/construction/document-field/{id}` | `Function.Construction.DocumentField.Update` |
@@ -30,8 +31,7 @@ Body sửa: mọi trường trừ `documentTypeId` (kể cả `fieldType`, `isSh
 ## Luật nghiệp vụ
 
 - Tạo: loại văn bản phải tồn tại và chưa xoá → nếu không, lỗi `301`.
-- `Field` **duy nhất trong cùng loại văn bản** (bản ghi chưa xoá) → trùng trả `409` "Trường `<field>` đã tồn tại trong loại
-  văn bản". Khi sửa, bản ghi đang sửa không tính là trùng với chính nó.
+- `Field` **duy nhất trong cùng loại văn bản** (bản ghi chưa xoá) → trùng trả `409`; khi sửa, không tính trùng với chính nó.
 
 ### Thêm nhanh
 
@@ -65,15 +65,19 @@ Body: `{ "isShow": true, "isChargeable": false, "isFieldOcr": true, "fieldNameOc
   thứ tự giữ nguyên, nên không kiểm `Field` trùng và không `LockOrderAsync`.
 - `fieldNameOcr` chỉ được ghi khi `isFieldOcr = true`; gửi `isFieldOcr = false` thì `FieldNameOcr` **giữ nguyên giá trị cũ**
   (FE không cần gửi), để bật lại OCR không phải nhập lại tên.
-- Trường không tồn tại hoặc đã xoá → `302`. Một `SaveChanges`, không transaction; audit "Cập nhật cấu hình trường của loại
-  văn bản" kèm giá trị cũ và mới.
+- Trường không tồn tại hoặc đã xoá → `302`. Một `SaveChanges`, không transaction; audit kèm giá trị cũ và mới.
 - Chưa gọi thử API thật (người dùng tự kiểm).
 
 ### Header từ Google Sheet
 
-`?url=<link Google Sheet>` → `[{ "sheetName": "Sheet1", "headers": ["Số hiệu", "Ngày ký"] }]`: mọi sheet theo đúng thứ tự,
-header là dòng `1` đã bỏ ô trống và trim. Chỉ đọc, không ghi DB, không audit. Link sai → `202`; sheet chưa chia sẻ cho
-service account hoặc không tồn tại → `203`. Cơ chế đọc: [../architecture/05-infrastructure-external.md](../architecture/05-infrastructure-external.md).
+- `sheet-header?url=` → `[{ "sheetName": "Sheet1", "headers": ["Số hiệu"] }]`: mọi sheet theo thứ tự, dòng `1` bỏ ô trống, trim.
+- `map-field-import?documentTypeId=&url=&sheetName=&headerStartIndex=` → **mọi** trường chưa xoá của loại văn bản (theo
+  `OrderTableView`, `Id`) dạng `{ fieldImport, headers }`; `headers` là các header ở dòng `headerStartIndex`
+  (đếm từ `1`, mặc định `1`) của sheet `sheetName` khớp **đủ từng từ** với `fieldImport`, không khớp thì `[]`.
+  `FieldImportMatchPolicy`: tách theo khoảng trắng, chuẩn hoá NFC, không phân biệt hoa thường, đúng số từ và thứ tự —
+  `"  ngày   BAN hành "` khớp `"Ngày ban hành"`, `"Người"` không khớp `"Người ký"`.
+- Chỉ đọc, không audit. `301` loại văn bản không tồn tại, `400` `headerStartIndex < 1`, `202` link sai, `204` không có sheet
+  đúng tên (phân biệt hoa thường), `203` chưa chia sẻ cho service account. Cơ chế đọc: [../architecture/05-infrastructure-external.md](../architecture/05-infrastructure-external.md).
 
 ### Thứ tự
 
@@ -100,13 +104,12 @@ liên tục** (xoá để lại chỗ hở). Entity đổi từng cột qua `Cha
 Ví dụ `1..6`, kéo trường `1` tới `5` → trường đó thành `5`, `2..5` thành `1..4`, `6` giữ nguyên. Luật nằm ở
 `DocumentFieldDomainService.MoveOrderAsync` (dùng chung cho hai cột); audit chỉ ghi trường được kéo, không ghi trường bị dịch.
 Trường không tồn tại hoặc đã xoá → `302`. Chưa gọi thử API thật (người dùng tự kiểm).
+Kéo thả chỉ dịch giá trị trong khoảng giữa nên trường đang dùng không trùng nhau, nhưng có thể trùng số với trường đã xoá.
 
 ⚠️ Tạo mới phải lấy `MAX + 1`, **không** lấy `COUNT + 1`: khi đã có chỗ hở (còn `3, 4, 5`), `COUNT + 1 = 4` trùng thứ tự
 đang dùng. `MAX` tính cả trường đã xoá (`GetMaxOrderAsync` dùng `IgnoreQueryFilters()`) và lấy **cột lớn hơn** của mỗi dòng:
 kéo lên có thể làm số lớn nhất của một cột giảm (`1, 3, 5` kéo `5` lên `1` → `1, 2, 4`), chỉ lấy một cột thì trường mới
 trùng ở cột kia.
-
-Kéo thả chỉ dịch giá trị trong khoảng giữa nên trường đang dùng không trùng nhau, nhưng có thể trùng số với trường đã xoá.
 
 **Không trùng khi ghi đồng thời:** tạo / sửa / xoá / kéo thả chạy trong transaction và mở đầu bằng `LockOrderAsync`, khoá dòng
 `DocumentType` cha (`UPDLOCK, HOLDLOCK`). Request cùng loại văn bản xếp hàng, request sau đọc thứ tự request trước đã lưu;
@@ -125,17 +128,14 @@ nên lúc hai trường đổi chỗ sẽ trùng tạm thời và báo lỗi. Gh
   hiển thị thì cũng nhận `true`. DB có default `1` cho hai cột, cấu hình `HasDefaultValue(true).HasSentinel(true)`: EF bỏ
   qua giá trị `true` khi insert (DB tự điền `1`) và vẫn gửi `false` khi cần. Đừng bỏ `HasSentinel` — thiếu nó thì `false`
   bị bỏ qua và thành `1` (cùng bẫy với `DocumentType.DefaultView`).
-- Sửa không đổi được `DocumentTypeId`.
 - Dropdown trả `{ id, name }` các trường chưa xoá của **một** loại văn bản, sắp theo `OrderTableView` rồi `Id`; loại văn
   bản không tồn tại hoặc chưa có trường thì trả danh sách rỗng (không báo lỗi, giống dropdown loại văn bản).
-- Danh sách lọc theo `documentTypeId` (tuỳ chọn) và `keyword` trên `Name` hoặc `Field`; sắp theo loại văn bản, rồi
-  `OrderTableView`, rồi `Id`.
-- Xoá là xoá mềm; xem lại sau xoá trả `302`. Mỗi thao tác ghi để lại audit log kèm giá trị cũ và mới.
+- Danh sách lọc theo `documentTypeId` (tuỳ chọn) và `keyword` trên `Name` / `Field`; sắp theo loại văn bản, `OrderTableView`, `Id`.
+- Sửa không đổi được `DocumentTypeId`. Xoá là xoá mềm; xem lại sau xoá trả `302`. Mỗi thao tác ghi để lại audit log kèm giá trị cũ và mới.
 
 ## Đã kiểm thực tế
 
-> Các bước "chuyển thứ tự", `order = 99`, `order = 0` dưới đây kiểm luật **cũ** của `PUT {id}` (đánh lại cả hai cột `1..n`),
-> nay đã thay bằng kéo thả — không còn đúng với code hiện tại.
+> Các bước "chuyển thứ tự", `order = 99`, `order = 0` dưới đây kiểm luật **cũ** của `PUT {id}`, nay đã thay bằng kéo thả.
 
 Ngày 2026-10-12, gọi API thật bằng `admin`: tạo 2 trường (thứ tự `1`, `2`), tạo trùng `Field` (`409`), loại văn bản
 không tồn tại (`301`), phân trang lọc theo loại văn bản, xem chi tiết, xoá, xem lại sau xoá (`302`), seeder thêm đủ 5
@@ -166,10 +166,12 @@ Dropdown, đối chiếu với `GET paging` cùng loại văn bản: thêm 4 tr�
 dropdown đổi theo; xoá một trường → không còn trong dropdown; loại văn bản khác chỉ ra trường của nó; loại văn bản rỗng
 hoặc không tồn tại → `[]`; `GET {id}` không bị route `dropdown` che; không token → `401`.
 
+Map `fieldImport` (2026-10-14, sheet thật 2 tab, 7 trường): khớp cả khi khác hoa thường / thừa khoảng trắng, `"Người"` không
+khớp `"Người ký"`, `fieldImport` rỗng hoặc dòng header trống → `[]`, đổi tab đổi kết quả; `400`, `202`, `204`, `301`, `401` đúng.
+
 ## Giới hạn
 
-⚠️ Chưa có unique index cho `(DocumentTypeId, Field)`; trùng `Field` được chặn bằng code dưới khoá ở trên. Ghi thẳng vào DB
-(script, tool) thì không có gì chặn.
+⚠️ Chưa có unique index cho `(DocumentTypeId, Field)`; trùng `Field` chặn bằng code dưới khoá ở trên, ghi thẳng vào DB thì không.
 
 ⚠️ Xoá loại văn bản không xoá các trường của nó; trường vẫn còn nhưng không tạo thêm được vào loại văn bản đã xoá.
 

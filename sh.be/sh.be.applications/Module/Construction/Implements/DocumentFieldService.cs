@@ -61,6 +61,22 @@ namespace sh.be.applications.Module.Construction.Implements
             return await _dataReader.GetSheetHeadersAsync(dto.Url);
         }
 
+        public async Task<List<FieldImportHeaderDto>> MapFieldImport(MapFieldImportDto dto)
+        {
+            _logger.LogInformation($"{nameof(MapFieldImport)}, dto={JsonSerializer.Serialize(dto)}");
+            await _documentFieldDomainService.EnsureDocumentTypeExistsAsync(dto.DocumentTypeId);
+            var headers = await _dataReader.GetHeadersAsync(dto.Url, dto.SheetName, dto.HeaderStartIndex);
+            var fieldImports = await _documentFieldQuery.GetListFieldImport(dto.DocumentTypeId);
+
+            foreach (var fieldImport in fieldImports)
+            {
+                fieldImport.Headers = headers
+                    .Where(header => FieldImportMatchPolicy.IsMatch(fieldImport.FieldImport, header))
+                    .ToList();
+            }
+            return fieldImports;
+        }
+
         public async Task Create(CreateDocumentFieldDto dto)
         {
             _logger.LogInformation($"{nameof(Create)}, dto={JsonSerializer.Serialize(dto)}");

@@ -31,6 +31,7 @@ namespace sh.be.shared.HttpRequest.Error
             { ErrorCodes.CoreErrorAuditLogNotFound, "Audit log không tồn tại" },
             { ErrorCodes.CoreErrorInvalidDataSource, "Đường dẫn nguồn dữ liệu không hợp lệ" },
             { ErrorCodes.CoreErrorReadDataSourceFailed, "Không đọc được dữ liệu từ nguồn, kiểm tra lại quyền chia sẻ" },
+            { ErrorCodes.CoreErrorSheetNotFound, "Không tìm thấy sheet trong nguồn dữ liệu" },
             { ErrorCodes.ConstructionErrorDocumentTypeNotFound, "Loại văn bản không tồn tại" },
             { ErrorCodes.ConstructionErrorDocumentFieldNotFound, "Trường của loại văn bản không tồn tại" },
         };
