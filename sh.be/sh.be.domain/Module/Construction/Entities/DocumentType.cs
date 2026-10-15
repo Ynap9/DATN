@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using sh.be.shared.Constants.Db;
 using sh.be.shared.Interfaces;
 using System.ComponentModel.DataAnnotations;
@@ -6,6 +7,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace sh.be.domain.Module.Construction.Entities
 {
     [Table(nameof(DocumentType), Schema = DbSchemas.Construction)]
+    [Index(nameof(Name), Name = $"IX_{nameof(DocumentType)}_{nameof(Name)}")]
     public class DocumentType : ISoftDeleted
     {
         [Key]

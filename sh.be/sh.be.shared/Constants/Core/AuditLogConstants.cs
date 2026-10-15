@@ -34,7 +34,16 @@ namespace sh.be.shared.Constants.Core
         public const string ACTION_DOCUMENT_FIELD_DELETE = "Xóa trường của loại văn bản";
         public const string ACTION_DOCUMENT_FIELD_QUICK_DELETE = "Xóa nhanh trường của loại văn bản";
 
-        public const string ACTION_SEED_ROLE = "Khởi tạo vai trò mặc định";
+        public const string ACTION_PROJECT_CREATE = "Tạo dự án";
+        public const string ACTION_PROJECT_UPDATE = "Cập nhật dự án";
+        public const string ACTION_PROJECT_DELETE = "Xóa dự án";
+
+        public const string ACTION_PROJECT_CONFIG_CREATE = "Tạo cấu hình dự án";
+        public const string ACTION_PROJECT_CONFIG_UPDATE = "Cập nhật cấu hình dự án";
+        public const string ACTION_PROJECT_CONFIG_DELETE = "Xóa cấu hình dự án";
+        public const string ACTION_PROJECT_CONFIG_AUTHORIZE_GOOGLE = "Xác thực tài khoản Google cho cấu hình dự án";
+
+        public const string ACTION_SEED_ROLE ="Khởi tạo vai trò mặc định";
         public const string ACTION_SEED_PERMISSION = "Đồng bộ danh sách quyền";
         public const string ACTION_SEED_USER = "Khởi tạo tài khoản quản trị mặc định";
         public const string ACTION_SEED_ROLE_PERMISSION = "Khởi tạo quyền cho vai trò mặc định";

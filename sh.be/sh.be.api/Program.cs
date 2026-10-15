@@ -40,6 +40,7 @@ using sh.be.infrastructure.data.Persistence.Seeder;
 using sh.be.infrastructure.external.DataReader.Implements;
 using sh.be.infrastructure.external.Excel.Implements;
 using sh.be.infrastructure.external.Mail.Implements;
+using sh.be.infrastructure.external.Spreadsheet.Implements;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Swagger;
 using sh.be.shared.Settings;
@@ -245,6 +246,17 @@ builder.Services.AddScoped<IDocumentFieldRepository, DocumentFieldRepository>();
 builder.Services.AddScoped<IDocumentFieldQuery, DocumentFieldQuery>();
 builder.Services.AddScoped<DocumentFieldDomainService>();
 builder.Services.AddScoped<IDocumentFieldService, DocumentFieldService>();
+builder.Services.AddScoped<ISpreadsheetWriter, GoogleSheetWriter>();
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+builder.Services.AddScoped<IProjectQuery, ProjectQuery>();
+builder.Services.AddScoped<ProjectDomainService>();
+builder.Services.AddScoped<IProjectService, ProjectService>();
+builder.Services.AddScoped<IAuthorizationStateProtector, AuthorizationStateProtector>();
+builder.Services.AddScoped<ISpreadsheetAuthorizer, GoogleSheetAuthorizer>();
+builder.Services.AddScoped<IProjectConfigRepository, ProjectConfigRepository>();
+builder.Services.AddScoped<IProjectConfigQuery, ProjectConfigQuery>();
+builder.Services.AddScoped<ProjectConfigDomainService>();
+builder.Services.AddScoped<IProjectConfigService, ProjectConfigService>();
 #endregion
 
 

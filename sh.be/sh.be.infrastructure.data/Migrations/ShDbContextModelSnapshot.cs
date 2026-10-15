@@ -545,6 +545,8 @@ namespace sh.be.infrastructure.data.Migrations
 
                     b.HasKey("UserId", "RoleId");
 
+                    b.HasIndex(new[] { "RoleId" }, "IX_UserRole_RoleId");
+
                     b.ToTable("UserRole", "auth");
                 });
 
@@ -580,7 +582,7 @@ namespace sh.be.infrastructure.data.Migrations
 
                     b.Property<string>("Field")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("FieldImport")
                         .HasColumnType("nvarchar(max)");
@@ -634,6 +636,10 @@ namespace sh.be.infrastructure.data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex(new[] { "DocumentTypeId", "Field" }, "IX_DocumentField_DocumentTypeId_Field");
+
+                    b.HasIndex(new[] { "DocumentTypeId", "OrderTableView" }, "IX_DocumentField_DocumentTypeId_OrderTableView");
+
                     b.ToTable("DocumentField", "construction");
                 });
 
@@ -677,9 +683,11 @@ namespace sh.be.infrastructure.data.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex(new[] { "Name" }, "IX_DocumentType_Name");
 
                     b.ToTable("DocumentType", "construction");
                 });
@@ -740,9 +748,61 @@ namespace sh.be.infrastructure.data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name");
+                    b.HasIndex(new[] { "Name" }, "IX_Project_Name");
 
                     b.ToTable("Project", "construction");
+                });
+
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.ProjectConfig", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<bool>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "Name" }, "IX_ProjectConfig_Name");
+
+                    b.ToTable("ProjectConfig", "construction");
                 });
 
             modelBuilder.Entity("sh.be.domain.Module.Core.Entities.AuditLog", b =>

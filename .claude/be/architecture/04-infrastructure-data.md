@@ -34,6 +34,9 @@ trong các luồng đó.
 
 - Bảng Auth ở schema `auth`, Core ở `core`, Construction ở `construction` (`[Table(..., Schema = DbSchemas.X)]` trên entity).
 - Khoá ghép: `RolePermission (RoleId, PermissionKey)`, `UserRole (UserId, RoleId)`.
+- Index khai bằng `[Index(..., Name = "IX_<Bang>_<Cot>")]` trên entity (không `HasIndex`): `AuditLog` (`CreatedDate`, `UserId`, `ActionType`),
+  `UserRole.RoleId`, `DocumentType.Name`, `DocumentField (DocumentTypeId, Field)` và `(DocumentTypeId, OrderTableView)`, `Project.Name`, `ProjectConfig.Name`.
+  Cột chuỗi có index thành `nvarchar(450)` — giá trị dài hơn sẽ lỗi khi lưu.
 - `Deleted` mặc định `0`, `CreatedDate` mặc định `getdate()` (cấu hình trong `OnModelCreating`).
 - EF map được setter/constructor `private` của entity, nên entity giàu hành vi không đổi schema.
 
@@ -46,7 +49,8 @@ chỉ có tác dụng **bên trong transaction** (xem [../nghiep-vu/06-truong-va
 
 ## Xoá mềm — global query filter
 
-`Role`, `Permission`, `UserRole`, `RolePermission`, `DocumentType`, `DocumentField` có `HasQueryFilter(e => !e.Deleted)` trong `ShDbContext`.
+`Role`, `Permission`, `UserRole`, `RolePermission`, `DocumentType`, `DocumentField`, `ProjectConfig` có `HasQueryFilter(e => !e.Deleted)` trong `ShDbContext`;
+`Project` dùng cờ tên khác: `HasQueryFilter(e => !e.IsDeleted)`.
 Mọi truy vấn LINQ (kể cả `join`, subquery, `Any`, `Count`) tự loại bản ghi đã xoá mềm.
 
 - **Không** viết tay `!x.Deleted` nữa.

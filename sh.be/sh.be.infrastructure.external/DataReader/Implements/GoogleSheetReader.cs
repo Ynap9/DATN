@@ -8,10 +8,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using sh.be.infrastructure.external.DataReader.Base;
 using sh.be.infrastructure.external.DataReader.Models;
+using sh.be.infrastructure.external.Spreadsheet.Base;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
 using sh.be.shared.Settings;
-using System.Text.RegularExpressions;
 
 namespace sh.be.infrastructure.external.DataReader.Implements
 {
@@ -19,7 +19,6 @@ namespace sh.be.infrastructure.external.DataReader.Implements
     {
         private const string SheetTitleFields = "sheets.properties.title";
         private const int FirstRowIndex = 1;
-        private static readonly Regex SpreadsheetIdRegex = new(@"/spreadsheets/d/([a-zA-Z0-9-_]+)", RegexOptions.Compiled);
 
         private readonly GoogleSheetSettings _googleSheetSettings;
         private readonly ILogger<GoogleSheetReader> _logger;
@@ -33,7 +32,7 @@ namespace sh.be.infrastructure.external.DataReader.Implements
         protected override async Task<List<SheetHeaderRow>> ReadHeaderRowsAsync(string source)
         {
             _logger.LogInformation($"{nameof(ReadHeaderRowsAsync)}, source={source}");
-            var spreadsheetId = ExtractSpreadsheetId(source);
+            var spreadsheetId = GoogleSheetUrl.ExtractSpreadsheetId(source);
 
             using var sheetsService = CreateSheetsService();
             try
@@ -59,7 +58,7 @@ namespace sh.be.infrastructure.external.DataReader.Implements
         protected override async Task<List<string?>> ReadHeaderCellsAsync(string source, string sheetName, int headerRowIndex)
         {
             _logger.LogInformation($"{nameof(ReadHeaderCellsAsync)}, source={source}, sheetName={sheetName}, headerRowIndex={headerRowIndex}");
-            var spreadsheetId = ExtractSpreadsheetId(source);
+            var spreadsheetId = GoogleSheetUrl.ExtractSpreadsheetId(source);
 
             using var sheetsService = CreateSheetsService();
             try
@@ -80,16 +79,6 @@ namespace sh.be.infrastructure.external.DataReader.Implements
                 _logger.LogError(ex, $"{nameof(ReadHeaderCellsAsync)}, spreadsheetId={spreadsheetId}, sheetName={sheetName}");
                 throw new UserFriendlyException(ErrorCodes.CoreErrorReadDataSourceFailed);
             }
-        }
-
-        private static string ExtractSpreadsheetId(string source)
-        {
-            var match = SpreadsheetIdRegex.Match(source ?? String.Empty);
-            if (!match.Success)
-            {
-                throw new UserFriendlyException(ErrorCodes.CoreErrorInvalidDataSource);
-            }
-            return match.Groups[1].Value;
         }
 
         private SheetsService CreateSheetsService()

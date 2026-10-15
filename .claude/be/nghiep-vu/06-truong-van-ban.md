@@ -1,6 +1,6 @@
 # Trường của loại văn bản (Construction)
 
-> **Phần 6/6** · trước: [05-loai-van-ban.md](05-loai-van-ban.md) · mục lục: [README.md](README.md)
+> **Phần 6/8** · trước: [05-loai-van-ban.md](05-loai-van-ban.md) · mục lục: [README.md](README.md)
 
 Cấu hình các trường của một loại văn bản, bảng `construction.DocumentField`. Mỗi bản ghi thuộc một `DocumentType` qua
 `DocumentTypeId`; có cờ hiển thị, thứ tự ở bảng (`OrderTableView`) và danh sách (`OrderListView`), độ rộng cột, cờ tính
@@ -177,4 +177,4 @@ khớp `"Người ký"`, `fieldImport` rỗng hoặc dòng header trống → `[
 
 ⚠️ Chưa kiểm `Name`, `Field` rỗng, giống `DocumentType`.
 
-> **Hết** · mục lục: [README.md](README.md)
+> **Tiếp:** [07-du-an.md](07-du-an.md) — danh mục dự án và Google Sheet tự tạo.

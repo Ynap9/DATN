@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using sh.be.shared.Constants.Db;
 using sh.be.shared.Interfaces;
 using System.ComponentModel.DataAnnotations;
@@ -6,6 +7,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace sh.be.domain.Module.Construction.Entities
 {
     [Table(nameof(DocumentField), Schema = DbSchemas.Construction)]
+    [Index(nameof(DocumentTypeId), nameof(Field), Name = $"IX_{nameof(DocumentField)}_{nameof(DocumentTypeId)}_{nameof(Field)}")]
+    [Index(nameof(DocumentTypeId), nameof(OrderTableView), Name = $"IX_{nameof(DocumentField)}_{nameof(DocumentTypeId)}_{nameof(OrderTableView)}")]
     public class DocumentField : ISoftDeleted
     {
         [Key]

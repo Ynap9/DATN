@@ -1,6 +1,6 @@
 # Phân quyền
 
-> **Phần 2/6** · trước: [01-nguoi-dung.md](01-nguoi-dung.md) · mục lục: [README.md](README.md)
+> **Phần 2/8** · trước: [01-nguoi-dung.md](01-nguoi-dung.md) · mục lục: [README.md](README.md)
 
 Quyền là một **cây** định danh bằng `Key`. Vai trò giữ một tập key; user có quyền = hợp quyền của các vai trò còn hoạt động.
 Hằng số key nằm ở `PermissionConstants` (shared); cây được seed bởi `SeedPermission`.
@@ -33,11 +33,21 @@ Menu.Construction                  Menu nghiệp vụ xây dựng
 │   ├── Function.Construction.DocumentType.Create
 │   ├── Function.Construction.DocumentType.Update
 │   └── Function.Construction.DocumentType.Delete
-└── Menu.Construction.DocumentField Menu quản lý trường của loại văn bản
-    ├── Function.Construction.DocumentField.View
-    ├── Function.Construction.DocumentField.Create
-    ├── Function.Construction.DocumentField.Update
-    └── Function.Construction.DocumentField.Delete
+├── Menu.Construction.DocumentField Menu quản lý trường của loại văn bản
+│   ├── Function.Construction.DocumentField.View
+│   ├── Function.Construction.DocumentField.Create
+│   ├── Function.Construction.DocumentField.Update
+│   └── Function.Construction.DocumentField.Delete
+├── Menu.Construction.Project      Menu quản lý dự án
+│   ├── Function.Construction.Project.View
+│   ├── Function.Construction.Project.Create
+│   ├── Function.Construction.Project.Update
+│   └── Function.Construction.Project.Delete
+└── Menu.Construction.ProjectConfig Menu cấu hình dự án
+    ├── Function.Construction.ProjectConfig.View
+    ├── Function.Construction.ProjectConfig.Create
+    ├── Function.Construction.ProjectConfig.Update   (gồm lấy link xác thực Google)
+    └── Function.Construction.ProjectConfig.Delete
 ```
 
 Quy ước đặt key: `Menu.<Module>.<Tên>` cho mục menu, `Function.<Module>.<Tên>.<Hành động>` cho thao tác.
@@ -90,6 +100,14 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `POST api/construction/document-field`, `POST .../quick-create`, `GET .../sheet-header` | `Function.Construction.DocumentField.Create` |
 | `PUT api/construction/document-field/{id}`, `PUT .../{id}/setting`, `PUT .../{id}/order-table-view`, `PUT .../{id}/order-list-view` | `Function.Construction.DocumentField.Update` |
 | `DELETE api/construction/document-field/{id}`, `DELETE .../quick-delete` | `Function.Construction.DocumentField.Delete` |
+| `GET api/construction/project/{id}` | `Function.Construction.Project.View` |
+| `POST api/construction/project` | `Function.Construction.Project.Create` |
+| `PUT api/construction/project/{id}` | `Function.Construction.Project.Update` |
+| `DELETE api/construction/project/{id}` | `Function.Construction.Project.Delete` |
+| `GET api/construction/project-config`, `GET .../{id}` | `Function.Construction.ProjectConfig.View` |
+| `POST` / `PUT {id}` / `DELETE {id}` `api/construction/project-config` | `...ProjectConfig.Create` / `.Update` / `.Delete` |
+| `GET api/construction/project-config/google-authorization-url` | `Function.Construction.ProjectConfig.Update` |
+| `GET api/construction/project-config/google-callback` | — (không cần token, kiểm `state` đã ký) |
 
 ## Quyền người dùng: đang lệch so với cây
 

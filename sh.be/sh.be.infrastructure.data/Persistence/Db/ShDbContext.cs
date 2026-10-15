@@ -25,6 +25,7 @@ namespace sh.be.infrastructure.data.Persistence.Db
         public DbSet<DocumentType> DocumentTypes { get; set; }
         public DbSet<DocumentField> DocumentFields { get; set; }
         public DbSet<Project> Projects { get; set; }
+        public DbSet<ProjectConfig> ProjectConfigs { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.UseOpenIddict();
@@ -76,7 +77,12 @@ namespace sh.be.infrastructure.data.Persistence.Db
                 entity.HasQueryFilter(e => !e.IsDeleted);
                 entity.Property(e => e.IsDeleted).HasDefaultValue(false);
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
-                entity.HasIndex(e => e.Name);
+            });
+            modelBuilder.Entity<ProjectConfig>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
             });
             modelBuilder.Entity<RolePermission>()
                 .HasKey(rp => new { rp.RoleId, rp.PermissionKey });

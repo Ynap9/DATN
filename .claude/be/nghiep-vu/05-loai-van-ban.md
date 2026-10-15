@@ -1,6 +1,6 @@
 # Loại văn bản (Construction)
 
-> **Phần 5/6** · trước: [04-nhat-ky-he-thong.md](04-nhat-ky-he-thong.md) · mục lục: [README.md](README.md)
+> **Phần 5/8** · trước: [04-nhat-ky-he-thong.md](04-nhat-ky-he-thong.md) · mục lục: [README.md](README.md)
 
 Danh mục loại văn bản, bảng `construction.DocumentType`. Entity `DocumentType` có `Id`, `Name`, `DefaultView`
 (mặc định `1`), cột tạo / sửa và xoá mềm.

@@ -1,7 +1,7 @@
 # Nghiệp vụ backend sh.be
 
 > Chức năng và luật nghiệp vụ của module `Auth` (người dùng, vai trò, quyền), `Core` (nhật ký hệ thống) và
-> `Construction` (loại văn bản).
+> `Construction` (loại văn bản, dự án).
 > Đối chiếu với code `sh.be` ngày 2026-10-12. Kiến trúc và quy ước code nằm ở [../architecture/README.md](../architecture/README.md).
 
 ## Mục lục
@@ -14,6 +14,8 @@
 | [04-nhat-ky-he-thong.md](04-nhat-ky-he-thong.md) | Các thao tác được ghi nhật ký và cách đọc nhật ký |
 | [05-loai-van-ban.md](05-loai-van-ban.md) | Danh mục loại văn bản (`DocumentType`): CRUD, tên duy nhất, xoá mềm |
 | [06-truong-van-ban.md](06-truong-van-ban.md) | Trường của loại văn bản (`DocumentField`): CRUD, `Field` duy nhất, thứ tự tự tăng |
+| [07-du-an.md](07-du-an.md) | Dự án (`Project`): CRUD, trạng thái `ProjectConst`, tự tạo Google Sheet khi tạo |
+| [08-cau-hinh-du-an.md](08-cau-hinh-du-an.md) | Cấu hình dự án (`ProjectConfig`): CRUD key-value, xác thực tài khoản Google lấy refresh token |
 
 ## Thuật ngữ
 
@@ -31,7 +33,7 @@
 ## Ba quy tắc xuyên suốt
 
 - Mọi thao tác ghi đều tạo `AuditLog` **trong cùng transaction** với thay đổi dữ liệu (xem [04-nhat-ky-he-thong.md](04-nhat-ky-he-thong.md)).
-- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`108` (Auth), `201`–`204` (Core) hoặc `301`–`302` (Construction).
+- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`108` (Auth), `201`–`207` (Core) hoặc `301`–`304` (Construction).
 - Thời gian thao tác lấy theo giờ Việt Nam, người thao tác lấy từ token đăng nhập.
 
 ## Giới hạn đã biết

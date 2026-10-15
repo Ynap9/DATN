@@ -44,5 +44,17 @@ namespace sh.be.shared.Constants.Auth
         public const string FUNCTION_DOCUMENT_FIELD_CREATE = "Function.Construction.DocumentField.Create";
         public const string FUNCTION_DOCUMENT_FIELD_UPDATE = "Function.Construction.DocumentField.Update";
         public const string FUNCTION_DOCUMENT_FIELD_DELETE = "Function.Construction.DocumentField.Delete";
+
+        public const string MENU_PROJECT = "Menu.Construction.Project";
+        public const string FUNCTION_PROJECT_VIEW = "Function.Construction.Project.View";
+        public const string FUNCTION_PROJECT_CREATE = "Function.Construction.Project.Create";
+        public const string FUNCTION_PROJECT_UPDATE = "Function.Construction.Project.Update";
+        public const string FUNCTION_PROJECT_DELETE = "Function.Construction.Project.Delete";
+
+        public const string MENU_PROJECT_CONFIG = "Menu.Construction.ProjectConfig";
+        public const string FUNCTION_PROJECT_CONFIG_VIEW = "Function.Construction.ProjectConfig.View";
+        public const string FUNCTION_PROJECT_CONFIG_CREATE = "Function.Construction.ProjectConfig.Create";
+        public const string FUNCTION_PROJECT_CONFIG_UPDATE = "Function.Construction.ProjectConfig.Update";
+        public const string FUNCTION_PROJECT_CONFIG_DELETE = "Function.Construction.ProjectConfig.Delete";
     }
 }

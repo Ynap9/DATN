@@ -31,9 +31,14 @@ namespace sh.be.shared.HttpRequest.Error
         public const int CoreErrorInvalidDataSource = 202;
         public const int CoreErrorReadDataSourceFailed = 203;
         public const int CoreErrorSheetNotFound = 204;
+        public const int CoreErrorCreateDataSourceFailed = 205;
+        public const int CoreErrorUpdateDataSourceFailed = 206;
+        public const int CoreErrorAuthorizeDataSourceFailed = 207;
 
         public const int ConstructionErrorDocumentTypeNotFound = 301;
         public const int ConstructionErrorDocumentFieldNotFound = 302;
+        public const int ConstructionErrorProjectNotFound = 303;
+        public const int ConstructionErrorProjectConfigNotFound = 304;
 
     }
 }

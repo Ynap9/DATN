@@ -15,6 +15,7 @@ application khai báo.
 | `DataReader/Implements/GoogleSheetReader.cs` | Đọc header từ Google Sheet bằng service account (`Google.Apis.Sheets.v4`) |
 | `Excel/Implements/ExcelTemplateWriter.cs` | Implement `IExcelTemplateWriter`: sinh file `.xlsx` template bằng ClosedXML |
 | `DataReader/Models/SheetHeaderRow.cs` | Dữ liệu thô lớp con trả cho lớp nền: tên sheet + các ô dòng `1` |
+| `Spreadsheet/Implements/GoogleSheetWriter.cs` | Implement `ISpreadsheetWriter`: tạo / xoá Google Sheet (`Google.Apis.Drive.v3` + Sheets) |
 
 ## IMailService
 
@@ -56,8 +57,23 @@ Cấu hình: section `GoogleSheet` bind vào `GoogleSheetSettings` — `Applicat
 account, mặc định `Credentials/google-service-account.json`, tương đối theo thư mục chạy app). Thư mục `sh.be.api/Credentials/`
 nằm trong `.gitignore` vì file chứa private key. Sheet phải được chia sẻ cho `client_email` của service account.
 
-⚠️ Dùng `CredentialFactory.FromFile<ServiceAccountCredential>(...)`, **không** `GoogleCredential.FromFile`: method sau bị
-Google đánh dấu lỗi thời (nhận mọi loại credential, rủi ro bảo mật) và sinh warning CS0618.
+⚠️ Dùng `CredentialFactory.FromFile<ServiceAccountCredential | UserCredential>(...)`, **không** `GoogleCredential.FromFile` (lỗi thời, CS0618).
+
+## ISpreadsheetWriter, ISpreadsheetAuthorizer — tạo Google Sheet bằng tài khoản Gmail
+
+Interface ở `sh.be.applications/Base/Interfaces/`; mọi method nhận `SpreadsheetAccountDto` (client id/secret, redirect URI, refresh token,
+folder id) do service đọc từ bảng `ProjectConfig` ([../nghiep-vu/08-cau-hinh-du-an.md](../nghiep-vu/08-cau-hinh-du-an.md)).
+
+| Method | Việc |
+|---|---|
+| `CreateSpreadsheetAsync(account, title, sheetName)` | Drive `files.create` trong `FolderId`, Sheets `batchUpdate` đổi tên sheet `0` (lỗi thì xoá file); `GoogleApiException` → `205` |
+| `RenameSpreadsheetAsync` / `TryRename...` / `TryDeleteSpreadsheetAsync` | Drive `files.update` / `files.delete`; lỗi → `206`, bản `Try` trả `false` |
+| `ISpreadsheetAuthorizer.BuildAuthorizationUrl` / `ExchangeRefreshTokenAsync` | Link consent (`access_type=offline`, `prompt=consent`) / đổi `code` lấy refresh token; lỗi → `207` |
+| `Spreadsheet/Base/GoogleOAuthFlowFactory`, `GoogleSheetUrl` | Dựng flow + `UserCredential` từ account (scope `drive` + `spreadsheets`); đổi URL ↔ id (link sai → `202`) |
+
+Refresh token hết hạn / bị thu hồi (`TokenResponseException`) → `207`, phải xác thực lại. Reader vẫn dùng service account nên thư mục vẫn
+chia sẻ cho `client_email`. ⚠️ Writer dùng service account thì Google trả `403 storageQuotaExceeded` (service account không có dung lượng,
+Gmail cá nhân không có Shared Drive) — đừng quay lại. ⚠️ OAuth consent screen ở **Testing** thì refresh token hết hạn sau 7 ngày.
 
 ## IExcelTemplateWriter — sinh file Excel template
 

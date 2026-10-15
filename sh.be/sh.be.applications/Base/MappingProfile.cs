@@ -1,6 +1,9 @@
 ﻿using AutoMapper;
 using sh.be.applications.Module.Construction.Dtos.DocumentField;
 using sh.be.applications.Module.Construction.Dtos.DocumentType;
+using sh.be.applications.Module.Construction.Dtos.Project;
+using sh.be.applications.Module.Construction.Dtos.ProjectConfig;
+using sh.be.shared.Constants.Construction;
 using sh.be.domain.Module.Construction.Entities;
 using System;
 using System.Collections.Generic;
@@ -23,6 +26,11 @@ namespace sh.be.applications.Base
             CreateMap<DocumentField, GetListDocumentFieldDropDownDto>();
             CreateMap<DocumentField, FieldImportHeaderDto>()
                 .ForMember(d => d.Headers, o => o.Ignore());
+            CreateMap<Project, FindProjectByIdDto>();
+            CreateMap<ProjectConfig, GetListProjectConfigDto>()
+                .ForMember(d => d.Value, o => o.MapFrom(s => ProjectConfigConst.SECRET_NAMES.Contains(s.Name) ? ProjectConfigConst.MASKED_VALUE : s.Value));
+            CreateMap<ProjectConfig, FindProjectConfigByIdDto>()
+                .ForMember(d => d.Value, o => o.MapFrom(s => ProjectConfigConst.SECRET_NAMES.Contains(s.Name) ? ProjectConfigConst.MASKED_VALUE : s.Value));
         }
     }
 }
