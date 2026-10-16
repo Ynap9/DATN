@@ -5,6 +5,7 @@ namespace sh.be.applications.Module.Construction.Interfaces.Services
 {
     public interface IProjectService
     {
+        Task<List<GetListProjectDto>> GetList();
         Task<List<GetListProjectDropDownDto>> GetProjectDropDown();
         Task<BaseResponsePagingDto<GetListProjectDto>> FindPaging(FindPagingProjectDto dto);
         Task<FindProjectByIdDto> FindById(int id);

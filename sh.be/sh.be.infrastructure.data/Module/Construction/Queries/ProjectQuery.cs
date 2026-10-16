@@ -15,6 +15,16 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
         {
         }
 
+        public Task<List<GetListProjectDto>> GetList()
+        {
+            return _shDbContext.Projects
+                .AsNoTracking()
+                .OrderByDescending(p => p.CreatedDate)
+                .ThenByDescending(p => p.Id)
+                .ProjectTo<GetListProjectDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+        }
+
         public Task<List<GetListProjectDropDownDto>> GetProjectDropDown()
         {
             return _shDbContext.Projects

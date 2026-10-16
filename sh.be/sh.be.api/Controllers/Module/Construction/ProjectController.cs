@@ -21,6 +21,21 @@ namespace sh.be.api.Controllers.Module.Construction
             _projectService = projectService;
         }
 
+        [HttpGet("")]
+        [Permission(PermissionConstants.FUNCTION_PROJECT_VIEW)]
+        public async Task<ApiResponse> GetList()
+        {
+            try
+            {
+                var data = await _projectService.GetList();
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
         [HttpGet("dropdown")]
         [Permission(PermissionConstants.FUNCTION_PROJECT_VIEW)]
         public async Task<ApiResponse> GetProjectDropDown()

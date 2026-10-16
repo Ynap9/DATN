@@ -40,6 +40,12 @@ namespace sh.be.applications.Module.Construction.Implements
             _spreadsheetWriter = spreadsheetWriter;
         }
 
+        public async Task<List<GetListProjectDto>> GetList()
+        {
+            _logger.LogInformation($"{nameof(GetList)}");
+            return await _projectQuery.GetList();
+        }
+
         public async Task<List<GetListProjectDropDownDto>> GetProjectDropDown()
         {
             _logger.LogInformation($"{nameof(GetProjectDropDown)}");

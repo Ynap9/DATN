@@ -9,6 +9,7 @@ Trường: `Name`, `StartedAt`, `EndedAt`, `Status`, `UrlGoogleSheetSync`, `Goog
 
 | Nghiệp vụ | Endpoint | Quyền yêu cầu |
 |---|---|---|
+| Danh sách (không phân trang) | `GET api/construction/project` | `Function.Construction.Project.View` |
 | Dropdown | `GET api/construction/project/dropdown` | `Function.Construction.Project.View` |
 | Danh sách phân trang | `GET api/construction/project/paging` | `Function.Construction.Project.View` |
 | Xem chi tiết | `GET api/construction/project/{id}` | `Function.Construction.Project.View` |
@@ -24,7 +25,8 @@ Body sửa: `{ "name", "startedAt", "endedAt", "status" }` — **không** sửa 
 
 Dropdown trả `[{ id, name }]` sắp theo `name`. Paging nhận `pageNumber`, `pageSize`, `keyword` (tìm trong `name`, tự trim),
 `status` (tuỳ chọn, lọc đúng trạng thái); trả `{ items, totalItems }`, mỗi item `id`, `name`, `startedAt`, `endedAt`, `status`,
-`urlGoogleSheetSync`; sắp mới tạo trước (`CreatedDate` giảm dần, rồi `Id` giảm dần). Cả hai bỏ dự án đã xoá mềm.
+`urlGoogleSheetSync`; sắp mới tạo trước (`CreatedDate` giảm dần, rồi `Id` giảm dần). Danh sách không phân trang trả mọi dự án
+cùng dạng item và cùng thứ tự như paging (`GetListProjectDto`). Cả ba API bỏ dự án đã xoá mềm.
 
 ## Trạng thái — `ProjectConst`
 
@@ -73,7 +75,7 @@ body hợp lệ → `205` (Drive báo `File not found` cho thư mục rỗng), k
 → `303`; không token → `401`; seeder thêm đủ 4 quyền `Function.Construction.Project.*`.
 
 Ngày 2026-10-16: `dropdown` trả đủ 2 dự án sắp theo tên; `paging` trang 1 cỡ 2 trả 2 item, `totalItems = 2`; `status=2` trả
-rỗng; `keyword=" test "` khớp cả hai; không token → `401`.
+rỗng; `keyword=" test "` khớp cả hai; `GET project` trả 2 dự án, id 2 trước id 1; không token → `401`.
 
 Chưa có `GoogleRefreshToken` → tạo trả `304` "Thiếu cấu hình dự án: GoogleRefreshToken". Chưa kiểm luồng tạo thành công,
 đổi tên, xoá trên dự án thật (cần người dùng xác thực Google trước).
