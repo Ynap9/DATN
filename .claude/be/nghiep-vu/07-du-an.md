@@ -28,6 +28,15 @@ Dropdown trả `[{ id, name }]` sắp theo `name`. Paging nhận `pageNumber`, `
 `urlGoogleSheetSync`; sắp mới tạo trước (`CreatedDate` giảm dần, rồi `Id` giảm dần). Danh sách không phân trang trả mọi dự án
 cùng dạng item và cùng thứ tự như paging (`GetListProjectDto`). Cả ba API bỏ dự án đã xoá mềm.
 
+## Loại văn bản của dự án — `ProjectDocumentType`
+
+Bảng nối `construction.ProjectDocumentType` (`ProjectId`, `DocumentTypeId`, cột tạo / sửa / xoá, cờ `Deleted`), khoá ghép
+`(ProjectId, DocumentTypeId)`, index `IX_ProjectDocumentType_DocumentTypeId`; migration `Add_ProjectDocumentType`.
+Chưa có khoá ngoại sang `Project` / `DocumentType` (giống `DocumentField`). 🔬 Chưa có API.
+
+⚠️ Khoá ghép + xoá mềm: gán lại cặp đã xoá mềm bằng `Add` sẽ trùng khoá chính — khi làm API phải khôi phục dòng cũ
+(`IgnoreQueryFilters()`) hoặc xoá cứng, đừng thêm dòng mới.
+
 ## Trạng thái — `ProjectConst`
 
 | Hằng | Giá trị | Nghĩa |

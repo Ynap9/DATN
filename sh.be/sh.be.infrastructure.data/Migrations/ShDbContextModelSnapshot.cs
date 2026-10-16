@@ -805,6 +805,46 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("ProjectConfig", "construction");
                 });
 
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.ProjectDocumentType", b =>
+                {
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DocumentTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<bool>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ProjectId", "DocumentTypeId");
+
+                    b.HasIndex(new[] { "DocumentTypeId" }, "IX_ProjectDocumentType_DocumentTypeId");
+
+                    b.ToTable("ProjectDocumentType", "construction");
+                });
+
             modelBuilder.Entity("sh.be.domain.Module.Core.Entities.AuditLog", b =>
                 {
                     b.Property<long>("Id")
