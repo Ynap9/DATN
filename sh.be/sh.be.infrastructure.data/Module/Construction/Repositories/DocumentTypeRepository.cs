@@ -30,6 +30,11 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
             return _shDbContext.DocumentTypes.AnyAsync(d => d.Name == name && d.Id != excludedId);
         }
 
+        public Task<int> CountActiveAsync(List<int> ids)
+        {
+            return _shDbContext.DocumentTypes.CountAsync(d => ids.Contains(d.Id));
+        }
+
         public void Add(DocumentType documentType)
         {
             _shDbContext.DocumentTypes.Add(documentType);

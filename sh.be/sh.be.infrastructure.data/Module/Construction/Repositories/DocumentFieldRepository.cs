@@ -56,6 +56,14 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
                 .ToListAsync();
         }
 
+        public Task<List<DocumentField>> GetByDocumentTypeIdsAsync(IReadOnlyCollection<int> documentTypeIds)
+        {
+            return _shDbContext.DocumentFields
+                .AsNoTracking()
+                .Where(d => documentTypeIds.Contains(d.DocumentTypeId))
+                .ToListAsync();
+        }
+
         public void Add(DocumentField documentField)
         {
             _shDbContext.DocumentFields.Add(documentField);

@@ -27,7 +27,8 @@ namespace sh.be.applications.Base
             CreateMap<DocumentField, FieldImportHeaderDto>()
                 .ForMember(d => d.Headers, o => o.Ignore());
             CreateMap<Project, GetListProjectDto>();
-            CreateMap<Project, FindProjectByIdDto>();
+            CreateMap<Project, FindProjectByIdDto>()
+                .ForMember(d => d.DocumentTypeIds, o => o.Ignore());
             CreateMap<Project, GetListProjectDropDownDto>();
             CreateMap<ProjectConfig, GetListProjectConfigDto>()
                 .ForMember(d => d.Value, o => o.MapFrom(s => ProjectConfigConst.SECRET_NAMES.Contains(s.Name) ? ProjectConfigConst.MASKED_VALUE : s.Value));

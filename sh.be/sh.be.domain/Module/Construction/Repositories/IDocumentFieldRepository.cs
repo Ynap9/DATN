@@ -10,6 +10,7 @@ namespace sh.be.domain.Module.Construction.Repositories
         Task<bool> ExistsByFieldAsync(int documentTypeId, string field, int? excludedId = null);
         Task<int> GetMaxOrderAsync(int documentTypeId);
         Task<List<DocumentField>> GetByDocumentTypeIdAsync(int documentTypeId);
+        Task<List<DocumentField>> GetByDocumentTypeIdsAsync(IReadOnlyCollection<int> documentTypeIds);
         void Add(DocumentField documentField);
         void AddRange(IEnumerable<DocumentField> documentFields);
         void Update(DocumentField documentField);

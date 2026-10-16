@@ -22,15 +22,17 @@ namespace sh.be.applications.Module.Construction.Implements
     public class DocumentFieldService : BaseService, IDocumentFieldService
     {
         private readonly IDocumentFieldRepository _documentFieldRepository;
+        private readonly IProjectRepository _projectRepository;
         private readonly IDocumentFieldQuery _documentFieldQuery;
         private readonly DocumentFieldDomainService _documentFieldDomainService;
         private readonly IDataReader _dataReader;
 
         public DocumentFieldService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<DocumentFieldService> logger, IRequestContext requestContext, TimeProvider timeProvider,
-            IDocumentFieldRepository documentFieldRepository, IDocumentFieldQuery documentFieldQuery, DocumentFieldDomainService documentFieldDomainService, IDataReader dataReader
+            IDocumentFieldRepository documentFieldRepository, IProjectRepository projectRepository, IDocumentFieldQuery documentFieldQuery, DocumentFieldDomainService documentFieldDomainService, IDataReader dataReader
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _documentFieldRepository = documentFieldRepository;
+            _projectRepository = projectRepository;
             _documentFieldQuery = documentFieldQuery;
             _documentFieldDomainService = documentFieldDomainService;
             _dataReader = dataReader;
@@ -249,6 +251,7 @@ namespace sh.be.applications.Module.Construction.Implements
             {
                 await _documentFieldDomainService.LockOrderAsync(documentField.DocumentTypeId);
                 documentField.Delete(currentUserId, now);
+                await DeleteProjectDocumentFieldsAsync([id], currentUserId, now);
 
                 _documentFieldRepository.Update(documentField);
                 AddAuditLog(AuditLogConstants.ACTION_DOCUMENT_FIELD_DELETE, AuditLogConstants.ACTION_TYPE_DELETE, $"Xóa trường {documentField.Name} của loại văn bản có Id = {documentField.DocumentTypeId}",
@@ -286,6 +289,7 @@ namespace sh.be.applications.Module.Construction.Implements
                     documentField.Delete(currentUserId, now);
                     _documentFieldRepository.Update(documentField);
                 }
+                await DeleteProjectDocumentFieldsAsync(ids, currentUserId, now);
 
                 AddAuditLog(AuditLogConstants.ACTION_DOCUMENT_FIELD_QUICK_DELETE, AuditLogConstants.ACTION_TYPE_DELETE, $"Xóa nhanh {documentFields.Count} trường của loại văn bản có Id = {dto.DocumentTypeId}",
                     oldData, null);
@@ -297,6 +301,15 @@ namespace sh.be.applications.Module.Construction.Implements
                 _logger.LogError(ex, $"{nameof(QuickDelete)}, documentTypeId={dto.DocumentTypeId}, ids={string.Join(",", ids)}");
                 await transaction.RollbackAsync();
                 throw;
+            }
+        }
+
+        private async Task DeleteProjectDocumentFieldsAsync(IReadOnlyCollection<int> documentFieldIds, string? deletedBy, DateTime deletedDate)
+        {
+            var projectDocumentFields = await _projectRepository.GetDocumentFieldsByDocumentFieldIdsAsync(documentFieldIds);
+            foreach (var projectDocumentField in projectDocumentFields)
+            {
+                projectDocumentField.Delete(deletedBy, deletedDate);
             }
         }
 

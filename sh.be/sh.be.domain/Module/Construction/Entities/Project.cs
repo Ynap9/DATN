@@ -74,6 +74,13 @@ namespace sh.be.domain.Module.Construction.Entities
             DeletedBy = deletedBy;
         }
 
+        public List<ProjectDocumentType> AssignDocumentTypes(IEnumerable<int> documentTypeIds, string? assignedBy, DateTime? assignedDate)
+        {
+            return documentTypeIds
+                .Select(documentTypeId => ProjectDocumentType.Create(Id, documentTypeId, assignedBy, assignedDate))
+                .ToList();
+        }
+
         private static void EnsureValidStatus(int status)
         {
             if (!ProjectConst.STATUSES.Contains(status))

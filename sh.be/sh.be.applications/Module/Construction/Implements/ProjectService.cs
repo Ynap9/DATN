@@ -23,19 +23,23 @@ namespace sh.be.applications.Module.Construction.Implements
     public class ProjectService : BaseService, IProjectService
     {
         private readonly IProjectRepository _projectRepository;
+        private readonly IDocumentFieldRepository _documentFieldRepository;
         private readonly IProjectQuery _projectQuery;
         private readonly ProjectDomainService _projectDomainService;
+        private readonly DocumentTypeDomainService _documentTypeDomainService;
         private readonly ProjectConfigDomainService _projectConfigDomainService;
         private readonly ISpreadsheetWriter _spreadsheetWriter;
 
         public ProjectService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<ProjectService> logger, IRequestContext requestContext, TimeProvider timeProvider,
-            IProjectRepository projectRepository, IProjectQuery projectQuery, ProjectDomainService projectDomainService,
-            ProjectConfigDomainService projectConfigDomainService, ISpreadsheetWriter spreadsheetWriter
+            IProjectRepository projectRepository, IDocumentFieldRepository documentFieldRepository, IProjectQuery projectQuery, ProjectDomainService projectDomainService,
+            DocumentTypeDomainService documentTypeDomainService, ProjectConfigDomainService projectConfigDomainService, ISpreadsheetWriter spreadsheetWriter
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _projectRepository = projectRepository;
+            _documentFieldRepository = documentFieldRepository;
             _projectQuery = projectQuery;
             _projectDomainService = projectDomainService;
+            _documentTypeDomainService = documentTypeDomainService;
             _projectConfigDomainService = projectConfigDomainService;
             _spreadsheetWriter = spreadsheetWriter;
         }
@@ -61,35 +65,51 @@ namespace sh.be.applications.Module.Construction.Implements
         public async Task<FindProjectByIdDto> FindById(int id)
         {
             _logger.LogInformation($"{nameof(FindById)}, id={id}");
-            return await _projectQuery.FindById(id)
+            var project = await _projectQuery.FindById(id)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
+            project.DocumentTypeIds = await _projectRepository.GetDocumentTypeIdsAsync(id);
+            return project;
         }
 
         public async Task<FindProjectByIdDto> Create(CreateProjectDto dto)
         {
             _logger.LogInformation($"{nameof(Create)}, dto={JsonSerializer.Serialize(dto)}");
+            var currentUserId = getCurrentUserId();
+            var now = GetVietnamTime();
             await _projectDomainService.EnsureUniqueNameAsync(dto.Name);
 
-            var project = Project.Create(dto.Name, dto.StartedAt, dto.EndedAt, getCurrentUserId(), GetVietnamTime());
+            var documentTypeIds = dto.DocumentTypeIds.Distinct().ToList();
+            await _documentTypeDomainService.EnsureAllExistAsync(documentTypeIds);
+
+            var project = Project.Create(dto.Name, dto.StartedAt, dto.EndedAt, currentUserId, now);
             var account = await GetSpreadsheetAccountAsync();
             var spreadsheet = await _spreadsheetWriter.CreateSpreadsheetAsync(account, project.Name, project.GoogleSheetName);
 
+            await using var transaction = await _unitOfWork.BeginTransactionAsync();
             try
             {
                 project.LinkGoogleSheet(spreadsheet.Url);
                 _projectRepository.Add(project);
-                AddAuditLog(AuditLogConstants.ACTION_PROJECT_CREATE, AuditLogConstants.ACTION_TYPE_CREATE, $"Tạo dự án {project.Name}",
-                    null, ToAuditData(project));
                 await _unitOfWork.SaveChangesAsync();
+
+                await AddDocumentTypesAsync(project, documentTypeIds, currentUserId, now);
+                AddAuditLog(AuditLogConstants.ACTION_PROJECT_CREATE, AuditLogConstants.ACTION_TYPE_CREATE, $"Tạo dự án {project.Name}",
+                    null, ToAuditData(project, documentTypeIds));
+                await _unitOfWork.SaveChangesAsync();
+
+                await transaction.CommitAsync();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"{nameof(Create)}, spreadsheetId={spreadsheet.SpreadsheetId}");
+                await transaction.RollbackAsync();
                 await _spreadsheetWriter.TryDeleteSpreadsheetAsync(account, spreadsheet.SpreadsheetId);
                 throw;
             }
 
-            return _mapper.Map<FindProjectByIdDto>(project);
+            var data = _mapper.Map<FindProjectByIdDto>(project);
+            data.DocumentTypeIds = documentTypeIds;
+            return data;
         }
 
         public async Task Update(int id, UpdateProjectDto dto)
@@ -97,11 +117,18 @@ namespace sh.be.applications.Module.Construction.Implements
             _logger.LogInformation($"{nameof(Update)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
             var project = await _projectRepository.FindByIdAsync(id)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
-            var oldData = ToAuditData(project);
+            var currentUserId = getCurrentUserId();
+            var now = GetVietnamTime();
+            var oldDocumentTypeIds = await _projectRepository.GetDocumentTypeIdsAsync(id);
+            var oldData = ToAuditData(project, oldDocumentTypeIds);
             var oldName = project.Name;
 
             await _projectDomainService.EnsureUniqueNameAsync(dto.Name, id);
-            project.Update(dto.Name, dto.StartedAt, dto.EndedAt, dto.Status, getCurrentUserId(), GetVietnamTime());
+            var documentTypeIds = dto.DocumentTypeIds.Distinct().ToList();
+            await _documentTypeDomainService.EnsureAllExistAsync(documentTypeIds);
+            var removedDocumentTypeIds = oldDocumentTypeIds.Except(documentTypeIds).ToList();
+            var addedDocumentTypeIds = documentTypeIds.Except(oldDocumentTypeIds).ToList();
+            project.Update(dto.Name, dto.StartedAt, dto.EndedAt, dto.Status, currentUserId, now);
 
             SpreadsheetAccountDto? renamedAccount = null;
             if (project.Name != oldName)
@@ -110,17 +137,27 @@ namespace sh.be.applications.Module.Construction.Implements
                 await _spreadsheetWriter.RenameSpreadsheetAsync(renamedAccount, project.UrlGoogleSheetSync, project.Name);
             }
 
+            await using var transaction = await _unitOfWork.BeginTransactionAsync();
             try
             {
                 _projectRepository.Update(project);
+                await _projectRepository.DeleteDocumentFieldsAsync(id, removedDocumentTypeIds);
+                await _projectRepository.DeleteDocumentTypesAsync(id, removedDocumentTypeIds);
+                await AddDocumentTypesAsync(project, addedDocumentTypeIds, currentUserId, now);
                 AddAuditLog(AuditLogConstants.ACTION_PROJECT_UPDATE, AuditLogConstants.ACTION_TYPE_UPDATE, $"Cập nhật dự án {project.Name}",
-                    oldData, ToAuditData(project));
+                    oldData, ToAuditData(project, documentTypeIds));
                 await _unitOfWork.SaveChangesAsync();
+
+                await transaction.CommitAsync();
             }
-            catch (Exception ex) when (renamedAccount != null)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, $"{nameof(Update)}, id={id}, oldName={oldName}");
-                await _spreadsheetWriter.TryRenameSpreadsheetAsync(renamedAccount, project.UrlGoogleSheetSync, oldName);
+                await transaction.RollbackAsync();
+                if (renamedAccount != null)
+                {
+                    await _spreadsheetWriter.TryRenameSpreadsheetAsync(renamedAccount, project.UrlGoogleSheetSync, oldName);
+                }
                 throw;
             }
         }
@@ -131,12 +168,34 @@ namespace sh.be.applications.Module.Construction.Implements
             var project = await _projectRepository.FindByIdAsync(id)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
 
-            project.Delete(getCurrentUserId(), GetVietnamTime());
+            var currentUserId = getCurrentUserId();
+            var now = GetVietnamTime();
+            var projectDocumentTypes = await _projectRepository.GetDocumentTypesAsync(id);
+            var projectDocumentFields = await _projectRepository.GetDocumentFieldsAsync(id);
+
+            project.Delete(currentUserId, now);
+            foreach (var projectDocumentType in projectDocumentTypes)
+            {
+                projectDocumentType.Delete(currentUserId, now);
+            }
+            foreach (var projectDocumentField in projectDocumentFields)
+            {
+                projectDocumentField.Delete(currentUserId, now);
+            }
 
             _projectRepository.Update(project);
             AddAuditLog(AuditLogConstants.ACTION_PROJECT_DELETE, AuditLogConstants.ACTION_TYPE_DELETE, $"Xóa dự án {project.Name}",
-                ToAuditData(project), null);
+                ToAuditData(project, projectDocumentTypes.Select(pd => pd.DocumentTypeId)), null);
             await _unitOfWork.SaveChangesAsync();
+        }
+
+        private async Task AddDocumentTypesAsync(Project project, List<int> documentTypeIds, string? assignedBy, DateTime assignedDate)
+        {
+            var projectDocumentTypes = project.AssignDocumentTypes(documentTypeIds, assignedBy, assignedDate);
+            var documentFields = await _documentFieldRepository.GetByDocumentTypeIdsAsync(documentTypeIds);
+
+            _projectRepository.AddDocumentTypes(projectDocumentTypes);
+            _projectRepository.AddDocumentFields(projectDocumentTypes.SelectMany(pd => pd.AssignDocumentFields(documentFields, assignedBy, assignedDate)));
         }
 
         private async Task<SpreadsheetAccountDto> GetSpreadsheetAccountAsync()
@@ -153,7 +212,7 @@ namespace sh.be.applications.Module.Construction.Implements
             };
         }
 
-        private static object ToAuditData(Project project)
+        private static object ToAuditData(Project project, IEnumerable<int> documentTypeIds)
         {
             return new
             {
@@ -164,6 +223,7 @@ namespace sh.be.applications.Module.Construction.Implements
                 project.Status,
                 project.UrlGoogleSheetSync,
                 project.GoogleSheetName,
+                DocumentTypeIds = documentTypeIds,
             };
         }
     }

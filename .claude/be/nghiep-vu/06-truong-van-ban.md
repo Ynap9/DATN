@@ -128,10 +128,10 @@ nên lúc hai trường đổi chỗ sẽ trùng tạm thời và báo lỗi. Gh
   hiển thị thì cũng nhận `true`. DB có default `1` cho hai cột, cấu hình `HasDefaultValue(true).HasSentinel(true)`: EF bỏ
   qua giá trị `true` khi insert (DB tự điền `1`) và vẫn gửi `false` khi cần. Đừng bỏ `HasSentinel` — thiếu nó thì `false`
   bị bỏ qua và thành `1` (cùng bẫy với `DocumentType.DefaultView`).
-- Dropdown trả `{ id, name }` các trường chưa xoá của **một** loại văn bản, sắp theo `OrderTableView` rồi `Id`; loại văn
-  bản không tồn tại hoặc chưa có trường thì trả danh sách rỗng (không báo lỗi, giống dropdown loại văn bản).
+- Dropdown trả `{ id, name }` trường chưa xoá của **một** loại văn bản (sắp `OrderTableView`, `Id`); không có thì trả rỗng, không lỗi.
 - Danh sách lọc theo `documentTypeId` (tuỳ chọn) và `keyword` trên `Name` / `Field`; sắp theo loại văn bản, `OrderTableView`, `Id`.
-- Sửa không đổi được `DocumentTypeId`. Xoá là xoá mềm; xem lại sau xoá trả `302`. Mỗi thao tác ghi để lại audit log kèm giá trị cũ và mới.
+- Sửa không đổi được `DocumentTypeId`. Xoá là xoá mềm; xem lại sau xoá trả `302`. Xoá (một hoặc nhanh) cũng xoá mềm các dòng
+  `ProjectDocumentTypeDocumentField` của trường đó ở **mọi dự án**, trong cùng transaction ([07-du-an.md](07-du-an.md)). Mỗi thao tác ghi để lại audit kèm giá trị cũ và mới.
 
 ## Đã kiểm thực tế
 

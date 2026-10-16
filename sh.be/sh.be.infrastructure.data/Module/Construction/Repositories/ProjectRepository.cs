@@ -33,5 +33,60 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
         {
             _shDbContext.Projects.Update(project);
         }
+
+        public Task<List<ProjectDocumentType>> GetDocumentTypesAsync(int projectId)
+        {
+            return _shDbContext.ProjectDocumentTypes
+                .Where(pd => pd.ProjectId == projectId)
+                .ToListAsync();
+        }
+
+        public Task<List<int>> GetDocumentTypeIdsAsync(int projectId)
+        {
+            return _shDbContext.ProjectDocumentTypes
+                .Where(pd => pd.ProjectId == projectId)
+                .Select(pd => pd.DocumentTypeId)
+                .ToListAsync();
+        }
+
+        public void AddDocumentTypes(IEnumerable<ProjectDocumentType> projectDocumentTypes)
+        {
+            _shDbContext.ProjectDocumentTypes.AddRange(projectDocumentTypes);
+        }
+
+        public Task DeleteDocumentTypesAsync(int projectId, IReadOnlyCollection<int> documentTypeIds)
+        {
+            return _shDbContext.ProjectDocumentTypes
+                .IgnoreQueryFilters()
+                .Where(pd => pd.ProjectId == projectId && documentTypeIds.Contains(pd.DocumentTypeId))
+                .ExecuteDeleteAsync();
+        }
+
+        public Task<List<ProjectDocumentTypeDocumentField>> GetDocumentFieldsAsync(int projectId)
+        {
+            return _shDbContext.ProjectDocumentTypeDocumentFields
+                .Where(pf => pf.ProjectId == projectId)
+                .ToListAsync();
+        }
+
+        public Task<List<ProjectDocumentTypeDocumentField>> GetDocumentFieldsByDocumentFieldIdsAsync(IReadOnlyCollection<int> documentFieldIds)
+        {
+            return _shDbContext.ProjectDocumentTypeDocumentFields
+                .Where(pf => documentFieldIds.Contains(pf.DocumentFieldId))
+                .ToListAsync();
+        }
+
+        public void AddDocumentFields(IEnumerable<ProjectDocumentTypeDocumentField> projectDocumentFields)
+        {
+            _shDbContext.ProjectDocumentTypeDocumentFields.AddRange(projectDocumentFields);
+        }
+
+        public Task DeleteDocumentFieldsAsync(int projectId, IReadOnlyCollection<int> documentTypeIds)
+        {
+            return _shDbContext.ProjectDocumentTypeDocumentFields
+                .IgnoreQueryFilters()
+                .Where(pf => pf.ProjectId == projectId && documentTypeIds.Contains(pf.DocumentTypeId))
+                .ExecuteDeleteAsync();
+        }
     }
 }

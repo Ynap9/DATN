@@ -20,5 +20,14 @@ namespace sh.be.domain.Module.Construction.Services
                 throw new UserFriendlyException(ErrorCodes.Found, "Tên loại văn bản đã tồn tại");
             }
         }
+
+        public async Task EnsureAllExistAsync(List<int> ids)
+        {
+            var existingCount = await _documentTypeRepository.CountActiveAsync(ids);
+            if (existingCount != ids.Count)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentTypeNotFound);
+            }
+        }
     }
 }

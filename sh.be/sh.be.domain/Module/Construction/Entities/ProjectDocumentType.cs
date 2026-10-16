@@ -40,5 +40,16 @@ namespace sh.be.domain.Module.Construction.Entities
             DeletedDate = deletedDate;
             DeletedBy = deletedBy;
         }
+
+        public List<ProjectDocumentTypeDocumentField> AssignDocumentFields(IEnumerable<DocumentField> documentFields, string? assignedBy, DateTime? assignedDate)
+        {
+            return documentFields
+                .Where(f => f.DocumentTypeId == DocumentTypeId)
+                .OrderBy(f => f.OrderTableView)
+                .ThenBy(f => f.Id)
+                .Select((f, index) => ProjectDocumentTypeDocumentField.Create(ProjectId, DocumentTypeId, f.Id, f.FieldImport ?? String.Empty,
+                    index + 1, assignedBy, assignedDate))
+                .ToList();
+        }
     }
 }
