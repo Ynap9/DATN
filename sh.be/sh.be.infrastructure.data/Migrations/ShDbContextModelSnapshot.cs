@@ -845,6 +845,56 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("ProjectDocumentType", "construction");
                 });
 
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.ProjectDocumentTypeDocumentField", b =>
+                {
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DocumentTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DocumentFieldId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<bool>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FieldImport")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("OrderFieldImport")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProjectId", "DocumentTypeId", "DocumentFieldId");
+
+                    b.HasIndex(new[] { "DocumentFieldId" }, "IX_ProjectDocumentTypeDocumentField_DocumentFieldId");
+
+                    b.ToTable("ProjectDocumentTypeDocumentField", "construction");
+                });
+
             modelBuilder.Entity("sh.be.domain.Module.Core.Entities.AuditLog", b =>
                 {
                     b.Property<long>("Id")

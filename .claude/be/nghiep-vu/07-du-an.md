@@ -34,7 +34,12 @@ Bảng nối `construction.ProjectDocumentType` (`ProjectId`, `DocumentTypeId`, 
 `(ProjectId, DocumentTypeId)`, index `IX_ProjectDocumentType_DocumentTypeId`; migration `Add_ProjectDocumentType`.
 Chưa có khoá ngoại sang `Project` / `DocumentType` (giống `DocumentField`). 🔬 Chưa có API.
 
-⚠️ Khoá ghép + xoá mềm: gán lại cặp đã xoá mềm bằng `Add` sẽ trùng khoá chính — khi làm API phải khôi phục dòng cũ
+Trường văn bản theo dự án: bảng `construction.ProjectDocumentTypeDocumentField` (`ProjectId`, `DocumentTypeId`,
+`DocumentFieldId`, `FieldImport` bắt buộc, `OrderFieldImport`, cột tạo / sửa / xoá, cờ `Deleted`), khoá ghép ba cột,
+index `IX_ProjectDocumentTypeDocumentField_DocumentFieldId`; migration `Add_ProjectDocumentTypeDocumentField`. Chưa có
+khoá ngoại, chưa có API.
+
+⚠️ Khoá ghép + xoá mềm (cả hai bảng): gán lại cặp đã xoá mềm bằng `Add` sẽ trùng khoá chính — khi làm API phải khôi phục dòng cũ
 (`IgnoreQueryFilters()`) hoặc xoá cứng, đừng thêm dòng mới.
 
 ## Trạng thái — `ProjectConst`
