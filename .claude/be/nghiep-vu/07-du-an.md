@@ -9,6 +9,8 @@ Trường: `Name`, `StartedAt`, `EndedAt`, `Status`, `UrlGoogleSheetSync`, `Goog
 
 | Nghiệp vụ | Endpoint | Quyền yêu cầu |
 |---|---|---|
+| Dropdown | `GET api/construction/project/dropdown` | `Function.Construction.Project.View` |
+| Danh sách phân trang | `GET api/construction/project/paging` | `Function.Construction.Project.View` |
 | Xem chi tiết | `GET api/construction/project/{id}` | `Function.Construction.Project.View` |
 | Tạo mới (kèm tạo Google Sheet) | `POST api/construction/project` | `Function.Construction.Project.Create` |
 | Cập nhật | `PUT api/construction/project/{id}` | `Function.Construction.Project.Update` |
@@ -20,7 +22,9 @@ Body tạo: `{ "name", "startedAt", "endedAt" }`. Hệ thống tự gán `status
 Body sửa: `{ "name", "startedAt", "endedAt", "status" }` — **không** sửa được `urlGoogleSheetSync`, `googleSheetName`;
 đổi `name` thì tên file Google Sheet đổi theo.
 
-🔬 Chưa làm: `GET paging`, `GET dropdown` (để sau theo yêu cầu).
+Dropdown trả `[{ id, name }]` sắp theo `name`. Paging nhận `pageNumber`, `pageSize`, `keyword` (tìm trong `name`, tự trim),
+`status` (tuỳ chọn, lọc đúng trạng thái); trả `{ items, totalItems }`, mỗi item `id`, `name`, `startedAt`, `endedAt`, `status`,
+`urlGoogleSheetSync`; sắp mới tạo trước (`CreatedDate` giảm dần, rồi `Id` giảm dần). Cả hai bỏ dự án đã xoá mềm.
 
 ## Trạng thái — `ProjectConst`
 
@@ -67,6 +71,9 @@ Ngày 2026-10-15, gọi API thật bằng `admin`, `FolderId` rỗng: `status = 
 `status`); `startedAt` sau `endedAt` → `400`;
 body hợp lệ → `205` (Drive báo `File not found` cho thư mục rỗng), không lưu dự án; `GET` / `PUT` / `DELETE` id không tồn tại
 → `303`; không token → `401`; seeder thêm đủ 4 quyền `Function.Construction.Project.*`.
+
+Ngày 2026-10-16: `dropdown` trả đủ 2 dự án sắp theo tên; `paging` trang 1 cỡ 2 trả 2 item, `totalItems = 2`; `status=2` trả
+rỗng; `keyword=" test "` khớp cả hai; không token → `401`.
 
 Chưa có `GoogleRefreshToken` → tạo trả `304` "Thiếu cấu hình dự án: GoogleRefreshToken". Chưa kiểm luồng tạo thành công,
 đổi tên, xoá trên dự án thật (cần người dùng xác thực Google trước).

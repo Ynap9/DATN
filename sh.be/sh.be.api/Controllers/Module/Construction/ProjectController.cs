@@ -21,6 +21,36 @@ namespace sh.be.api.Controllers.Module.Construction
             _projectService = projectService;
         }
 
+        [HttpGet("dropdown")]
+        [Permission(PermissionConstants.FUNCTION_PROJECT_VIEW)]
+        public async Task<ApiResponse> GetProjectDropDown()
+        {
+            try
+            {
+                var data = await _projectService.GetProjectDropDown();
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("paging")]
+        [Permission(PermissionConstants.FUNCTION_PROJECT_VIEW)]
+        public async Task<ApiResponse> FindPaging([FromQuery] FindPagingProjectDto dto)
+        {
+            try
+            {
+                var data = await _projectService.FindPaging(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
         [HttpGet("{id}")]
         [Permission(PermissionConstants.FUNCTION_PROJECT_VIEW)]
         public async Task<ApiResponse> FindById([FromRoute] int id)

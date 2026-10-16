@@ -13,6 +13,7 @@ using sh.be.domain.Module.Construction.Services;
 using sh.be.domain.Module.Core.Repositories;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.Constants.Core;
+using sh.be.shared.HttpRequest.BaseRequest;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
 using System.Text.Json;
@@ -37,6 +38,18 @@ namespace sh.be.applications.Module.Construction.Implements
             _projectDomainService = projectDomainService;
             _projectConfigDomainService = projectConfigDomainService;
             _spreadsheetWriter = spreadsheetWriter;
+        }
+
+        public async Task<List<GetListProjectDropDownDto>> GetProjectDropDown()
+        {
+            _logger.LogInformation($"{nameof(GetProjectDropDown)}");
+            return await _projectQuery.GetProjectDropDown();
+        }
+
+        public async Task<BaseResponsePagingDto<GetListProjectDto>> FindPaging(FindPagingProjectDto dto)
+        {
+            _logger.LogInformation($"{nameof(FindPaging)}, dto={JsonSerializer.Serialize(dto)}");
+            return await _projectQuery.FindPaging(dto);
         }
 
         public async Task<FindProjectByIdDto> FindById(int id)
