@@ -47,6 +47,19 @@ namespace sh.be.shared.Constants.Core
         public const string ACTION_SUBMISSION_IMPORT_BLANK = "Import bổ sung dữ liệu trống từ Google Sheet";
         public const string ACTION_SUBMISSION_IMPORT_OVERWRITE = "Import ghi đè trường dữ liệu từ Google Sheet";
 
+        public const string ACTION_TEMPLATE_CREATE = "Tạo mẫu chữ ký";
+        public const string ACTION_TEMPLATE_UPDATE = "Cập nhật mẫu chữ ký";
+        public const string ACTION_TEMPLATE_UPDATE_CONFIG = "Cập nhật cấu hình mẫu chữ ký";
+        public const string ACTION_TEMPLATE_DELETE = "Xóa mẫu chữ ký";
+
+        public const string ACTION_SIGNING_BATCH_CREATE = "Tạo lô ký";
+        public const string ACTION_SIGNING_BATCH_ADD_FILES = "Thêm file vào lô ký";
+        public const string ACTION_SIGNING_BATCH_REMOVE_FILE = "Xóa file khỏi lô ký";
+        public const string ACTION_SIGNING_BATCH_OPEN_SESSION = "Mở phiên ký";
+        public const string ACTION_SIGNING_BATCH_START = "Bắt đầu ký lô";
+        public const string ACTION_SIGNING_BATCH_PAUSE = "Tạm dừng lô ký";
+        public const string ACTION_SIGNING_BATCH_CANCEL = "Hủy lô ký";
+
         public const string ACTION_SEED_ROLE ="Khởi tạo vai trò mặc định";
         public const string ACTION_SEED_PERMISSION = "Đồng bộ danh sách quyền";
         public const string ACTION_SEED_USER = "Khởi tạo tài khoản quản trị mặc định";

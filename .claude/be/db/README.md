@@ -3,7 +3,7 @@
 > Chạy ở thư mục gốc repo. Đổi schema phải hỏi trước (skill `task-workflow`). Chi tiết: [architecture/04-infrastructure-data.md](../architecture/04-infrastructure-data.md).
 
 ```bash
-dotnet ef migrations add <Ten> --project sh.be/sh.be.infrastructure.data --startup-project sh.be/sh.be.api --output-dir Migrations/<Auth|Core|Construction>
+dotnet ef migrations add <Ten> --project sh.be/sh.be.infrastructure.data --startup-project sh.be/sh.be.api --output-dir Migrations/<Auth|Core|Construction|DigitalSignature>
 dotnet ef migrations has-pending-model-changes --project sh.be/sh.be.infrastructure.data --startup-project sh.be/sh.be.api
 dotnet ef database update --project sh.be/sh.be.infrastructure.data --startup-project sh.be/sh.be.api
 dotnet ef migrations remove --project sh.be/sh.be.infrastructure.data --startup-project sh.be/sh.be.api

@@ -21,6 +21,9 @@ using sh.be.applications.Module.Core.Interfaces.Queries;
 using sh.be.applications.Module.Construction.Implements;
 using sh.be.applications.Module.Construction.Interfaces.Queries;
 using sh.be.applications.Module.Construction.Interfaces.Services;
+using sh.be.applications.Module.DigitalSignature.Implements;
+using sh.be.applications.Module.DigitalSignature.Interfaces.Queries;
+using sh.be.applications.Module.DigitalSignature.Interfaces.Services;
 using sh.be.domain.Base;
 using sh.be.domain.Module.Auth.Entities;
 using sh.be.domain.Module.Auth.Repositories;
@@ -28,6 +31,7 @@ using sh.be.domain.Module.Auth.Services;
 using sh.be.domain.Module.Core.Repositories;
 using sh.be.domain.Module.Construction.Repositories;
 using sh.be.domain.Module.Construction.Services;
+using sh.be.domain.Module.DigitalSignature.Repositories;
 using sh.be.infrastructure.data.Base;
 using sh.be.infrastructure.data.Module.Auth.Queries;
 using sh.be.infrastructure.data.Module.Auth.Repositories;
@@ -35,16 +39,27 @@ using sh.be.infrastructure.data.Module.Core.Queries;
 using sh.be.infrastructure.data.Module.Core.Repositories;
 using sh.be.infrastructure.data.Module.Construction.Queries;
 using sh.be.infrastructure.data.Module.Construction.Repositories;
+using sh.be.infrastructure.data.Module.DigitalSignature.Queries;
+using sh.be.infrastructure.data.Module.DigitalSignature.Repositories;
 using sh.be.infrastructure.data.Persistence.Db;
 using sh.be.infrastructure.data.Persistence.Seeder;
 using sh.be.infrastructure.external.DataReader.Implements;
 using sh.be.infrastructure.external.Excel.Implements;
 using sh.be.infrastructure.external.FileDownloader.Implements;
+using sh.be.infrastructure.external.Certificate.Implements;
 using sh.be.infrastructure.external.Mail.Implements;
+using sh.be.infrastructure.external.Pdf.Implements;
+using sh.be.infrastructure.external.Plugin.Implements;
+using sh.be.infrastructure.external.Signing.Implements;
+using sh.be.infrastructure.external.SampleFile.Implements;
 using sh.be.infrastructure.external.Spreadsheet.Implements;
+using sh.be.infrastructure.external.Storage.Implements;
+using sh.be.infrastructure.external.Timestamp.Implements;
 using sh.be.shared.Constants.Auth;
+using sh.be.shared.Constants.DigitalSignature;
 using sh.be.shared.Constants.Swagger;
 using sh.be.shared.Settings;
+using System.Globalization;
 using System.Net.WebSockets;
 using System.Reflection.Metadata;
 using System.Text;
@@ -129,7 +144,8 @@ string secretKey = builder.Configuration.GetSection("AuthServer:SecretKey").Valu
 builder.Services.Configure<AuthServerSettings>(builder.Configuration.GetSection("AuthServer"));
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
 builder.Services.Configure<GoogleSheetSettings>(builder.Configuration.GetSection("GoogleSheet"));
-//builder.Services.Configure<S3Settings>(builder.Configuration.GetSection("S3"));
+builder.Services.Configure<S3Settings>(builder.Configuration.GetSection("S3"));
+builder.Services.Configure<PluginSettings>(builder.Configuration.GetSection(PluginConst.CONFIG_SECTION));
 
 builder.Services.AddOpenIddict()
     .AddCore(opt =>
@@ -263,10 +279,26 @@ builder.Services.AddScoped<ISubmissionRepository, SubmissionRepository>();
 builder.Services.AddScoped<SubmissionDomainService>();
 builder.Services.AddScoped<ISubmissionImportService, SubmissionImportService>();
 builder.Services.AddScoped<ISubmissionFileService, SubmissionFileService>();
+builder.Services.AddScoped<IFileStorage, S3FileStorage>();
+builder.Services.AddScoped<ISampleFileReader, SampleFileReader>();
+builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();
+builder.Services.AddScoped<ITemplateQuery, TemplateQuery>();
+builder.Services.AddScoped<ITemplateService, TemplateService>();
+builder.Services.AddScoped<ISigningBatchRepository, SigningBatchRepository>();
+builder.Services.AddScoped<ISigningBatchQuery, SigningBatchQuery>();
+builder.Services.AddScoped<ISigningBatchService, SigningBatchService>();
+builder.Services.AddScoped<IPluginSetupProvider, PluginSetupProvider>();
+builder.Services.AddScoped<IPluginService, PluginService>();
+builder.Services.AddSingleton<ICertificateValidator, CertificateValidator>();
+builder.Services.AddSingleton<ISigningQueue, SigningQueue>();
+builder.Services.AddSingleton<IPdfSigner, PdfSigner>();
+builder.Services.AddSingleton<ITimestampClient, TimestampClient>();
+builder.Services.AddSingleton<ISigningRunner, SigningRunner>();
 #endregion
 
 
 builder.Services.AddHttpClient();
+builder.Services.AddHttpClient(TimestampConst.HTTP_CLIENT_NAME, client => client.Timeout = TimeSpan.FromSeconds(TimestampConst.TIMEOUT_SECONDS));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers(o => o.Conventions.Add(new ModuleGroupConvention()));
 builder.Services.AddHealthChecks();
@@ -332,6 +364,7 @@ using (var scope = app.Services.CreateScope())
     await SeedUser.SeedAsync(shDbContext,userManager);
     await SeedRolePermission.SeedAsync(shDbContext);
 }
+await app.Services.GetRequiredService<ISigningRunner>().RecoverAsync();
 #endregion
 
 
@@ -360,6 +393,11 @@ if (app.Environment.IsDevelopment())
 
     });
 }
+
+app.UseRequestLocalization(new RequestLocalizationOptions()
+    .SetDefaultCulture(CultureInfo.InvariantCulture.Name)
+    .AddSupportedCultures(CultureInfo.InvariantCulture.Name)
+    .AddSupportedUICultures(CultureInfo.InvariantCulture.Name));
 
 app.UseCors(ProgramExtensions.CorsPolicy);
 app.UseStaticFiles();

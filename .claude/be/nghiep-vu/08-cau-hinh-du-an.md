@@ -1,6 +1,6 @@
 # Cấu hình dự án (Construction)
 
-> **Phần 8/9** · trước: [07-du-an.md](07-du-an.md) · mục lục: [README.md](README.md)
+> **Phần 8/11** · trước: [07-du-an.md](07-du-an.md) · mục lục: [README.md](README.md)
 
 Bảng key-value `construction.ProjectConfig` (`Name`, `Value`, `Description`, cột tạo / sửa / xoá mềm). Hiện dùng để lưu tài khoản
 Google mà hệ thống dùng tạo, đổi tên, xoá Google Sheet của dự án ([07-du-an.md](07-du-an.md)).
@@ -61,4 +61,4 @@ Chưa kiểm đồng ý thật trên trình duyệt (cần người dùng đăng
 
 ⚠️ Đổi tên một dòng cấu hình Google (ví dụ `GoogleFolderId`) làm tạo dự án báo `304` — tên là khoá mà code tra cứu.
 
-> **Tiếp:** [09-ho-so-import.md](09-ho-so-import.md) — import hồ sơ từ Google Sheet và xem file.
+> **Tiếp:** [09-mau-chu-ky.md](09-mau-chu-ky.md) — mẫu chữ ký cho lô ký số: cấu hình, ảnh dấu đỏ / chữ ký tay, toạ độ khối.

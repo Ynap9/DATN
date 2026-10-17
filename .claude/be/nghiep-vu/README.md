@@ -1,8 +1,8 @@
 # Nghiệp vụ backend sh.be
 
 > Chức năng và luật nghiệp vụ của module `Auth` (người dùng, vai trò, quyền), `Core` (nhật ký hệ thống) và
-> `Construction` (loại văn bản, dự án, hồ sơ).
-> Đối chiếu với code `sh.be` ngày 2026-10-12. Kiến trúc và quy ước code nằm ở [../architecture/README.md](../architecture/README.md).
+> `Construction` (loại văn bản, dự án, hồ sơ) và `DigitalSignature` (mẫu chữ ký, lô ký).
+> Đối chiếu với code `sh.be` ngày 2026-10-17. Kiến trúc và quy ước code nằm ở [../architecture/README.md](../architecture/README.md).
 
 ## Mục lục
 
@@ -16,7 +16,9 @@
 | [06-truong-van-ban.md](06-truong-van-ban.md) | Trường của loại văn bản (`DocumentField`): CRUD, `Field` duy nhất, thứ tự tự tăng |
 | [07-du-an.md](07-du-an.md) | Dự án (`Project`): CRUD, trạng thái `ProjectConst`, tự tạo Google Sheet khi tạo |
 | [08-cau-hinh-du-an.md](08-cau-hinh-du-an.md) | Cấu hình dự án (`ProjectConfig`): CRUD key-value, xác thực tài khoản Google lấy refresh token |
-| [09-ho-so-import.md](09-ho-so-import.md) | Hồ sơ (`Submission`, `SubmissionData`): import append / blank / overwrite từ Google Sheet, proxy xem file PDF |
+| [09-mau-chu-ky.md](09-mau-chu-ky.md) | Mẫu chữ ký (`Template`): tạo / đổi tên / xoá, ghi cấu hình ký kèm ảnh lên MinIO và toạ độ khối |
+| [10-lo-ky.md](10-lo-ky.md) | Lô ký (`SigningBatch`): tạo lô, tải / xoá file PDF lên MinIO, chủ lô, lô đang dở |
+| [11-ho-so-import.md](11-ho-so-import.md) | Hồ sơ (`Submission`, `SubmissionData`): import append / blank / overwrite từ Google Sheet, proxy xem file PDF |
 
 ## Thuật ngữ
 
@@ -35,7 +37,7 @@
 ## Ba quy tắc xuyên suốt
 
 - Mọi thao tác ghi đều tạo `AuditLog` **trong cùng transaction** với thay đổi dữ liệu (xem [04-nhat-ky-he-thong.md](04-nhat-ky-he-thong.md)).
-- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`108` (Auth), `201`–`207` (Core) hoặc `301`–`315` (Construction).
+- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`108` (Auth), `201`–`210` (Core), `301`–`315` (Construction) hoặc `601`–`635` (DigitalSignature).
 - Thời gian thao tác lấy theo giờ Việt Nam, người thao tác lấy từ token đăng nhập.
 
 ## Giới hạn đã biết

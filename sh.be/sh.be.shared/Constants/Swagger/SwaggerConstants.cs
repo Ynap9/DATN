@@ -13,9 +13,10 @@ namespace sh.be.shared.Constants.Swagger
         public const string AUTH = "auth";
         public const string CORE = "core";
         public const string CONSTRUCTION = "construction";
+        public const string DIGITAL_SIGNATURE = "digitalsignature";
         public const string COMMON = "common";
 
 
-        public static readonly string[] MODULES = { AUTH, CORE, CONSTRUCTION };
+        public static readonly string[] MODULES = { AUTH, CORE, CONSTRUCTION, DIGITAL_SIGNATURE };
     }
 }
