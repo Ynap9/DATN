@@ -25,10 +25,9 @@ repository, `IUnitOfWork`).
 | Được join nhiều bảng | Chỉ khi phục vụ aggregate | Thoải mái, kể cả bảng `Users` |
 | Lưu | Không tự `SaveChanges`; để `IUnitOfWork` | Không ghi gì |
 
-`UserRepository` bọc `UserManager<AppUser>` và dịch `IdentityResult` lỗi sang `UserFriendlyException` với mã
-`102` (tạo), `106` (sửa), `107` (xoá), `108` (đổi mật khẩu). ⚠️ `UserManager` **tự `SaveChanges`**, nên audit
-log thêm trước lời gọi `UpdateAsync`/`ChangePasswordAsync` được lưu cùng lúc — đừng gọi thêm `SaveChanges`
-trong các luồng đó.
+`UserRepository` bọc `UserManager<AppUser>`, dịch `IdentityResult` lỗi sang mã `102` (tạo), `106` (sửa), `107` (xoá), `108` (đổi mật
+khẩu). ⚠️ `UserManager` **tự `SaveChanges`**, nên audit thêm trước `UpdateAsync`/`ChangePasswordAsync` được lưu cùng lúc — đừng
+gọi thêm `SaveChanges` trong các luồng đó.
 
 ## Schema
 
@@ -51,6 +50,11 @@ trong các luồng đó.
 
 `DocumentTypeRepository.LockAsync` khoá dòng loại văn bản (`UPDLOCK, HOLDLOCK`) để tuần tự hoá việc ghi thứ tự trường;
 chỉ có tác dụng **bên trong transaction** (xem [../nghiep-vu/06-truong-van-ban.md](../nghiep-vu/06-truong-van-ban.md)).
+`SubmissionRepository.LockImportAsync` khoá dòng `ProjectDocumentType` cùng cách, `SET LOCK_TIMEOUT` 5 giây (lỗi `1222` → `310`).
+Bulk (`EFCore.BulkExtensions`) chạy trên cùng `ShDbContext` nên tự vào transaction của `UnitOfWork`; repository không mở transaction riêng.
+⚠️ Bulk và đọc cột `nvarchar(max)` số lượng lớn: dùng API **sync**, connection string **tắt MARS** — lý do và số đo ở [../nghiep-vu/09-ho-so-import.md](../nghiep-vu/09-ho-so-import.md#hiệu-năng--sheet-20000-dòng--30-trường-600000-dữ-liệu).
+
+⚠️ Bảng có filtered index (`Submission`, `SubmissionData`) chỉ ghi được khi `QUOTED_IDENTIFIER ON` (EF bật sẵn); `sqlcmd` tắt → `Msg 1934`, dùng `sqlcmd -I`.
 
 ## Xoá mềm — global query filter
 

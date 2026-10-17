@@ -75,6 +75,14 @@ namespace sh.be.domain.Module.Construction.Entities
             DeletedBy = deletedBy;
         }
 
+        public void EnsureImportable()
+        {
+            if (Status == ProjectConst.DONE)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectDone);
+            }
+        }
+
         public List<ProjectDocumentType> AssignDocumentTypes(IEnumerable<int> documentTypeIds, string? assignedBy, DateTime? assignedDate)
         {
             return documentTypeIds

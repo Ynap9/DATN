@@ -81,6 +81,35 @@ namespace sh.be.infrastructure.external.DataReader.Implements
             }
         }
 
+        protected override async Task<List<List<string?>>> ReadRowsAsync(string source, string sheetName)
+        {
+            _logger.LogInformation($"{nameof(ReadRowsAsync)}, source={source}, sheetName={sheetName}");
+            var spreadsheetId = GoogleSheetUrl.ExtractSpreadsheetId(source);
+
+            using var sheetsService = CreateSheetsService();
+            try
+            {
+                var sheetNames = await GetSheetNamesAsync(sheetsService, spreadsheetId);
+                if (!sheetNames.Contains(sheetName))
+                {
+                    throw new UserFriendlyException(ErrorCodes.CoreErrorSheetNotFound);
+                }
+
+                var sheetRange = await sheetsService.Spreadsheets.Values
+                    .Get(spreadsheetId, ToSheetRange(sheetName))
+                    .ExecuteAsync();
+                return sheetRange.Values?
+                    .Select(row => row.Select(cell => cell?.ToString()).ToList())
+                    .ToList()
+                    ?? new List<List<string?>>();
+            }
+            catch (GoogleApiException ex)
+            {
+                _logger.LogError(ex, $"{nameof(ReadRowsAsync)}, spreadsheetId={spreadsheetId}, sheetName={sheetName}");
+                throw new UserFriendlyException(ErrorCodes.CoreErrorReadDataSourceFailed);
+            }
+        }
+
         private SheetsService CreateSheetsService()
         {
             var credential = CredentialFactory
@@ -115,7 +144,12 @@ namespace sh.be.infrastructure.external.DataReader.Implements
 
         private static string ToHeaderRange(string sheetName, int rowIndex)
         {
-            return $"'{sheetName.Replace("'", "''")}'!{rowIndex}:{rowIndex}";
+            return $"{ToSheetRange(sheetName)}!{rowIndex}:{rowIndex}";
+        }
+
+        private static string ToSheetRange(string sheetName)
+        {
+            return $"'{sheetName.Replace("'", "''")}'";
         }
 
         private static List<string?> ToCells(ValueRange headerRange)

@@ -16,6 +16,7 @@ application khai báo.
 | `Excel/Implements/ExcelTemplateWriter.cs` | Implement `IExcelTemplateWriter`: sinh file `.xlsx` template bằng ClosedXML |
 | `DataReader/Models/SheetHeaderRow.cs` | Dữ liệu thô lớp con trả cho lớp nền: tên sheet + các ô dòng `1` |
 | `Spreadsheet/Implements/GoogleSheetWriter.cs` | Implement `ISpreadsheetWriter`: tạo / xoá Google Sheet (`Google.Apis.Drive.v3` + Sheets) |
+| `FileDownloader/Implements/HttpFileDownloader.cs` | Implement `IFileDownloader.OpenPdfAsync`: `IHttpClientFactory`, `ResponseHeadersRead`, trả **stream** (không nạp RAM); không phải http(s), lỗi mạng / HTTP, `Content-Type` khác `application/pdf` / `application/octet-stream` → `315` |
 
 ## IMailService
 
@@ -31,9 +32,8 @@ Interface nằm ở `sh.be.applications/Base/Interfaces/IMailService.cs`:
 
 ## Cấu hình
 
-Section `Email` trong `appsettings.json`, bind vào `EmailSettings` (`sh.be.shared/Settings`):
-`Smtp.Host`, `Smtp.Port`, `Smtp.UserName`, `Smtp.Password`, `Smtp.EnableSsl`, `DefaultFromAddress`,
-`DefaultFromDisplayName`.
+Section `Email` trong `appsettings.json`, bind vào `EmailSettings` (`sh.be.shared/Settings`): `Smtp.Host`, `Smtp.Port`,
+`Smtp.UserName`, `Smtp.Password`, `Smtp.EnableSsl`, `DefaultFromAddress`, `DefaultFromDisplayName`.
 
 ## IDataReader — đọc header theo từng sheet
 
@@ -45,9 +45,10 @@ Interface ở `sh.be.applications/Base/Interfaces/IDataReader.cs`: `GetSheetHead
 | `DataReaderBase` | `GetSheetHeadersAsync` gọi `ReadHeaderRowsAsync` rồi bỏ ô trống, trim — viết **một lần** cho mọi nguồn |
 | `GoogleSheetReader` | Override `ReadHeaderRowsAsync`: tách `spreadsheetId` từ link (sai → `202`), `spreadsheets.get` lấy tên sheet, một lần `values.batchGet` range `'Tên sheet'!1:1` cho mọi sheet; `GoogleApiException` → `203` |
 
-Method thứ hai `GetHeadersAsync(source, sheetName, headerRowIndex)` trả header **một** sheet ở dòng tuỳ chọn (đếm từ `1`):
-lớp nền kiểm `headerRowIndex >= 1` (sai → `400`) rồi chuẩn hoá như trên; `GoogleSheetReader.ReadHeaderCellsAsync` kiểm sheet có
+`GetHeadersAsync(source, sheetName, headerRowIndex)` trả header **một** sheet ở dòng tuỳ chọn (`>= 1`, sai → `400`); lớp con kiểm sheet có
 trong danh sách tên (so đúng chữ, không có → `204`) rồi `values.get` range `'Tên sheet'!n:n`.
+`ReadTableAsync(source, sheetName)` trả `SheetTable` cả sheet (import hồ sơ): lớp con `ReadRowsAsync` (`values.get` range `'Tên sheet'`,
+kiểm `204`, lỗi `203`) trả ô thô; lớp nền trim mọi ô, **giữ** ô trống để đúng vị trí cột, dòng `1` là header, `SheetRowNumber` = số dòng thật.
 
 Thêm nguồn mới (ví dụ Excel): tạo `DataReader/Implements/ExcelReader : DataReaderBase`, chỉ override
 `ReadHeaderRowsAsync`. ⚠️ Khi có từ hai reader trở lên, `IDataReader` không còn biết lấy implement nào (DI trả cái đăng ký

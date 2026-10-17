@@ -11,7 +11,7 @@ Presentation + **composition root**. Tham chiếu `applications`, `infrastructur
 | `Base/BaseController.cs` | `OkException(ex)`: đổi exception thành `ApiResponse` lỗi |
 | `Controllers/Module/Auth/` | `AuthorizationController` (token), `UserController`, `RoleController`, `PermissionController` |
 | `Controllers/Module/Core/` | `AuditLogController` |
-| `Controllers/Module/Construction/` | `DocumentTypeController`, `DocumentFieldController`, `ProjectController`, `ProjectConfigController` (callback Google `[AllowAnonymous]`) |
+| `Controllers/Module/Construction/` | `DocumentTypeController`, `DocumentFieldController`, `ProjectController`, `ProjectConfigController` (callback Google `[AllowAnonymous]`), `SubmissionController` (`proxy-file` trả stream PDF, lỗi vẫn `Ok(OkException(ex))`) |
 | `Attributes/PermissionAttribute.cs` | Kiểm quyền theo key, gọi `IPermissionService.HasAnyPermission` |
 | `Services/HttpRequestContext.cs` | Implement `IRequestContext`: `UserId`, `Source`, `ContentType` từ `HttpContext` |
 | `Services/AuthorizationStateProtector.cs` | Implement `IAuthorizationStateProtector`: ký / đọc `state` OAuth bằng `ITimeLimitedDataProtector` |
@@ -71,6 +71,7 @@ khi cấp token. Đây là chỗ còn dính Identity ở tầng api, đã biết
   `TimeProvider.System` là `AddSingleton`.
 - Domain service (`RoleDomainService`, `UserDomainService`) đăng ký **class cụ thể**, không qua interface.
 - Seeder chạy sau `builder.Build()` theo thứ tự: Role → Permission → User → RolePermission.
-- Connection string tên `SO_HOA_DB`; CORS lấy từ `AllowedHosts` (phân cách `;`).
+- Connection string tên `SO_HOA_DB`, `MultipleActiveResultSets=False` (bật MARS làm bulk import treo transaction — xem
+  [../nghiep-vu/09-ho-so-import.md](../nghiep-vu/09-ho-so-import.md)); CORS lấy từ `AllowedHosts` (phân cách `;`).
 
 > **Tiếp:** [02-applications.md](02-applications.md) — service điều phối use case.

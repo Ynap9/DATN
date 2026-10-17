@@ -1,6 +1,6 @@
 # Phân quyền
 
-> **Phần 2/8** · trước: [01-nguoi-dung.md](01-nguoi-dung.md) · mục lục: [README.md](README.md)
+> **Phần 2/9** · trước: [01-nguoi-dung.md](01-nguoi-dung.md) · mục lục: [README.md](README.md)
 
 Quyền là một **cây** định danh bằng `Key`. Vai trò giữ một tập key; user có quyền = hợp quyền của các vai trò còn hoạt động.
 Hằng số key nằm ở `PermissionConstants` (shared); cây được seed bởi `SeedPermission`.
@@ -43,11 +43,14 @@ Menu.Construction                  Menu nghiệp vụ xây dựng
 │   ├── Function.Construction.Project.Create
 │   ├── Function.Construction.Project.Update
 │   └── Function.Construction.Project.Delete
-└── Menu.Construction.ProjectConfig Menu cấu hình dự án
-    ├── Function.Construction.ProjectConfig.View
-    ├── Function.Construction.ProjectConfig.Create
-    ├── Function.Construction.ProjectConfig.Update   (gồm lấy link xác thực Google)
-    └── Function.Construction.ProjectConfig.Delete
+├── Menu.Construction.ProjectConfig Menu cấu hình dự án
+│   ├── Function.Construction.ProjectConfig.View
+│   ├── Function.Construction.ProjectConfig.Create
+│   ├── Function.Construction.ProjectConfig.Update   (gồm lấy link xác thực Google)
+│   └── Function.Construction.ProjectConfig.Delete
+└── Menu.Construction.Submission   Menu quản lý hồ sơ
+    ├── Function.Construction.Submission.View     (xem file PDF qua proxy)
+    └── Function.Construction.Submission.Import   (6 API verify / import)
 ```
 
 Quy ước đặt key: `Menu.<Module>.<Tên>` cho mục menu, `Function.<Module>.<Tên>.<Hành động>` cho thao tác.
@@ -108,6 +111,8 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `POST` / `PUT {id}` / `DELETE {id}` `api/construction/project-config` | `...ProjectConfig.Create` / `.Update` / `.Delete` |
 | `GET api/construction/project-config/google-authorization-url` | `Function.Construction.ProjectConfig.Update` |
 | `GET api/construction/project-config/google-callback` | — (không cần token, kiểm `state` đã ký) |
+| `POST api/construction/submission/import/{append\|blank\|overwrite}` và `.../verify` | `Function.Construction.Submission.Import` |
+| `GET api/construction/submission/proxy-file` | `Function.Construction.Submission.View` |
 
 ## Quyền người dùng: đang lệch so với cây
 

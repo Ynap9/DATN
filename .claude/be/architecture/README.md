@@ -35,6 +35,7 @@ Mọi mũi tên hướng **vào trong**. Tầng ngoài implement interface do t�
 | `applications/.../Interfaces/Queries/IRoleQuery`… | `infrastructure.data/.../Queries/RoleQuery`… |
 | `applications/Base/Interfaces/IMailService` | `infrastructure.external/Mail/Implements/MailService` |
 | `applications/Base/Interfaces/IDataReader` | `infrastructure.external/DataReader/Implements/GoogleSheetReader` (qua `DataReaderBase`) |
+| `applications/Base/Interfaces/IFileDownloader` | `infrastructure.external/FileDownloader/Implements/HttpFileDownloader` |
 | `applications/Base/Interfaces/IRequestContext` | `api/Services/HttpRequestContext` |
 | `applications/.../Interfaces/Services/IRoleService`… | `applications/.../Implements/RoleService`… |
 

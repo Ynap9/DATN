@@ -43,6 +43,10 @@ namespace sh.be.shared.Constants.Core
         public const string ACTION_PROJECT_CONFIG_DELETE = "Xóa cấu hình dự án";
         public const string ACTION_PROJECT_CONFIG_AUTHORIZE_GOOGLE = "Xác thực tài khoản Google cho cấu hình dự án";
 
+        public const string ACTION_SUBMISSION_IMPORT_APPEND = "Import thêm mới hồ sơ từ Google Sheet";
+        public const string ACTION_SUBMISSION_IMPORT_BLANK = "Import bổ sung dữ liệu trống từ Google Sheet";
+        public const string ACTION_SUBMISSION_IMPORT_OVERWRITE = "Import ghi đè trường dữ liệu từ Google Sheet";
+
         public const string ACTION_SEED_ROLE ="Khởi tạo vai trò mặc định";
         public const string ACTION_SEED_PERMISSION = "Đồng bộ danh sách quyền";
         public const string ACTION_SEED_USER = "Khởi tạo tài khoản quản trị mặc định";

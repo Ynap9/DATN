@@ -39,6 +39,7 @@ using sh.be.infrastructure.data.Persistence.Db;
 using sh.be.infrastructure.data.Persistence.Seeder;
 using sh.be.infrastructure.external.DataReader.Implements;
 using sh.be.infrastructure.external.Excel.Implements;
+using sh.be.infrastructure.external.FileDownloader.Implements;
 using sh.be.infrastructure.external.Mail.Implements;
 using sh.be.infrastructure.external.Spreadsheet.Implements;
 using sh.be.shared.Constants.Auth;
@@ -257,6 +258,11 @@ builder.Services.AddScoped<IProjectConfigRepository, ProjectConfigRepository>();
 builder.Services.AddScoped<IProjectConfigQuery, ProjectConfigQuery>();
 builder.Services.AddScoped<ProjectConfigDomainService>();
 builder.Services.AddScoped<IProjectConfigService, ProjectConfigService>();
+builder.Services.AddScoped<IFileDownloader, HttpFileDownloader>();
+builder.Services.AddScoped<ISubmissionRepository, SubmissionRepository>();
+builder.Services.AddScoped<SubmissionDomainService>();
+builder.Services.AddScoped<ISubmissionImportService, SubmissionImportService>();
+builder.Services.AddScoped<ISubmissionFileService, SubmissionFileService>();
 #endregion
 
 

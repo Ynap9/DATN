@@ -60,6 +60,10 @@ namespace sh.be.infrastructure.data.Persistence.Seeder
             Permission.Create(PermissionConstants.FUNCTION_PROJECT_CONFIG_CREATE, "Tạo cấu hình dự án", PermissionConstants.MENU_PROJECT_CONFIG, PermissionConstants.MODULE_CONSTRUCTION, null),
             Permission.Create(PermissionConstants.FUNCTION_PROJECT_CONFIG_UPDATE, "Cập nhật cấu hình dự án và xác thực tài khoản Google", PermissionConstants.MENU_PROJECT_CONFIG, PermissionConstants.MODULE_CONSTRUCTION, null),
             Permission.Create(PermissionConstants.FUNCTION_PROJECT_CONFIG_DELETE, "Xóa cấu hình dự án", PermissionConstants.MENU_PROJECT_CONFIG, PermissionConstants.MODULE_CONSTRUCTION, null),
+
+            Permission.Create(PermissionConstants.MENU_SUBMISSION, "Menu quản lý hồ sơ", PermissionConstants.MENU_CONSTRUCTION, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_SUBMISSION_VIEW, "Xem file hồ sơ", PermissionConstants.MENU_SUBMISSION, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_SUBMISSION_IMPORT, "Import hồ sơ từ Google Sheet", PermissionConstants.MENU_SUBMISSION, PermissionConstants.MODULE_CONSTRUCTION, null),
         ];
 
         public static async Task SeedAsync(ShDbContext dbContext)

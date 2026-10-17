@@ -56,5 +56,9 @@ namespace sh.be.shared.Constants.Auth
         public const string FUNCTION_PROJECT_CONFIG_CREATE = "Function.Construction.ProjectConfig.Create";
         public const string FUNCTION_PROJECT_CONFIG_UPDATE = "Function.Construction.ProjectConfig.Update";
         public const string FUNCTION_PROJECT_CONFIG_DELETE = "Function.Construction.ProjectConfig.Delete";
+
+        public const string MENU_SUBMISSION = "Menu.Construction.Submission";
+        public const string FUNCTION_SUBMISSION_VIEW = "Function.Construction.Submission.View";
+        public const string FUNCTION_SUBMISSION_IMPORT = "Function.Construction.Submission.Import";
     }
 }
