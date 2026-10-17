@@ -10,7 +10,7 @@
 ```text
 Base/
   BaseService.cs          lớp cha của mọi service: audit log, user hiện tại, giờ Việt Nam
-  MappingProfile.cs       profile AutoMapper (hiện rỗng)
+  MappingProfile.cs       profile AutoMapper: map entity → DTO đọc, dùng qua ProjectTo
   Interfaces/             cổng ra dùng chung: IRequestContext, IMailService
 Module/<TenModule>/
   Dtos/<Nhom>/            DTO vào/ra của API

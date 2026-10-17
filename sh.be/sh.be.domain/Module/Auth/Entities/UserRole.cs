@@ -1,4 +1,5 @@
-﻿using sh.be.shared.Constants.Db;
+﻿using Microsoft.EntityFrameworkCore;
+using sh.be.shared.Constants.Db;
 using sh.be.shared.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 namespace sh.be.domain.Module.Auth.Entities
 {
     [Table(nameof(UserRole), Schema = DbSchemas.Auth)]
+    [Index(nameof(RoleId), Name = $"IX_{nameof(UserRole)}_{nameof(RoleId)}")]
     public class UserRole: ISoftDeleted
     {
         public string UserId { get; private set; } = String.Empty;

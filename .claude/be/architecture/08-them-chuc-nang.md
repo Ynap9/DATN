@@ -23,8 +23,8 @@ tầng ngoài chỉ việc implement.
 
 1. DTO kết quả trong `applications/.../Dtos/`.
 2. Method trong `applications/.../Interfaces/Queries/I<X>Query`.
-3. Implement trong `infrastructure.data/.../Queries/<X>Query`: `AsNoTracking`, `Select` thẳng ra DTO, phân
-   trang bằng `.Paging(dto)`.
+3. Implement trong `infrastructure.data/.../Queries/<X>Query`: `AsNoTracking`, phân trang bằng `.Paging(dto)`,
+   chiếu ra DTO bằng `ProjectTo` (thêm `CreateMap<Entity, Dto>()` vào `MappingProfile`).
 4. Method trong `I<X>Service` + `<X>Service` chỉ gọi query (và ném lỗi nếu `null`).
 5. Action controller + `[Permission]`. Build.
 

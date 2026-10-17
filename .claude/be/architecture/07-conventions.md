@@ -68,7 +68,10 @@
 ## Truy vấn
 
 - Không viết `!x.Deleted` (đã có global query filter). Cần bản ghi đã xoá ⇒ `IgnoreQueryFilters()`.
-- Query đọc dùng `AsNoTracking()` và `Select` thẳng ra DTO.
+- Query đọc dùng `AsNoTracking()` rồi chiếu thẳng ra DTO trong SQL: `ProjectTo<TDto>(_mapper.ConfigurationProvider)`
+  với map khai trong `MappingProfile` (module mới, từ `DocumentType`), hoặc `Select` tay (module cũ). Đặt sau `.Paging(dto)`.
+  Query mới kế thừa `BaseQuery` để có `_shDbContext`, `_mapper`; service đã có `_mapper` từ `BaseService`.
+- AutoMapper **chỉ** dùng chiều entity → DTO. DTO → entity luôn qua `Create`/`Update` của entity (setter `private`).
 - Không trả `IQueryable` ra khỏi infrastructure.
 
 ## Lỗi và response

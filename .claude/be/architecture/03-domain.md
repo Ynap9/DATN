@@ -28,6 +28,12 @@ Module/<TenModule>/
 | `UserRole` | Auth | `Create`, `Delete` (xoá mềm) |
 | `AppUser : IdentityUser` | Auth | `Create` (`EmailConfirmed = true`), `UpdateProfile`, `AssignRoles` |
 | `AuditLog` | Core | `Create` (tự serialize `oldData`/`newData` sang JSON) |
+| `DocumentType` | Construction | `Create` (`DefaultView` mặc định `1`), `Update`, `Delete` (xoá mềm); `Name` duy nhất qua `DocumentTypeDomainService.EnsureUniqueNameAsync`; `EnsureAllExistAsync` (thiếu id nào → `301`) |
+| `Project` | Construction | `Create` (`Status = DEPLOYING`, `GoogleSheetName = Name`, kiểm `StartedAt ≤ EndedAt`), `Update` (kiểm thêm `Status` thuộc `ProjectConst.STATUSES`), `LinkGoogleSheet`, `Delete` (đặt `IsDeleted`, không dùng `ISoftDeleted`), `AssignDocumentTypes` (dựng `ProjectDocumentType`, gọi sau khi đã có `Id`); `Name` duy nhất qua `ProjectDomainService.EnsureUniqueNameAsync` |
+| `ProjectConfig` | Construction | Key-value: `Create`, `Update` (giữ secret cũ khi gửi `******`), `ChangeValue`, `Delete`, `IsSecret`; `ProjectConfigDomainService`: `Name` duy nhất, `GetRequiredValuesAsync` (thiếu → `304`), `SaveValueAsync` (có thì sửa, chưa có thì tạo) |
+| `ProjectDocumentType` | Construction | Bảng nối dự án – loại văn bản, khoá ghép `(ProjectId, DocumentTypeId)`: `Create`, `Delete` (xoá mềm), `AssignDocumentFields` (chép trường của loại, `OrderFieldImport` từ 1) |
+| `ProjectDocumentTypeDocumentField` | Construction | Trường văn bản theo dự án, khoá ghép `(ProjectId, DocumentTypeId, DocumentFieldId)`, thêm `FieldImport`, `OrderFieldImport`: `Create`, `Delete` (xoá mềm) |
+| `DocumentField` | Construction | `Create` (`FieldType = "string"`, hai cờ hiển thị `true`), `Update` (không đổi `DocumentTypeId`, không đổi thứ tự), `UpdateSetting` (chỉ `IsShow`, `IsChargeable`, `IsFieldOcr`, `FieldNameOcr`; tắt OCR thì giữ `FieldNameOcr` cũ), `ChangeOrderTableView` / `ChangeOrderListView` (mỗi method một cột), `Delete` (xoá mềm, giữ nguyên thứ tự); `DocumentFieldDomainService` kiểm loại văn bản tồn tại, `Field` duy nhất, thứ tự không trùng (tạo = lớn nhất của cả hai cột kể cả trường đã xoá + 1, kéo thả từng cột thì dịch `±1` các trường ở giữa, xoá không đổi thứ tự) |
 
 **Vì sao hành vi nằm trong entity:** setter `private` chỉ có nghĩa khi entity tự cung cấp cách thay đổi. Tách
 các method này ra class khác thì setter phải mở `public` — entity thành anemic model, ai cũng gán được
@@ -48,7 +54,7 @@ gọi chúng bên trong method của aggregate gốc hoặc seeder; đừng gọ
 |---|---|---|
 | Chỉ dữ liệu của chính entity | Method của entity | `Role.Update`, `AppUser.UpdateProfile` |
 | Tra cứu dữ liệu khác (qua repository) | Domain service | `UserDomainService.EnsureUniqueAsync`, `RoleDomainService.EnsureAllExistAsync` |
-| Phép tính thuần, không I/O | Policy tĩnh | `PermissionGrantPolicy.ResolveGrantedKeys`, `IsSuperAdmin`, `HasAnyPermission` |
+| Phép tính thuần, không I/O | Policy tĩnh | `PermissionGrantPolicy.ResolveGrantedKeys`, `IsSuperAdmin`, `HasAnyPermission`; `FieldImportMatchPolicy.IsMatch` |
 
 Entity **không** được giữ repository. Domain service nhận repository qua constructor và được đăng ký DI dạng
 class cụ thể.
