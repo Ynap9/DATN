@@ -1,6 +1,6 @@
 # Phân quyền
 
-> **Phần 2/8** · trước: [01-nguoi-dung.md](01-nguoi-dung.md) · mục lục: [README.md](README.md)
+> **Phần 2/10** · trước: [01-nguoi-dung.md](01-nguoi-dung.md) · mục lục: [README.md](README.md)
 
 Quyền là một **cây** định danh bằng `Key`. Vai trò giữ một tập key; user có quyền = hợp quyền của các vai trò còn hoạt động.
 Hằng số key nằm ở `PermissionConstants` (shared); cây được seed bởi `SeedPermission`.
@@ -48,6 +48,17 @@ Menu.Construction                  Menu nghiệp vụ xây dựng
     ├── Function.Construction.ProjectConfig.Create
     ├── Function.Construction.ProjectConfig.Update   (gồm lấy link xác thực Google)
     └── Function.Construction.ProjectConfig.Delete
+
+Menu.DigitalSignature              Menu ký số
+├── Menu.DigitalSignature.Template Menu quản lý mẫu chữ ký
+│   ├── Function.DigitalSignature.Template.View
+│   ├── Function.DigitalSignature.Template.Create
+│   ├── Function.DigitalSignature.Template.Update   (gồm ghi cấu hình ký)
+│   └── Function.DigitalSignature.Template.Delete
+└── Menu.DigitalSignature.SigningBatch Menu lô ký số
+    ├── Function.DigitalSignature.SigningBatch.View     (lô đang dở, danh sách file)
+    ├── Function.DigitalSignature.SigningBatch.Create   (tạo lô, tải file lên)
+    └── Function.DigitalSignature.SigningBatch.Delete   (xoá file khỏi lô)
 ```
 
 Quy ước đặt key: `Menu.<Module>.<Tên>` cho mục menu, `Function.<Module>.<Tên>.<Hành động>` cho thao tác.
@@ -108,6 +119,11 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `POST` / `PUT {id}` / `DELETE {id}` `api/construction/project-config` | `...ProjectConfig.Create` / `.Update` / `.Delete` |
 | `GET api/construction/project-config/google-authorization-url` | `Function.Construction.ProjectConfig.Update` |
 | `GET api/construction/project-config/google-callback` | — (không cần token, kiểm `state` đã ký) |
+| `GET api/digital-signature/template/paging`, `GET .../{id}`, `GET .../sample-file` | `Function.DigitalSignature.Template.View` |
+| `POST` / `PUT {id}` + `PUT {id}/config` / `DELETE {id}` `api/digital-signature/template` | `...Template.Create` / `.Update` / `.Delete` |
+| `GET api/digital-signature/signing-batch/running`, `GET .../{id}/files` | `Function.DigitalSignature.SigningBatch.View` |
+| `POST api/digital-signature/signing-batch`, `POST .../{id}/files` / `DELETE .../{id}/files/{fileId}` | `...SigningBatch.Create` / `.Delete` |
+| `GET api/digital-signature/plugin/version`, `.../setup`, `.../setup/content` | — (chỉ cần đăng nhập) |
 
 ## Quyền người dùng: đang lệch so với cây
 
