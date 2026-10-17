@@ -11,7 +11,7 @@ sh.be.api                      Controller, PermissionAttribute, HttpRequestConte
 sh.be.applications             Use case: Interfaces/{Services,Queries}, Implements, Dtos, BaseService
 sh.be.domain                   Lõi nghiệp vụ: Entities, Services (domain service, policy), Repositories (interface)
 sh.be.infrastructure.data      EF Core: ShDbContext, Repositories, Queries, UnitOfWork, Migrations, Seeder
-sh.be.infrastructure.external  Dịch vụ ngoài: MailService (SMTP) + template email
+sh.be.infrastructure.external  Dịch vụ ngoài: mail SMTP, Google Sheet, Excel, kho file MinIO, file mẫu
 sh.be.shared                   Shared kernel: ApiResponse, ErrorCodes, exception, hằng số, settings, utils
 ```
 
@@ -35,6 +35,10 @@ Mọi mũi tên hướng **vào trong**. Tầng ngoài implement interface do t�
 | `applications/.../Interfaces/Queries/IRoleQuery`… | `infrastructure.data/.../Queries/RoleQuery`… |
 | `applications/Base/Interfaces/IMailService` | `infrastructure.external/Mail/Implements/MailService` |
 | `applications/Base/Interfaces/IDataReader` | `infrastructure.external/DataReader/Implements/GoogleSheetReader` (qua `DataReaderBase`) |
+| `applications/Base/Interfaces/IFileStorage` | `infrastructure.external/Storage/Implements/S3FileStorage` (MinIO) |
+| `applications/Base/Interfaces/ISampleFileReader` | `infrastructure.external/SampleFile/Implements/SampleFileReader` |
+| `applications/Base/Interfaces/IPluginSetupProvider` | `infrastructure.external/Plugin/Implements/PluginSetupProvider` |
+| `applications/Base/Interfaces/ICertificateValidator` | `infrastructure.external/Certificate/Implements/CertificateValidator` |
 | `applications/Base/Interfaces/IRequestContext` | `api/Services/HttpRequestContext` |
 | `applications/.../Interfaces/Services/IRoleService`… | `applications/.../Implements/RoleService`… |
 

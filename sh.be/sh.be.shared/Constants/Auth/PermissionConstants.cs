@@ -56,5 +56,21 @@ namespace sh.be.shared.Constants.Auth
         public const string FUNCTION_PROJECT_CONFIG_CREATE = "Function.Construction.ProjectConfig.Create";
         public const string FUNCTION_PROJECT_CONFIG_UPDATE = "Function.Construction.ProjectConfig.Update";
         public const string FUNCTION_PROJECT_CONFIG_DELETE = "Function.Construction.ProjectConfig.Delete";
+
+        public const string MODULE_DIGITAL_SIGNATURE = "DigitalSignature";
+
+        public const string MENU_DIGITAL_SIGNATURE = "Menu.DigitalSignature";
+
+        public const string MENU_TEMPLATE = "Menu.DigitalSignature.Template";
+        public const string FUNCTION_TEMPLATE_VIEW = "Function.DigitalSignature.Template.View";
+        public const string FUNCTION_TEMPLATE_CREATE = "Function.DigitalSignature.Template.Create";
+        public const string FUNCTION_TEMPLATE_UPDATE = "Function.DigitalSignature.Template.Update";
+        public const string FUNCTION_TEMPLATE_DELETE = "Function.DigitalSignature.Template.Delete";
+
+        public const string MENU_SIGNING_BATCH = "Menu.DigitalSignature.SigningBatch";
+        public const string FUNCTION_SIGNING_BATCH_VIEW = "Function.DigitalSignature.SigningBatch.View";
+        public const string FUNCTION_SIGNING_BATCH_CREATE = "Function.DigitalSignature.SigningBatch.Create";
+        public const string FUNCTION_SIGNING_BATCH_SIGN = "Function.DigitalSignature.SigningBatch.Sign";
+        public const string FUNCTION_SIGNING_BATCH_DELETE = "Function.DigitalSignature.SigningBatch.Delete";
     }
 }

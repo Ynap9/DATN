@@ -35,6 +35,11 @@ Module/<TenModule>/
 | `ProjectDocumentTypeDocumentField` | Construction | Trường văn bản theo dự án, khoá ghép `(ProjectId, DocumentTypeId, DocumentFieldId)`, thêm `FieldImport`, `OrderFieldImport`: `Create`, `Delete` (xoá mềm) |
 | `DocumentField` | Construction | `Create` (`FieldType = "string"`, hai cờ hiển thị `true`), `Update` (không đổi `DocumentTypeId`, không đổi thứ tự), `UpdateSetting` (chỉ `IsShow`, `IsChargeable`, `IsFieldOcr`, `FieldNameOcr`; tắt OCR thì giữ `FieldNameOcr` cũ), `ChangeOrderTableView` / `ChangeOrderListView` (mỗi method một cột), `Delete` (xoá mềm, giữ nguyên thứ tự); `DocumentFieldDomainService` kiểm loại văn bản tồn tại, `Field` duy nhất, thứ tự không trùng (tạo = lớn nhất của cả hai cột kể cả trường đã xoá + 1, kéo thả từng cột thì dịch `±1` các trường ở giữa, xoá không đổi thứ tự) |
 
+| `Template` | DigitalSignature | Mẫu cấu hình chữ ký (port từ `kssm.be`), migration `Add_DigitalSignature`: `Create`, `Update` (chỉ `Name`, trim), `UpdateConfig` (kẹp độ đậm `40–250`, độ dày nét `0–200`, cỡ chữ `6–24`; màu chuẩn hoá `#RRGGBB`, sai → mặc định / `null`; font ngoài `TemplateConst.DIGITAL_SIGNATURE_FONTS` → `Times New Roman`; `AllowSigningSignedPdf` = cho ký lên PDF đã có chữ ký), `ChangeStampImage` / `RemoveStampImage`, `ChangeWetSignatureImage` / `RemoveWetSignatureImage`, `Delete` (xoá mềm + bỏ link ảnh), `CreatePosition` |
+| `TemplatePosition` | DigitalSignature | Khối đặt trên trang PDF, toạ độ theo tỉ lệ `0–1`: `Create` (`Kind` thuộc `TemplatePositionConst.KINDS`, `PageNumber ≥ 1`, khối nằm trọn trong trang, kích thước `> 0`, sai → `602` / `603`), `Delete` (xoá mềm). Chỉ tạo qua `Template.CreatePosition` |
+| `SigningBatch` | DigitalSignature | Lô ký (port từ `LoKy` của `kssm.be`), migration `Add_DigitalSignature`, trạng thái `SigningBatchConst`: `Create` (`NEW`), `NameSignedFolder` (bỏ `/`, `\`, ký tự điều khiển, trim; rỗng → `605`), `EnsureOwnedBy` (khác `CreatedBy` → `616`), `LinkProject`, `EnsureAcceptUpload` (lô dự án → `606`), `CreateFile(order, …)` (chỉ khi `NEW`, không thì `607`; `Order` do service truyền = lớn nhất của lô kể cả file đã xoá + 1), `RemoveFile` (lô `SIGNING` → `608`, trừ bộ đếm), `ChangeCertificate`, `RequeueFailedFiles`, `Start` (thiếu chứng thư → `609`) / `Pause` / `Cancel` / `Finish` / `Fail`, `MarkProjectNotified`, `Delete` |
+| `SigningBatchFile` | DigitalSignature | Một file trong lô, trạng thái `SigningBatchFileConst`: `Create` (`PENDING`), `StartSigning`, `MarkSigned` (ghi `SignedObjectKey` — bản đã ký lưu trên MinIO, không lên Google Drive như kssm), `MarkFailed`, `ReturnToQueue`, `Retry` (xoá lỗi và kết quả kiểm chữ ký), `Delete` (chỉ `PENDING`/`FAILED`, không thì `611`). Chỉ tạo qua `SigningBatch.CreateFile` |
+
 **Vì sao hành vi nằm trong entity:** setter `private` chỉ có nghĩa khi entity tự cung cấp cách thay đổi. Tách
 các method này ra class khác thì setter phải mở `public` — entity thành anemic model, ai cũng gán được
 `role.Deleted = true` mà quên `DeletedBy`.
@@ -54,7 +59,7 @@ gọi chúng bên trong method của aggregate gốc hoặc seeder; đừng gọ
 |---|---|---|
 | Chỉ dữ liệu của chính entity | Method của entity | `Role.Update`, `AppUser.UpdateProfile` |
 | Tra cứu dữ liệu khác (qua repository) | Domain service | `UserDomainService.EnsureUniqueAsync`, `RoleDomainService.EnsureAllExistAsync` |
-| Phép tính thuần, không I/O | Policy tĩnh | `PermissionGrantPolicy.ResolveGrantedKeys`, `IsSuperAdmin`, `HasAnyPermission`; `FieldImportMatchPolicy.IsMatch` |
+| Phép tính thuần, không I/O | Policy tĩnh | `PermissionGrantPolicy.ResolveGrantedKeys`, `IsSuperAdmin`, `HasAnyPermission`; `FieldImportMatchPolicy.IsMatch`; `TemplateImagePolicy` (kiểm ảnh mẫu chữ ký → `612`, dựng object key); `PluginVersionPolicy` (whitelist phiên bản plugin); `SigningBatchFilePolicy` (trần 200 file / lượt → `617`, nhận `.pdf` không rỗng, dựng key nguồn) |
 
 Entity **không** được giữ repository. Domain service nhận repository qua constructor và được đăng ký DI dạng
 class cụ thể.

@@ -12,6 +12,7 @@ Presentation + **composition root**. Tham chiếu `applications`, `infrastructur
 | `Controllers/Module/Auth/` | `AuthorizationController` (token), `UserController`, `RoleController`, `PermissionController` |
 | `Controllers/Module/Core/` | `AuditLogController` |
 | `Controllers/Module/Construction/` | `DocumentTypeController`, `DocumentFieldController`, `ProjectController`, `ProjectConfigController` (callback Google `[AllowAnonymous]`) |
+| `Controllers/Module/DigitalSignature/` | `TemplateController` (mẫu chữ ký; `PUT {id}/config` nhận `[FromForm]` multipart), `PluginController` (phiên bản + bộ cài plugin ký số, chỉ cần đăng nhập), `SigningBatchController` (lô ký; `POST {id}/files` multipart, `[RequestSizeLimit]` 512 MB) |
 | `Attributes/PermissionAttribute.cs` | Kiểm quyền theo key, gọi `IPermissionService.HasAnyPermission` |
 | `Services/HttpRequestContext.cs` | Implement `IRequestContext`: `UserId`, `Source`, `ContentType` từ `HttpContext` |
 | `Services/AuthorizationStateProtector.cs` | Implement `IAuthorizationStateProtector`: ký / đọc `state` OAuth bằng `ITimeLimitedDataProtector` |
@@ -72,5 +73,8 @@ khi cấp token. Đây là chỗ còn dính Identity ở tầng api, đã biết
 - Domain service (`RoleDomainService`, `UserDomainService`) đăng ký **class cụ thể**, không qua interface.
 - Seeder chạy sau `builder.Build()` theo thứ tự: Role → Permission → User → RolePermission.
 - Connection string tên `SO_HOA_DB`; CORS lấy từ `AllowedHosts` (phân cách `;`).
+
+⚠️ `UseRequestLocalization` ép culture **invariant**: form-data bind số theo culture của máy, máy `vi-VN` đọc `0.6` thành
+`6` nên toạ độ mẫu chữ ký bị báo `603`. Đừng gỡ dòng này khi dọn `Program.cs`.
 
 > **Tiếp:** [02-applications.md](02-applications.md) — service điều phối use case.
