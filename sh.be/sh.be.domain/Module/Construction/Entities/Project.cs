@@ -3,6 +3,7 @@ using sh.be.shared.Constants.Construction;
 using sh.be.shared.Constants.Db;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
+using sh.be.shared.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -10,13 +11,13 @@ namespace sh.be.domain.Module.Construction.Entities
 {
     [Table(nameof(Project), Schema = DbSchemas.Construction)]
     [Index(nameof(Name), Name = $"IX_{nameof(Project)}_{nameof(Name)}")]
-    public class Project
+    public class Project : ISoftDeleted
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; private set; }
         public string Name { get; private set; } = String.Empty;
-        public bool IsDeleted { get; private set; }
+        public bool Deleted { get; private set; }
         public DateTime? StartedAt { get; private set; }
         public DateTime? EndedAt { get; private set; }
         public int Status { get; private set; }
@@ -69,9 +70,17 @@ namespace sh.be.domain.Module.Construction.Entities
 
         public void Delete(string? deletedBy, DateTime deletedDate)
         {
-            IsDeleted = true;
+            Deleted = true;
             DeletedDate = deletedDate;
             DeletedBy = deletedBy;
+        }
+
+        public void EnsureImportable()
+        {
+            if (Status == ProjectConst.DONE)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectDone);
+            }
         }
 
         public List<ProjectDocumentType> AssignDocumentTypes(IEnumerable<int> documentTypeIds, string? assignedBy, DateTime? assignedDate)

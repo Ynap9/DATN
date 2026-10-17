@@ -25,10 +25,9 @@ repository, `IUnitOfWork`).
 | Được join nhiều bảng | Chỉ khi phục vụ aggregate | Thoải mái, kể cả bảng `Users` |
 | Lưu | Không tự `SaveChanges`; để `IUnitOfWork` | Không ghi gì |
 
-`UserRepository` bọc `UserManager<AppUser>` và dịch `IdentityResult` lỗi sang `UserFriendlyException` với mã
-`102` (tạo), `106` (sửa), `107` (xoá), `108` (đổi mật khẩu). ⚠️ `UserManager` **tự `SaveChanges`**, nên audit
-log thêm trước lời gọi `UpdateAsync`/`ChangePasswordAsync` được lưu cùng lúc — đừng gọi thêm `SaveChanges`
-trong các luồng đó.
+`UserRepository` bọc `UserManager<AppUser>`, dịch `IdentityResult` lỗi sang mã `102` (tạo), `106` (sửa), `107` (xoá), `108` (đổi mật
+khẩu). ⚠️ `UserManager` **tự `SaveChanges`**, nên audit thêm trước `UpdateAsync`/`ChangePasswordAsync` được lưu cùng lúc — đừng
+gọi thêm `SaveChanges` trong các luồng đó.
 
 ## Schema
 
@@ -40,6 +39,9 @@ trong các luồng đó.
   `ProjectDocumentType.DocumentTypeId`, `ProjectDocumentTypeDocumentField.DocumentFieldId`, `TemplatePosition.TemplateId`,
   `SigningBatchFile (SigningBatchId, Status, Order)` (runner lấy file kế tiếp liên tục theo lô + trạng thái + thứ tự).
   Cột chuỗi có index thành `nvarchar(450)` — giá trị dài hơn sẽ lỗi khi lưu.
+- Unique index có filter: attribute khai index + `IsUnique`, `OnModelCreating` gọi `HasIndex([...], <tên>).HasFilter("[Deleted] = 0")` theo
+  **cùng tên** (hằng `Submission.UniqueKeyIndexName`, `SubmissionData.UniqueFieldIndexName`). ⚠️ Khoá index nonclustered tối đa 1700 byte:
+  `Submission (ProjectId, DocumentTypeId, FileName 255, ProfileRange 100, Box 100)` ≈ 918 byte; đừng nới các cột này lên `nvarchar(500)`.
 - `Deleted` mặc định `0`, `CreatedDate` mặc định `getdate()` (cấu hình trong `OnModelCreating`).
 - EF map được setter/constructor `private` của entity, nên entity giàu hành vi không đổi schema.
 
@@ -50,12 +52,14 @@ trong các luồng đó.
 
 `DocumentTypeRepository.LockAsync` khoá dòng loại văn bản (`UPDLOCK, HOLDLOCK`) để tuần tự hoá việc ghi thứ tự trường;
 chỉ có tác dụng **bên trong transaction** (xem [../nghiep-vu/06-truong-van-ban.md](../nghiep-vu/06-truong-van-ban.md)).
+`SubmissionRepository.LockImportAsync` khoá dòng `ProjectDocumentType` cùng cách (`SET LOCK_TIMEOUT` 5 giây, lỗi `1222` → `310`); bulk (`EFCore.BulkExtensions`) chạy trên cùng `ShDbContext` nên tự vào transaction của `UnitOfWork`.
+⚠️ Bulk và đọc cột `nvarchar(max)` số lượng lớn: dùng API **sync**, connection string **tắt MARS** — lý do và số đo ở [../nghiep-vu/11-ho-so-import.md](../nghiep-vu/11-ho-so-import.md#hiệu-năng--sheet-20000-dòng--30-trường-600000-dữ-liệu).
+⚠️ Bảng có filtered index (`Submission`, `SubmissionData`) chỉ ghi được khi `QUOTED_IDENTIFIER ON` (EF bật sẵn); `sqlcmd` tắt → `Msg 1934`, dùng `sqlcmd -I`.
 
 ## Xoá mềm — global query filter
 
-`Role`, `Permission`, `UserRole`, `RolePermission`, `DocumentType`, `DocumentField`, `ProjectConfig`, `ProjectDocumentType`,
-`ProjectDocumentTypeDocumentField`, `Template`, `TemplatePosition`, `SigningBatch`, `SigningBatchFile` có `HasQueryFilter(e => !e.Deleted)` trong `ShDbContext`;
-`Project` dùng cờ tên khác: `HasQueryFilter(e => !e.IsDeleted)`.
+`Role`, `Permission`, `UserRole`, `RolePermission`, `DocumentType`, `DocumentField`, `Project`, `ProjectConfig`, `ProjectDocumentType`, `ProjectDocumentTypeDocumentField`,
+`Submission`, `SubmissionData`, `Template`, `TemplatePosition`, `SigningBatch`, `SigningBatchFile` có `HasQueryFilter(e => !e.Deleted)` trong `ShDbContext`.
 Mọi truy vấn LINQ (kể cả `join`, subquery, `Any`, `Count`) tự loại bản ghi đã xoá mềm.
 
 - **Không** viết tay `!x.Deleted` nữa.

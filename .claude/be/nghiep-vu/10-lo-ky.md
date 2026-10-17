@@ -1,6 +1,6 @@
 # Lô ký (DigitalSignature)
 
-> **Phần 10/10** · trước: [09-mau-chu-ky.md](09-mau-chu-ky.md) · mục lục: [README.md](README.md)
+> **Phần 10/11** · trước: [09-mau-chu-ky.md](09-mau-chu-ky.md) · mục lục: [README.md](README.md)
 
 Lô ký (`digitalsignature.SigningBatch`) gom các file PDF người dùng tải lên để ký số hàng loạt bằng USB token qua plugin
 theo một mẫu chữ ký. Mỗi file là một dòng `digitalsignature.SigningBatchFile`. Kiến trúc ký và thứ tự thi công:
@@ -66,4 +66,4 @@ nguồn** của file khác. `Order` mới = `Order` lớn nhất của lô **k�
 Mở / đóng phiên ký (`ICertificateValidator`, sai → `614` / `615`), runner, vòng đưa thư, bắt đầu / tạm dừng / huỷ, tiến độ,
 link bản đã ký, khôi phục sau restart — theo các bước 3–7 của [../plans/ky-so-local.plan.md](../plans/ky-so-local.plan.md).
 
-> **Hết** · mục lục: [README.md](README.md)
+> **Tiếp:** [11-ho-so-import.md](11-ho-so-import.md) — import hồ sơ từ Google Sheet và xem file.
