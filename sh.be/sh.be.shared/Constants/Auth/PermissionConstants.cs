@@ -28,5 +28,33 @@ namespace sh.be.shared.Constants.Auth
 
         public const string MENU_AUDIT_LOG = "Menu.Core.AuditLog";
         public const string FUNCTION_AUDIT_LOG_VIEW = "Function.Core.AuditLog.View";
+
+        public const string MODULE_CONSTRUCTION = "Construction";
+
+        public const string MENU_CONSTRUCTION = "Menu.Construction";
+
+        public const string MENU_DOCUMENT_TYPE = "Menu.Construction.DocumentType";
+        public const string FUNCTION_DOCUMENT_TYPE_VIEW = "Function.Construction.DocumentType.View";
+        public const string FUNCTION_DOCUMENT_TYPE_CREATE = "Function.Construction.DocumentType.Create";
+        public const string FUNCTION_DOCUMENT_TYPE_UPDATE = "Function.Construction.DocumentType.Update";
+        public const string FUNCTION_DOCUMENT_TYPE_DELETE = "Function.Construction.DocumentType.Delete";
+
+        public const string MENU_DOCUMENT_FIELD = "Menu.Construction.DocumentField";
+        public const string FUNCTION_DOCUMENT_FIELD_VIEW = "Function.Construction.DocumentField.View";
+        public const string FUNCTION_DOCUMENT_FIELD_CREATE = "Function.Construction.DocumentField.Create";
+        public const string FUNCTION_DOCUMENT_FIELD_UPDATE = "Function.Construction.DocumentField.Update";
+        public const string FUNCTION_DOCUMENT_FIELD_DELETE = "Function.Construction.DocumentField.Delete";
+
+        public const string MENU_PROJECT = "Menu.Construction.Project";
+        public const string FUNCTION_PROJECT_VIEW = "Function.Construction.Project.View";
+        public const string FUNCTION_PROJECT_CREATE = "Function.Construction.Project.Create";
+        public const string FUNCTION_PROJECT_UPDATE = "Function.Construction.Project.Update";
+        public const string FUNCTION_PROJECT_DELETE = "Function.Construction.Project.Delete";
+
+        public const string MENU_PROJECT_CONFIG = "Menu.Construction.ProjectConfig";
+        public const string FUNCTION_PROJECT_CONFIG_VIEW = "Function.Construction.ProjectConfig.View";
+        public const string FUNCTION_PROJECT_CONFIG_CREATE = "Function.Construction.ProjectConfig.Create";
+        public const string FUNCTION_PROJECT_CONFIG_UPDATE = "Function.Construction.ProjectConfig.Update";
+        public const string FUNCTION_PROJECT_CONFIG_DELETE = "Function.Construction.ProjectConfig.Delete";
     }
 }

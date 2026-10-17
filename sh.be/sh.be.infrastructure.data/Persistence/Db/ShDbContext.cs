@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using sh.be.domain.Module.Auth.Entities;
 using sh.be.domain.Module.Core.Entities;
+using sh.be.domain.Module.Construction.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +22,12 @@ namespace sh.be.infrastructure.data.Persistence.Db
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<DocumentType> DocumentTypes { get; set; }
+        public DbSet<DocumentField> DocumentFields { get; set; }
+        public DbSet<Project> Projects { get; set; }
+        public DbSet<ProjectConfig> ProjectConfigs { get; set; }
+        public DbSet<ProjectDocumentType> ProjectDocumentTypes { get; set; }
+        public DbSet<ProjectDocumentTypeDocumentField> ProjectDocumentTypeDocumentFields { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.UseOpenIddict();
@@ -51,10 +58,54 @@ namespace sh.be.infrastructure.data.Persistence.Db
                 entity.Property(e => e.Deleted).HasDefaultValue(0);
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
             });
+            modelBuilder.Entity<DocumentType>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.Property(e => e.DefaultView).HasDefaultValue(1).HasSentinel(-1);
+            });
+            modelBuilder.Entity<DocumentField>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.Property(e => e.FieldType).HasDefaultValue("string");
+                entity.Property(e => e.IsShowTableView).HasDefaultValue(true).HasSentinel(true);
+                entity.Property(e => e.IsShowListView).HasDefaultValue(true).HasSentinel(true);
+            });
+            modelBuilder.Entity<Project>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.IsDeleted);
+                entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
+            modelBuilder.Entity<ProjectConfig>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
+            modelBuilder.Entity<ProjectDocumentType>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
+            modelBuilder.Entity<ProjectDocumentTypeDocumentField>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
             modelBuilder.Entity<RolePermission>()
                 .HasKey(rp => new { rp.RoleId, rp.PermissionKey });
             modelBuilder.Entity<UserRole>()
                 .HasKey(ur => new { ur.UserId, ur.RoleId });
+            modelBuilder.Entity<ProjectDocumentType>()
+                .HasKey(pd => new { pd.ProjectId, pd.DocumentTypeId });
+            modelBuilder.Entity<ProjectDocumentTypeDocumentField>()
+                .HasKey(pf => new { pf.ProjectId, pf.DocumentTypeId, pf.DocumentFieldId });
             base.OnModelCreating(modelBuilder);
         }
     }

@@ -11,8 +11,10 @@ Presentation + **composition root**. Tham chiếu `applications`, `infrastructur
 | `Base/BaseController.cs` | `OkException(ex)`: đổi exception thành `ApiResponse` lỗi |
 | `Controllers/Module/Auth/` | `AuthorizationController` (token), `UserController`, `RoleController`, `PermissionController` |
 | `Controllers/Module/Core/` | `AuditLogController` |
+| `Controllers/Module/Construction/` | `DocumentTypeController`, `DocumentFieldController`, `ProjectController`, `ProjectConfigController` (callback Google `[AllowAnonymous]`) |
 | `Attributes/PermissionAttribute.cs` | Kiểm quyền theo key, gọi `IPermissionService.HasAnyPermission` |
 | `Services/HttpRequestContext.cs` | Implement `IRequestContext`: `UserId`, `Source`, `ContentType` từ `HttpContext` |
+| `Services/AuthorizationStateProtector.cs` | Implement `IAuthorizationStateProtector`: ký / đọc `state` OAuth bằng `ITimeLimitedDataProtector` |
 | `Worker/AuthWorker.cs` | Tạo client OpenIddict lúc khởi động (`service-worker`, `client-web`, `client-web2`, `client-guest-traobang`) |
 | `Swagger/` | Chia tài liệu Swagger / Scalar theo module |
 | `Program.cs` | Đăng ký DI, cấu hình auth, CORS, chạy seeder |
