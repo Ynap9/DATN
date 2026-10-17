@@ -39,6 +39,9 @@ trong các luồng đó.
   `UserRole.RoleId`, `DocumentType.Name`, `DocumentField (DocumentTypeId, Field)` và `(DocumentTypeId, OrderTableView)`, `Project.Name`, `ProjectConfig.Name`,
   `ProjectDocumentType.DocumentTypeId`, `ProjectDocumentTypeDocumentField.DocumentFieldId`.
   Cột chuỗi có index thành `nvarchar(450)` — giá trị dài hơn sẽ lỗi khi lưu.
+- Unique index có filter: attribute khai index + `IsUnique`, `OnModelCreating` gọi `HasIndex([...], <tên>).HasFilter("[Deleted] = 0")` theo
+  **cùng tên** (hằng `Submission.UniqueKeyIndexName`, `SubmissionData.UniqueFieldIndexName`). ⚠️ Khoá index nonclustered tối đa 1700 byte:
+  `Submission (ProjectId, DocumentTypeId, FileName 255, ProfileRange 100, Box 100)` ≈ 918 byte; đừng nới các cột này lên `nvarchar(500)`.
 - `Deleted` mặc định `0`, `CreatedDate` mặc định `getdate()` (cấu hình trong `OnModelCreating`).
 - EF map được setter/constructor `private` của entity, nên entity giàu hành vi không đổi schema.
 
@@ -51,9 +54,8 @@ chỉ có tác dụng **bên trong transaction** (xem [../nghiep-vu/06-truong-va
 
 ## Xoá mềm — global query filter
 
-`Role`, `Permission`, `UserRole`, `RolePermission`, `DocumentType`, `DocumentField`, `ProjectConfig`, `ProjectDocumentType`,
-`ProjectDocumentTypeDocumentField` có `HasQueryFilter(e => !e.Deleted)` trong `ShDbContext`;
-`Project` dùng cờ tên khác: `HasQueryFilter(e => !e.IsDeleted)`.
+`Role`, `Permission`, `UserRole`, `RolePermission`, `DocumentType`, `DocumentField`, `Project`, `ProjectConfig`, `ProjectDocumentType`,
+`ProjectDocumentTypeDocumentField`, `Submission`, `SubmissionData` có `HasQueryFilter(e => !e.Deleted)` trong `ShDbContext`.
 Mọi truy vấn LINQ (kể cả `join`, subquery, `Any`, `Count`) tự loại bản ghi đã xoá mềm.
 
 - **Không** viết tay `!x.Deleted` nữa.

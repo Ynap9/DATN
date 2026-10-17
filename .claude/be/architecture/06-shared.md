@@ -16,6 +16,7 @@ Phần dùng chung cho mọi project. Không tham chiếu project nào khác.
 | `Constants/Core/AuditLogConstants.cs` | Action, action type, `SOURCE_SYSTEM` của nhật ký |
 | `Constants/Construction/ProjectConfigConst.cs` | Tên các dòng cấu hình Google, `SECRET_NAMES`, `MASKED_VALUE = "******"`, hạn `state` 10 phút |
 | `Constants/Construction/ProjectConst.cs` | Trạng thái dự án: `DEPLOYING = 1` (đang triển khai), `DOING = 2` (đang làm), `ACCEPTING = 3` (đang nghiệm thu), `DONE = 4` (đã xong) |
+| `Constants/Construction/SubmissionConst.cs` | Trạng thái kiểm tra hồ sơ: `NOT_CHECKED = 0`, `CHECKED = 1` |
 | `Constants/Db/DbSchemas.cs` | Schema `auth`, `core` |
 | `Constants/Mail/`, `Constants/Swagger/` | Tiêu đề email; tên module Swagger |
 | `Interfaces/IFullAudited.cs` | `ICreatedBy`, `IModifiedBy`, `ISoftDeleted` (chỉ `get`) |

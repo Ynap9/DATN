@@ -4,6 +4,7 @@ using Microsoft.Identity.Client;
 using sh.be.domain.Module.Auth.Entities;
 using sh.be.domain.Module.Core.Entities;
 using sh.be.domain.Module.Construction.Entities;
+using sh.be.shared.Constants.Construction;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +29,8 @@ namespace sh.be.infrastructure.data.Persistence.Db
         public DbSet<ProjectConfig> ProjectConfigs { get; set; }
         public DbSet<ProjectDocumentType> ProjectDocumentTypes { get; set; }
         public DbSet<ProjectDocumentTypeDocumentField> ProjectDocumentTypeDocumentFields { get; set; }
+        public DbSet<Submission> Submissions { get; set; }
+        public DbSet<SubmissionData> SubmissionDatas { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.UseOpenIddict();
@@ -76,8 +79,8 @@ namespace sh.be.infrastructure.data.Persistence.Db
             });
             modelBuilder.Entity<Project>(entity =>
             {
-                entity.HasQueryFilter(e => !e.IsDeleted);
-                entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(false);
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
             });
             modelBuilder.Entity<ProjectConfig>(entity =>
@@ -97,6 +100,24 @@ namespace sh.be.infrastructure.data.Persistence.Db
                 entity.HasQueryFilter(e => !e.Deleted);
                 entity.Property(e => e.Deleted).HasDefaultValue(0);
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
+            modelBuilder.Entity<Submission>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.Property(e => e.StatusCheck).HasDefaultValue(SubmissionConst.NOT_CHECKED);
+                entity.HasIndex([nameof(Submission.ProjectId), nameof(Submission.DocumentTypeId), nameof(Submission.FileName),
+                        nameof(Submission.ProfileRange), nameof(Submission.Box)], Submission.UniqueKeyIndexName)
+                    .HasFilter("[Deleted] = 0");
+            });
+            modelBuilder.Entity<SubmissionData>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.HasIndex([nameof(SubmissionData.SubmissionId), nameof(SubmissionData.DocumentFieldId)], SubmissionData.UniqueFieldIndexName)
+                    .HasFilter("[Deleted] = 0");
             });
             modelBuilder.Entity<RolePermission>()
                 .HasKey(rp => new { rp.RoleId, rp.PermissionKey });

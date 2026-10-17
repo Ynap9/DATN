@@ -3,7 +3,7 @@
 > **Phần 7/8** · trước: [06-truong-van-ban.md](06-truong-van-ban.md) · mục lục: [README.md](README.md)
 
 Danh mục dự án, bảng `construction.Project`. Mỗi dự án có một Google Sheet riêng, hệ thống **tự tạo** lúc tạo dự án.
-Trường: `Name`, `StartedAt`, `EndedAt`, `Status`, `UrlGoogleSheetSync`, `GoogleSheetName`, cột tạo / sửa / xoá, cờ `IsDeleted`.
+Trường: `Name`, `StartedAt`, `EndedAt`, `Status`, `UrlGoogleSheetSync`, `GoogleSheetName`, cột tạo / sửa / xoá, cờ `Deleted` (`ISoftDeleted`, đổi tên từ `IsDeleted` ở migration `Rename_Project_Deleted_Add_Submission`).
 
 ## Các chức năng
 
@@ -71,7 +71,7 @@ khoá ngoại; chưa có API riêng — chỉ được ghi qua CRUD dự án (xe
   "Tên dự án đã tồn tại"; khi sửa không tính trùng với chính nó.
 - Sửa: `Status` ngoài `ProjectConst.STATUSES` → `400` "Trạng thái dự án không hợp lệ" (kiểm trong `Project.Update`).
 - `StartedAt` sau `EndedAt` (khi có cả hai) → `400` "Ngày bắt đầu không được sau ngày kết thúc" (tạo và sửa).
-- Xoá là **xoá mềm** (`IsDeleted = true`, global query filter ẩn đi); xem lại sau xoá trả `303`. **Không** xoá Google Sheet.
+- Xoá là **xoá mềm** (`Deleted = true`, global query filter ẩn đi); xem lại sau xoá trả `303`. **Không** xoá Google Sheet.
 - Mỗi thao tác ghi để lại audit `Tạo / Cập nhật / Xóa dự án` kèm giá trị cũ và mới.
 
 ## Tạo dự án và Google Sheet
