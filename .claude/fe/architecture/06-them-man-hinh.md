@@ -5,7 +5,7 @@
 ⚠️ Làm **sau** khi plan [../plans/khop-voi-be.plan.md](../plans/khop-voi-be.plan.md) xong ít nhất bước envelope
 và đăng nhập; trước đó mọi response BE đều bị đọc là lỗi.
 
-Ví dụ dưới: màn hình danh sách vai trò, gọi `GET api/auth/role/paging` của `RoleController`.
+Ví dụ dưới: màn hình danh sách vai trò, gọi `GET api/v1/auth/role/paging` của `RoleController`.
 
 ## Các bước
 
@@ -24,7 +24,7 @@ Ví dụ dưới: màn hình danh sách vai trò, gọi `GET api/auth/role/pagin
 ```typescript
 @Injectable({ providedIn: 'root' })
 export class RoleService {
-    private readonly baseUrl = `${environment.api}/api/auth/role`;
+    private readonly baseUrl = `${environment.api}/api/v1/auth/role`;
 
     constructor(private _http: HttpClient) {}
 
@@ -45,10 +45,10 @@ sẽ được thêm vào `lib-components/.../shared/interfaces/response.interfac
 
 | Màn hình | Route BE | Quyền |
 |---|---|---|
-| Người dùng | `api/auth/user`: `GET me`, `GET paging`, `POST`, `PUT`, `DELETE {userid}`, `PUT change-password`, `PUT role` | `Function.Auth.User.*` |
-| Vai trò | `api/auth/role`: `GET paging`, `GET dropdown`, `GET {id}`, `GET {id}/tree`, `POST`, `PUT {id}`, `DELETE {id}`, `PUT permission` | `Function.Auth.Role.*` |
-| Quyền | `api/auth/permission` | `Function.Auth.Permission.View` |
-| Nhật ký | `api/core/audit-log/paging`, `{id}` | `Function.Core.AuditLog.View` |
+| Người dùng | `api/v1/auth/user`: `GET me`, `GET paging`, `POST`, `PUT`, `DELETE {userid}`, `PUT change-password`, `PUT role` | `Function.Auth.User.*` |
+| Vai trò | `api/v1/auth/role`: `GET paging`, `GET dropdown`, `GET {id}`, `GET {id}/tree`, `POST`, `PUT {id}`, `DELETE {id}`, `PUT permission` | `Function.Auth.Role.*` |
+| Quyền | `api/v1/auth/permission` | `Function.Auth.Permission.View` |
+| Nhật ký | `api/v1/core/audit-log/paging`, `{id}` | `Function.Core.AuditLog.View` |
 
 Route chi tiết của từng action: xem controller trong `sh.be/sh.be.api/Controllers/Module/`.
 

@@ -19,9 +19,10 @@ Phần dùng chung cho mọi project. Không tham chiếu project nào khác.
 | `Constants/Construction/SubmissionConst.cs` | Trạng thái kiểm tra hồ sơ `NOT_CHECKED = 0`, `CHECKED = 1`; tham số import (khoá 5 giây, lô bulk 100.000, ngưỡng song song 5.000 dòng, ký tự nối khoá); xem / kiểm tra: `MAX_PAGE_SIZE = 200`, `CHECK_NOTE_MAX_LENGTH = 1000` |
 | `Constants/DigitalSignature/` | `TemplateConst` (mặc định / sàn / trần độ đậm, độ dày nét, màu, font, cỡ chữ của mẫu chữ ký; `DIGITAL_SIGNATURE_FONTS`, `COLOR_PATTERN`, đuôi / trần 5 MB và tiền tố object key ảnh), `TemplatePositionConst` (loại khối: `DIGITAL_SIGNATURE = 0`, `STAMP = 1`, `WET_SIGNATURE = 2`), `SigningBatchConst` (trạng thái lô `NEW = 0` … `PAUSED = 5`, `RUNNING_STATUSES`, trần 200 file / 512 MB mỗi lượt tải, song song 4, tiền tố key nguồn), `SigningBatchFileConst` (trạng thái file `PENDING = 0` … `FAILED = 3`), `PluginConst` (tên bộ cài, whitelist mặc định), `CertificateConst` (file + pin SHA-256 các CA Ban Cơ yếu) |
 | `Constants/Db/DbSchemas.cs` | Schema `auth`, `core`, `construction`, `digitalsignature` |
-| `Constants/Mail/`, `Constants/Swagger/` | Tiêu đề email; tên module Swagger |
+| `Constants/Mail/`, `Constants/Swagger/` | Tiêu đề email; tên module, khuôn tên tài liệu `{version}-{module}`, ghi chú deprecated / sunset của Swagger |
+| `Constants/Versioning/ApiVersionConstants.cs` | Version API (`V1 = "1.0"`, `DEFAULT_VERSION`), khuôn nhóm `'v'VVV`, section `ApiVersion` |
 | `Interfaces/IFullAudited.cs` | `ICreatedBy`, `IModifiedBy`, `ISoftDeleted` (chỉ `get`) |
-| `Settings/` | `AuthServerSettings`, `EmailSettings`, `GoogleSheetSettings`, `S3Settings` (section `S3`, khoá `S3_URL`…), `PluginSettings` (section `Plugin`, `SupportedVersions`) |
+| `Settings/` | `AuthServerSettings`, `EmailSettings`, `GoogleSheetSettings`, `S3Settings` (section `S3`, khoá `S3_URL`…), `PluginSettings` (section `Plugin`, `SupportedVersions`), `ApiVersionSettings` (section `ApiVersion`, `Sunsets[]`) |
 | `Ultils/` | `TreeUtils`, `ValidationUtils`, `CryptoUtils`, `AuditLogUtils`, `DateTimeUtils` |
 
 ⚠️ Thư mục tên `Ultils` (sai chính tả) nhưng namespace là `sh.be.shared.Utils`. Đừng đổi tên thư mục nếu không

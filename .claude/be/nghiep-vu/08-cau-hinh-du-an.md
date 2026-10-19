@@ -25,7 +25,7 @@ Body tạo / sửa: `{ "name", "value", "description" }`.
 |---|---|---|
 | `GoogleClientId` | OAuth Client ID (Web application) | |
 | `GoogleClientSecret` | OAuth Client secret | ✔ |
-| `GoogleRedirectUri` | URL callback ở trên, **trùng từng ký tự** với Authorized redirect URI trên Google Cloud | |
+| `GoogleRedirectUri` | URL callback ở trên (có version: `.../api/v1/construction/project-config/google-callback`), **trùng từng ký tự** với Authorized redirect URI trên Google Cloud. ⚠️ Giá trị cũ không có `v1` giờ trả `404` — sửa cả dòng cấu hình lẫn Google Cloud | |
 | `GoogleFolderId` | Id thư mục Drive chứa sheet dự án | |
 | `GoogleRefreshToken` | Hệ thống tự ghi khi xác thực xong; cũng nhập tay được | ✔ |
 

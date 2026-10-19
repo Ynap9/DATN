@@ -1,6 +1,9 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using NLog;
@@ -58,6 +61,7 @@ using sh.be.infrastructure.external.Timestamp.Implements;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.DigitalSignature;
 using sh.be.shared.Constants.Swagger;
+using sh.be.shared.Constants.Versioning;
 using sh.be.shared.Settings;
 using System.Globalization;
 using System.Net.WebSockets;
@@ -306,18 +310,46 @@ builder.Services.AddHealthChecks();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
+#region api version
+var apiVersionSettings = builder.Configuration.GetSection(ApiVersionConstants.CONFIG_SECTION).Get<ApiVersionSettings>() ?? new();
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = ApiVersionParser.Default.Parse(ApiVersionConstants.DEFAULT_VERSION);
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = new UrlSegmentApiVersionReader();
+    foreach (var sunset in apiVersionSettings.Sunsets)
+    {
+        var sunsetPolicy = options.Policies.Sunset(ApiVersionParser.Default.Parse(sunset.Version)).Effective(sunset.Date);
+        if (!string.IsNullOrWhiteSpace(sunset.Link))
+        {
+            sunsetPolicy.Link(sunset.Link);
+        }
+    }
+})
+.AddMvc()
+.AddApiExplorer(options =>
+{
+    options.GroupNameFormat = ApiVersionConstants.GROUP_NAME_FORMAT;
+    options.FormatGroupName = (module, apiVersionGroupName) => module;
+    options.SubstituteApiVersionInUrl = true;
+});
+builder.Services.ConfigureOptions<ConfigureSwaggerOptions>();
+#endregion
+
 builder.Services.AddSwaggerGen(c =>
 {
     //c.SwaggerDoc("v1", new() { Title = "My API", Version = "v1" });
 
-    //add config swagger cho từng module
-    c.SwaggerDoc(SwaggerConstants.ALL, new() { Title = "Sh API - ALL", Version = "v1" });
-    foreach(var module in SwaggerConstants.MODULES)
+    c.DocInclusionPredicate((docName, apiDesc) =>
     {
-        c.SwaggerDoc(module, new() { Title = $"Sh API - {module.ToLower()}", Version = "v1" });
-    }
-
-    c.DocInclusionPredicate((docName, apiDesc) => docName == SwaggerConstants.ALL || apiDesc.GroupName == docName);
+        if (apiDesc.GetApiVersion() is not ApiVersion apiVersion)
+        {
+            return false;
+        }
+        var apiVersionGroupName = SwaggerDocumentName.BuildApiVersionGroupName(apiVersion);
+        return docName == SwaggerDocumentName.Build(apiVersionGroupName, SwaggerConstants.ALL)
+            || docName == SwaggerDocumentName.Build(apiVersionGroupName, apiDesc.GroupName);
+    });
     //c.OperationFilter<ModuleTagOperationFiltor>();
 
     c.DocumentFilter<ModuleTagGroupDocumentFilter>();
@@ -372,23 +404,37 @@ await app.Services.GetRequiredService<ISigningRunner>().RecoverAsync();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    var apiVersionGroupNames = app.Services.GetRequiredService<IApiVersionDescriptionProvider>().ApiVersionDescriptions
+        .Select(apiVersionDescription => apiVersionDescription.ApiVersion)
+        .Distinct()
+        .OrderByDescending(apiVersion => apiVersion)
+        .Select(SwaggerDocumentName.BuildApiVersionGroupName)
+        .ToList();
+    var defaultDocumentName = SwaggerDocumentName.Build(apiVersionGroupNames.First(), SwaggerConstants.ALL);
+
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint($"/swagger/{SwaggerConstants.ALL}/swagger.json", SwaggerConstants.ALL.ToUpper());
-        foreach(var module in SwaggerConstants.MODULES)
+        foreach (var apiVersionGroupName in apiVersionGroupNames)
         {
-            c.SwaggerEndpoint($"/swagger/{module}/swagger.json", module.ToUpper());
+            foreach (var module in SwaggerConstants.DOCUMENTS)
+            {
+                var documentName = SwaggerDocumentName.Build(apiVersionGroupName, module);
+                c.SwaggerEndpoint($"/swagger/{documentName}/swagger.json", documentName.ToUpper());
+            }
         }
     });
 
     app.MapScalarApiReference(options =>
     {
-    options.AddDocument(SwaggerConstants.ALL, SwaggerConstants.ALL.ToUpper(),
-        $"/swagger/{SwaggerConstants.ALL}/swagger.json", isDefault: true);
-        foreach (var module in SwaggerConstants.MODULES){
-            options.AddDocument(module, module.ToUpper(),
-                $"/swagger/{module}/swagger.json");
+        foreach (var apiVersionGroupName in apiVersionGroupNames)
+        {
+            foreach (var module in SwaggerConstants.DOCUMENTS)
+            {
+                var documentName = SwaggerDocumentName.Build(apiVersionGroupName, module);
+                options.AddDocument(documentName, documentName.ToUpper(),
+                    $"/swagger/{documentName}/swagger.json", isDefault: documentName == defaultDocumentName);
+            }
         }
         options.AddPreferredSecuritySchemes("Bearer");
 

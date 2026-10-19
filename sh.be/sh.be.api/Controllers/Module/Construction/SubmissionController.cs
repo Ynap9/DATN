@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Asp.Versioning;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
@@ -7,13 +8,15 @@ using sh.be.api.Base;
 using sh.be.applications.Module.Construction.Dtos.Submission;
 using sh.be.applications.Module.Construction.Interfaces.Services;
 using sh.be.shared.Constants.Auth;
+using sh.be.shared.Constants.Versioning;
 using sh.be.shared.HttpRequest;
 using System.Net.Mime;
 
 namespace sh.be.api.Controllers.Module.Construction
 {
-    [Route("api/construction/submission")]
+    [Route("api/v{version:apiVersion}/construction/submission")]
     [ApiController]
+    [ApiVersion(ApiVersionConstants.V1)]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class SubmissionController : BaseController
     {

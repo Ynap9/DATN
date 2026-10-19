@@ -65,7 +65,7 @@ Mọi truy vấn LINQ (kể cả `join`, subquery, `Any`, `Count`) tự loại b
 - **Không** viết tay `!x.Deleted` nữa.
 - Cần thấy cả bản ghi đã xoá ⇒ `.IgnoreQueryFilters()`. Hiện dùng ở: `ReplacePermissionsAsync`, `TemplateRepository.ReplacePositionsAsync`,
   `DeleteUserRolesAsync` (xoá cứng theo khoá ghép), `DocumentFieldRepository.GetMaxOrderAsync` (thứ tự mới tính cả trường
-đã xoá), `SigningBatchRepository.GetLastFileOrderAsync` (key nguồn MinIO theo thứ tự, không được dùng lại), `SeedPermission` (khôi phục quyền), `SeedRolePermission`,
+đã xoá), `SigningBatchRepository.GetLastFileOrderAsync` (key nguồn MinIO theo thứ tự, không được dùng lại; các hàm runner `ClaimFilesAsync` / `MarkFile*Async` / `PauseInterruptedAsync` ghi bằng `ExecuteUpdate`, không qua UnitOfWork), `SeedPermission` (khôi phục quyền), `SeedRolePermission`,
   `SeedUser` (kiểm cặp khoá đã có).
 
 ⚠️ Bẫy: `ExecuteDeleteAsync` cũng bị filter lọc. Xoá cứng mà quên `IgnoreQueryFilters()` thì bản ghi xoá mềm

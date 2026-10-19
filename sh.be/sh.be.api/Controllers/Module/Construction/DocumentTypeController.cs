@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -6,12 +7,14 @@ using sh.be.api.Base;
 using sh.be.applications.Module.Construction.Dtos.DocumentType;
 using sh.be.applications.Module.Construction.Interfaces.Services;
 using sh.be.shared.Constants.Auth;
+using sh.be.shared.Constants.Versioning;
 using sh.be.shared.HttpRequest;
 
 namespace sh.be.api.Controllers.Module.Construction
 {
-    [Route("api/construction/document-type")]
+    [Route("api/v{version:apiVersion}/construction/document-type")]
     [ApiController]
+    [ApiVersion(ApiVersionConstants.V1)]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class DocumentTypeController : BaseController
     {

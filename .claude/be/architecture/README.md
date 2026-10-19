@@ -40,6 +40,7 @@ Mọi mũi tên hướng **vào trong**. Tầng ngoài implement interface do t�
 | `applications/Base/Interfaces/ISampleFileReader` | `infrastructure.external/SampleFile/Implements/SampleFileReader` |
 | `applications/Base/Interfaces/IPluginSetupProvider` | `infrastructure.external/Plugin/Implements/PluginSetupProvider` |
 | `applications/Base/Interfaces/ICertificateValidator` | `infrastructure.external/Certificate/Implements/CertificateValidator` |
+| `applications/Base/Interfaces/IPdfSigner`, `ITimestampClient`, `ISigningQueue` | `infrastructure.external/{Pdf,Timestamp,Signing}/Implements/...` |
 | `applications/Base/Interfaces/IRequestContext` | `api/Services/HttpRequestContext` |
 | `applications/Base/Interfaces/IExcelTemplateWriter` | `infrastructure.external/Excel/Implements/ExcelTemplateWriter` |
 | `applications/Base/Interfaces/ISpreadsheetWriter`, `ISpreadsheetAuthorizer` | `infrastructure.external/Spreadsheet/Implements/GoogleSheetWriter`, `GoogleSheetAuthorizer` |
@@ -70,6 +71,7 @@ Chiều này do `.csproj` cưỡng chế: domain gọi `ShDbContext` là build l
 - **Nghiệp vụ nằm ở domain.** Service chỉ nạp dữ liệu, giao cho entity / domain service quyết định, rồi lưu.
 - **Ghi đi qua repository + aggregate, đọc đi qua query trả thẳng DTO** (CQRS-lite, chung một DB).
 - Controller **không có nghiệp vụ** — gọi service rồi bọc `ApiResponse`.
+- Mọi route nghiệp vụ có version: `api/v1/<module>/...` (`[ApiVersion]`, xem [01-api.md](01-api.md#version-api)).
 - Mọi REST trả **HTTP 200**; trạng thái thật nằm trong `ApiResponse.Status` (`1` ok, `0` lỗi) và `Code`. Ngoại lệ: API tải
   file (`excel-template`) trả thẳng file khi thành công, lỗi vẫn là `ApiResponse`.
 - Lỗi nghiệp vụ ⇒ `throw new UserFriendlyException(ErrorCodes.X)`; controller bắt bằng `OkException(ex)`.

@@ -16,7 +16,8 @@ tầng ngoài chỉ việc implement.
    `Implements/<X>Service`: nạp → gọi domain → transaction (nếu nhiều bước) → `AddAuditLog` → `SaveChangesAsync`.
 4. **Shared** — mã lỗi mới (`ErrorCodes` + `ErrorMessages`), action nhật ký (`AuditLogConstants`), key quyền mới
    (`PermissionConstants` + dòng `Permission.Create` trong `SeedPermission`).
-5. **Api** — action trong controller của module, gắn `[Permission(...)]`, mẫu `try / OkException`.
+5. **Api** — action trong controller của module, gắn `[Permission(...)]`, mẫu `try / OkException`. Controller mới khai
+   `[Route("api/v{version:apiVersion}/<module>/<ten>")]` + `[ApiVersion(ApiVersionConstants.V1)]` ([01-api.md](01-api.md#version-api)).
 6. Build + kiểm EF (xem [07-conventions.md](07-conventions.md)).
 
 ## Thêm một use case ĐỌC

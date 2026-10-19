@@ -8,7 +8,7 @@ namespace sh.be.api.Swagger
     {
         public void Apply(OpenApiOperation operation, OperationFilterContext context)
         {
-            if(context.DocumentName != SwaggerConstants.ALL)
+            if(!SwaggerDocumentName.IsAll(context.DocumentName))
             {
                 return;
             }

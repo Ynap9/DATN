@@ -14,13 +14,15 @@ Dịch vụ bên thứ ba không phải database. Chỉ tham chiếu `sh.be.appl
 | `DataReader/Base/DataReaderBase.cs` | Lớp nền abstract implement `IDataReader`: luồng chung + chuẩn hoá header |
 | `DataReader/Implements/GoogleSheetReader.cs` | Đọc header từ Google Sheet bằng service account (`Google.Apis.Sheets.v4`) |
 | `Excel/Implements/ExcelTemplateWriter.cs` | Implement `IExcelTemplateWriter`: sinh file `.xlsx` template bằng ClosedXML |
-| `DataReader/Models/SheetHeaderRow.cs` | Dữ liệu thô lớp con trả cho lớp nền: tên sheet + các ô dòng `1` |
 | `Spreadsheet/Implements/GoogleSheetWriter.cs` | Implement `ISpreadsheetWriter`: tạo / xoá Google Sheet (`Google.Apis.Drive.v3` + Sheets) |
 | `FileDownloader/Implements/HttpFileDownloader.cs` | Implement `IFileDownloader.OpenPdfAsync`: `IHttpClientFactory`, `ResponseHeadersRead`, trả **stream** (không nạp RAM); không phải http(s), lỗi mạng / HTTP, `Content-Type` khác `application/pdf` / `application/octet-stream` → `315` |
-| `Storage/Implements/S3FileStorage.cs` | Implement `IFileStorage`: đẩy / xoá object trên MinIO (`AWSSDK.S3`) |
+| `Storage/Implements/S3FileStorage.cs` | Implement `IFileStorage`: đẩy (công khai / riêng tư), tải, link ký sẵn, xoá object trên MinIO (`AWSSDK.S3`) |
 | `SampleFile/Implements/SampleFileReader.cs` | Implement `ISampleFileReader`: trả PDF mẫu nhúng `SampleFile/Files/*.pdf` (embedded resource) |
 | `Plugin/Implements/PluginSetupProvider.cs` | Implement `IPluginSetupProvider`: whitelist phiên bản plugin + mở bộ cài `Plugins/Ký số plugin.exe` |
 | `Certificate/Implements/CertificateValidator.cs` | Implement `ICertificateValidator` (singleton): đọc chứng thư base64, dựng chuỗi tin cậy về CA Ban Cơ yếu đã ghim |
+| `Pdf/Implements/PdfSigner.cs` + `Pdf/Base/*`, `Pdf/Models/*` | Implement `IPdfSigner` (singleton): đọc / nối bản PDF, vẽ khối chữ ký (PDFsharp 6.2.1), ghép + tự kiểm chữ ký |
+| `Signing/Base/CmsBuilder.cs`, `Signing/Implements/SigningQueue.cs` | Dựng `SignedAttributes` + CMS (CAdES); `ISigningQueue` (singleton): phiên ký và hàng đợi yêu cầu cho plugin |
+| `Timestamp/Implements/TimestampClient.cs` | Implement `ITimestampClient`: RFC 3161 tới TSA Ban Cơ yếu qua `IHttpClientFactory` (client `Timestamp`, timeout 180 s) |
 
 ## IMailService
 
@@ -30,8 +32,7 @@ Interface ở `sh.be.applications/Base/Interfaces/IMailService.cs`:
 | `SendAsync(to, subject, body)` | Gửi email tuỳ ý |
 | `SendAccountCreatedAsync(to, userName, password)` | Tạo user xong, gửi thông tin đăng nhập |
 
-**Vì sao interface ở application, không ở external:** application chỉ nói "gửi mail báo tạo tài khoản"; tiêu đề (`MailTemplateConstants`) và HTML là chi tiết của tầng ngoài. Sửa giao diện email không chạm `UserService`.
-Cấu hình: section `Email` bind vào `EmailSettings` (`Smtp.*`, `DefaultFromAddress`, `DefaultFromDisplayName`).
+**Vì sao interface ở application, không ở external:** application chỉ nói "gửi mail báo tạo tài khoản"; tiêu đề (`MailTemplateConstants`) và HTML là chi tiết của tầng ngoài. Sửa giao diện email không chạm `UserService`. Cấu hình: section `Email` bind vào `EmailSettings` (`Smtp.*`, `DefaultFromAddress`, `DefaultFromDisplayName`).
 
 ## IDataReader — đọc header theo từng sheet
 
@@ -78,16 +79,17 @@ nằm ở đây, không ở service. Controller trả `File(...)`; lỗi vẫn t
 
 ## IFileStorage — kho file MinIO
 
-`UploadAsync(content, objectKey, contentType)` đặt `PublicRead`, trả URL công khai `{S3_URL}/{bucket}/{key}`; lỗi → `209`.
-`DeleteAsync` / `DeleteByPrefixAsync` (đi hết các trang 1000 key) chỉ ghi log khi lỗi — dọn rác không làm hỏng thao tác chính.
-Section `S3` bind vào `S3Settings` (`S3_URL`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`); thiếu URL / bucket → `208`
-lúc gọi đầu tiên (client dựng lười). `ForcePathStyle = true` vì MinIO không phục vụ bucket theo tên miền con.
-⚠️ Bucket phải tạo sẵn trên MinIO: thiếu bucket thì upload trả `209` (log ghi `The specified bucket does not exist`).
+`UploadAsync` đặt `PublicRead`, trả URL công khai (ảnh mẫu chữ ký); `UploadPrivateAsync` cho file nguồn / bản ký; lỗi → `209`. `DownloadAsync` lỗi → `210`. `GetTemporaryUrl(key, fileName, lifetime)` trả link ký sẵn kèm `Content-Disposition` (tên gốc). `DeleteAsync` / `DeleteByPrefixAsync` chỉ ghi log khi lỗi. Section `S3` → `S3Settings`; thiếu URL / bucket → `208` lúc gọi đầu tiên; `ForcePathStyle = true` cho MinIO. ⚠️ Bucket phải tạo sẵn: thiếu bucket thì upload trả `209`.
 
 ## IPluginSetupProvider, ICertificateValidator — plugin và chứng thư số
 
 Bộ cài là bản build của repo `Ký số Plugin` (`Window/ks.plugin/bo-cai`, hiện `3.0.0`), chép vào `sh.be.api/Plugins/`, csproj chép sang output; tên file phải đúng `PluginConst.SETUP_FILE_NAME`. Whitelist ở section `Plugin` → `PluginSettings.SupportedVersions` (rỗng → `PluginConst.DEFAULT_SUPPORTED_VERSIONS`), đọc qua `IOptionsMonitor` nên sửa appsettings không cần build lại. ⚠️ Exe ~160 MB nằm trong `.gitignore` (`Plugins/*.exe`): máy chủ phải chép tay, thiếu thì `setup` trả `exists = false`, `setup/content` trả `613`.
 `CertificateValidator` nạp **một lần** 5 file `sh.be.api/Cert/*.crt` (port từ kssm, csproj chép sang output), mỗi file đối chiếu SHA-256 với `CertificateConst` — thiếu file / sai pin thì nhánh đó bị bỏ (fail-closed, log cảnh báo). `Load(base64)` hỏng → `614`. `IsTrusted(cert, thời điểm UTC)` đạt **một** trong hai nhánh: G1 (`rootca` + Sub-CA `cp`) hoặc G2 (`rootcag2` + CA trung gian `cpg2`, `dcscag2`); `CustomRootTrust` nên **không** tin kho chứng thư Windows, revocation `NoCheck` (chứng thư bị thu hồi vẫn qua). Plugin liệt kê chứng thư ở máy người dùng nên server **không** đọc kho chứng thư như API `chung-thu-so` cũ của kssm; ⚠️ đừng tin cờ tin cậy client gửi lên, luôn gọi `IsTrusted`.
+
+## IPdfSigner, ITimestampClient, ISigningQueue — ký số
+
+Port từ kssm, nghiệp vụ ở [../nghiep-vu/10-lo-ky.md](../nghiep-vu/10-lo-ky.md). `CreateContext` (một lần mỗi lô: chuỗi CA, `signingCertificateV2`, cache ảnh đã vẽ) → `Prepare` (nối bản có lỗ `/Contents` 32 768 byte, vá `/ByteRange`, trả `SignedAttributes` cho token) → `Complete` (ghép CMS với token TSA rồi tự kiểm `CheckSignature`, ByteRange phủ trọn file, có token TSA; sai → `631`). Lỗi PDF `625`–`629`, `635`. `SigningQueue.CopySessionCertificate` trả **bản sao** vì đóng phiên sẽ dispose chứng thư gốc.
+⚠️ PDFsharp giữ font cache toàn tiến trình: mọi lệnh vẽ nằm trong một `lock`, và `GlobalFontSettings.FontResolver` chỉ đặt được **một lần** — `PdfSigner` phải là singleton. ⚠️ Model `PdfIndirectObject` không được đặt tên `PdfObject` (trùng `PdfSharp.Pdf.PdfObject`).
 
 ## Thêm một dịch vụ ngoài
 

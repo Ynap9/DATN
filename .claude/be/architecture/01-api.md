@@ -1,6 +1,6 @@
 # Tầng API — sh.be.api
 
-> **Phần 1/9** · mục lục: [README.md](README.md)
+> **Phần 1/9** · mục lục: [README.md](README.md) · cập nhật 2026-10-20 (version API)
 
 Presentation + **composition root**. Tham chiếu `applications`, `infrastructure.data`, `infrastructure.external`.
 
@@ -17,7 +17,7 @@ Presentation + **composition root**. Tham chiếu `applications`, `infrastructur
 | `Services/HttpRequestContext.cs` | Implement `IRequestContext`: `UserId`, `Source`, `ContentType` từ `HttpContext` |
 | `Services/AuthorizationStateProtector.cs` | Implement `IAuthorizationStateProtector`: ký / đọc `state` OAuth bằng `ITimeLimitedDataProtector` |
 | `Worker/AuthWorker.cs` | Tạo client OpenIddict lúc khởi động (`service-worker`, `client-web`, `client-web2`, `client-guest-traobang`) |
-| `Swagger/` | Chia tài liệu Swagger / Scalar theo module |
+| `Swagger/` | Tài liệu Swagger / Scalar theo version × module: `ConfigureSwaggerOptions`, `SwaggerDocumentName`, filter nhóm tag |
 | `Program.cs` | Đăng ký DI, cấu hình auth, CORS, chạy seeder |
 
 ## Controller mỏng
@@ -54,6 +54,25 @@ public ApiResponse FindById([FromRoute] int id)
 ⚠️ Attribute truy vấn DB mỗi request (vai trò + quyền + danh sách permission), chưa cache. Đừng gắn
 `[Permission]` vào endpoint gọi dày đặc mà không tính tới chi phí này.
 
+## Version API
+
+Version theo URL: controller khai `[Route("api/v{version:apiVersion}/<module>/<ten>")]` + `[ApiVersion(ApiVersionConstants.V1)]`,
+gọi `api/v1/...` (`v1.0` cũng nhận). Thư viện `Asp.Versioning.Mvc.ApiExplorer`, cấu hình ở `#region api version` của `Program.cs`.
+
+| Mục | Cách làm |
+|---|---|
+| Không version | `AuthorizationController` là `[ApiVersionNeutral]`: `/connect/token`, `/connect/authorize` là URL chuẩn OAuth mà client đã đăng ký |
+| Báo version | Mọi response có `api-supported-versions` (và `api-deprecated-versions` khi có) |
+| Ngày ngừng | `appsettings` → `ApiVersion:Sunsets[]` (`Version`, `Date`, `Link`) ⇒ header `Sunset` + `Link rel="sunset"` (RFC 8594), ghi chú trên Swagger |
+| Swagger / Scalar | Tự sinh mỗi version × (`all` + `SwaggerConstants.MODULES`): `/swagger/v1-all/swagger.json`, `/swagger/v1-auth/swagger.json`… |
+
+Vòng đời: **(1)** thêm `V2` vào `ApiVersionConstants` + controller / action v2 (`[MapToApiVersion]`), v1 vẫn chạy → **(2)** v2 ổn định:
+`[ApiVersion(V1, Deprecated = true)]`, `DEFAULT_VERSION = V2` → **(3)** khai `ApiVersion:Sunsets`, báo FE → **(4)** qua ngày đó mới xoá code v1.
+
+⚠️ `IApiVersionDescriptionProvider` trả một mô tả cho **mỗi cặp (module, version)**, không phải mỗi version: lặp thẳng nó thì Swagger
+đẻ 25 tài liệu (`auth-all`, `core-auth`…). Luôn gom theo `ApiVersion` rồi đặt tên qua `SwaggerDocumentName.BuildApiVersionGroupName`.
+⚠️ Version không có (`api/v2/...`) trả **404**, không phải 400 — với URL segment, đường dẫn không khớp route nào.
+
 ## Xác thực — OpenIddict
 
 | Mục | Giá trị |
@@ -71,7 +90,7 @@ khi cấp token. Đây là chỗ còn dính Identity ở tầng api, đã biết
 - Mọi interface ↔ implementation đăng ký ở vùng `#region services`, scope `AddScoped`;
   `TimeProvider.System` là `AddSingleton`.
 - Domain service (`RoleDomainService`, `UserDomainService`) đăng ký **class cụ thể**, không qua interface.
-- Seeder chạy sau `builder.Build()` theo thứ tự: Role → Permission → User → RolePermission.
+- Seeder chạy sau `builder.Build()` theo thứ tự: Role → Permission → User → RolePermission; rồi `ISigningRunner.RecoverAsync` đưa lô kẹt `SIGNING` về `PAUSED`.
 - Connection string tên `SO_HOA_DB`, `MultipleActiveResultSets=False` (bật MARS làm bulk import treo transaction — xem
   [../nghiep-vu/11-ho-so-import.md](../nghiep-vu/11-ho-so-import.md)); CORS lấy từ `AllowedHosts` (phân cách `;`).
 

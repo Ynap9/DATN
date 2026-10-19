@@ -1,15 +1,18 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using sh.be.api.Base;
 using sh.be.applications.Module.DigitalSignature.Dtos.Plugin;
 using sh.be.applications.Module.DigitalSignature.Interfaces.Services;
+using sh.be.shared.Constants.Versioning;
 using sh.be.shared.HttpRequest;
 
 namespace sh.be.api.Controllers.Module.DigitalSignature
 {
-    [Route("api/digital-signature/plugin")]
+    [Route("api/v{version:apiVersion}/digital-signature/plugin")]
     [ApiController]
+    [ApiVersion(ApiVersionConstants.V1)]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class PluginController : BaseController
     {
