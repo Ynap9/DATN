@@ -55,7 +55,7 @@ RouterModule.forChild([
 `MenuItem[]` của PrimeNG, hiện gán `[]` trong `setMenu()`.
 
 ⚠️ Menu chưa lọc theo quyền và topbar chưa có đăng xuất. Khi thêm, menu phải dựng từ quyền của user
-(`GET /api/auth/user/me`), key quyền khớp `PermissionConstants` của BE — xem
+(`GET /api/v1/auth/user/me`), key quyền khớp `PermissionConstants` của BE — xem
 [../plans/khop-voi-be.plan.md](../plans/khop-voi-be.plan.md).
 
 ## Đăng nhập

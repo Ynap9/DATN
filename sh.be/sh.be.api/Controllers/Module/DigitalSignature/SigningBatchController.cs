@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,12 +9,14 @@ using sh.be.applications.Module.DigitalSignature.Dtos.SigningBatch;
 using sh.be.applications.Module.DigitalSignature.Interfaces.Services;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.DigitalSignature;
+using sh.be.shared.Constants.Versioning;
 using sh.be.shared.HttpRequest;
 
 namespace sh.be.api.Controllers.Module.DigitalSignature
 {
-    [Route("api/digital-signature/signing-batch")]
+    [Route("api/v{version:apiVersion}/digital-signature/signing-batch")]
     [ApiController]
+    [ApiVersion(ApiVersionConstants.V1)]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class SigningBatchController : BaseController
     {

@@ -19,7 +19,7 @@
 | 4 | Đăng nhập | `POST /connect/token`, form-urlencoded, `grant_type=password`, `client_id` | `HLoginFeComponent.onSubmit` không gọi API | Không đăng nhập được |
 | 5 | Client OAuth | Client có sẵn: `client-web`, `client-web2`… | `environment` không có `clientId` | Thiếu cấu hình |
 | 6 | Refresh token | Hỗ trợ grant `refresh_token` (cần scope `offline_access`) | Hết hạn ⇒ về login | Phải đăng nhập lại |
-| 7 | User hiện tại | `GET api/auth/user/me` → `ViewMeDto` (`id`, `userName`, `fullName`, `email`, `roles[].permissions[]`) | `IUser` (`role`, `branch_id`, `_id`…), `getUser()` đọc `userInfo` localStorage chưa ai ghi | Không có thông tin user |
+| 7 | User hiện tại | `GET api/v1/auth/user/me` → `ViewMeDto` (`id`, `userName`, `fullName`, `email`, `roles[].permissions[]`) | `IUser` (`role`, `branch_id`, `_id`…), `getUser()` đọc `userInfo` localStorage chưa ai ghi | Không có thông tin user |
 | 8 | Quyền / menu | Key `Menu.*`, `Function.*` trong `PermissionConstants` | Menu rỗng, chưa có hằng quyền phía FE | Chưa ẩn/hiện theo quyền |
 | 9 | Mã lỗi | `ErrorCodes` 101–108, 201… | `exceptionCodeWarnings` là mã dự án cũ; `code > 1 && < 1000` tính thông điệp chung nhưng biến không được dùng | Thông điệp lỗi không đúng ý |
 | 10 | 403 | Body rỗng | Toast `err.error.message` | Toast rỗng |

@@ -42,6 +42,21 @@ namespace sh.be.shared.HttpRequest.Error
         public const int ConstructionErrorDocumentFieldNotFound = 302;
         public const int ConstructionErrorProjectNotFound = 303;
         public const int ConstructionErrorProjectConfigNotFound = 304;
+        public const int ConstructionErrorSubmissionNotFound = 305;
+        public const int ConstructionErrorImportSheetEmpty = 306;
+        public const int ConstructionErrorImportColumnNotFound = 307;
+        public const int ConstructionErrorImportDuplicateSubmissionKey = 308;
+        public const int ConstructionErrorImportNotEnoughFieldMapping = 309;
+        public const int ConstructionErrorImportInProgress = 310;
+        public const int ConstructionErrorDocumentFieldNotInProject = 311;
+        public const int ConstructionErrorDocumentTypeNotInProject = 312;
+        public const int ConstructionErrorProjectDone = 313;
+        public const int ConstructionErrorImportFileUrlMissing = 314;
+        public const int ConstructionErrorFileUnavailable = 315;
+        public const int ConstructionErrorProjectDoneNotEditable = 316;
+        public const int ConstructionErrorSubmissionPositionOutOfRange = 317;
+        public const int ConstructionErrorSubmissionDataDuplicateField = 318;
+        public const int ConstructionErrorSubmissionNotInDocumentType = 319;
 
         public const int DigitalSignatureErrorTemplateNotFound = 601;
         public const int DigitalSignatureErrorInvalidTemplatePositionKind = 602;

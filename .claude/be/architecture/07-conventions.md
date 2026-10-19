@@ -1,6 +1,6 @@
 # Quy ước code bắt buộc
 
-> **Phần 7/8** · trước: [06-shared.md](06-shared.md) · mục lục: [README.md](README.md)
+> **Phần 7/9** · trước: [06-shared.md](06-shared.md) · mục lục: [README.md](README.md)
 
 Áp dụng cho mọi thay đổi trong `sh.be`. Vi phạm một dòng ở đây coi như chưa xong việc.
 
@@ -40,6 +40,8 @@
 - Method bắt đầu bằng động từ (`Create`, `Assign`, `Ensure`, `Resolve`, `Find`); biến `bool` đọc như câu hỏi
   (`isRandomPassword`, `hasRole`); danh sách dùng số nhiều (`roleIds`, `userRoles`).
 - Không viết tắt khó đoán (`usrRl`, `pmsKey`); chỉ giữ viết tắt phổ biến (`id`, `dto`, `ex`).
+- **Hạn chế hàm private**: logic chỉ dùng một chỗ viết thẳng trong hàm public. Chỉ tách hàm private khi được gọi
+  từ **≥ 2 nơi** (tránh lặp code). Đang áp dụng cho module Submission; code cũ sửa dần khi đụng tới.
 
 ## Tên và namespace
 

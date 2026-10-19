@@ -35,11 +35,17 @@ Mọi mũi tên hướng **vào trong**. Tầng ngoài implement interface do t�
 | `applications/.../Interfaces/Queries/IRoleQuery`… | `infrastructure.data/.../Queries/RoleQuery`… |
 | `applications/Base/Interfaces/IMailService` | `infrastructure.external/Mail/Implements/MailService` |
 | `applications/Base/Interfaces/IDataReader` | `infrastructure.external/DataReader/Implements/GoogleSheetReader` (qua `DataReaderBase`) |
+| `applications/Base/Interfaces/IFileDownloader` | `infrastructure.external/FileDownloader/Implements/HttpFileDownloader` |
 | `applications/Base/Interfaces/IFileStorage` | `infrastructure.external/Storage/Implements/S3FileStorage` (MinIO) |
 | `applications/Base/Interfaces/ISampleFileReader` | `infrastructure.external/SampleFile/Implements/SampleFileReader` |
 | `applications/Base/Interfaces/IPluginSetupProvider` | `infrastructure.external/Plugin/Implements/PluginSetupProvider` |
 | `applications/Base/Interfaces/ICertificateValidator` | `infrastructure.external/Certificate/Implements/CertificateValidator` |
+| `applications/Base/Interfaces/IPdfSigner`, `ITimestampClient`, `ISigningQueue` | `infrastructure.external/{Pdf,Timestamp,Signing}/Implements/...` |
 | `applications/Base/Interfaces/IRequestContext` | `api/Services/HttpRequestContext` |
+| `applications/Base/Interfaces/IExcelTemplateWriter` | `infrastructure.external/Excel/Implements/ExcelTemplateWriter` |
+| `applications/Base/Interfaces/ISpreadsheetWriter`, `ISpreadsheetAuthorizer` | `infrastructure.external/Spreadsheet/Implements/GoogleSheetWriter`, `GoogleSheetAuthorizer` |
+| `applications/Base/Interfaces/IPdfSigner`, `ISigningQueue`, `ITimestampClient` | `infrastructure.external/Pdf`, `Signing`, `Timestamp` (xem [09-chu-ky-so.md](09-chu-ky-so.md)) |
+| `applications/.../DigitalSignature/Interfaces/Services/ISigningRunner` | `applications/.../DigitalSignature/Implements/SigningRunner` (singleton, chạy nền) |
 | `applications/.../Interfaces/Services/IRoleService`… | `applications/.../Implements/RoleService`… |
 
 Chiều này do `.csproj` cưỡng chế: domain gọi `ShDbContext` là build lỗi ngay.
@@ -56,6 +62,7 @@ Chiều này do `.csproj` cưỡng chế: domain gọi `ShDbContext` là build l
 | [06-shared.md](06-shared.md) | Mã lỗi, exception, hằng số, settings, utils |
 | [07-conventions.md](07-conventions.md) | **Quy ước code bắt buộc** |
 | [08-them-chuc-nang.md](08-them-chuc-nang.md) | Các bước thêm một use case hoặc một module mới |
+| [09-chu-ky-so.md](09-chu-ky-so.md) | Pipeline lô ký, phiên plugin, PDF revision, CMS, TSA |
 | [../db/README.md](../db/README.md) | Lệnh migration và cập nhật database |
 | [../nghiep-vu/README.md](../nghiep-vu/README.md) | **Nghiệp vụ**: người dùng, phân quyền, vai trò mặc định, nhật ký hệ thống |
 
@@ -64,6 +71,7 @@ Chiều này do `.csproj` cưỡng chế: domain gọi `ShDbContext` là build l
 - **Nghiệp vụ nằm ở domain.** Service chỉ nạp dữ liệu, giao cho entity / domain service quyết định, rồi lưu.
 - **Ghi đi qua repository + aggregate, đọc đi qua query trả thẳng DTO** (CQRS-lite, chung một DB).
 - Controller **không có nghiệp vụ** — gọi service rồi bọc `ApiResponse`.
+- Mọi route nghiệp vụ có version: `api/v1/<module>/...` (`[ApiVersion]`, xem [01-api.md](01-api.md#version-api)).
 - Mọi REST trả **HTTP 200**; trạng thái thật nằm trong `ApiResponse.Status` (`1` ok, `0` lỗi) và `Code`. Ngoại lệ: API tải
   file (`excel-template`) trả thẳng file khi thành công, lỗi vẫn là `ApiResponse`.
 - Lỗi nghiệp vụ ⇒ `throw new UserFriendlyException(ErrorCodes.X)`; controller bắt bằng `OkException(ex)`.

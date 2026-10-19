@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Asp.Versioning;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using sh.be.api.Attributes;
@@ -6,12 +7,14 @@ using sh.be.api.Base;
 using sh.be.applications.Module.Auth.Dtos.Role;
 using sh.be.applications.Module.Auth.Interfaces.Services;
 using sh.be.shared.Constants.Auth;
+using sh.be.shared.Constants.Versioning;
 using sh.be.shared.HttpRequest;
 
 namespace sh.be.api.Controllers.Module.Auth
 {
-    [Route("api/auth/role")]
+    [Route("api/v{version:apiVersion}/auth/role")]
     [ApiController]
+    [ApiVersion(ApiVersionConstants.V1)]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class RoleController:BaseController
     {

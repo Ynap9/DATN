@@ -1,6 +1,6 @@
 # Nhật ký hệ thống (Core)
 
-> **Phần 4/10** · trước: [03-vai-tro-mac-dinh.md](03-vai-tro-mac-dinh.md) · mục lục: [README.md](README.md)
+> **Phần 4/12** · trước: [03-vai-tro-mac-dinh.md](03-vai-tro-mac-dinh.md) · mục lục: [README.md](README.md)
 
 Mọi thao tác ghi nghiệp vụ để lại một `AuditLog`. Module `Core` chỉ **đọc** nhật ký qua API; việc ghi nằm trong
 `BaseService.AddAuditLog` và được gọi từ các service nghiệp vụ.
@@ -32,8 +32,11 @@ Mọi thao tác ghi nghiệp vụ để lại một `AuditLog`. Module `Core` ch
 | Tạo / cập nhật / xoá cấu hình dự án, xác thực tài khoản Google (giá trị bí mật ghi `******`) | Create / Update / Delete / Update | `ProjectConfigService` |
 | Tạo / đổi tên / cập nhật cấu hình / xoá mẫu chữ ký | Create / Update / Update / Delete | `TemplateService` |
 | Tạo lô ký / thêm file / xoá file khỏi lô | Create / Create / Delete | `SigningBatchService` (không ghi từng file, chỉ số file) |
+| Mở phiên ký / bắt đầu ký lô / tạm dừng / huỷ lô ký | Update | `SigningBatchService` (runner không ghi nhật ký từng file) |
 | Đăng nhập thành công | Login | `AuthorizationController.Exchange` |
 | Đăng nhập thất bại (sai tên hoặc sai mật khẩu) | Login | `AuthorizationController.Exchange` |
+| Import thêm mới / bổ sung ô trống / ghi đè trường hồ sơ từ Google Sheet (chỉ khi có thay đổi; ghi đè lưu giá trị cũ / mới) | Create / Update / Update | `SubmissionService` |
+| Kiểm tra hồ sơ (mỗi lần bấm, kể cả không sửa ô nào; lưu trạng thái và giá trị cũ / mới từng trường) | Update | `SubmissionService.Check` |
 | Khởi tạo vai trò / quyền / tài khoản mặc định, đồng bộ danh sách quyền | Create / Update | Các seeder khi khởi động |
 
 ## Cách ghi và cùng transaction

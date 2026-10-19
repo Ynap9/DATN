@@ -1,6 +1,6 @@
 # Vai trò và quyền mặc định
 
-> **Phần 3/10** · trước: [02-phan-quyen.md](02-phan-quyen.md) · mục lục: [README.md](README.md)
+> **Phần 3/12** · trước: [02-phan-quyen.md](02-phan-quyen.md) · mục lục: [README.md](README.md)
 
 ## Vai trò mặc định
 
@@ -15,7 +15,7 @@ Hằng số trong `RoleConstants`; `SeedRole` tạo các vai trò còn thiếu k
 | `ROLE_QA` | `QA` | Nhân viên QA | Chưa có |
 | `ROLE_USER` | `User` | Người dùng | Chưa có |
 
-Ba vai trò `Leader`, `Data`, `QA`, `User` chưa có quyền nào sau khi seed. Muốn dùng phải gán quyền bằng API
+Bốn vai trò `Leader`, `Data`, `QA`, `User` chưa có quyền nào sau khi seed. Muốn dùng phải gán quyền bằng API
 `PUT api/auth/role/permission`.
 
 ## Tài khoản khởi tạo

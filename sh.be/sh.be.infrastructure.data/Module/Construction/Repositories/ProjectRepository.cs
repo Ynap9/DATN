@@ -49,6 +49,18 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
                 .ToListAsync();
         }
 
+        public Task<bool> ExistsDocumentTypeAsync(int projectId, int documentTypeId)
+        {
+            return _shDbContext.ProjectDocumentTypes.AnyAsync(pd => pd.ProjectId == projectId && pd.DocumentTypeId == documentTypeId);
+        }
+
+        public Task<bool> ExistsActiveDocumentTypeAsync(int projectId, int documentTypeId)
+        {
+            return _shDbContext.ProjectDocumentTypes.AnyAsync(pd => pd.ProjectId == projectId && pd.DocumentTypeId == documentTypeId
+                && _shDbContext.Projects.Any(p => p.Id == projectId)
+                && _shDbContext.DocumentTypes.Any(d => d.Id == documentTypeId));
+        }
+
         public void AddDocumentTypes(IEnumerable<ProjectDocumentType> projectDocumentTypes)
         {
             _shDbContext.ProjectDocumentTypes.AddRange(projectDocumentTypes);
@@ -66,6 +78,14 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
         {
             return _shDbContext.ProjectDocumentTypeDocumentFields
                 .Where(pf => pf.ProjectId == projectId)
+                .ToListAsync();
+        }
+
+        public Task<List<ProjectDocumentTypeDocumentField>> GetDocumentFieldsAsync(int projectId, int documentTypeId)
+        {
+            return _shDbContext.ProjectDocumentTypeDocumentFields
+                .AsNoTracking()
+                .Where(pf => pf.ProjectId == projectId && pf.DocumentTypeId == documentTypeId)
                 .ToListAsync();
         }
 

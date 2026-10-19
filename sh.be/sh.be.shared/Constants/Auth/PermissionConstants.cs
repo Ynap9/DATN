@@ -57,6 +57,11 @@ namespace sh.be.shared.Constants.Auth
         public const string FUNCTION_PROJECT_CONFIG_UPDATE = "Function.Construction.ProjectConfig.Update";
         public const string FUNCTION_PROJECT_CONFIG_DELETE = "Function.Construction.ProjectConfig.Delete";
 
+        public const string MENU_SUBMISSION = "Menu.Construction.Submission";
+        public const string FUNCTION_SUBMISSION_VIEW = "Function.Construction.Submission.View";
+        public const string FUNCTION_SUBMISSION_IMPORT = "Function.Construction.Submission.Import";
+        public const string FUNCTION_SUBMISSION_CHECK = "Function.Construction.Submission.Check";
+
         public const string MODULE_DIGITAL_SIGNATURE = "DigitalSignature";
 
         public const string MENU_DIGITAL_SIGNATURE = "Menu.DigitalSignature";
