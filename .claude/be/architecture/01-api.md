@@ -12,7 +12,7 @@ Presentation + **composition root**. Tham chiếu `applications`, `infrastructur
 | `Controllers/Module/Auth/` | `AuthorizationController` (token), `UserController`, `RoleController`, `PermissionController` |
 | `Controllers/Module/Core/` | `AuditLogController` |
 | `Controllers/Module/Construction/` | `DocumentTypeController`, `DocumentFieldController`, `ProjectController`, `ProjectConfigController` (callback Google `[AllowAnonymous]`), `SubmissionController` (`proxy-file` trả stream PDF, lỗi vẫn `Ok(OkException(ex))`) |
-| `Controllers/Module/DigitalSignature/` | `TemplateController` (mẫu chữ ký; `PUT {id}/config` nhận `[FromForm]` multipart), `PluginController` (phiên bản + bộ cài plugin ký số, chỉ cần đăng nhập), `SigningBatchController` (lô ký; `POST {id}/files` multipart, `[RequestSizeLimit]` 512 MB) |
+| `Controllers/Module/DigitalSignature/` | `TemplateController` (mẫu chữ ký; `PUT {id}/config` nhận `[FromForm]` multipart), `PluginController` (phiên bản + bộ cài plugin ký số, chỉ cần đăng nhập), `SigningBatchController` (lô ký; `POST {id}/files` multipart, `[RequestSizeLimit]` 512 MB; `requests` / `signatures` nhận `CancellationToken` để long-poll dừng khi client ngắt) |
 | `Attributes/PermissionAttribute.cs` | Kiểm quyền theo key, gọi `IPermissionService.HasAnyPermission` |
 | `Services/HttpRequestContext.cs` | Implement `IRequestContext`: `UserId`, `Source`, `ContentType` từ `HttpContext` |
 | `Services/AuthorizationStateProtector.cs` | Implement `IAuthorizationStateProtector`: ký / đọc `state` OAuth bằng `ITimeLimitedDataProtector` |
@@ -71,7 +71,7 @@ khi cấp token. Đây là chỗ còn dính Identity ở tầng api, đã biết
 - Mọi interface ↔ implementation đăng ký ở vùng `#region services`, scope `AddScoped`;
   `TimeProvider.System` là `AddSingleton`.
 - Domain service (`RoleDomainService`, `UserDomainService`) đăng ký **class cụ thể**, không qua interface.
-- Seeder chạy sau `builder.Build()` theo thứ tự: Role → Permission → User → RolePermission.
+- Seeder chạy sau `builder.Build()` theo thứ tự: Role → Permission → User → RolePermission; rồi `ISigningRunner.RecoverAsync` đưa lô kẹt `SIGNING` về `PAUSED`.
 - Connection string tên `SO_HOA_DB`, `MultipleActiveResultSets=False` (bật MARS làm bulk import treo transaction — xem
   [../nghiep-vu/11-ho-so-import.md](../nghiep-vu/11-ho-so-import.md)); CORS lấy từ `AllowedHosts` (phân cách `;`).
 

@@ -40,6 +40,7 @@ Mọi mũi tên hướng **vào trong**. Tầng ngoài implement interface do t�
 | `applications/Base/Interfaces/ISampleFileReader` | `infrastructure.external/SampleFile/Implements/SampleFileReader` |
 | `applications/Base/Interfaces/IPluginSetupProvider` | `infrastructure.external/Plugin/Implements/PluginSetupProvider` |
 | `applications/Base/Interfaces/ICertificateValidator` | `infrastructure.external/Certificate/Implements/CertificateValidator` |
+| `applications/Base/Interfaces/IPdfSigner`, `ITimestampClient`, `ISigningQueue` | `infrastructure.external/{Pdf,Timestamp,Signing}/Implements/...` |
 | `applications/Base/Interfaces/IRequestContext` | `api/Services/HttpRequestContext` |
 | `applications/.../Interfaces/Services/IRoleService`… | `applications/.../Implements/RoleService`… |
 
