@@ -83,6 +83,14 @@ namespace sh.be.domain.Module.Construction.Entities
             }
         }
 
+        public void EnsureEditable(bool isSuperAdmin)
+        {
+            if (Status == ProjectConst.DONE && !isSuperAdmin)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectDoneNotEditable);
+            }
+        }
+
         public List<ProjectDocumentType> AssignDocumentTypes(IEnumerable<int> documentTypeIds, string? assignedBy, DateTime? assignedDate)
         {
             return documentTypeIds

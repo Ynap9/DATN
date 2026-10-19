@@ -1,16 +1,18 @@
 # Tầng Infrastructure External — sh.be.infrastructure.external
 
-> **Phần 5/8** · trước: [04-infrastructure-data.md](04-infrastructure-data.md) · mục lục: [README.md](README.md)
+> **Phần 5/9** · trước: [04-infrastructure-data.md](04-infrastructure-data.md) · mục lục: [README.md](README.md)
 
-Dịch vụ bên thứ ba không phải database. Chỉ tham chiếu `sh.be.applications` để implement cổng ra mà
-application khai báo.
+Dịch vụ bên thứ ba không phải database. Chỉ tham chiếu `sh.be.applications` để implement cổng ra mà application khai báo.
 
 ## Thư mục
 
 | Thư mục | Chứa gì |
 |---|---|
-| `Mail/Implements/MailService.cs`, `Mail/Templates/AccountCreatedMailTemplate.cs` | Implement `IMailService`: gửi SMTP bằng `EmailSettings`; HTML email báo tạo tài khoản |
-| `DataReader/Base/DataReaderBase.cs`, `Implements/GoogleSheetReader.cs`, `Models/SheetHeaderRow.cs` | `IDataReader`: lớp nền chuẩn hoá header + đọc Google Sheet bằng service account |
+| `Mail/Implements/MailService.cs` | Implement `IMailService`: gửi SMTP bằng cấu hình `EmailSettings` |
+| `Pdf/`, `Signing/`, `Timestamp/` | Ký số PDF, gói CMS, phiên plugin, TSA. Xem [09-chu-ky-so.md](09-chu-ky-so.md) |
+| `Mail/Templates/AccountCreatedMailTemplate.cs` | HTML email báo tạo tài khoản |
+| `DataReader/Base/DataReaderBase.cs` | Lớp nền abstract implement `IDataReader`: luồng chung + chuẩn hoá header |
+| `DataReader/Implements/GoogleSheetReader.cs` | Đọc header từ Google Sheet bằng service account (`Google.Apis.Sheets.v4`) |
 | `Excel/Implements/ExcelTemplateWriter.cs` | Implement `IExcelTemplateWriter`: sinh file `.xlsx` template bằng ClosedXML |
 | `Spreadsheet/Implements/GoogleSheetWriter.cs` | Implement `ISpreadsheetWriter`: tạo / xoá Google Sheet (`Google.Apis.Drive.v3` + Sheets) |
 | `FileDownloader/Implements/HttpFileDownloader.cs` | Implement `IFileDownloader.OpenPdfAsync`: `IHttpClientFactory`, `ResponseHeadersRead`, trả **stream** (không nạp RAM); không phải http(s), lỗi mạng / HTTP, `Content-Type` khác `application/pdf` / `application/octet-stream` → `315` |

@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -6,12 +7,14 @@ using sh.be.api.Base;
 using sh.be.applications.Module.DigitalSignature.Dtos.Template;
 using sh.be.applications.Module.DigitalSignature.Interfaces.Services;
 using sh.be.shared.Constants.Auth;
+using sh.be.shared.Constants.Versioning;
 using sh.be.shared.HttpRequest;
 
 namespace sh.be.api.Controllers.Module.DigitalSignature
 {
-    [Route("api/digital-signature/template")]
+    [Route("api/v{version:apiVersion}/digital-signature/template")]
     [ApiController]
+    [ApiVersion(ApiVersionConstants.V1)]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class TemplateController : BaseController
     {

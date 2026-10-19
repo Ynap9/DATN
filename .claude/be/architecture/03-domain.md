@@ -1,6 +1,6 @@
 # Tầng Domain — sh.be.domain
 
-> **Phần 3/8** · trước: [02-applications.md](02-applications.md) · mục lục: [README.md](README.md)
+> **Phần 3/9** · trước: [02-applications.md](02-applications.md) · mục lục: [README.md](README.md)
 
 Lõi nghiệp vụ. Chỉ tham chiếu `sh.be.shared`. Mọi quy tắc nghiệp vụ nằm ở đây.
 
@@ -29,12 +29,13 @@ Module/<TenModule>/
 | `AppUser : IdentityUser` | Auth | `Create` (`EmailConfirmed = true`), `UpdateProfile`, `AssignRoles` |
 | `AuditLog` | Core | `Create` (tự serialize `oldData`/`newData` sang JSON) |
 | `DocumentType` | Construction | `Create` (`DefaultView` mặc định `1`), `Update`, `Delete` (xoá mềm); `Name` duy nhất qua `DocumentTypeDomainService.EnsureUniqueNameAsync`; `EnsureAllExistAsync` (thiếu id nào → `301`) |
-| `Project` | Construction | `Create` (`Status = DEPLOYING`, `GoogleSheetName = Name`, kiểm `StartedAt ≤ EndedAt`), `Update` (kiểm thêm `Status` thuộc `ProjectConst.STATUSES`), `LinkGoogleSheet`, `EnsureImportable` (`DONE` → `313`), `Delete` (xoá mềm, `ISoftDeleted`), `AssignDocumentTypes` (dựng `ProjectDocumentType`, gọi sau khi đã có `Id`); `Name` duy nhất qua `ProjectDomainService.EnsureUniqueNameAsync` |
+| `Project` | Construction | `Create` (`Status = DEPLOYING`, `GoogleSheetName = Name`, kiểm `StartedAt ≤ EndedAt`), `Update` (kiểm thêm `Status` thuộc `ProjectConst.STATUSES`), `LinkGoogleSheet`, `EnsureImportable` (`DONE` → `313`), `EnsureEditable(isSuperAdmin)` (`DONE` mà không phải SuperAdmin → `316`), `Delete` (xoá mềm, `ISoftDeleted`), `AssignDocumentTypes` (dựng `ProjectDocumentType`, gọi sau khi đã có `Id`); `Name` duy nhất qua `ProjectDomainService.EnsureUniqueNameAsync` |
 | `ProjectConfig` | Construction | Key-value: `Create`, `Update` (giữ secret cũ khi gửi `******`), `ChangeValue`, `Delete`, `IsSecret`; `ProjectConfigDomainService`: `Name` duy nhất, `GetRequiredValuesAsync` (thiếu → `304`), `SaveValueAsync` (có thì sửa, chưa có thì tạo) |
 | `ProjectDocumentType` | Construction | Bảng nối dự án – loại văn bản, khoá ghép `(ProjectId, DocumentTypeId)`: `Create`, `Delete` (xoá mềm), `AssignDocumentFields` (chép trường của loại, `OrderFieldImport` từ 1) |
 | `ProjectDocumentTypeDocumentField` | Construction | Trường văn bản theo dự án, khoá ghép `(ProjectId, DocumentTypeId, DocumentFieldId)`, thêm `FieldImport`, `OrderFieldImport`: `Create`, `Delete` (xoá mềm) |
-| `Submission` | Construction | Hồ sơ = một dòng Google Sheet; gốc của `SubmissionData`. `Create` (trim, `Name = FileName`, một link gán cho cả `FileUrlS3Object` / `FileUrlGoogleDrive` / `FileUrlGstore`, `StatusCheck = SubmissionConst.NOT_CHECKED`), `CreateData` (sinh `SubmissionData` lấy `ProjectId`, `DocumentTypeId` từ hồ sơ), `IsChecked`, `Delete` (xoá mềm) |
-| `SubmissionData` | Construction | Giá trị một trường của hồ sơ, không có navigation: `Create` (public cho bulk insert; chỉ gọi qua `Submission.CreateData` hoặc policy import), `AssignSubmission` (gán `Id` thật sau bulk insert), `FillIfBlank` / `Overwrite` (trả `false` nếu không đổi gì), `Delete` (xoá mềm) |
+| `Submission` | Construction | Hồ sơ = một dòng Google Sheet; gốc của `SubmissionData` và `SubmissionLog`. `Create` (trim, `Name = FileName`, một link gán cho cả `FileUrlS3Object` / `FileUrlGoogleDrive` / `FileUrlGstore`, `StatusCheck = SubmissionConst.NOT_CHECKED`), `CreateData` (sinh `SubmissionData` lấy `ProjectId`, `DocumentTypeId` từ hồ sơ), `IsChecked`, `Check` (luôn sang `CHECKED`, trả `SubmissionLog` "kiểm tra" / "tái kiểm tra", ghi chú ≤ 1000 ký tự), `EnsureBelongsTo` (`319`), `Delete` (xoá mềm) |
+| `SubmissionData` | Construction | Giá trị một trường của hồ sơ, không có navigation: `Create` (public cho bulk insert; chỉ gọi qua `Submission.CreateData` hoặc policy import), `AssignSubmission` (gán `Id` thật sau bulk insert), `FillIfBlank` / `Overwrite` (trả `false` nếu không đổi gì), `ChangeData` (người kiểm tra sửa tay, cho phép xoá trắng, không đổi `IndexGoogleSheet`), `Delete` (xoá mềm) |
+| `SubmissionLog` | Construction | Một lần kiểm tra hồ sơ, migration `Add_SubmissionLog`: `Create` (chỉ gọi từ `Submission.Check`), lưu `UserId`, trạng thái cũ / mới, mô tả, ghi chú, số ô đã sửa |
 | `DocumentField` | Construction | `Create` (`FieldType = "string"`, hai cờ hiển thị `true`), `Update` (không đổi `DocumentTypeId`, không đổi thứ tự), `UpdateSetting` (chỉ `IsShow`, `IsChargeable`, `IsFieldOcr`, `FieldNameOcr`; tắt OCR thì giữ `FieldNameOcr` cũ), `ChangeOrderTableView` / `ChangeOrderListView` (mỗi method một cột), `Delete` (xoá mềm, giữ nguyên thứ tự); `DocumentFieldDomainService` kiểm loại văn bản tồn tại, `Field` duy nhất, thứ tự không trùng (tạo = lớn nhất của cả hai cột kể cả trường đã xoá + 1, kéo thả từng cột thì dịch `±1` các trường ở giữa, xoá không đổi thứ tự) |
 
 | `Template` | DigitalSignature | Mẫu cấu hình chữ ký (port từ `kssm.be`), migration `Add_DigitalSignature`: `Create`, `Update` (chỉ `Name`, trim), `UpdateConfig` (kẹp độ đậm `40–250`, độ dày nét `0–200`, cỡ chữ `6–24`; màu chuẩn hoá `#RRGGBB`, sai → mặc định / `null`; font ngoài `TemplateConst.DIGITAL_SIGNATURE_FONTS` → `Times New Roman`; `AllowSigningSignedPdf` = cho ký lên PDF đã có chữ ký), `ChangeStampImage` / `RemoveStampImage`, `ChangeWetSignatureImage` / `RemoveWetSignatureImage`, `Delete` (xoá mềm + bỏ link ảnh), `CreatePosition` |
@@ -65,7 +66,7 @@ gọi chúng bên trong method của aggregate gốc hoặc seeder; đừng gọ
 
 `Services/Import/` (Construction) là policy **thuần**, chạy song song an toàn: `SubmissionKeyPolicy`, `SheetCellAddressPolicy`,
 `SubmissionImportColumnPolicy`, `SubmissionImportPolicy` (dựng `Append/Blank/OverwriteImportPlan` dùng chung cho verify và import) +
-record trong `Import/Models/`. Bảng đọc từ nguồn (`SheetTable`, `SheetRow`) ở `domain/Base/Models` vì `IDataReader` dùng chung mọi module.
+record trong `Import/Models/`. `Services/Check/SubmissionCheckPolicy` cũng thuần: dựng `SubmissionCheckPlan` (ô sửa, ô thêm, thay đổi cho audit) cho API kiểm tra hồ sơ, lỗi `318` / `311`. Bảng đọc từ nguồn (`SheetTable`, `SheetRow`) ở `domain/Base/Models` vì `IDataReader` dùng chung mọi module.
 
 Entity **không** được giữ repository. Domain service nhận repository qua constructor và được đăng ký DI dạng
 class cụ thể.

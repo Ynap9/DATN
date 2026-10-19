@@ -1,6 +1,6 @@
 # Tầng API — sh.be.api
 
-> **Phần 1/8** · mục lục: [README.md](README.md)
+> **Phần 1/9** · mục lục: [README.md](README.md) · cập nhật 2026-10-20 (version API)
 
 Presentation + **composition root**. Tham chiếu `applications`, `infrastructure.data`, `infrastructure.external`.
 
@@ -11,13 +11,13 @@ Presentation + **composition root**. Tham chiếu `applications`, `infrastructur
 | `Base/BaseController.cs` | `OkException(ex)`: đổi exception thành `ApiResponse` lỗi |
 | `Controllers/Module/Auth/` | `AuthorizationController` (token), `UserController`, `RoleController`, `PermissionController` |
 | `Controllers/Module/Core/` | `AuditLogController` |
-| `Controllers/Module/Construction/` | `DocumentTypeController`, `DocumentFieldController`, `ProjectController`, `ProjectConfigController` (callback Google `[AllowAnonymous]`), `SubmissionController` (`proxy-file` trả stream PDF, lỗi vẫn `Ok(OkException(ex))`) |
-| `Controllers/Module/DigitalSignature/` | `TemplateController` (mẫu chữ ký; `PUT {id}/config` nhận `[FromForm]` multipart), `PluginController` (phiên bản + bộ cài plugin ký số, chỉ cần đăng nhập), `SigningBatchController` (lô ký; `POST {id}/files` multipart, `[RequestSizeLimit]` 512 MB; `requests` / `signatures` nhận `CancellationToken` để long-poll dừng khi client ngắt) |
+| `Controllers/Module/Construction/` | `DocumentTypeController`, `DocumentFieldController`, `ProjectController`, `ProjectConfigController` (callback Google `[AllowAnonymous]`), `SubmissionController` (một `ISubmissionService` cho cả import, xem, kiểm tra + `ISubmissionFileService`; `proxy-file` trả stream PDF, lỗi vẫn `Ok(OkException(ex))`; 7 API xem / kiểm tra hồ sơ, route có id luôn ràng buộc `{id:int}` để không nuốt `paging`, `count`, `proxy-file`) |
+| `Controllers/Module/DigitalSignature/` | `TemplateController` (mẫu chữ ký; `PUT {id}/config` nhận `[FromForm]` multipart), `PluginController` (phiên bản + bộ cài plugin ký số, chỉ cần đăng nhập), `SigningBatchController` (lô ký; `POST {id}/files` multipart, `[RequestSizeLimit]` 512 MB) |
 | `Attributes/PermissionAttribute.cs` | Kiểm quyền theo key, gọi `IPermissionService.HasAnyPermission` |
 | `Services/HttpRequestContext.cs` | Implement `IRequestContext`: `UserId`, `Source`, `ContentType` từ `HttpContext` |
 | `Services/AuthorizationStateProtector.cs` | Implement `IAuthorizationStateProtector`: ký / đọc `state` OAuth bằng `ITimeLimitedDataProtector` |
 | `Worker/AuthWorker.cs` | Tạo client OpenIddict lúc khởi động (`service-worker`, `client-web`, `client-web2`, `client-guest-traobang`) |
-| `Swagger/` | Chia tài liệu Swagger / Scalar theo module |
+| `Swagger/` | Tài liệu Swagger / Scalar theo version × module: `ConfigureSwaggerOptions`, `SwaggerDocumentName`, filter nhóm tag |
 | `Program.cs` | Đăng ký DI, cấu hình auth, CORS, chạy seeder |
 
 ## Controller mỏng
@@ -53,6 +53,25 @@ public ApiResponse FindById([FromRoute] int id)
 
 ⚠️ Attribute truy vấn DB mỗi request (vai trò + quyền + danh sách permission), chưa cache. Đừng gắn
 `[Permission]` vào endpoint gọi dày đặc mà không tính tới chi phí này.
+
+## Version API
+
+Version theo URL: controller khai `[Route("api/v{version:apiVersion}/<module>/<ten>")]` + `[ApiVersion(ApiVersionConstants.V1)]`,
+gọi `api/v1/...` (`v1.0` cũng nhận). Thư viện `Asp.Versioning.Mvc.ApiExplorer`, cấu hình ở `#region api version` của `Program.cs`.
+
+| Mục | Cách làm |
+|---|---|
+| Không version | `AuthorizationController` là `[ApiVersionNeutral]`: `/connect/token`, `/connect/authorize` là URL chuẩn OAuth mà client đã đăng ký |
+| Báo version | Mọi response có `api-supported-versions` (và `api-deprecated-versions` khi có) |
+| Ngày ngừng | `appsettings` → `ApiVersion:Sunsets[]` (`Version`, `Date`, `Link`) ⇒ header `Sunset` + `Link rel="sunset"` (RFC 8594), ghi chú trên Swagger |
+| Swagger / Scalar | Tự sinh mỗi version × (`all` + `SwaggerConstants.MODULES`): `/swagger/v1-all/swagger.json`, `/swagger/v1-auth/swagger.json`… |
+
+Vòng đời: **(1)** thêm `V2` vào `ApiVersionConstants` + controller / action v2 (`[MapToApiVersion]`), v1 vẫn chạy → **(2)** v2 ổn định:
+`[ApiVersion(V1, Deprecated = true)]`, `DEFAULT_VERSION = V2` → **(3)** khai `ApiVersion:Sunsets`, báo FE → **(4)** qua ngày đó mới xoá code v1.
+
+⚠️ `IApiVersionDescriptionProvider` trả một mô tả cho **mỗi cặp (module, version)**, không phải mỗi version: lặp thẳng nó thì Swagger
+đẻ 25 tài liệu (`auth-all`, `core-auth`…). Luôn gom theo `ApiVersion` rồi đặt tên qua `SwaggerDocumentName.BuildApiVersionGroupName`.
+⚠️ Version không có (`api/v2/...`) trả **404**, không phải 400 — với URL segment, đường dẫn không khớp route nào.
 
 ## Xác thực — OpenIddict
 

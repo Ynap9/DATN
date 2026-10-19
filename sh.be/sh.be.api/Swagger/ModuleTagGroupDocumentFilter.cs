@@ -9,14 +9,14 @@ namespace sh.be.api.Swagger
     {
         public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
         {
-            if(context.DocumentName != SwaggerConstants.ALL)
+            if(!SwaggerDocumentName.IsAll(context.DocumentName))
             {
                 return;
             }
 
             var groups = new OpenApiArray();
             foreach( var module in context.ApiDescriptions
-                .GroupBy(x => x.GroupName ?? SwaggerConstants.COMMON)
+                .GroupBy(x => x.GroupName is string groupName && SwaggerConstants.MODULES.Contains(groupName) ? groupName : SwaggerConstants.COMMON)
                 .OrderBy(x => x.Key))
             {
                 var tags = new OpenApiArray();

@@ -33,6 +33,7 @@ namespace sh.be.infrastructure.data.Persistence.Db
         public DbSet<ProjectDocumentTypeDocumentField> ProjectDocumentTypeDocumentFields { get; set; }
         public DbSet<Submission> Submissions { get; set; }
         public DbSet<SubmissionData> SubmissionDatas { get; set; }
+        public DbSet<SubmissionLog> SubmissionLogs { get; set; }
         public DbSet<Template> Templates { get; set; }
         public DbSet<TemplatePosition> TemplatePositions { get; set; }
         public DbSet<SigningBatch> SigningBatches { get; set; }
@@ -124,6 +125,12 @@ namespace sh.be.infrastructure.data.Persistence.Db
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
                 entity.HasIndex([nameof(SubmissionData.SubmissionId), nameof(SubmissionData.DocumentFieldId)], SubmissionData.UniqueFieldIndexName)
                     .HasFilter("[Deleted] = 0");
+            });
+            modelBuilder.Entity<SubmissionLog>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
             });
             modelBuilder.Entity<Template>(entity =>
             {

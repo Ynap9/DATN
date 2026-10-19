@@ -1,6 +1,6 @@
 # Phân quyền
 
-> **Phần 2/11** · trước: [01-nguoi-dung.md](01-nguoi-dung.md) · mục lục: [README.md](README.md)
+> **Phần 2/12** · trước: [01-nguoi-dung.md](01-nguoi-dung.md) · mục lục: [README.md](README.md)
 
 Quyền là một **cây** định danh bằng `Key`. Vai trò giữ một tập key; user có quyền = hợp quyền của các vai trò còn hoạt động.
 Hằng số key nằm ở `PermissionConstants` (shared); cây được seed bởi `SeedPermission`.
@@ -49,8 +49,9 @@ Menu.Construction                  Menu nghiệp vụ xây dựng
 │   ├── Function.Construction.ProjectConfig.Update   (gồm lấy link xác thực Google)
 │   └── Function.Construction.ProjectConfig.Delete
 └── Menu.Construction.Submission   Menu quản lý hồ sơ
-    ├── Function.Construction.Submission.View     (xem file PDF qua proxy)
-    └── Function.Construction.Submission.Import   (6 API verify / import)
+    ├── Function.Construction.Submission.View     (danh sách, chi tiết, đếm, lịch sử, xem file PDF qua proxy)
+    ├── Function.Construction.Submission.Import   (6 API verify / import)
+    └── Function.Construction.Submission.Check    (kiểm tra và sửa dữ liệu hồ sơ)
 
 Menu.DigitalSignature              Menu ký số
 ├── Menu.DigitalSignature.Template Menu quản lý mẫu chữ ký
@@ -124,7 +125,8 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `GET api/construction/project-config/google-authorization-url` | `Function.Construction.ProjectConfig.Update` |
 | `GET api/construction/project-config/google-callback` | — (không cần token, kiểm `state` đã ký) |
 | `POST api/construction/submission/import/{append\|blank\|overwrite}` và `.../verify` | `Function.Construction.Submission.Import` |
-| `GET api/construction/submission/proxy-file` | `Function.Construction.Submission.View` |
+| `GET api/construction/submission/proxy-file`, `GET .../paging`, `GET .../count`, `GET .../{id}`, `GET .../{id}/next`, `GET .../{id}/previous`, `GET .../{id}/logs` | `Function.Construction.Submission.View` |
+| `PUT api/construction/submission/{id}/check` | `Function.Construction.Submission.Check` |
 | `GET api/digital-signature/template/paging`, `GET .../{id}`, `GET .../sample-file` | `Function.DigitalSignature.Template.View` |
 | `POST` / `PUT {id}` + `PUT {id}/config` / `DELETE {id}` `api/digital-signature/template` | `...Template.Create` / `.Update` / `.Delete` |
 | `GET api/digital-signature/signing-batch/running`, `GET .../{id}/files`, `.../{id}/progress`, `.../{id}/files/{fileId}/signed-url` | `Function.DigitalSignature.SigningBatch.View` |

@@ -53,6 +53,10 @@ namespace sh.be.shared.HttpRequest.Error
         public const int ConstructionErrorProjectDone = 313;
         public const int ConstructionErrorImportFileUrlMissing = 314;
         public const int ConstructionErrorFileUnavailable = 315;
+        public const int ConstructionErrorProjectDoneNotEditable = 316;
+        public const int ConstructionErrorSubmissionPositionOutOfRange = 317;
+        public const int ConstructionErrorSubmissionDataDuplicateField = 318;
+        public const int ConstructionErrorSubmissionNotInDocumentType = 319;
 
         public const int DigitalSignatureErrorTemplateNotFound = 601;
         public const int DigitalSignatureErrorInvalidTemplatePositionKind = 602;

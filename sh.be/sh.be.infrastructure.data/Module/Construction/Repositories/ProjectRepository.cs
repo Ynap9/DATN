@@ -54,6 +54,13 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
             return _shDbContext.ProjectDocumentTypes.AnyAsync(pd => pd.ProjectId == projectId && pd.DocumentTypeId == documentTypeId);
         }
 
+        public Task<bool> ExistsActiveDocumentTypeAsync(int projectId, int documentTypeId)
+        {
+            return _shDbContext.ProjectDocumentTypes.AnyAsync(pd => pd.ProjectId == projectId && pd.DocumentTypeId == documentTypeId
+                && _shDbContext.Projects.Any(p => p.Id == projectId)
+                && _shDbContext.DocumentTypes.Any(d => d.Id == documentTypeId));
+        }
+
         public void AddDocumentTypes(IEnumerable<ProjectDocumentType> projectDocumentTypes)
         {
             _shDbContext.ProjectDocumentTypes.AddRange(projectDocumentTypes);

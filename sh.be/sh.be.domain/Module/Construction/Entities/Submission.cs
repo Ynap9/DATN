@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.Constants.Db;
+using sh.be.shared.HttpRequest.Error;
+using sh.be.shared.HttpRequest.Exception;
 using sh.be.shared.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -9,6 +11,7 @@ namespace sh.be.domain.Module.Construction.Entities
 {
     [Table(nameof(Submission), Schema = DbSchemas.Construction)]
     [Index(nameof(FileName), Name = $"IX_{nameof(Submission)}_{nameof(FileName)}")]
+    [Index(nameof(ProjectId), nameof(DocumentTypeId), nameof(StatusCheck), Name = "IX_Submission_ProjectId_DocumentTypeId_StatusCheck")]
     [Index(nameof(ProjectId), nameof(DocumentTypeId), nameof(FileName), nameof(ProfileRange), nameof(Box), IsUnique = true,
         Name = UniqueKeyIndexName)]
     public class Submission : ISoftDeleted
@@ -80,6 +83,35 @@ namespace sh.be.domain.Module.Construction.Entities
         public bool IsChecked()
         {
             return StatusCheck == SubmissionConst.CHECKED;
+        }
+
+        public SubmissionLog Check(string checkedBy, string userName, string? note, int changedDataCount, DateTime checkedDate)
+        {
+            var trimmedNote = note?.Trim();
+            if (trimmedNote?.Length > SubmissionConst.CHECK_NOTE_MAX_LENGTH)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, $"Ghi chú tối đa {SubmissionConst.CHECK_NOTE_MAX_LENGTH} ký tự");
+            }
+
+            var oldStatus = StatusCheck;
+            var description = oldStatus == SubmissionConst.CHECKED
+                ? $"Người dùng: {userName} đã tái kiểm tra hồ sơ."
+                : $"Người dùng: {userName} đã kiểm tra hồ sơ.";
+
+            StatusCheck = SubmissionConst.CHECKED;
+            ModifiedBy = checkedBy;
+            ModifiedDate = checkedDate;
+
+            return SubmissionLog.Create(Id, ProjectId, DocumentTypeId, checkedBy, oldStatus, StatusCheck, description,
+                String.IsNullOrEmpty(trimmedNote) ? null : trimmedNote, changedDataCount, checkedBy, checkedDate);
+        }
+
+        public void EnsureBelongsTo(int projectId, int documentTypeId)
+        {
+            if (ProjectId != projectId || DocumentTypeId != documentTypeId)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionNotInDocumentType);
+            }
         }
 
         public void Delete(string? deletedBy, DateTime deletedDate)

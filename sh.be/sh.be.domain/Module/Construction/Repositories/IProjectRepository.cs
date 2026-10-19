@@ -11,6 +11,7 @@ namespace sh.be.domain.Module.Construction.Repositories
         Task<List<ProjectDocumentType>> GetDocumentTypesAsync(int projectId);
         Task<List<int>> GetDocumentTypeIdsAsync(int projectId);
         Task<bool> ExistsDocumentTypeAsync(int projectId, int documentTypeId);
+        Task<bool> ExistsActiveDocumentTypeAsync(int projectId, int documentTypeId);
         void AddDocumentTypes(IEnumerable<ProjectDocumentType> projectDocumentTypes);
         Task DeleteDocumentTypesAsync(int projectId, IReadOnlyCollection<int> documentTypeIds);
         Task<List<ProjectDocumentTypeDocumentField>> GetDocumentFieldsAsync(int projectId);
