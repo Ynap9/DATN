@@ -5,8 +5,6 @@ namespace sh.be.shared.Constants.Construction
         public const int NOT_CHECKED = 0;
         public const int CHECKED = 1;
 
-        public const string NEIGHBOR_NEXT = "next";
-        public const string NEIGHBOR_PREVIOUS = "previous";
         public const int MAX_PAGE_SIZE = 200;
         public const int CHECK_NOTE_MAX_LENGTH = 1000;
 

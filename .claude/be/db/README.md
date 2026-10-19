@@ -12,3 +12,15 @@ dotnet ef migrations remove --project sh.be/sh.be.infrastructure.data --startup-
 Thứ tự: `add` → xem lại file sinh ra → `database update` (dùng connection string `SO_HOA_DB` của `sh.be.api`); `remove` chỉ gỡ migration **chưa** update vào DB.
 
 Cần `dotnet-ef` đúng bản EF của dự án: `dotnet tool install --global dotnet-ef --version 9.0.8`.
+
+## Dữ liệu test hồ sơ (DB dev)
+
+`test-data-ho-so.sql` tạo 15 hồ sơ + 1 hồ sơ khác loại văn bản (dự án 3, loại văn bản 3/4), 5 trường (`Ghi chú` cố ý không cấu hình
+cho dự án), user `tester` (role QA, được cấp tạm `Submission.View` + `Check`) và `viewer` (role User, không quyền), mật khẩu như
+`admin`. Mọi dòng gắn `CreatedBy = 'TESTDATA'`; `test-data-ho-so-xoa.sql` xoá sạch, kể cả log kiểm tra và quyền cấp tạm.
+
+```bash
+sqlcmd -C -I -f 65001 -S 127.0.0.1,14330 -U sa -P <mật khẩu> -d SO_HOA_DB -i .claude/be/db/test-data-ho-so.sql
+```
+
+⚠️ Thiếu `-f 65001` thì `sqlcmd` đọc file theo bảng mã ANSI, tiếng Việt lưu vào DB bị lỗi font.

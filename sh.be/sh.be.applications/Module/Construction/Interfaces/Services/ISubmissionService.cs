@@ -5,9 +5,18 @@ namespace sh.be.applications.Module.Construction.Interfaces.Services
 {
     public interface ISubmissionService
     {
+        Task<ViewVerifyImportAppendSubmissionDto> VerifyImportAppend(ImportSubmissionDto dto);
+        Task<ViewImportSubmissionResultDto> ImportAppend(ImportSubmissionDto dto);
+        Task<ViewVerifyImportBlankSubmissionDto> VerifyImportBlank(ImportSubmissionDto dto);
+        Task<ViewImportSubmissionResultDto> ImportBlank(ImportSubmissionDto dto);
+        Task<ViewVerifyImportOverwriteSubmissionDto> VerifyImportOverwrite(ImportOverwriteSubmissionDto dto);
+        Task<ViewImportSubmissionResultDto> ImportOverwrite(ImportOverwriteSubmissionDto dto);
         Task<BaseResponsePagingDto<GetListSubmissionDto>> FindPaging(FindPagingSubmissionDto dto);
         Task<ViewSubmissionDetailDto> FindById(int id, FindSubmissionDetailDto dto);
-        Task<ViewSubmissionDetailDto> FindNeighbor(int id, FindSubmissionNeighborDto dto);
+        Task<ViewSubmissionDetailDto> FindNext(int id, SubmissionFilterDto dto);
+        Task<ViewSubmissionDetailDto> FindPrevious(int id, SubmissionFilterDto dto);
         Task<ViewCountSubmissionDto> Count(SubmissionFilterDto dto);
+        Task<ViewCheckSubmissionResultDto> Check(int id, CheckSubmissionDto dto);
+        Task<BaseResponsePagingDto<GetListSubmissionLogDto>> FindLogPaging(int id, FindPagingSubmissionLogDto dto);
     }
 }

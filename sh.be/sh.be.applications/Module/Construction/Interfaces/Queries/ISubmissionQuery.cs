@@ -7,7 +7,9 @@ namespace sh.be.applications.Module.Construction.Interfaces.Queries
     {
         Task<BaseResponsePagingDto<GetListSubmissionDto>> FindPaging(FindPagingSubmissionDto dto);
         Task<ViewSubmissionDetailDto?> FindById(int id, ISubmissionFilter filter, bool includePosition);
-        Task<int?> FindNeighborId(int id, ISubmissionFilter filter, string direction);
+        Task<int?> FindNextId(int id, ISubmissionFilter filter);
+        Task<int?> FindPreviousId(int id, ISubmissionFilter filter);
         Task<ViewCountSubmissionDto> Count(ISubmissionFilter filter);
+        Task<BaseResponsePagingDto<GetListSubmissionLogDto>> FindLogPaging(int submissionId, FindPagingSubmissionLogDto dto);
     }
 }

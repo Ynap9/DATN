@@ -40,6 +40,8 @@
 - Method bắt đầu bằng động từ (`Create`, `Assign`, `Ensure`, `Resolve`, `Find`); biến `bool` đọc như câu hỏi
   (`isRandomPassword`, `hasRole`); danh sách dùng số nhiều (`roleIds`, `userRoles`).
 - Không viết tắt khó đoán (`usrRl`, `pmsKey`); chỉ giữ viết tắt phổ biến (`id`, `dto`, `ex`).
+- **Hạn chế hàm private**: logic chỉ dùng một chỗ viết thẳng trong hàm public. Chỉ tách hàm private khi được gọi
+  từ **≥ 2 nơi** (tránh lặp code). Đang áp dụng cho module Submission; code cũ sửa dần khi đụng tới.
 
 ## Tên và namespace
 

@@ -11,6 +11,6 @@ namespace sh.be.applications.Module.Construction.Dtos.Submission
         public int StatusCheck { get; set; }
         public DateTime? CreatedDate { get; set; }
         public DateTime? ModifiedDate { get; set; }
-        public List<SubmissionCellDto> Cells { get; set; } = new();
+        public List<SubmissionDataDto> SubmissionDatas { get; set; } = new();
     }
 }

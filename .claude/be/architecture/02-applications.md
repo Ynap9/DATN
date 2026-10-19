@@ -58,6 +58,8 @@ catch (Exception ex)
 - **Được:** nạp aggregate, gọi method entity / domain service, mở transaction, ghi audit, log, gọi `IMailService`.
 - **Không được:** `if` nghiệp vụ, gán thẳng thuộc tính entity, tự viết luật quyền, truy vấn LINQ trên DB.
 - Lệnh ghi nhiều bước (xoá + thêm, tạo user + gán role) **phải** nằm trong transaction như trên.
+- Ngoại lệ: `SubmissionService.Check` ghi 4 bảng bằng **một** `SaveChanges` (EF tự bọc transaction, gộp batch) nên không mở
+  `BeginTransactionAsync`. ⚠️ Thêm bước ghi thứ hai (`SaveChanges` khác, gửi mail, gọi dịch vụ ngoài) thì phải quay lại mẫu trên.
 
 ⚠️ `UserService.Create` gửi mail **trước** `CommitAsync`: SMTP chậm thì transaction bị giữ lâu, và nếu commit
 lỗi sau khi mail đã đi thì người dùng nhận mail cho tài khoản không tồn tại. Đã biết, chưa sửa — hướng sửa là

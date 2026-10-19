@@ -33,6 +33,19 @@ namespace sh.be.domain.Module.Construction.Services
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
         }
 
+        public async Task<Submission> EnsureSubmissionExistsAsync(int submissionId)
+        {
+            return await _submissionRepository.FindByIdAsync(submissionId)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionNotFound);
+        }
+
+        public async Task<Project> EnsureEditableProjectAsync(int projectId, bool isSuperAdmin)
+        {
+            var project = await EnsureProjectExistsAsync(projectId);
+            project.EnsureEditable(isSuperAdmin);
+            return project;
+        }
+
         public async Task EnsureReadableDocumentTypeAsync(int projectId, int documentTypeId)
         {
             if (await _projectRepository.ExistsActiveDocumentTypeAsync(projectId, documentTypeId))
