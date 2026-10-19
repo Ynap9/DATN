@@ -45,7 +45,16 @@ namespace sh.be.domain.Module.Construction.Services.Import
                 .Where(header => header.Key.Length > 0)
                 .GroupBy(header => header.Key, StringComparer.OrdinalIgnoreCase)
                 .ToDictionary(group => group.Key, group => group.Select(header => header.Index).ToList(), StringComparer.OrdinalIgnoreCase);
-            EnsureEnoughFieldMappings(headers, orderedMappings, headerIndexesByKey);
+            var duplicatedHeaderMessages = orderedMappings
+                .GroupBy(mapping => FieldImportMatchPolicy.ToMatchKey(mapping.FieldImport), StringComparer.OrdinalIgnoreCase)
+                .Select(group => (MappingCount: group.Count(), HeaderIndexes: headerIndexesByKey.GetValueOrDefault(group.Key)))
+                .Where(group => group.HeaderIndexes != null && group.HeaderIndexes.Count > group.MappingCount)
+                .Select(group => $"Cột {headers[group.HeaderIndexes![0]]} xuất hiện {group.HeaderIndexes.Count} lần nhưng chỉ cấu hình {group.MappingCount} trường")
+                .ToList();
+            if (duplicatedHeaderMessages.Count > 0)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorImportNotEnoughFieldMapping, string.Join(" | ", duplicatedHeaderMessages));
+            }
 
             var mappedColumns = new List<MappedImportColumn>();
             var usedHeaderCountByKey = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -97,22 +106,6 @@ namespace sh.be.domain.Module.Construction.Services.Import
             {
                 throw new UserFriendlyException(ErrorCodes.ConstructionErrorImportColumnNotFound,
                     $"Không tìm thấy cột: {string.Join(", ", missingColumns)}");
-            }
-        }
-
-        private static void EnsureEnoughFieldMappings(IReadOnlyList<string> headers, List<ProjectDocumentTypeDocumentField> orderedMappings,
-            Dictionary<string, List<int>> headerIndexesByKey)
-        {
-            var duplicatedHeaderMessages = orderedMappings
-                .GroupBy(mapping => FieldImportMatchPolicy.ToMatchKey(mapping.FieldImport), StringComparer.OrdinalIgnoreCase)
-                .Select(group => (MappingCount: group.Count(), HeaderIndexes: headerIndexesByKey.GetValueOrDefault(group.Key)))
-                .Where(group => group.HeaderIndexes != null && group.HeaderIndexes.Count > group.MappingCount)
-                .Select(group => $"Cột {headers[group.HeaderIndexes![0]]} xuất hiện {group.HeaderIndexes.Count} lần nhưng chỉ cấu hình {group.MappingCount} trường")
-                .ToList();
-
-            if (duplicatedHeaderMessages.Count > 0)
-            {
-                throw new UserFriendlyException(ErrorCodes.ConstructionErrorImportNotEnoughFieldMapping, string.Join(" | ", duplicatedHeaderMessages));
             }
         }
     }

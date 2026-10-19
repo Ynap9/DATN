@@ -982,6 +982,8 @@ namespace sh.be.infrastructure.data.Migrations
                         .IsUnique()
                         .HasFilter("[Deleted] = 0");
 
+                    b.HasIndex(new[] { "ProjectId", "DocumentTypeId", "StatusCheck" }, "IX_Submission_ProjectId_DocumentTypeId_StatusCheck");
+
                     b.ToTable("Submission", "construction");
                 });
 
@@ -1050,6 +1052,78 @@ namespace sh.be.infrastructure.data.Migrations
                         .HasFilter("[Deleted] = 0");
 
                     b.ToTable("SubmissionData", "construction");
+                });
+
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.SubmissionLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ChangedDataCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<bool>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("DocumentTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("NewStatus")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("OldStatus")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SubmissionId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "SubmissionId", "CreatedDate" }, "IX_SubmissionLog_SubmissionId_CreatedDate");
+
+                    b.ToTable("SubmissionLog", "construction");
                 });
 
             modelBuilder.Entity("sh.be.domain.Module.Core.Entities.AuditLog", b =>

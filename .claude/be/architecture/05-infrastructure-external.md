@@ -1,15 +1,15 @@
 # Tầng Infrastructure External — sh.be.infrastructure.external
 
-> **Phần 5/8** · trước: [04-infrastructure-data.md](04-infrastructure-data.md) · mục lục: [README.md](README.md)
+> **Phần 5/9** · trước: [04-infrastructure-data.md](04-infrastructure-data.md) · mục lục: [README.md](README.md)
 
-Dịch vụ bên thứ ba không phải database. Chỉ tham chiếu `sh.be.applications` để implement cổng ra mà
-application khai báo.
+Dịch vụ bên thứ ba không phải database. Chỉ tham chiếu `sh.be.applications` để implement cổng ra mà application khai báo.
 
 ## Thư mục
 
 | Thư mục | Chứa gì |
 |---|---|
 | `Mail/Implements/MailService.cs` | Implement `IMailService`: gửi SMTP bằng cấu hình `EmailSettings` |
+| `Pdf/`, `Signing/`, `Timestamp/` | Ký số PDF, gói CMS, phiên plugin, TSA. Xem [09-chu-ky-so.md](09-chu-ky-so.md) |
 | `Mail/Templates/AccountCreatedMailTemplate.cs` | HTML email báo tạo tài khoản |
 | `DataReader/Base/DataReaderBase.cs` | Lớp nền abstract implement `IDataReader`: luồng chung + chuẩn hoá header |
 | `DataReader/Implements/GoogleSheetReader.cs` | Đọc header từ Google Sheet bằng service account (`Google.Apis.Sheets.v4`) |

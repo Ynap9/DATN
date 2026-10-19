@@ -1,6 +1,6 @@
 # Hồ sơ — import Google Sheet và xem file (Construction)
 
-> **Phần 11/11** · trước: [10-lo-ky.md](10-lo-ky.md) · mục lục: [README.md](README.md)
+> **Phần 11/12** · trước: [10-lo-ky.md](10-lo-ky.md) · mục lục: [README.md](README.md)
 
 Hồ sơ (`construction.Submission`) = một file tài liệu số hoá = một dòng trên Google Sheet, thuộc một dự án và một loại văn bản.
 Giá trị từng trường của hồ sơ nằm ở `construction.SubmissionData` (một dòng cho mỗi cặp hồ sơ – trường). Nghiệp vụ lấy từ
@@ -60,7 +60,7 @@ Append tạo hồ sơ với `Name = FileName`, `StatusCheck = 0`, **một** link
 
 Kết quả verify: append `{ totalDataFields (ô có giá trị sẽ thêm), totalAppendRowCount (hồ sơ sẽ tạo), totalFieldCount (trường đã map),
 totalSubmission (hồ sơ đang có), totalSubmissionGoogleSheet (số khoá trên sheet) }`; blank `{ totalBlankCount, totalFieldCount }`;
-overwrite `{ totalOverWriteCount, totalSkippedChecked }`. Kết quả import: `{ message, totalDataFields, durationSeconds }`.
+overwrite `{ totalOverWriteCount, totalSkippedChecked }`. Kết quả import: `{ message, totalDataFields }` (server không đo thời gian; muốn đo thì đo từ phía client).
 
 ## Ghi dữ liệu — một transaction
 
@@ -122,10 +122,10 @@ trong transaction): DB không còn hồ sơ, dữ liệu, audit nào của lần
 ⚠️ Trường thêm vào loại văn bản **sau** khi gắn vào dự án không tự vào cấu hình `ProjectDocumentTypeDocumentField` (hành vi của
 [07-du-an.md](07-du-an.md)), nên import không thấy trường đó cho tới khi cấu hình dự án được cập nhật.
 
-⚠️ Chưa có API chuyển hồ sơ sang `CHECKED`; `overwriteChecked` chỉ có tác dụng khi trạng thái được đổi bằng cách khác.
-
 ⚠️ `proxy-file` tìm `FileUrlS3Object` không có index (cột `nvarchar(1000)` vượt giới hạn khoá index) → quét bảng `Submission` mỗi lần
 xem file. Bảng lớn thì nên đổi sang tìm theo `Id` hồ sơ — đổi contract FE, hỏi trước. Chấp nhận `application/octet-stream` vì MinIO
 thường lưu PDF với kiểu này, nên file không phải PDF mà có kiểu đó vẫn lọt.
 
 ⚠️ Thông báo lỗi `308` / `314` liệt kê **mọi** dòng lỗi; sheet lỗi hàng nghìn dòng cho message rất dài.
+
+> **Tiếp:** [12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md) — xem, lọc và kiểm tra hồ sơ sau khi import.

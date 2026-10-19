@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
@@ -19,13 +19,13 @@ namespace sh.be.api.Controllers.Module.Construction
     {
         private const string FileCacheControl = "private, max-age=300";
 
-        private readonly ISubmissionImportService _submissionImportService;
+        private readonly ISubmissionService _submissionService;
         private readonly ISubmissionFileService _submissionFileService;
 
-        public SubmissionController(ILogger<SubmissionController> logger, ISubmissionImportService submissionImportService,
+        public SubmissionController(ILogger<SubmissionController> logger, ISubmissionService submissionService,
             ISubmissionFileService submissionFileService) : base(logger)
         {
-            _submissionImportService = submissionImportService;
+            _submissionService = submissionService;
             _submissionFileService = submissionFileService;
         }
 
@@ -35,7 +35,7 @@ namespace sh.be.api.Controllers.Module.Construction
         {
             try
             {
-                var data = await _submissionImportService.VerifyImportAppend(dto);
+                var data = await _submissionService.VerifyImportAppend(dto);
                 return new(data);
             }
             catch (Exception ex)
@@ -50,7 +50,7 @@ namespace sh.be.api.Controllers.Module.Construction
         {
             try
             {
-                var data = await _submissionImportService.ImportAppend(dto);
+                var data = await _submissionService.ImportAppend(dto);
                 return new(data);
             }
             catch (Exception ex)
@@ -65,7 +65,7 @@ namespace sh.be.api.Controllers.Module.Construction
         {
             try
             {
-                var data = await _submissionImportService.VerifyImportBlank(dto);
+                var data = await _submissionService.VerifyImportBlank(dto);
                 return new(data);
             }
             catch (Exception ex)
@@ -80,7 +80,7 @@ namespace sh.be.api.Controllers.Module.Construction
         {
             try
             {
-                var data = await _submissionImportService.ImportBlank(dto);
+                var data = await _submissionService.ImportBlank(dto);
                 return new(data);
             }
             catch (Exception ex)
@@ -95,7 +95,7 @@ namespace sh.be.api.Controllers.Module.Construction
         {
             try
             {
-                var data = await _submissionImportService.VerifyImportOverwrite(dto);
+                var data = await _submissionService.VerifyImportOverwrite(dto);
                 return new(data);
             }
             catch (Exception ex)
@@ -110,7 +110,112 @@ namespace sh.be.api.Controllers.Module.Construction
         {
             try
             {
-                var data = await _submissionImportService.ImportOverwrite(dto);
+                var data = await _submissionService.ImportOverwrite(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("paging")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindPaging([FromQuery] FindPagingSubmissionDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindPaging(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("count")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> Count([FromQuery] SubmissionFilterDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.Count(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("{id:int}/next")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindNext([FromRoute] int id, [FromQuery] SubmissionFilterDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindNext(id, dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("{id:int}/previous")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindPrevious([FromRoute] int id, [FromQuery] SubmissionFilterDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindPrevious(id, dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("{id:int}")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindById([FromRoute] int id, [FromQuery] FindSubmissionDetailDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindById(id, dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPut("{id:int}/check")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_CHECK)]
+        public async Task<ApiResponse> Check([FromRoute] int id, [FromBody] CheckSubmissionDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.Check(id, dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("{id:int}/logs")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindLogPaging([FromRoute] int id, [FromQuery] FindPagingSubmissionLogDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindLogPaging(id, dto);
                 return new(data);
             }
             catch (Exception ex)

@@ -41,6 +41,28 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
             }
         }
 
+        public Task<Submission?> FindByIdAsync(int id)
+        {
+            return _shDbContext.Submissions.FirstOrDefaultAsync(s => s.Id == id);
+        }
+
+        public Task<List<SubmissionData>> GetDatasBySubmissionIdAsync(int submissionId)
+        {
+            return _shDbContext.SubmissionDatas
+                .Where(sd => sd.SubmissionId == submissionId)
+                .ToListAsync();
+        }
+
+        public void AddDatas(IEnumerable<SubmissionData> datas)
+        {
+            _shDbContext.SubmissionDatas.AddRange(datas);
+        }
+
+        public void AddLog(SubmissionLog log)
+        {
+            _shDbContext.SubmissionLogs.Add(log);
+        }
+
         public Task<bool> ExistsByFileUrlAsync(string fileUrl)
         {
             return _shDbContext.Submissions.AnyAsync(s => s.FileUrlS3Object == fileUrl);

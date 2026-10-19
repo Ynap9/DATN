@@ -1,6 +1,6 @@
 # Tầng API — sh.be.api
 
-> **Phần 1/8** · mục lục: [README.md](README.md)
+> **Phần 1/9** · mục lục: [README.md](README.md)
 
 Presentation + **composition root**. Tham chiếu `applications`, `infrastructure.data`, `infrastructure.external`.
 
@@ -11,7 +11,7 @@ Presentation + **composition root**. Tham chiếu `applications`, `infrastructur
 | `Base/BaseController.cs` | `OkException(ex)`: đổi exception thành `ApiResponse` lỗi |
 | `Controllers/Module/Auth/` | `AuthorizationController` (token), `UserController`, `RoleController`, `PermissionController` |
 | `Controllers/Module/Core/` | `AuditLogController` |
-| `Controllers/Module/Construction/` | `DocumentTypeController`, `DocumentFieldController`, `ProjectController`, `ProjectConfigController` (callback Google `[AllowAnonymous]`), `SubmissionController` (`proxy-file` trả stream PDF, lỗi vẫn `Ok(OkException(ex))`) |
+| `Controllers/Module/Construction/` | `DocumentTypeController`, `DocumentFieldController`, `ProjectController`, `ProjectConfigController` (callback Google `[AllowAnonymous]`), `SubmissionController` (một `ISubmissionService` cho cả import, xem, kiểm tra + `ISubmissionFileService`; `proxy-file` trả stream PDF, lỗi vẫn `Ok(OkException(ex))`; 7 API xem / kiểm tra hồ sơ, route có id luôn ràng buộc `{id:int}` để không nuốt `paging`, `count`, `proxy-file`) |
 | `Controllers/Module/DigitalSignature/` | `TemplateController` (mẫu chữ ký; `PUT {id}/config` nhận `[FromForm]` multipart), `PluginController` (phiên bản + bộ cài plugin ký số, chỉ cần đăng nhập), `SigningBatchController` (lô ký; `POST {id}/files` multipart, `[RequestSizeLimit]` 512 MB) |
 | `Attributes/PermissionAttribute.cs` | Kiểm quyền theo key, gọi `IPermissionService.HasAnyPermission` |
 | `Services/HttpRequestContext.cs` | Implement `IRequestContext`: `UserId`, `Source`, `ContentType` từ `HttpContext` |
