@@ -1,6 +1,6 @@
 # Shared Kernel — sh.be.shared
 
-> **Phần 6/8** · trước: [05-infrastructure-external.md](05-infrastructure-external.md) · mục lục: [README.md](README.md)
+> **Phần 6/9** · trước: [05-infrastructure-external.md](05-infrastructure-external.md) · mục lục: [README.md](README.md)
 
 Phần dùng chung cho mọi project. Không tham chiếu project nào khác.
 
@@ -33,9 +33,9 @@ Phần dùng chung cho mọi project. Không tham chiếu project nào khác.
 |---|---|---|
 | `1`, `400`–`500` | Chung | `NotFound = 404`, `Found = 409`, `InternalServerError = 500` |
 | `101`–`199` | Auth | `AuthErrorUserNotFound = 103`, `AuthErrorRoleNotFound = 105` |
-| `201`–`299` | Core | `CoreErrorAuditLogNotFound = 201`; nguồn dữ liệu (`IDataReader`, dùng chung mọi module): `CoreErrorInvalidDataSource = 202`, `CoreErrorReadDataSourceFailed = 203`, `CoreErrorSheetNotFound = 204`, `CoreErrorCreateDataSourceFailed = 205`, `CoreErrorUpdateDataSourceFailed = 206`, `CoreErrorAuthorizeDataSourceFailed = 207` (Google Sheet); kho file (`IFileStorage`): `CoreErrorStorageNotConfigured = 208`, `CoreErrorUploadFileFailed = 209` |
+| `201`–`299` | Core | `CoreErrorAuditLogNotFound = 201`; nguồn dữ liệu (`IDataReader`, dùng chung mọi module): `CoreErrorInvalidDataSource = 202`, `CoreErrorReadDataSourceFailed = 203`, `CoreErrorSheetNotFound = 204`, `CoreErrorCreateDataSourceFailed = 205`, `CoreErrorUpdateDataSourceFailed = 206`, `CoreErrorAuthorizeDataSourceFailed = 207` (Google Sheet); kho file (`IFileStorage`): `CoreErrorStorageNotConfigured = 208`, `CoreErrorUploadFileFailed = 209`, `CoreErrorDownloadFileFailed = 210` |
 | `301`–`399` | Construction | `...DocumentTypeNotFound = 301`, `...DocumentFieldNotFound = 302`, `...ProjectNotFound = 303`, `...ProjectConfigNotFound = 304`; hồ sơ / import `305`–`315` (bảng ở [../nghiep-vu/11-ho-so-import.md](../nghiep-vu/11-ho-so-import.md)) |
-| `601`–`699` | DigitalSignature | `DigitalSignatureError...`: `TemplateNotFound = 601`, mẫu chữ ký `602`–`603`, `SigningBatchNotFound = 604`, lô ký `605`–`609`, `SigningBatchFileNotFound = 610`, `SigningBatchFileNotDeletable = 611`, `InvalidTemplateImage = 612`, `PluginSetupMissing = 613`, `InvalidCertificate = 614`, `UntrustedCertificate = 615`, `SigningBatchNotOwned = 616`, `TooManyUploadFiles = 617`. Bỏ qua `401`–`599` vì đụng mã chung `400`/`401`/`404`/`409`/`500` |
+| `601`–`699` | DigitalSignature | `DigitalSignatureError...`: `TemplateNotFound = 601`, mẫu chữ ký `602`–`603`, `SigningBatchNotFound = 604`, lô ký `605`–`609`, `SigningBatchFileNotFound = 610`, `SigningBatchFileNotDeletable = 611`, `InvalidTemplateImage = 612`, `PluginSetupMissing = 613`, `InvalidCertificate = 614`, `UntrustedCertificate = 615`, `SigningBatchNotOwned = 616`, `TooManyUploadFiles = 617`, `618`–`635` (lô không ký được, phiên ký, PDF, TSA, chữ ký; bảng đầy đủ ở [09-chu-ky-so.md](09-chu-ky-so.md)). Bỏ qua `401`–`599` vì đụng mã chung `400`/`401`/`404`/`409`/`500` |
 
 Thêm mã mới: hằng trong `ErrorCodes` (đúng dải module) + message trong `ErrorMessages`.
 

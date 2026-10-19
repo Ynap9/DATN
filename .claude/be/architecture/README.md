@@ -41,6 +41,10 @@ Mọi mũi tên hướng **vào trong**. Tầng ngoài implement interface do t�
 | `applications/Base/Interfaces/IPluginSetupProvider` | `infrastructure.external/Plugin/Implements/PluginSetupProvider` |
 | `applications/Base/Interfaces/ICertificateValidator` | `infrastructure.external/Certificate/Implements/CertificateValidator` |
 | `applications/Base/Interfaces/IRequestContext` | `api/Services/HttpRequestContext` |
+| `applications/Base/Interfaces/IExcelTemplateWriter` | `infrastructure.external/Excel/Implements/ExcelTemplateWriter` |
+| `applications/Base/Interfaces/ISpreadsheetWriter`, `ISpreadsheetAuthorizer` | `infrastructure.external/Spreadsheet/Implements/GoogleSheetWriter`, `GoogleSheetAuthorizer` |
+| `applications/Base/Interfaces/IPdfSigner`, `ISigningQueue`, `ITimestampClient` | `infrastructure.external/Pdf`, `Signing`, `Timestamp` (xem [09-chu-ky-so.md](09-chu-ky-so.md)) |
+| `applications/.../DigitalSignature/Interfaces/Services/ISigningRunner` | `applications/.../DigitalSignature/Implements/SigningRunner` (singleton, chạy nền) |
 | `applications/.../Interfaces/Services/IRoleService`… | `applications/.../Implements/RoleService`… |
 
 Chiều này do `.csproj` cưỡng chế: domain gọi `ShDbContext` là build lỗi ngay.
@@ -57,6 +61,7 @@ Chiều này do `.csproj` cưỡng chế: domain gọi `ShDbContext` là build l
 | [06-shared.md](06-shared.md) | Mã lỗi, exception, hằng số, settings, utils |
 | [07-conventions.md](07-conventions.md) | **Quy ước code bắt buộc** |
 | [08-them-chuc-nang.md](08-them-chuc-nang.md) | Các bước thêm một use case hoặc một module mới |
+| [09-chu-ky-so.md](09-chu-ky-so.md) | Pipeline lô ký, phiên plugin, PDF revision, CMS, TSA |
 | [../db/README.md](../db/README.md) | Lệnh migration và cập nhật database |
 | [../nghiep-vu/README.md](../nghiep-vu/README.md) | **Nghiệp vụ**: người dùng, phân quyền, vai trò mặc định, nhật ký hệ thống |
 

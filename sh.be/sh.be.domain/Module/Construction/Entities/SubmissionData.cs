@@ -88,6 +88,20 @@ namespace sh.be.domain.Module.Construction.Entities
             return true;
         }
 
+        public bool ChangeData(string newData, string? modifiedBy, DateTime modifiedDate)
+        {
+            var trimmedNewData = newData.Trim();
+            if (trimmedNewData == Data.Trim())
+            {
+                return false;
+            }
+
+            Data = trimmedNewData;
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
+            return true;
+        }
+
         public void Delete(string? deletedBy, DateTime deletedDate)
         {
             Deleted = true;

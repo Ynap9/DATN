@@ -1,6 +1,6 @@
 # Tầng Domain — sh.be.domain
 
-> **Phần 3/8** · trước: [02-applications.md](02-applications.md) · mục lục: [README.md](README.md)
+> **Phần 3/9** · trước: [02-applications.md](02-applications.md) · mục lục: [README.md](README.md)
 
 Lõi nghiệp vụ. Chỉ tham chiếu `sh.be.shared`. Mọi quy tắc nghiệp vụ nằm ở đây.
 

@@ -1,6 +1,6 @@
 # Quy ước code bắt buộc
 
-> **Phần 7/8** · trước: [06-shared.md](06-shared.md) · mục lục: [README.md](README.md)
+> **Phần 7/9** · trước: [06-shared.md](06-shared.md) · mục lục: [README.md](README.md)
 
 Áp dụng cho mọi thay đổi trong `sh.be`. Vi phạm một dòng ở đây coi như chưa xong việc.
 

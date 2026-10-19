@@ -1,6 +1,6 @@
 # Thêm use case hoặc module mới
 
-> **Phần 8/8** · trước: [07-conventions.md](07-conventions.md) · mục lục: [README.md](README.md)
+> **Phần 8/9** · trước: [07-conventions.md](07-conventions.md) · mục lục: [README.md](README.md)
 
 Làm theo thứ tự **từ trong ra ngoài**: domain → applications → infrastructure → api. Tầng trong xong trước thì
 tầng ngoài chỉ việc implement.
@@ -62,3 +62,5 @@ builder.Services.AddScoped<ICatalogService, CatalogService>();
 3. Ghi nhiều bước có transaction; có audit log?
 4. Đã đăng ký DI, build sạch, EF đúng kỳ vọng?
 5. Tài liệu trong `.claude/be/architecture/` nào cần cập nhật theo?
+
+> **Tiếp:** [09-chu-ky-so.md](09-chu-ky-so.md) — pipeline ký số: phần duy nhất có tiến trình nền.

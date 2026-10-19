@@ -278,6 +278,8 @@ builder.Services.AddScoped<IFileDownloader, HttpFileDownloader>();
 builder.Services.AddScoped<ISubmissionRepository, SubmissionRepository>();
 builder.Services.AddScoped<SubmissionDomainService>();
 builder.Services.AddScoped<ISubmissionImportService, SubmissionImportService>();
+builder.Services.AddScoped<ISubmissionQuery, SubmissionQuery>();
+builder.Services.AddScoped<ISubmissionService, SubmissionService>();
 builder.Services.AddScoped<ISubmissionFileService, SubmissionFileService>();
 builder.Services.AddScoped<IFileStorage, S3FileStorage>();
 builder.Services.AddScoped<ISampleFileReader, SampleFileReader>();

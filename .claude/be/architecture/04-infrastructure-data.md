@@ -1,6 +1,6 @@
 # Tầng Infrastructure Data — sh.be.infrastructure.data
 
-> **Phần 4/8** · trước: [03-domain.md](03-domain.md) · mục lục: [README.md](README.md)
+> **Phần 4/9** · trước: [03-domain.md](03-domain.md) · mục lục: [README.md](README.md)
 
 Mọi thứ dính EF Core và SQL Server. Tham chiếu `applications` (để implement query) và `domain` (để implement
 repository, `IUnitOfWork`).
@@ -35,8 +35,8 @@ gọi thêm `SaveChanges` trong các luồng đó.
 - Khoá ghép: `RolePermission (RoleId, PermissionKey)`, `UserRole (UserId, RoleId)`, `ProjectDocumentType (ProjectId, DocumentTypeId)`,
   `ProjectDocumentTypeDocumentField (ProjectId, DocumentTypeId, DocumentFieldId)`.
 - Index khai bằng `[Index(..., Name = "IX_<Bang>_<Cot>")]` trên entity (không `HasIndex`): `AuditLog` (`CreatedDate`, `UserId`, `ActionType`),
-  `UserRole.RoleId`, `DocumentType.Name`, `DocumentField (DocumentTypeId, Field)` và `(DocumentTypeId, OrderTableView)`, `Project.Name`, `ProjectConfig.Name`,
-  `ProjectDocumentType.DocumentTypeId`, `ProjectDocumentTypeDocumentField.DocumentFieldId`, `TemplatePosition.TemplateId`,
+  `Permission.Key` (unique), `UserRole.RoleId`, `DocumentType.Name`, `Submission.FileName`, `DocumentField (DocumentTypeId, Field)` và `(DocumentTypeId, OrderTableView)`, `Project.Name`, `ProjectConfig.Name`,
+  `ProjectDocumentType.DocumentTypeId`, `ProjectDocumentTypeDocumentField.DocumentFieldId`, `SubmissionData (ProjectId, DocumentTypeId, DocumentFieldId)`, `TemplatePosition.TemplateId`,
   `SigningBatchFile (SigningBatchId, Status, Order)` (runner lấy file kế tiếp liên tục theo lô + trạng thái + thứ tự).
   Cột chuỗi có index thành `nvarchar(450)` — giá trị dài hơn sẽ lỗi khi lưu.
 - Unique index có filter: attribute khai index + `IsUnique`, `OnModelCreating` gọi `HasIndex([...], <tên>).HasFilter("[Deleted] = 0")` theo

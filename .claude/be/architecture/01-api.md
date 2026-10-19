@@ -1,6 +1,6 @@
 # Tầng API — sh.be.api
 
-> **Phần 1/8** · mục lục: [README.md](README.md)
+> **Phần 1/9** · mục lục: [README.md](README.md)
 
 Presentation + **composition root**. Tham chiếu `applications`, `infrastructure.data`, `infrastructure.external`.
 

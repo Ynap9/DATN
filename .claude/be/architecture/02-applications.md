@@ -1,6 +1,6 @@
 # Tầng Application — sh.be.applications
 
-> **Phần 2/8** · trước: [01-api.md](01-api.md) · mục lục: [README.md](README.md)
+> **Phần 2/9** · trước: [01-api.md](01-api.md) · mục lục: [README.md](README.md)
 
 Điều phối use case. Chỉ tham chiếu `sh.be.domain` (qua đó dùng được `sh.be.shared`). **Không** biết EF Core,
 `ShDbContext`, `UserManager`, `HttpContext`, OpenIddict.

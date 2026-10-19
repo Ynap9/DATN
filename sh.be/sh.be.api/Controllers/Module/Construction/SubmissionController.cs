@@ -21,12 +21,14 @@ namespace sh.be.api.Controllers.Module.Construction
 
         private readonly ISubmissionImportService _submissionImportService;
         private readonly ISubmissionFileService _submissionFileService;
+        private readonly ISubmissionService _submissionService;
 
         public SubmissionController(ILogger<SubmissionController> logger, ISubmissionImportService submissionImportService,
-            ISubmissionFileService submissionFileService) : base(logger)
+            ISubmissionFileService submissionFileService, ISubmissionService submissionService) : base(logger)
         {
             _submissionImportService = submissionImportService;
             _submissionFileService = submissionFileService;
+            _submissionService = submissionService;
         }
 
         [HttpPost("import/append/verify")]
@@ -111,6 +113,66 @@ namespace sh.be.api.Controllers.Module.Construction
             try
             {
                 var data = await _submissionImportService.ImportOverwrite(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("paging")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindPaging([FromQuery] FindPagingSubmissionDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindPaging(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("count")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> Count([FromQuery] SubmissionFilterDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.Count(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("{id:int}/neighbor")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindNeighbor([FromRoute] int id, [FromQuery] FindSubmissionNeighborDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindNeighbor(id, dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("{id:int}")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindById([FromRoute] int id, [FromQuery] FindSubmissionDetailDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindById(id, dto);
                 return new(data);
             }
             catch (Exception ex)
