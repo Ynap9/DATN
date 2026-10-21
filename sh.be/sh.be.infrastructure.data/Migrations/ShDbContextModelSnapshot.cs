@@ -1137,6 +1137,8 @@ namespace sh.be.infrastructure.data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex(new[] { "ProjectId", "DocumentTypeId", "CreatedDate" }, "IX_SubmissionLog_ProjectId_DocumentTypeId_CreatedDate");
+
                     b.HasIndex(new[] { "SubmissionId", "CreatedDate" }, "IX_SubmissionLog_SubmissionId_CreatedDate");
 
                     b.ToTable("SubmissionLog", "construction");
