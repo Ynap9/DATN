@@ -8,8 +8,14 @@ Nguồn: bê từ `C:\Users\Admin\workspace\ksts\.claude\docs\tt05-*.md` ngày 2
 364 trang trên `moha.gov.vn`, cập nhật 2026-09-08). Nội dung quy định giữ nguyên; chỉ tách file cho vừa 180 dòng,
 sửa link, và đổi các ghi chú gắn với kssm / KSTS sang ngữ cảnh sh.be.
 
-> 🎯 **Luật trọng tài:** khi thông tư và gói mẫu `SIP_hoso` lệch nhau thì **theo gói mẫu** — trừ ba lỗi của chính gói
-> mẫu ở [04-sip-goi-mau.md](04-sip-goi-mau.md).
+> 🎯 **Luật trọng tài:** khi thông tư và gói mẫu `SIP_hoso` (gói đóng bởi hệ thống của FPT) lệch nhau thì **theo gói
+> mẫu** — trừ ba lỗi của chính gói mẫu ở [04-sip-goi-mau.md](04-sip-goi-mau.md). Phần gói mẫu không có (AIP, DIP,
+> `SIP_tailieu` cấp gói) mới lấy theo `.xsd` của thông tư.
+
+**Văn bản gốc:** [tai-lieu/TT05-2025-TT-BNV.pdf](tai-lieu/TT05-2025-TT-BNV.pdf) (364 trang, tải từ `moha.gov.vn`) và
+bản chữ để tra cứu [tai-lieu/TT05-2025-TT-BNV.txt](tai-lieu/TT05-2025-TT-BNV.txt) (mỗi trang mở đầu `===== TRANG n`).
+Trang schema `.xsd` của từng phụ lục: AIP_hoso 101–106 · AIP_tailieu 173–177 · SIP_hoso 231–235 · SIP_tailieu
+284–287 · DIP 349–353.
 
 ## Mục lục
 
