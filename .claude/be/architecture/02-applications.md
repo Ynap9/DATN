@@ -1,6 +1,6 @@
 # Tầng Application — sh.be.applications
 
-> **Phần 2/8** · trước: [01-api.md](01-api.md) · mục lục: [README.md](README.md)
+> **Phần 2/9** · trước: [01-api.md](01-api.md) · mục lục: [README.md](README.md)
 
 Điều phối use case. Chỉ tham chiếu `sh.be.domain` (qua đó dùng được `sh.be.shared`). **Không** biết EF Core,
 `ShDbContext`, `UserManager`, `HttpContext`, OpenIddict.
@@ -10,7 +10,7 @@
 ```text
 Base/
   BaseService.cs          lớp cha của mọi service: audit log, user hiện tại, giờ Việt Nam
-  MappingProfile.cs       profile AutoMapper (hiện rỗng)
+  MappingProfile.cs       profile AutoMapper: map entity → DTO đọc, dùng qua ProjectTo
   Interfaces/             cổng ra dùng chung: IRequestContext, IMailService
 Module/<TenModule>/
   Dtos/<Nhom>/            DTO vào/ra của API
@@ -58,6 +58,8 @@ catch (Exception ex)
 - **Được:** nạp aggregate, gọi method entity / domain service, mở transaction, ghi audit, log, gọi `IMailService`.
 - **Không được:** `if` nghiệp vụ, gán thẳng thuộc tính entity, tự viết luật quyền, truy vấn LINQ trên DB.
 - Lệnh ghi nhiều bước (xoá + thêm, tạo user + gán role) **phải** nằm trong transaction như trên.
+- Ngoại lệ: `SubmissionService.Check` ghi 4 bảng bằng **một** `SaveChanges` (EF tự bọc transaction, gộp batch) nên không mở
+  `BeginTransactionAsync`. ⚠️ Thêm bước ghi thứ hai (`SaveChanges` khác, gửi mail, gọi dịch vụ ngoài) thì phải quay lại mẫu trên.
 
 ⚠️ `UserService.Create` gửi mail **trước** `CommitAsync`: SMTP chậm thì transaction bị giữ lâu, và nếu commit
 lỗi sau khi mail đã đi thì người dùng nhận mail cho tài khoản không tồn tại. Đã biết, chưa sửa — hướng sửa là

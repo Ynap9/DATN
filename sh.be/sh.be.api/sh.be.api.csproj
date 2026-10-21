@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.20" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8">
@@ -37,6 +38,15 @@
     <ProjectReference Include="..\sh.be.applications\sh.be.applications.csproj" />
     <ProjectReference Include="..\sh.be.infrastructure.data\sh.be.infrastructure.data.csproj" />
     <ProjectReference Include="..\sh.be.infrastructure.external\sh.be.infrastructure.external.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Plugins\*.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Cert\*.crt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

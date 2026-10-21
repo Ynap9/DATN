@@ -34,6 +34,51 @@ namespace sh.be.infrastructure.data.Persistence.Seeder
 
             Permission.Create(PermissionConstants.MENU_AUDIT_LOG, "Menu nhật ký hệ thống", PermissionConstants.MENU_CORE, PermissionConstants.MODULE_CORE, null),
             Permission.Create(PermissionConstants.FUNCTION_AUDIT_LOG_VIEW, "Xem danh sách và thông tin chi tiết nhật ký hệ thống", PermissionConstants.MENU_AUDIT_LOG, PermissionConstants.MODULE_CORE, null),
+
+            Permission.Create(PermissionConstants.MENU_CONSTRUCTION, "Menu nghiệp vụ xây dựng", null, PermissionConstants.MODULE_CONSTRUCTION, null),
+
+            Permission.Create(PermissionConstants.MENU_DOCUMENT_TYPE, "Menu quản lý loại văn bản", PermissionConstants.MENU_CONSTRUCTION, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_DOCUMENT_TYPE_VIEW, "Xem danh sách và chi tiết loại văn bản", PermissionConstants.MENU_DOCUMENT_TYPE, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_DOCUMENT_TYPE_CREATE, "Tạo mới loại văn bản", PermissionConstants.MENU_DOCUMENT_TYPE, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_DOCUMENT_TYPE_UPDATE, "Cập nhật loại văn bản", PermissionConstants.MENU_DOCUMENT_TYPE, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_DOCUMENT_TYPE_DELETE, "Xóa loại văn bản", PermissionConstants.MENU_DOCUMENT_TYPE, PermissionConstants.MODULE_CONSTRUCTION, null),
+
+            Permission.Create(PermissionConstants.MENU_DOCUMENT_FIELD, "Menu quản lý trường của loại văn bản", PermissionConstants.MENU_CONSTRUCTION, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_DOCUMENT_FIELD_VIEW, "Xem danh sách và chi tiết trường của loại văn bản", PermissionConstants.MENU_DOCUMENT_FIELD, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_DOCUMENT_FIELD_CREATE, "Tạo mới trường của loại văn bản", PermissionConstants.MENU_DOCUMENT_FIELD, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_DOCUMENT_FIELD_UPDATE, "Cập nhật trường của loại văn bản", PermissionConstants.MENU_DOCUMENT_FIELD, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_DOCUMENT_FIELD_DELETE, "Xóa trường của loại văn bản", PermissionConstants.MENU_DOCUMENT_FIELD, PermissionConstants.MODULE_CONSTRUCTION, null),
+
+            Permission.Create(PermissionConstants.MENU_PROJECT, "Menu quản lý dự án", PermissionConstants.MENU_CONSTRUCTION, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_PROJECT_VIEW, "Xem danh sách và chi tiết dự án", PermissionConstants.MENU_PROJECT, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_PROJECT_CREATE, "Tạo mới dự án", PermissionConstants.MENU_PROJECT, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_PROJECT_UPDATE, "Cập nhật dự án", PermissionConstants.MENU_PROJECT, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_PROJECT_DELETE, "Xóa dự án", PermissionConstants.MENU_PROJECT, PermissionConstants.MODULE_CONSTRUCTION, null),
+
+            Permission.Create(PermissionConstants.MENU_PROJECT_CONFIG, "Menu cấu hình dự án", PermissionConstants.MENU_CONSTRUCTION, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_PROJECT_CONFIG_VIEW, "Xem cấu hình dự án", PermissionConstants.MENU_PROJECT_CONFIG, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_PROJECT_CONFIG_CREATE, "Tạo cấu hình dự án", PermissionConstants.MENU_PROJECT_CONFIG, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_PROJECT_CONFIG_UPDATE, "Cập nhật cấu hình dự án và xác thực tài khoản Google", PermissionConstants.MENU_PROJECT_CONFIG, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_PROJECT_CONFIG_DELETE, "Xóa cấu hình dự án", PermissionConstants.MENU_PROJECT_CONFIG, PermissionConstants.MODULE_CONSTRUCTION, null),
+
+            Permission.Create(PermissionConstants.MENU_SUBMISSION, "Menu quản lý hồ sơ", PermissionConstants.MENU_CONSTRUCTION, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_SUBMISSION_VIEW, "Xem danh sách, chi tiết, lịch sử và file hồ sơ", PermissionConstants.MENU_SUBMISSION, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_SUBMISSION_IMPORT, "Import hồ sơ từ Google Sheet", PermissionConstants.MENU_SUBMISSION, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_SUBMISSION_CHECK, "Kiểm tra và sửa dữ liệu hồ sơ", PermissionConstants.MENU_SUBMISSION, PermissionConstants.MODULE_CONSTRUCTION, null),
+
+            Permission.Create(PermissionConstants.MENU_DIGITAL_SIGNATURE, "Menu ký số", null, PermissionConstants.MODULE_DIGITAL_SIGNATURE, null),
+
+            Permission.Create(PermissionConstants.MENU_TEMPLATE, "Menu quản lý mẫu chữ ký", PermissionConstants.MENU_DIGITAL_SIGNATURE, PermissionConstants.MODULE_DIGITAL_SIGNATURE, null),
+            Permission.Create(PermissionConstants.FUNCTION_TEMPLATE_VIEW, "Xem danh sách và chi tiết mẫu chữ ký", PermissionConstants.MENU_TEMPLATE, PermissionConstants.MODULE_DIGITAL_SIGNATURE, null),
+            Permission.Create(PermissionConstants.FUNCTION_TEMPLATE_CREATE, "Tạo mới mẫu chữ ký", PermissionConstants.MENU_TEMPLATE, PermissionConstants.MODULE_DIGITAL_SIGNATURE, null),
+            Permission.Create(PermissionConstants.FUNCTION_TEMPLATE_UPDATE, "Cập nhật mẫu chữ ký và cấu hình ký", PermissionConstants.MENU_TEMPLATE, PermissionConstants.MODULE_DIGITAL_SIGNATURE, null),
+            Permission.Create(PermissionConstants.FUNCTION_TEMPLATE_DELETE, "Xóa mẫu chữ ký", PermissionConstants.MENU_TEMPLATE, PermissionConstants.MODULE_DIGITAL_SIGNATURE, null),
+
+            Permission.Create(PermissionConstants.MENU_SIGNING_BATCH, "Menu lô ký số", PermissionConstants.MENU_DIGITAL_SIGNATURE, PermissionConstants.MODULE_DIGITAL_SIGNATURE, null),
+            Permission.Create(PermissionConstants.FUNCTION_SIGNING_BATCH_VIEW, "Xem lô ký và danh sách file", PermissionConstants.MENU_SIGNING_BATCH, PermissionConstants.MODULE_DIGITAL_SIGNATURE, null),
+            Permission.Create(PermissionConstants.FUNCTION_SIGNING_BATCH_CREATE, "Tạo lô ký và tải file lên", PermissionConstants.MENU_SIGNING_BATCH, PermissionConstants.MODULE_DIGITAL_SIGNATURE, null),
+            Permission.Create(PermissionConstants.FUNCTION_SIGNING_BATCH_SIGN, "Ký số lô (mở / đóng phiên, bắt đầu, tạm dừng, huỷ)", PermissionConstants.MENU_SIGNING_BATCH, PermissionConstants.MODULE_DIGITAL_SIGNATURE, null),
+            Permission.Create(PermissionConstants.FUNCTION_SIGNING_BATCH_DELETE, "Xóa file khỏi lô ký", PermissionConstants.MENU_SIGNING_BATCH, PermissionConstants.MODULE_DIGITAL_SIGNATURE, null),
         ];
 
         public static async Task SeedAsync(ShDbContext dbContext)

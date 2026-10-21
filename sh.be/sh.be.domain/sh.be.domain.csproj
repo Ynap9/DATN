@@ -15,4 +15,10 @@
 		<ProjectReference Include="..\sh.be.shared\sh.be.shared.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Module\Construction\Entities\" />
+	  <Folder Include="Module\Construction\Services\" />
+	  <Folder Include="Module\Construction\Repositories\" />
+	</ItemGroup>
+
 </Project>

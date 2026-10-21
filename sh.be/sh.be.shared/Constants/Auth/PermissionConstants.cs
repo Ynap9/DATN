@@ -28,5 +28,54 @@ namespace sh.be.shared.Constants.Auth
 
         public const string MENU_AUDIT_LOG = "Menu.Core.AuditLog";
         public const string FUNCTION_AUDIT_LOG_VIEW = "Function.Core.AuditLog.View";
+
+        public const string MODULE_CONSTRUCTION = "Construction";
+
+        public const string MENU_CONSTRUCTION = "Menu.Construction";
+
+        public const string MENU_DOCUMENT_TYPE = "Menu.Construction.DocumentType";
+        public const string FUNCTION_DOCUMENT_TYPE_VIEW = "Function.Construction.DocumentType.View";
+        public const string FUNCTION_DOCUMENT_TYPE_CREATE = "Function.Construction.DocumentType.Create";
+        public const string FUNCTION_DOCUMENT_TYPE_UPDATE = "Function.Construction.DocumentType.Update";
+        public const string FUNCTION_DOCUMENT_TYPE_DELETE = "Function.Construction.DocumentType.Delete";
+
+        public const string MENU_DOCUMENT_FIELD = "Menu.Construction.DocumentField";
+        public const string FUNCTION_DOCUMENT_FIELD_VIEW = "Function.Construction.DocumentField.View";
+        public const string FUNCTION_DOCUMENT_FIELD_CREATE = "Function.Construction.DocumentField.Create";
+        public const string FUNCTION_DOCUMENT_FIELD_UPDATE = "Function.Construction.DocumentField.Update";
+        public const string FUNCTION_DOCUMENT_FIELD_DELETE = "Function.Construction.DocumentField.Delete";
+
+        public const string MENU_PROJECT = "Menu.Construction.Project";
+        public const string FUNCTION_PROJECT_VIEW = "Function.Construction.Project.View";
+        public const string FUNCTION_PROJECT_CREATE = "Function.Construction.Project.Create";
+        public const string FUNCTION_PROJECT_UPDATE = "Function.Construction.Project.Update";
+        public const string FUNCTION_PROJECT_DELETE = "Function.Construction.Project.Delete";
+
+        public const string MENU_PROJECT_CONFIG = "Menu.Construction.ProjectConfig";
+        public const string FUNCTION_PROJECT_CONFIG_VIEW = "Function.Construction.ProjectConfig.View";
+        public const string FUNCTION_PROJECT_CONFIG_CREATE = "Function.Construction.ProjectConfig.Create";
+        public const string FUNCTION_PROJECT_CONFIG_UPDATE = "Function.Construction.ProjectConfig.Update";
+        public const string FUNCTION_PROJECT_CONFIG_DELETE = "Function.Construction.ProjectConfig.Delete";
+
+        public const string MENU_SUBMISSION = "Menu.Construction.Submission";
+        public const string FUNCTION_SUBMISSION_VIEW = "Function.Construction.Submission.View";
+        public const string FUNCTION_SUBMISSION_IMPORT = "Function.Construction.Submission.Import";
+        public const string FUNCTION_SUBMISSION_CHECK = "Function.Construction.Submission.Check";
+
+        public const string MODULE_DIGITAL_SIGNATURE = "DigitalSignature";
+
+        public const string MENU_DIGITAL_SIGNATURE = "Menu.DigitalSignature";
+
+        public const string MENU_TEMPLATE = "Menu.DigitalSignature.Template";
+        public const string FUNCTION_TEMPLATE_VIEW = "Function.DigitalSignature.Template.View";
+        public const string FUNCTION_TEMPLATE_CREATE = "Function.DigitalSignature.Template.Create";
+        public const string FUNCTION_TEMPLATE_UPDATE = "Function.DigitalSignature.Template.Update";
+        public const string FUNCTION_TEMPLATE_DELETE = "Function.DigitalSignature.Template.Delete";
+
+        public const string MENU_SIGNING_BATCH = "Menu.DigitalSignature.SigningBatch";
+        public const string FUNCTION_SIGNING_BATCH_VIEW = "Function.DigitalSignature.SigningBatch.View";
+        public const string FUNCTION_SIGNING_BATCH_CREATE = "Function.DigitalSignature.SigningBatch.Create";
+        public const string FUNCTION_SIGNING_BATCH_SIGN = "Function.DigitalSignature.SigningBatch.Sign";
+        public const string FUNCTION_SIGNING_BATCH_DELETE = "Function.DigitalSignature.SigningBatch.Delete";
     }
 }

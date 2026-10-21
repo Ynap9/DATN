@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore;
+﻿using Asp.Versioning;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
@@ -23,6 +24,7 @@ namespace sh.be.api.Controllers.Module.Auth
 {
     [Route("")]
     [ApiController]
+    [ApiVersionNeutral]
     public class AuthorizationController : Controller
     {
         private readonly IOpenIddictApplicationManager _applicationManager;

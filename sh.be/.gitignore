@@ -100,6 +100,8 @@ PublishScripts/
 .env.*
 appsettings.*.local.json
 secrets.json
+sh.be.api/Credentials/
+sh.be.api/Plugins/*.exe
 
 ## OS
 Thumbs.db

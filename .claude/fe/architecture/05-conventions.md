@@ -38,7 +38,7 @@ Thư mục module FE theo **module BE** (`auth`, `core`) để một chức năn
 ## Gọi API
 
 - Service `@Injectable({ providedIn: 'root' })`, base URL từ `environment.api`, route **copy đúng** từ
-  controller BE (`api/auth/role/paging`…).
+  controller BE, có version (`api/v1/auth/role/paging`…; `/connect/token` không có version).
 - Service trả `Observable`; component subscribe kèm `takeUntil(this.destroyed$)` hoặc dùng `confirmAction` /
   `awaitApi` của helper.
 - Đọc kết quả bằng `checkStatusResponse(res)` trước khi dùng `res.data`.

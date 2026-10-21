@@ -1,6 +1,6 @@
 # Thêm use case hoặc module mới
 
-> **Phần 8/8** · trước: [07-conventions.md](07-conventions.md) · mục lục: [README.md](README.md)
+> **Phần 8/9** · trước: [07-conventions.md](07-conventions.md) · mục lục: [README.md](README.md)
 
 Làm theo thứ tự **từ trong ra ngoài**: domain → applications → infrastructure → api. Tầng trong xong trước thì
 tầng ngoài chỉ việc implement.
@@ -16,15 +16,16 @@ tầng ngoài chỉ việc implement.
    `Implements/<X>Service`: nạp → gọi domain → transaction (nếu nhiều bước) → `AddAuditLog` → `SaveChangesAsync`.
 4. **Shared** — mã lỗi mới (`ErrorCodes` + `ErrorMessages`), action nhật ký (`AuditLogConstants`), key quyền mới
    (`PermissionConstants` + dòng `Permission.Create` trong `SeedPermission`).
-5. **Api** — action trong controller của module, gắn `[Permission(...)]`, mẫu `try / OkException`.
+5. **Api** — action trong controller của module, gắn `[Permission(...)]`, mẫu `try / OkException`. Controller mới khai
+   `[Route("api/v{version:apiVersion}/<module>/<ten>")]` + `[ApiVersion(ApiVersionConstants.V1)]` ([01-api.md](01-api.md#version-api)).
 6. Build + kiểm EF (xem [07-conventions.md](07-conventions.md)).
 
 ## Thêm một use case ĐỌC
 
 1. DTO kết quả trong `applications/.../Dtos/`.
 2. Method trong `applications/.../Interfaces/Queries/I<X>Query`.
-3. Implement trong `infrastructure.data/.../Queries/<X>Query`: `AsNoTracking`, `Select` thẳng ra DTO, phân
-   trang bằng `.Paging(dto)`.
+3. Implement trong `infrastructure.data/.../Queries/<X>Query`: `AsNoTracking`, phân trang bằng `.Paging(dto)`,
+   chiếu ra DTO bằng `ProjectTo` (thêm `CreateMap<Entity, Dto>()` vào `MappingProfile`).
 4. Method trong `I<X>Service` + `<X>Service` chỉ gọi query (và ném lỗi nếu `null`).
 5. Action controller + `[Permission]`. Build.
 
@@ -62,3 +63,5 @@ builder.Services.AddScoped<ICatalogService, CatalogService>();
 3. Ghi nhiều bước có transaction; có audit log?
 4. Đã đăng ký DI, build sạch, EF đúng kỳ vọng?
 5. Tài liệu trong `.claude/be/architecture/` nào cần cập nhật theo?
+
+> **Tiếp:** [09-chu-ky-so.md](09-chu-ky-so.md) — pipeline ký số: phần duy nhất có tiến trình nền.
