@@ -22,5 +22,9 @@ namespace sh.be.applications.Module.Construction.Interfaces.Services
         Task<ViewQaSubmissionDetailDto> FindQaById(int id, FindQaSubmissionDetailDto dto);
         Task<ViewQaResultDto> ReviewQa(ReviewQaSubmissionDto dto);
         Task<BaseResponsePagingDto<GetListSubmissionQaLogDto>> FindQaLogPaging(int id, FindPagingSubmissionQaLogDto dto);
+        Task<List<GetListSubmissionFieldValueDto>> FindFieldValues(FindSubmissionFieldValueDto dto);
+        Task<ViewSubmissionTreeDto> FindTree(FindSubmissionTreeDto dto);
+        Task<BaseResponsePagingDto<GetListProjectSubmissionLogDto>> FindProjectLogPaging(FindPagingProjectSubmissionLogDto dto);
+        Task<ViewSubmissionSummaryDto> FindSummary(FindSubmissionSummaryDto dto);
     }
 }

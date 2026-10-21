@@ -345,6 +345,183 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             };
         }
 
+        public Task<List<GetListSubmissionFieldValueDto>> FindFieldValues(FindSubmissionFieldValueDto dto)
+        {
+            var submissionIds = ApplyFilter(dto, dto.StatusCheck, dto.StatusQa, false, dto.DocumentFieldId).Select(s => s.Id);
+            var query = _shDbContext.SubmissionDatas
+                .AsNoTracking()
+                .Where(sd => sd.ProjectId == dto.ProjectId && sd.DocumentTypeId == dto.DocumentTypeId && sd.DocumentFieldId == dto.DocumentFieldId
+                    && sd.Data != String.Empty && submissionIds.Contains(sd.SubmissionId));
+
+            var keyword = dto.Keyword?.Trim();
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                query = query.Where(sd => sd.Data.Contains(keyword));
+            }
+
+            return query
+                .GroupBy(sd => sd.Data)
+                .Select(g => new GetListSubmissionFieldValueDto
+                {
+                    Value = g.Key,
+                    SubmissionCount = g.Count(),
+                })
+                .OrderBy(v => v.Value)
+                .Take(SubmissionConst.FIELD_VALUE_MAX_ITEMS)
+                .ToListAsync();
+        }
+
+        public async Task<ViewSubmissionTreeDto> FindTree(ISubmissionFilter filter)
+        {
+            var boxCounts = await ApplyFilter(filter, filter.StatusCheck, filter.StatusQa)
+                .GroupBy(s => new { s.ProfileRange, s.Box })
+                .Select(g => new
+                {
+                    g.Key.ProfileRange,
+                    g.Key.Box,
+                    Count = new SubmissionTreeCountDto
+                    {
+                        Total = g.Count(),
+                        TotalNotChecked = g.Count(s => s.StatusCheck == SubmissionConst.NOT_CHECKED),
+                        TotalChecked = g.Count(s => s.StatusCheck == SubmissionConst.CHECKED),
+                        TotalReturned = g.Count(s => s.StatusCheck == SubmissionConst.RETURNED),
+                        TotalQaPassed = g.Count(s => s.StatusQa == SubmissionConst.QA_PASSED),
+                        TotalQaFailed = g.Count(s => s.StatusQa == SubmissionConst.QA_FAILED),
+                    },
+                })
+                .OrderBy(b => b.ProfileRange)
+                .ThenBy(b => b.Box)
+                .ToListAsync();
+
+            var profileRanges = boxCounts
+                .GroupBy(b => b.ProfileRange)
+                .Select(g => new SubmissionProfileRangeNodeDto
+                {
+                    ProfileRange = g.Key,
+                    Count = SumTreeCounts(g.Select(b => b.Count)),
+                    Boxes = g.Select(b => new SubmissionBoxNodeDto { Box = b.Box, Count = b.Count }).ToList(),
+                })
+                .ToList();
+
+            return new ViewSubmissionTreeDto
+            {
+                ProfileRanges = profileRanges,
+                Total = SumTreeCounts(profileRanges.Select(p => p.Count)),
+            };
+        }
+
+        public async Task<BaseResponsePagingDto<GetListProjectSubmissionLogDto>> FindProjectLogPaging(FindPagingProjectSubmissionLogDto dto)
+        {
+            var query = _shDbContext.SubmissionLogs
+                .AsNoTracking()
+                .Where(l => l.ProjectId == dto.ProjectId && l.DocumentTypeId == dto.DocumentTypeId);
+
+            var userId = dto.UserId?.Trim();
+            if (!string.IsNullOrEmpty(userId))
+            {
+                query = query.Where(l => l.UserId == userId);
+            }
+            if (dto.OldStatus.HasValue)
+            {
+                query = query.Where(l => l.OldStatus == dto.OldStatus.Value);
+            }
+            if (dto.FromDate.HasValue)
+            {
+                var fromDate = dto.FromDate.Value.Date;
+                query = query.Where(l => l.CreatedDate >= fromDate);
+            }
+            if (dto.ToDate.HasValue)
+            {
+                var toDateExclusive = dto.ToDate.Value.Date.AddDays(1);
+                query = query.Where(l => l.CreatedDate < toDateExclusive);
+            }
+
+            var totalItems = await query.CountAsync();
+            var logs = await (from l in query.OrderByDescending(l => l.CreatedDate).ThenByDescending(l => l.Id).Paging(dto)
+                              let submission = _shDbContext.Submissions.IgnoreQueryFilters().FirstOrDefault(s => s.Id == l.SubmissionId)
+                              select new GetListProjectSubmissionLogDto
+                              {
+                                  Id = l.Id,
+                                  SubmissionId = l.SubmissionId,
+                                  FileName = submission != null ? submission.FileName : String.Empty,
+                                  ProfileRange = submission != null ? submission.ProfileRange : String.Empty,
+                                  Box = submission != null ? submission.Box : String.Empty,
+                                  UserId = l.UserId,
+                                  UserName = _shDbContext.Users.Where(u => u.Id == l.UserId).Select(u => u.UserName).FirstOrDefault(),
+                                  FullName = _shDbContext.Users.Where(u => u.Id == l.UserId).Select(u => u.FullName).FirstOrDefault(),
+                                  OldStatus = l.OldStatus,
+                                  NewStatus = l.NewStatus,
+                                  Description = l.Description,
+                                  Note = l.Note,
+                                  ChangedDataCount = l.ChangedDataCount,
+                                  CreatedDate = l.CreatedDate,
+                              })
+                .ToListAsync();
+
+            return new BaseResponsePagingDto<GetListProjectSubmissionLogDto>
+            {
+                Items = logs,
+                TotalItems = totalItems,
+            };
+        }
+
+        public async Task<ViewSubmissionSummaryDto> FindSummary(int projectId, int documentTypeId)
+        {
+            var summary = await _shDbContext.Submissions
+                .AsNoTracking()
+                .Where(s => s.ProjectId == projectId && s.DocumentTypeId == documentTypeId)
+                .GroupBy(_ => 1)
+                .Select(g => new ViewSubmissionSummaryDto
+                {
+                    TotalSubmissions = g.Count(),
+                    TotalNotChecked = g.Count(s => s.StatusCheck == SubmissionConst.NOT_CHECKED),
+                    TotalChecked = g.Count(s => s.StatusCheck == SubmissionConst.CHECKED),
+                    TotalReturned = g.Count(s => s.StatusCheck == SubmissionConst.RETURNED),
+                    TotalQaNotReviewed = g.Count(s => s.StatusQa == SubmissionConst.QA_NOT_REVIEWED),
+                    TotalQaPassed = g.Count(s => s.StatusQa == SubmissionConst.QA_PASSED),
+                    TotalQaFailed = g.Count(s => s.StatusQa == SubmissionConst.QA_FAILED),
+                })
+                .SingleOrDefaultAsync() ?? new ViewSubmissionSummaryDto();
+
+            var isChargeableByFieldId = await (from pf in _shDbContext.ProjectDocumentTypeDocumentFields.AsNoTracking()
+                                               join d in _shDbContext.DocumentFields.AsNoTracking() on pf.DocumentFieldId equals d.Id
+                                               where pf.ProjectId == projectId && pf.DocumentTypeId == documentTypeId
+                                               select new { d.Id, d.IsChargeable })
+                .ToDictionaryAsync(d => d.Id, d => d.IsChargeable);
+
+            var filledCellCounts = await (from sd in _shDbContext.SubmissionDatas.AsNoTracking()
+                                          join s in _shDbContext.Submissions.AsNoTracking().Where(s => s.ProjectId == projectId && s.DocumentTypeId == documentTypeId)
+                                              on sd.SubmissionId equals s.Id
+                                          where sd.ProjectId == projectId && sd.DocumentTypeId == documentTypeId && sd.Data != String.Empty
+                                          group sd by new { sd.DocumentFieldId, s.StatusCheck } into g
+                                          select new { g.Key.DocumentFieldId, g.Key.StatusCheck, FilledCells = g.Count() })
+                .ToListAsync();
+            var configuredCellCounts = filledCellCounts.Where(c => isChargeableByFieldId.ContainsKey(c.DocumentFieldId)).ToList();
+
+            summary.CheckedPercent = summary.TotalSubmissions == 0 ? 0 : Math.Round(summary.TotalChecked * 100m / summary.TotalSubmissions, 2);
+            summary.TotalFields = isChargeableByFieldId.Count;
+            summary.TotalChargeableFields = isChargeableByFieldId.Count(f => f.Value);
+            summary.TotalFilledCells = configuredCellCounts.Sum(c => c.FilledCells);
+            summary.TotalChargeableFilledCellsOfChecked = configuredCellCounts
+                .Where(c => isChargeableByFieldId[c.DocumentFieldId] && c.StatusCheck == SubmissionConst.CHECKED)
+                .Sum(c => c.FilledCells);
+            return summary;
+        }
+
+        private static SubmissionTreeCountDto SumTreeCounts(IEnumerable<SubmissionTreeCountDto> counts)
+        {
+            var countList = counts.ToList();
+            return new SubmissionTreeCountDto
+            {
+                Total = countList.Sum(c => c.Total),
+                TotalNotChecked = countList.Sum(c => c.TotalNotChecked),
+                TotalChecked = countList.Sum(c => c.TotalChecked),
+                TotalReturned = countList.Sum(c => c.TotalReturned),
+                TotalQaPassed = countList.Sum(c => c.TotalQaPassed),
+                TotalQaFailed = countList.Sum(c => c.TotalQaFailed),
+            };
+        }
+
         private async Task FillFieldsAndPositionAsync(ViewSubmissionDetailDto detail, ISubmissionFilter filter, bool includePosition)
         {
             detail.Fields = await (from pf in _shDbContext.ProjectDocumentTypeDocumentFields.AsNoTracking()
@@ -403,7 +580,8 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             }
         }
 
-        private IQueryable<Submission> ApplyFilter(ISubmissionFilter filter, int? statusCheck, int? statusQa)
+        private IQueryable<Submission> ApplyFilter(ISubmissionFilter filter, int? statusCheck, int? statusQa, bool includeKeyword = true,
+            int? excludedDocumentFieldId = null)
         {
             var query = _shDbContext.Submissions
                 .AsNoTracking()
@@ -420,19 +598,19 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             }
 
             var keyword = filter.Keyword?.Trim();
-            if (!string.IsNullOrEmpty(keyword))
+            if (includeKeyword && !string.IsNullOrEmpty(keyword))
             {
                 query = query.Where(s => s.FileName.Contains(keyword) || s.ProfileRange.Contains(keyword) || s.Box.Contains(keyword));
             }
 
-            query = ApplyFieldFilter(query, filter.DocumentFieldId1, filter.FieldValue1);
-            return ApplyFieldFilter(query, filter.DocumentFieldId2, filter.FieldValue2);
+            query = ApplyFieldFilter(query, filter.DocumentFieldId1, filter.FieldValue1, excludedDocumentFieldId);
+            return ApplyFieldFilter(query, filter.DocumentFieldId2, filter.FieldValue2, excludedDocumentFieldId);
         }
 
-        private IQueryable<Submission> ApplyFieldFilter(IQueryable<Submission> query, int? documentFieldId, string? fieldValue)
+        private IQueryable<Submission> ApplyFieldFilter(IQueryable<Submission> query, int? documentFieldId, string? fieldValue, int? excludedDocumentFieldId)
         {
             var value = fieldValue?.Trim();
-            if (!documentFieldId.HasValue || string.IsNullOrEmpty(value))
+            if (!documentFieldId.HasValue || string.IsNullOrEmpty(value) || documentFieldId == excludedDocumentFieldId)
             {
                 return query;
             }

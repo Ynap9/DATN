@@ -287,6 +287,66 @@ namespace sh.be.api.Controllers.Module.Construction
             }
         }
 
+        [HttpGet("field-values")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindFieldValues([FromQuery] FindSubmissionFieldValueDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindFieldValues(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("tree")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindTree([FromQuery] FindSubmissionTreeDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindTree(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("logs")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindProjectLogPaging([FromQuery] FindPagingProjectSubmissionLogDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindProjectLogPaging(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("summary")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindSummary([FromQuery] FindSubmissionSummaryDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindSummary(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
         [HttpGet("proxy-file")]
         [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
         public async Task<IActionResult> ProxyFile([FromQuery] string url)

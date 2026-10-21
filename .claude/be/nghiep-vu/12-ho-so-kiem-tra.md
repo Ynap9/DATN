@@ -83,6 +83,27 @@ Body: `{ id, projectId, documentTypeId, datas: [{ documentFieldId, data }], note
 Phân trang, sắp `CreatedDate` rồi `Id` giảm dần; mỗi dòng có `userName`, `fullName` (join bảng `Users` lúc đọc), `oldStatus`,
 `newStatus`, `description`, `note`, `changedDataCount`. `totalItems` là tổng thật. Hồ sơ không tồn tại → `305`.
 
+## Tra cứu và thống kê
+
+Bốn API chỉ đọc, quyền `Function.Construction.Submission.View`, không audit; dự án / loại văn bản sai → `303` / `301` / `312`.
+
+| Endpoint | Việc |
+|---|---|
+| `GET field-values?documentFieldId=` + bộ lọc chung | Giá trị khác nhau của một trường cho dropdown lọc: `[{ value, submissionCount }]`, sắp theo `value`, tối đa 200 (`FIELD_VALUE_MAX_ITEMS`), bỏ ô rỗng |
+| `GET tree` + bộ lọc chung | Cây Hồ sơ → Hộp: `{ profileRanges: [{ profileRange, count, boxes: [{ box, count }] }], total }`, `count` = `total`, `totalNotChecked`, `totalChecked`, `totalReturned`, `totalQaPassed`, `totalQaFailed` |
+| `GET logs` | Lịch sử kiểm tra cả dự án + loại văn bản: lọc `userId`, `oldStatus`, `fromDate`, `toDate`; mỗi dòng như `{id}/logs` + `fileName`, `profileRange`, `box` |
+| `GET summary` | Tiến độ: số hồ sơ theo `StatusCheck` / `StatusQa`, `checkedPercent`, `totalFields`, `totalChargeableFields`, `totalFilledCells`, `totalChargeableFilledCellsOfChecked` |
+
+- `field-values`: `keyword` tìm **trong giá trị** (không phải tên file); lọc liên hoàn — bỏ cặp lọc của chính trường đang lấy, vẫn qua
+  **một** `ApplyFilter` (tham số `includeKeyword`, `excludedDocumentFieldId`). Trường không thuộc cấu hình → `311`.
+- `tree`: một câu `GROUP BY (ProfileRange, Box)`, cây dựng trong bộ nhớ (Hộp cộng lên Hồ sơ, lên tổng) nên tổng mọi nút = `count.total`.
+  Sắp **chuỗi** (`Hộp 10` trước `Hộp 2`); Hồ sơ / Hộp rỗng giữ `""`.
+- `logs`: lọc `oldStatus` (`0` kiểm tra lần đầu, `1` tái kiểm tra, `2` kiểm tra lại hồ sơ bị trả lại) thay cho `newStatus` của spec — `NewStatus`
+  luôn là `1`. `toDate` tính trọn ngày; `fromDate > toDate` → `400`. Tên file lấy `IgnoreQueryFilters` nên hồ sơ đã xoá vẫn thấy tên.
+  Index `SubmissionLog (ProjectId, DocumentTypeId, CreatedDate)`, migration `Add_SubmissionLog_ProjectIndex`.
+- `summary`: ô chỉ tính trường thuộc cấu hình, `Data` khác rỗng, hồ sơ chưa xoá; ô tính tiền = trường `IsChargeable` của hồ sơ `CHECKED`
+  (hồ sơ trả lại không tính). Không tính tiền (cần đơn giá theo người — module phân công). `checkedPercent` làm tròn 2 số lẻ, chưa có hồ sơ → `0`.
+
 ## Đã kiểm thực tế
 
 Ngày 2026-10-19, gọi API thật bằng `admin` sau khi chạy migration `Add_SubmissionLog` (seeder đã thêm quyền `Check`) — 18/18 đạt:
@@ -107,7 +128,28 @@ Sau khi tách `neighbor` thành `{id}/next` và `{id}/previous`, gọi lại tr�
 `317`; lọc trường, `statusCheck`, keyword; đi từ hồ sơ ngoài bộ lọc hoặc id không tồn tại; đi hết danh sách cả hai chiều; `303`,
 `301`, `312`; thiếu quyền `View` → `403`; route cũ `neighbor` → `404`.
 
+Tra cứu và thống kê, ngày 2026-10-22 trên `test-data-ho-so.sql` — 37/37 đạt: `field-values` đủ giá trị và số đếm, sắp `value`, keyword không
+phân biệt hoa thường, lọc liên hoàn, bỏ cặp lọc trùng trường, `311` / `303` / `312`; `tree` đúng hình, Hộp cộng đúng lên Hồ sơ, tổng = `count.total`
+có / không lọc; `logs` mới nhất trước, lọc `userId`, `oldStatus` 0 / 1 / 2, trọn ngày, hôm qua → 0, `400`, trang 2, tên file của hồ sơ đã xoá mềm;
+`summary` khớp SQL tay, bỏ hồ sơ đã xoá; không token `401`, `viewer` → `403`, `tester` (`View`) đọc được.
+
+Đo trên 20.000 hồ sơ × 30 trường (600.000 ô, 13.334 log, gắn `ZZPERF`, đo xong đã xoá), API chạy build Debug, SQL Server 2022 Docker, trung vị 7 lần
+gọi cả HTTP. Một request nhẹ (`count` 16 hồ sơ) đã tốn ~136 ms (≈ 5 lượt đi – về: `[Permission]`, kiểm dự án, query) nên mục tiêu < 50 ms không đạt được ở môi trường này:
+
+| API | Đo | Mục tiêu | API | Đo | Mục tiêu |
+|---|---|---|---|---|---|
+| `field-values` không lọc (135 giá trị) | **1.235 ms** | < 300 | `tree` không lọc / lọc | 227 / 205 ms | < 200 |
+| `field-values` lọc `statusCheck` + keyword | 319 ms | < 300 | `logs` trang 50 / lọc 7 ngày | 242 / 181 ms | < 50 |
+| `field-values` 18.000 giá trị, lấy 200 | 344 ms | < 300 | `summary` | 382 ms | < 500 |
+
+`summary` lúc đầu 4.528 ms: join `SubmissionData` × `Submission` × `DocumentField` cho từng ô (3,4 triệu logical reads). Viết lại: lọc `Submission` theo dự án
+trong join, `GROUP BY (DocumentFieldId, StatusCheck)` rồi cộng trường cấu hình / tính tiền trong bộ nhớ → ~13.000 reads.
+
 ## Giới hạn
+
+⚠️ `field-values` không lọc chậm (~1 s ở DB): plan **sort theo `Data` (`nvarchar(max)`)** rồi seek `Submission` cho từng ô; nhiều ô cùng giá trị thì
+không dừng sớm được. Đo tay: `GROUP BY CAST(Data AS nvarchar(4000))` còn 114 ms, nhưng EF cần thêm `DbFunction` trong `ShDbContext` và giá trị
+dài hơn 4.000 ký tự bị cắt khi gộp — chưa làm, chờ chốt. Đừng thêm index / `INCLUDE` cột `Data` (xem dưới).
 
 ⚠️ **Chưa đo tốc độ** trên dự án 20.000 hồ sơ (execution plan, import append < 60 s sau khi thêm index). Import chưa gọi lại sau khi
 gộp vào `SubmissionService` (cần Google Sheet thật); code import chỉ chuyển chỗ, không đổi logic.

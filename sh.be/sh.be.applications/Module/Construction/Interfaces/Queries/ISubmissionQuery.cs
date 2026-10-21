@@ -14,5 +14,9 @@ namespace sh.be.applications.Module.Construction.Interfaces.Queries
         Task<BaseResponsePagingDto<GetListQaSubmissionDto>> FindQaPaging(FindPagingQaSubmissionDto dto);
         Task<ViewQaSubmissionDetailDto?> FindQaById(int id, ISubmissionFilter filter, bool includePosition);
         Task<BaseResponsePagingDto<GetListSubmissionQaLogDto>> FindQaLogPaging(int submissionId, FindPagingSubmissionQaLogDto dto);
+        Task<List<GetListSubmissionFieldValueDto>> FindFieldValues(FindSubmissionFieldValueDto dto);
+        Task<ViewSubmissionTreeDto> FindTree(ISubmissionFilter filter);
+        Task<BaseResponsePagingDto<GetListProjectSubmissionLogDto>> FindProjectLogPaging(FindPagingProjectSubmissionLogDto dto);
+        Task<ViewSubmissionSummaryDto> FindSummary(int projectId, int documentTypeId);
     }
 }

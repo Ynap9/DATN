@@ -386,6 +386,39 @@ namespace sh.be.applications.Module.Construction.Implements
             return await _submissionQuery.FindQaLogPaging(id, dto);
         }
 
+        public async Task<List<GetListSubmissionFieldValueDto>> FindFieldValues(FindSubmissionFieldValueDto dto)
+        {
+            _logger.LogInformation($"{nameof(FindFieldValues)}, dto={JsonSerializer.Serialize(dto)}");
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            await _submissionDomainService.EnsureDocumentFieldInProjectAsync(dto.ProjectId, dto.DocumentTypeId, dto.DocumentFieldId);
+            return await _submissionQuery.FindFieldValues(dto);
+        }
+
+        public async Task<ViewSubmissionTreeDto> FindTree(FindSubmissionTreeDto dto)
+        {
+            _logger.LogInformation($"{nameof(FindTree)}, dto={JsonSerializer.Serialize(dto)}");
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            return await _submissionQuery.FindTree(dto);
+        }
+
+        public async Task<BaseResponsePagingDto<GetListProjectSubmissionLogDto>> FindProjectLogPaging(FindPagingProjectSubmissionLogDto dto)
+        {
+            _logger.LogInformation($"{nameof(FindProjectLogPaging)}, dto={JsonSerializer.Serialize(dto)}");
+            if (dto.FromDate.HasValue && dto.ToDate.HasValue && dto.FromDate.Value.Date > dto.ToDate.Value.Date)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Từ ngày không được sau đến ngày");
+            }
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            return await _submissionQuery.FindProjectLogPaging(dto);
+        }
+
+        public async Task<ViewSubmissionSummaryDto> FindSummary(FindSubmissionSummaryDto dto)
+        {
+            _logger.LogInformation($"{nameof(FindSummary)}, dto={JsonSerializer.Serialize(dto)}");
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            return await _submissionQuery.FindSummary(dto.ProjectId, dto.DocumentTypeId);
+        }
+
         private async Task<ProjectSheetSource> LoadAppendSheetAsync(ImportSubmissionDto dto)
         {
             var source = await LoadProjectSheetAsync(dto, dto.LinkColumnImport);

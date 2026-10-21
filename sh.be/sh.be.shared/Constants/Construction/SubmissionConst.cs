@@ -16,6 +16,7 @@ namespace sh.be.shared.Constants.Construction
 
         public const int MAX_PAGE_SIZE = 200;
         public const int CHECK_NOTE_MAX_LENGTH = 1000;
+        public const int FIELD_VALUE_MAX_ITEMS = 200;
 
         public const int IMPORT_LOCK_TIMEOUT_MILLISECONDS = 5000;
         public const int BULK_BATCH_SIZE = 100000;

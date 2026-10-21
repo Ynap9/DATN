@@ -37,7 +37,7 @@ gọi thêm `SaveChanges` trong các luồng đó.
 - Index khai bằng `[Index(..., Name = "IX_<Bang>_<Cot>")]` trên entity (không `HasIndex`): `AuditLog` (`CreatedDate`, `UserId`, `ActionType`),
   `Permission.Key` (unique), `UserRole.RoleId`, `DocumentType.Name`, `Submission.FileName`, `DocumentField (DocumentTypeId, Field)` và `(DocumentTypeId, OrderTableView)`, `Project.Name`, `ProjectConfig.Name`,
   `ProjectDocumentType.DocumentTypeId`, `ProjectDocumentTypeDocumentField.DocumentFieldId`, `SubmissionData (ProjectId, DocumentTypeId, DocumentFieldId)`, `TemplatePosition.TemplateId`,
-  `SigningBatchFile (SigningBatchId, Status, Order)` (runner lấy file kế tiếp liên tục theo lô + trạng thái + thứ tự), `Submission (ProjectId, DocumentTypeId, StatusCheck)` và `(..., StatusQa)` (hồ sơ liền kề theo keyset `Id` và đếm theo trạng thái là seek thuần), `SubmissionLog` / `SubmissionQaLog (SubmissionId, CreatedDate)`.
+  `SigningBatchFile (SigningBatchId, Status, Order)` (runner lấy file kế tiếp liên tục theo lô + trạng thái + thứ tự), `Submission (ProjectId, DocumentTypeId, StatusCheck)` và `(..., StatusQa)` (hồ sơ liền kề theo keyset `Id` và đếm theo trạng thái là seek thuần), `SubmissionLog` / `SubmissionQaLog (SubmissionId, CreatedDate)`, `SubmissionLog (ProjectId, DocumentTypeId, CreatedDate)` (lịch sử kiểm tra cả dự án).
   Cột chuỗi có index thành `nvarchar(450)` — giá trị dài hơn sẽ lỗi khi lưu.
 - Unique index có filter: attribute khai index + `IsUnique`, `OnModelCreating` gọi `HasIndex([...], <tên>).HasFilter("[Deleted] = 0")` theo
   **cùng tên** (hằng `Submission.UniqueKeyIndexName`, `SubmissionData.UniqueFieldIndexName`). ⚠️ Khoá index nonclustered tối đa 1700 byte:

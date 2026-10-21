@@ -126,7 +126,7 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `GET api/construction/project-config/google-authorization-url` | `Function.Construction.ProjectConfig.Update` |
 | `GET api/construction/project-config/google-callback` | — (không cần token, kiểm `state` đã ký) |
 | `POST api/construction/submission/import/{append\|blank\|overwrite}` và `.../verify` | `Function.Construction.Submission.Import` |
-| `GET api/construction/submission/proxy-file`, `GET .../paging`, `GET .../count`, `GET .../{id}`, `GET .../{id}/next`, `GET .../{id}/previous`, `GET .../{id}/logs`, `GET .../qa/paging`, `GET .../{id}/qa`, `GET .../{id}/qa-logs` | `Function.Construction.Submission.View` |
+| `GET api/construction/submission/proxy-file`, `GET .../paging`, `GET .../count`, `GET .../{id}`, `GET .../{id}/next`, `GET .../{id}/previous`, `GET .../{id}/logs`, `GET .../qa/paging`, `GET .../{id}/qa`, `GET .../{id}/qa-logs`, `GET .../field-values`, `GET .../tree`, `GET .../logs`, `GET .../summary` | `Function.Construction.Submission.View` |
 | `PUT api/construction/submission/check` (id trong body) | `Function.Construction.Submission.Check` |
 | `PUT api/construction/submission/qa` (id trong body) | `Function.Construction.Submission.Qa` |
 | `GET api/digital-signature/template/paging`, `GET .../{id}`, `GET .../sample-file` | `Function.DigitalSignature.Template.View` |
