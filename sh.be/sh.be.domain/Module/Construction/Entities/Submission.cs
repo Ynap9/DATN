@@ -12,6 +12,7 @@ namespace sh.be.domain.Module.Construction.Entities
     [Table(nameof(Submission), Schema = DbSchemas.Construction)]
     [Index(nameof(FileName), Name = $"IX_{nameof(Submission)}_{nameof(FileName)}")]
     [Index(nameof(ProjectId), nameof(DocumentTypeId), nameof(StatusCheck), Name = "IX_Submission_ProjectId_DocumentTypeId_StatusCheck")]
+    [Index(nameof(ProjectId), nameof(DocumentTypeId), nameof(StatusQa), Name = "IX_Submission_ProjectId_DocumentTypeId_StatusQa")]
     [Index(nameof(ProjectId), nameof(DocumentTypeId), nameof(FileName), nameof(ProfileRange), nameof(Box), IsUnique = true,
         Name = UniqueKeyIndexName)]
     public class Submission : ISoftDeleted
@@ -38,6 +39,12 @@ namespace sh.be.domain.Module.Construction.Entities
         [MaxLength(100)]
         public string Box { get; private set; } = String.Empty;
         public int StatusCheck { get; private set; } = SubmissionConst.NOT_CHECKED;
+        public int StatusQa { get; private set; } = SubmissionConst.QA_NOT_REVIEWED;
+        [MaxLength(1000)]
+        public string? QaReason { get; private set; }
+        [MaxLength(450)]
+        public string? QaBy { get; private set; }
+        public DateTime? QaDate { get; private set; }
         public string? CreatedBy { get; private set; }
         public DateTime? CreatedDate { get; private set; }
         public string? ModifiedBy { get; private set; }
