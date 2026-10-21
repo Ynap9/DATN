@@ -20,7 +20,7 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
 
         public async Task<BaseResponsePagingDto<GetListSubmissionDto>> FindPaging(FindPagingSubmissionDto dto)
         {
-            var query = ApplyFilter(dto, dto.StatusCheck);
+            var query = ApplyFilter(dto, dto.StatusCheck, dto.StatusQa);
             var totalItems = await query.CountAsync();
 
             var submissions = await query
@@ -35,6 +35,8 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                     ProfileRange = s.ProfileRange,
                     Box = s.Box,
                     StatusCheck = s.StatusCheck,
+                    StatusQa = s.StatusQa,
+                    QaReason = s.QaReason,
                     CreatedDate = s.CreatedDate,
                     ModifiedDate = s.ModifiedDate,
                 })
@@ -108,6 +110,8 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                     ProfileRange = s.ProfileRange,
                     Box = s.Box,
                     StatusCheck = s.StatusCheck,
+                    StatusQa = s.StatusQa,
+                    QaReason = s.QaReason,
                     CreatedDate = s.CreatedDate,
                     ModifiedDate = s.ModifiedDate,
                     ModifiedBy = s.ModifiedBy,
@@ -118,51 +122,13 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 return null;
             }
 
-            detail.Fields = await (from pf in _shDbContext.ProjectDocumentTypeDocumentFields.AsNoTracking()
-                                   join d in _shDbContext.DocumentFields.AsNoTracking() on pf.DocumentFieldId equals d.Id
-                                   join sd in _shDbContext.SubmissionDatas.AsNoTracking().Where(x => x.SubmissionId == detail.Id)
-                                       on d.Id equals sd.DocumentFieldId into datas
-                                   from sd in datas.DefaultIfEmpty()
-                                   where pf.ProjectId == detail.ProjectId && pf.DocumentTypeId == detail.DocumentTypeId
-                                   orderby d.OrderListView, d.Id
-                                   select new SubmissionFieldDto
-                                   {
-                                       DocumentFieldId = d.Id,
-                                       Name = d.Name,
-                                       Field = d.Field,
-                                       FieldType = d.FieldType,
-                                       IsShow = d.IsShow,
-                                       IsChargeable = d.IsChargeable,
-                                       OrderListView = d.OrderListView,
-                                       IsShowListView = d.IsShowListView,
-                                       Width = d.Width,
-                                       SubmissionDataId = sd != null ? sd.Id : null,
-                                       Data = sd != null ? sd.Data : String.Empty,
-                                       IndexGoogleSheet = sd != null ? sd.IndexGoogleSheet : null,
-                                   })
-                .ToListAsync();
-
-            if (includePosition)
-            {
-                var counts = await ApplyFilter(filter, filter.StatusCheck)
-                    .GroupBy(_ => 1)
-                    .Select(g => new
-                    {
-                        TotalItems = g.Count(),
-                        BeforeCount = g.Count(s => s.Id < detail.Id),
-                        IsMatched = g.Count(s => s.Id == detail.Id),
-                    })
-                    .SingleOrDefaultAsync();
-
-                detail.TotalItems = counts?.TotalItems ?? 0;
-                detail.Position = counts is { IsMatched: > 0 } ? counts.BeforeCount + 1 : null;
-            }
+            await FillFieldsAndPositionAsync(detail, filter, includePosition);
             return detail;
         }
 
         public Task<int?> FindNextId(int id, ISubmissionFilter filter)
         {
-            return ApplyFilter(filter, filter.StatusCheck)
+            return ApplyFilter(filter, filter.StatusCheck, filter.StatusQa)
                 .Where(s => s.Id > id)
                 .OrderBy(s => s.Id)
                 .Select(s => (int?)s.Id)
@@ -171,7 +137,7 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
 
         public Task<int?> FindPreviousId(int id, ISubmissionFilter filter)
         {
-            return ApplyFilter(filter, filter.StatusCheck)
+            return ApplyFilter(filter, filter.StatusCheck, filter.StatusQa)
                 .Where(s => s.Id < id)
                 .OrderByDescending(s => s.Id)
                 .Select(s => (int?)s.Id)
@@ -180,12 +146,13 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
 
         public async Task<ViewCountSubmissionDto> Count(ISubmissionFilter filter)
         {
-            var counts = await ApplyFilter(filter, null)
+            var counts = await ApplyFilter(filter, null, filter.StatusQa)
                 .GroupBy(_ => 1)
                 .Select(g => new ViewCountSubmissionDto
                 {
                     TotalChecked = g.Count(s => s.StatusCheck == SubmissionConst.CHECKED),
                     TotalNotChecked = g.Count(s => s.StatusCheck == SubmissionConst.NOT_CHECKED),
+                    TotalReturned = g.Count(s => s.StatusCheck == SubmissionConst.RETURNED),
                 })
                 .SingleOrDefaultAsync() ?? new ViewCountSubmissionDto();
 
@@ -193,7 +160,8 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             {
                 SubmissionConst.CHECKED => counts.TotalChecked,
                 SubmissionConst.NOT_CHECKED => counts.TotalNotChecked,
-                _ => counts.TotalChecked + counts.TotalNotChecked,
+                SubmissionConst.RETURNED => counts.TotalReturned,
+                _ => counts.TotalChecked + counts.TotalNotChecked + counts.TotalReturned,
             };
             return counts;
         }
@@ -232,7 +200,210 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             };
         }
 
-        private IQueryable<Submission> ApplyFilter(ISubmissionFilter filter, int? statusCheck)
+        public async Task<BaseResponsePagingDto<GetListQaSubmissionDto>> FindQaPaging(FindPagingQaSubmissionDto dto)
+        {
+            var query = ApplyFilter(dto, dto.StatusCheck, dto.StatusQa);
+            var totalItems = await query.CountAsync();
+
+            var submissions = await (from s in query.OrderBy(s => s.Id).Paging(dto)
+                                     let lastLog = _shDbContext.SubmissionLogs
+                                         .Where(l => l.SubmissionId == s.Id)
+                                         .OrderByDescending(l => l.CreatedDate)
+                                         .ThenByDescending(l => l.Id)
+                                         .FirstOrDefault()
+                                     select new GetListQaSubmissionDto
+                                     {
+                                         Id = s.Id,
+                                         Name = s.Name,
+                                         FileName = s.FileName,
+                                         FileUrlS3Object = s.FileUrlS3Object,
+                                         ProfileRange = s.ProfileRange,
+                                         Box = s.Box,
+                                         StatusCheck = s.StatusCheck,
+                                         StatusQa = s.StatusQa,
+                                         QaReason = s.QaReason,
+                                         QaBy = s.QaBy,
+                                         QaUserName = _shDbContext.Users.Where(u => u.Id == s.QaBy).Select(u => u.UserName).FirstOrDefault(),
+                                         QaDate = s.QaDate,
+                                         CheckedBy = lastLog != null ? lastLog.UserId : null,
+                                         CheckedUserName = lastLog != null
+                                             ? _shDbContext.Users.Where(u => u.Id == lastLog.UserId).Select(u => u.UserName).FirstOrDefault()
+                                             : null,
+                                         CheckedDate = lastLog != null ? lastLog.CreatedDate : null,
+                                     })
+                .ToListAsync();
+
+            var qaCounts = await ApplyFilter(dto, dto.StatusCheck, null)
+                .GroupBy(_ => 1)
+                .Select(g => new ViewQaCountDto
+                {
+                    TotalNotReviewed = g.Count(s => s.StatusQa == SubmissionConst.QA_NOT_REVIEWED),
+                    TotalPassed = g.Count(s => s.StatusQa == SubmissionConst.QA_PASSED),
+                    TotalFailed = g.Count(s => s.StatusQa == SubmissionConst.QA_FAILED),
+                })
+                .SingleOrDefaultAsync() ?? new ViewQaCountDto();
+
+            return new BaseResponsePagingDto<GetListQaSubmissionDto>
+            {
+                Items = submissions,
+                TotalItems = totalItems,
+                CustomData = qaCounts,
+            };
+        }
+
+        public async Task<ViewQaSubmissionDetailDto?> FindQaById(int id, ISubmissionFilter filter, bool includePosition)
+        {
+            var detail = await (from s in _shDbContext.Submissions.AsNoTracking().Where(s => s.Id == id)
+                                let lastLog = _shDbContext.SubmissionLogs
+                                    .Where(l => l.SubmissionId == s.Id)
+                                    .OrderByDescending(l => l.CreatedDate)
+                                    .ThenByDescending(l => l.Id)
+                                    .FirstOrDefault()
+                                select new ViewQaSubmissionDetailDto
+                                {
+                                    Id = s.Id,
+                                    ProjectId = s.ProjectId,
+                                    DocumentTypeId = s.DocumentTypeId,
+                                    Name = s.Name,
+                                    FileName = s.FileName,
+                                    FileUrlS3Object = s.FileUrlS3Object,
+                                    ProfileRange = s.ProfileRange,
+                                    Box = s.Box,
+                                    StatusCheck = s.StatusCheck,
+                                    StatusQa = s.StatusQa,
+                                    QaReason = s.QaReason,
+                                    CreatedDate = s.CreatedDate,
+                                    ModifiedDate = s.ModifiedDate,
+                                    ModifiedBy = s.ModifiedBy,
+                                    QaBy = s.QaBy,
+                                    QaUserName = _shDbContext.Users.Where(u => u.Id == s.QaBy).Select(u => u.UserName).FirstOrDefault(),
+                                    QaDate = s.QaDate,
+                                    CheckedBy = lastLog != null ? lastLog.UserId : null,
+                                    CheckedUserName = lastLog != null
+                                        ? _shDbContext.Users.Where(u => u.Id == lastLog.UserId).Select(u => u.UserName).FirstOrDefault()
+                                        : null,
+                                    CheckedDate = lastLog != null ? lastLog.CreatedDate : null,
+                                    CheckNote = lastLog != null ? lastLog.Note : null,
+                                })
+                .FirstOrDefaultAsync();
+            if (detail == null)
+            {
+                return null;
+            }
+
+            await FillFieldsAndPositionAsync(detail, filter, includePosition);
+            return detail;
+        }
+
+        public async Task<BaseResponsePagingDto<GetListSubmissionQaLogDto>> FindQaLogPaging(int submissionId, FindPagingSubmissionQaLogDto dto)
+        {
+            var query = _shDbContext.SubmissionQaLogs
+                .AsNoTracking()
+                .Where(l => l.SubmissionId == submissionId);
+            var totalItems = await query.CountAsync();
+
+            var logs = await query
+                .OrderByDescending(l => l.CreatedDate)
+                .ThenByDescending(l => l.Id)
+                .Paging(dto)
+                .Select(l => new GetListSubmissionQaLogDto
+                {
+                    Id = l.Id,
+                    SubmissionId = l.SubmissionId,
+                    UserId = l.UserId,
+                    UserName = _shDbContext.Users.Where(u => u.Id == l.UserId).Select(u => u.UserName).FirstOrDefault(),
+                    FullName = _shDbContext.Users.Where(u => u.Id == l.UserId).Select(u => u.FullName).FirstOrDefault(),
+                    OldStatusQa = l.OldStatusQa,
+                    NewStatusQa = l.NewStatusQa,
+                    OldStatusCheck = l.OldStatusCheck,
+                    NewStatusCheck = l.NewStatusCheck,
+                    Reason = l.Reason,
+                    Description = l.Description,
+                    CreatedDate = l.CreatedDate,
+                })
+                .ToListAsync();
+
+            var qaLogIds = logs.Select(l => l.Id).ToList();
+            var wrongFields = await _shDbContext.SubmissionQaLogFields
+                .AsNoTracking()
+                .Where(f => qaLogIds.Contains(f.SubmissionQaLogId))
+                .OrderBy(f => f.DocumentFieldId)
+                .Select(f => new { f.SubmissionQaLogId, f.DocumentFieldId })
+                .ToListAsync();
+            foreach (var log in logs)
+            {
+                log.WrongDocumentFieldIds = wrongFields
+                    .Where(f => f.SubmissionQaLogId == log.Id)
+                    .Select(f => f.DocumentFieldId)
+                    .ToList();
+            }
+
+            return new BaseResponsePagingDto<GetListSubmissionQaLogDto>
+            {
+                Items = logs,
+                TotalItems = totalItems,
+            };
+        }
+
+        private async Task FillFieldsAndPositionAsync(ViewSubmissionDetailDto detail, ISubmissionFilter filter, bool includePosition)
+        {
+            detail.Fields = await (from pf in _shDbContext.ProjectDocumentTypeDocumentFields.AsNoTracking()
+                                   join d in _shDbContext.DocumentFields.AsNoTracking() on pf.DocumentFieldId equals d.Id
+                                   join sd in _shDbContext.SubmissionDatas.AsNoTracking().Where(x => x.SubmissionId == detail.Id)
+                                       on d.Id equals sd.DocumentFieldId into datas
+                                   from sd in datas.DefaultIfEmpty()
+                                   where pf.ProjectId == detail.ProjectId && pf.DocumentTypeId == detail.DocumentTypeId
+                                   orderby d.OrderListView, d.Id
+                                   select new SubmissionFieldDto
+                                   {
+                                       DocumentFieldId = d.Id,
+                                       Name = d.Name,
+                                       Field = d.Field,
+                                       FieldType = d.FieldType,
+                                       IsShow = d.IsShow,
+                                       IsChargeable = d.IsChargeable,
+                                       OrderListView = d.OrderListView,
+                                       IsShowListView = d.IsShowListView,
+                                       Width = d.Width,
+                                       SubmissionDataId = sd != null ? sd.Id : null,
+                                       Data = sd != null ? sd.Data : String.Empty,
+                                       IndexGoogleSheet = sd != null ? sd.IndexGoogleSheet : null,
+                                   })
+                .ToListAsync();
+
+            if (detail.StatusQa == SubmissionConst.QA_FAILED)
+            {
+                detail.QaWrongDocumentFieldIds = await _shDbContext.SubmissionQaLogFields
+                    .AsNoTracking()
+                    .Where(f => f.SubmissionQaLogId == _shDbContext.SubmissionQaLogs
+                        .Where(l => l.SubmissionId == detail.Id)
+                        .OrderByDescending(l => l.CreatedDate)
+                        .ThenByDescending(l => l.Id)
+                        .Select(l => l.Id)
+                        .FirstOrDefault())
+                    .OrderBy(f => f.DocumentFieldId)
+                    .Select(f => f.DocumentFieldId)
+                    .ToListAsync();
+            }
+
+            if (includePosition)
+            {
+                var counts = await ApplyFilter(filter, filter.StatusCheck, filter.StatusQa)
+                    .GroupBy(_ => 1)
+                    .Select(g => new
+                    {
+                        TotalItems = g.Count(),
+                        BeforeCount = g.Count(s => s.Id < detail.Id),
+                        IsMatched = g.Count(s => s.Id == detail.Id),
+                    })
+                    .SingleOrDefaultAsync();
+
+                detail.TotalItems = counts?.TotalItems ?? 0;
+                detail.Position = counts is { IsMatched: > 0 } ? counts.BeforeCount + 1 : null;
+            }
+        }
+
+        private IQueryable<Submission> ApplyFilter(ISubmissionFilter filter, int? statusCheck, int? statusQa)
         {
             var query = _shDbContext.Submissions
                 .AsNoTracking()
@@ -241,6 +412,11 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             if (statusCheck.HasValue)
             {
                 query = query.Where(s => s.StatusCheck == statusCheck.Value);
+            }
+
+            if (statusQa.HasValue)
+            {
+                query = query.Where(s => s.StatusQa == statusQa.Value);
             }
 
             var keyword = filter.Keyword?.Trim();

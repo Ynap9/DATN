@@ -1,6 +1,6 @@
 # Hồ sơ — xem, lọc, kiểm tra
 
-> **Phần 12/12** · trước: [11-ho-so-import.md](11-ho-so-import.md) · mục lục: [README.md](README.md)
+> **Phần 12/13** · trước: [11-ho-so-import.md](11-ho-so-import.md) · mục lục: [README.md](README.md)
 
 Sau khi import ([11-ho-so-import.md](11-ho-so-import.md)), người kiểm tra mở màn hình hồ sơ của **một dự án + một loại văn bản**:
 xem bảng, lọc, mở từng hồ sơ (PDF bên trái qua `proxy-file`, form trường bên phải), sửa dữ liệu rồi bấm **Kiểm tra**.
@@ -14,15 +14,16 @@ Không có phân việc: mọi user có quyền đều thấy toàn bộ hồ s�
 | `GET {id}` | `...Submission.View` | Chi tiết hồ sơ + form trường; `includePosition = true` thì có `position` / `totalItems` |
 | `GET {id}/next` | `...Submission.View` | Hồ sơ kế tiếp trong bộ lọc (nút "Sau"), trả chi tiết như `GET {id}` |
 | `GET {id}/previous` | `...Submission.View` | Hồ sơ liền trước trong bộ lọc (nút "Trước"), trả chi tiết như `GET {id}` |
-| `GET count` | `...Submission.View` | `total`, `totalChecked`, `totalNotChecked` theo bộ lọc |
-| `PUT {id}/check` | `Function.Construction.Submission.Check` | Sửa dữ liệu + chuyển `CHECKED` + ghi lịch sử |
+| `GET count` | `...Submission.View` | `total`, `totalChecked`, `totalNotChecked`, `totalReturned` theo bộ lọc (`statusCheck` trống: `total` = tổng ba số) |
+| `PUT check` | `Function.Construction.Submission.Check` | Sửa dữ liệu + chuyển `CHECKED` + ghi lịch sử (`id` hồ sơ nằm trong body) |
 | `GET {id}/logs` | `...Submission.View` | Lịch sử kiểm tra, mới nhất trước |
 
 Route có ràng buộc `{id:int}` để `paging`, `count`, `proxy-file` không khớp nhầm route `{id}`.
 
 ## Bộ lọc chung
 
-Năm API đọc nhận cùng bộ lọc query: `projectId`, `documentTypeId` (bắt buộc), `statusCheck` (bỏ trống = tất cả), `keyword`,
+Năm API đọc (và hai API QA ở [13-ho-so-qa.md](13-ho-so-qa.md)) nhận cùng bộ lọc query: `projectId`, `documentTypeId` (bắt buộc),
+`statusCheck` (`0` chưa kiểm tra, `1` đã kiểm tra, `2` trả lại; bỏ trống = tất cả), `statusQa` (`0` / `1` / `2`, bỏ trống = tất cả), `keyword`,
 `documentFieldId1` + `fieldValue1`, `documentFieldId2` + `fieldValue2`. Mọi API lọc qua **một** hàm `SubmissionQuery.ApplyFilter`,
 nên `count.total` luôn bằng `paging.totalItems`, và vị trí, hồ sơ liền kề cũng khớp với danh sách.
 
@@ -37,6 +38,7 @@ nên `count.total` luôn bằng `paging.totalItems`, và vị trí, hồ sơ li�
 
 - `pageSize` phải từ `1` đến `200` (`SubmissionConst.MAX_PAGE_SIZE`), không nhận `-1` → `400`.
 - `customData`: trường thuộc cấu hình dự án + loại văn bản và có `IsShowTableView = true`, sắp theo `OrderTableView`.
+- Mỗi dòng (và chi tiết `GET {id}`, `next`, `previous`) có `statusCheck`, `statusQa`, `qaReason`.
 - Mỗi dòng có `submissionDatas` theo thứ tự cột: `id`, `documentFieldId`, `data`, `indexRow`, `indexGoogleSheet` và `documentField`
   đầy đủ (cùng khuôn `GetListDocumentFieldDto` của API trường văn bản). Trường chưa có dữ liệu thì không có phần tử.
   Thông tin trường lấy **một lần** cho cả trang rồi gắn vào từng ô, không join lặp lại trong SQL.
@@ -59,11 +61,12 @@ nên `count.total` luôn bằng `paging.totalItems`, và vị trí, hồ sơ li�
 
 ## Kiểm tra hồ sơ
 
-Body: `{ projectId, documentTypeId, datas: [{ documentFieldId, data }], note }`.
+Body: `{ id, projectId, documentTypeId, datas: [{ documentFieldId, data }], note }` (trước 2026-10-21 là `PUT {id}/check`, id ở route).
 
-- Hồ sơ luôn chuyển sang `CHECKED`, kể cả đã `CHECKED` (tái kiểm tra). Mỗi lần bấm sinh đúng **một** `SubmissionLog` + **một**
-  `AuditLog`, kể cả không sửa ô nào.
-- `Description` của log: `Người dùng: {UserName} đã kiểm tra hồ sơ.` hoặc `... đã tái kiểm tra hồ sơ.`.
+- Hồ sơ luôn chuyển sang `CHECKED`, kể cả đã `CHECKED` (tái kiểm tra) hoặc đang `RETURNED`. Mỗi lần bấm sinh đúng **một** `SubmissionLog`
+  + **một** `AuditLog`, kể cả không sửa ô nào.
+- `Description` của log: `Người dùng: {UserName} đã kiểm tra hồ sơ.`, `... đã tái kiểm tra hồ sơ.` hoặc `... đã kiểm tra lại hồ sơ bị trả lại.`.
+- Hồ sơ bị trả lại: `StatusQa` về `0`, xoá `QaReason` để QA chấm lại. Tái kiểm tra **không** đổi `StatusQa` ([13-ho-so-qa.md](13-ho-so-qa.md)).
 - Dữ liệu:
   - trường đã có dữ liệu → so sau khi trim, khác thì ghi (cho phép xoá trắng); giữ nguyên `IndexGoogleSheet`, `IndexRow`;
   - trường chưa có dữ liệu → giá trị rỗng thì bỏ qua, khác rỗng thì thêm mới (`IndexRow` = `OrderFieldImport`, `IndexGoogleSheet` rỗng);
@@ -121,3 +124,5 @@ sớm không tốn thêm. Cộng thêm chi phí `[Permission]` mỗi request ([0
 
 ⚠️ `Description` lưu `UserName` **tại thời điểm kiểm tra**; đổi tên đăng nhập sau đó thì mô tả cũ không đổi, còn cột `userName` /
 `fullName` khi đọc lịch sử luôn là tên hiện tại.
+
+> **Tiếp:** [13-ho-so-qa.md](13-ho-so-qa.md) — QA hồ sơ đã kiểm tra, trả lại hồ sơ không đạt, lịch sử QA.

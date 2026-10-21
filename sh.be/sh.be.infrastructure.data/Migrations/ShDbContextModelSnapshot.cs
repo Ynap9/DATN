@@ -1217,6 +1217,38 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("SubmissionQaLog", "construction");
                 });
 
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.SubmissionQaLogField", b =>
+                {
+                    b.Property<int>("SubmissionQaLogId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DocumentFieldId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<bool>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("SubmissionQaLogId", "DocumentFieldId");
+
+                    b.ToTable("SubmissionQaLogField", "construction");
+                });
+
             modelBuilder.Entity("sh.be.domain.Module.Core.Entities.AuditLog", b =>
                 {
                     b.Property<long>("Id")

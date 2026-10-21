@@ -1,6 +1,6 @@
 # Hồ sơ — import Google Sheet và xem file (Construction)
 
-> **Phần 11/12** · trước: [10-lo-ky.md](10-lo-ky.md) · mục lục: [README.md](README.md)
+> **Phần 11/13** · trước: [10-lo-ky.md](10-lo-ky.md) · mục lục: [README.md](README.md)
 
 Hồ sơ (`construction.Submission`) = một file tài liệu số hoá = một dòng trên Google Sheet, thuộc một dự án và một loại văn bản.
 Giá trị từng trường của hồ sơ nằm ở `construction.SubmissionData` (một dòng cho mỗi cặp hồ sơ – trường). Nghiệp vụ lấy từ
@@ -53,7 +53,7 @@ Body chung (`ImportSubmissionDto`): `projectId`, `documentTypeId`, `fileColumnIm
 |---|---|---|---|
 | Append | `Project.UrlGoogleSheetSync` + `GoogleSheetName` | Tạo hồ sơ có khoá **chưa** có + `SubmissionData` cho **mọi** trường đã map (ô rỗng vẫn tạo, để blank điền sau). Hồ sơ đã có: bỏ qua | `Import thêm mới hồ sơ từ Google Sheet`, `Create` |
 | Blank | Như append | Hồ sơ **đã có**, ô sheet khác rỗng: data đang rỗng thì điền (`FillIfBlank`); chưa có data cho trường đó thì thêm. Không tạo hồ sơ, không ghi đè ô có dữ liệu; điền cả hồ sơ đã kiểm tra | `Import bổ sung dữ liệu trống từ Google Sheet`, `Update` |
-| Overwrite | `url` + `sheetName` trong body | Cột `columnImport` ghi đè trường `documentFieldId` của hồ sơ đã có. Ô rỗng: bỏ qua (không xoá). Giá trị giống cũ: không tính. Hồ sơ `CHECKED` bị bỏ qua khi `overwriteChecked = false` | `Import ghi đè trường dữ liệu từ Google Sheet`, `Update`, `OldData` / `NewData` = danh sách `SubmissionId, FileName, DocumentFieldId, Data` |
+| Overwrite | `url` + `sheetName` trong body | Cột `columnImport` ghi đè trường `documentFieldId` của hồ sơ đã có. Ô rỗng: bỏ qua (không xoá). Giá trị giống cũ: không tính. Hồ sơ `CHECKED` bị bỏ qua khi `overwriteChecked = false`; hồ sơ trả lại (`RETURNED`) vẫn bị ghi đè | `Import ghi đè trường dữ liệu từ Google Sheet`, `Update`, `OldData` / `NewData` = danh sách `SubmissionId, FileName, DocumentFieldId, Data` |
 
 Append tạo hồ sơ với `Name = FileName`, `StatusCheck = 0`, **một** link gán cho cả `FileUrlS3Object`, `FileUrlGoogleDrive`,
 `FileUrlGstore` (hiện link là S3/MinIO; Google Drive / Gstore làm sau).

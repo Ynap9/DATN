@@ -197,13 +197,13 @@ namespace sh.be.api.Controllers.Module.Construction
             }
         }
 
-        [HttpPut("{id:int}/check")]
+        [HttpPut("check")]
         [Permission(PermissionConstants.FUNCTION_SUBMISSION_CHECK)]
-        public async Task<ApiResponse> Check([FromRoute] int id, [FromBody] CheckSubmissionDto dto)
+        public async Task<ApiResponse> Check([FromBody] CheckSubmissionDto dto)
         {
             try
             {
-                var data = await _submissionService.Check(id, dto);
+                var data = await _submissionService.Check(dto);
                 return new(data);
             }
             catch (Exception ex)
@@ -219,6 +219,66 @@ namespace sh.be.api.Controllers.Module.Construction
             try
             {
                 var data = await _submissionService.FindLogPaging(id, dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("qa/paging")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindQaPaging([FromQuery] FindPagingQaSubmissionDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindQaPaging(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("{id:int}/qa")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindQaById([FromRoute] int id, [FromQuery] FindQaSubmissionDetailDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindQaById(id, dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPut("qa")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_QA)]
+        public async Task<ApiResponse> ReviewQa([FromBody] ReviewQaSubmissionDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.ReviewQa(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("{id:int}/qa-logs")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindQaLogPaging([FromRoute] int id, [FromQuery] FindPagingSubmissionQaLogDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindQaLogPaging(id, dto);
                 return new(data);
             }
             catch (Exception ex)

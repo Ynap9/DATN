@@ -11,5 +11,8 @@ namespace sh.be.applications.Module.Construction.Interfaces.Queries
         Task<int?> FindPreviousId(int id, ISubmissionFilter filter);
         Task<ViewCountSubmissionDto> Count(ISubmissionFilter filter);
         Task<BaseResponsePagingDto<GetListSubmissionLogDto>> FindLogPaging(int submissionId, FindPagingSubmissionLogDto dto);
+        Task<BaseResponsePagingDto<GetListQaSubmissionDto>> FindQaPaging(FindPagingQaSubmissionDto dto);
+        Task<ViewQaSubmissionDetailDto?> FindQaById(int id, ISubmissionFilter filter, bool includePosition);
+        Task<BaseResponsePagingDto<GetListSubmissionQaLogDto>> FindQaLogPaging(int submissionId, FindPagingSubmissionQaLogDto dto);
     }
 }

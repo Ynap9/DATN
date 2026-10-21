@@ -63,6 +63,16 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
             _shDbContext.SubmissionLogs.Add(log);
         }
 
+        public void AddQaLog(SubmissionQaLog log)
+        {
+            _shDbContext.SubmissionQaLogs.Add(log);
+        }
+
+        public void AddQaLogFields(IEnumerable<SubmissionQaLogField> fields)
+        {
+            _shDbContext.SubmissionQaLogFields.AddRange(fields);
+        }
+
         public Task<bool> ExistsByFileUrlAsync(string fileUrl)
         {
             return _shDbContext.Submissions.AnyAsync(s => s.FileUrlS3Object == fileUrl);

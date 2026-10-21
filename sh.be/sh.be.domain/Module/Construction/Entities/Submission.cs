@@ -101,16 +101,91 @@ namespace sh.be.domain.Module.Construction.Entities
             }
 
             var oldStatus = StatusCheck;
-            var description = oldStatus == SubmissionConst.CHECKED
-                ? $"Người dùng: {userName} đã tái kiểm tra hồ sơ."
-                : $"Người dùng: {userName} đã kiểm tra hồ sơ.";
+            var description = oldStatus switch
+            {
+                SubmissionConst.CHECKED => $"Người dùng: {userName} đã tái kiểm tra hồ sơ.",
+                SubmissionConst.RETURNED => $"Người dùng: {userName} đã kiểm tra lại hồ sơ bị trả lại.",
+                _ => $"Người dùng: {userName} đã kiểm tra hồ sơ.",
+            };
 
+            if (oldStatus == SubmissionConst.RETURNED)
+            {
+                StatusQa = SubmissionConst.QA_NOT_REVIEWED;
+                QaReason = null;
+            }
             StatusCheck = SubmissionConst.CHECKED;
             ModifiedBy = checkedBy;
             ModifiedDate = checkedDate;
 
             return SubmissionLog.Create(Id, ProjectId, DocumentTypeId, checkedBy, oldStatus, StatusCheck, description,
                 String.IsNullOrEmpty(trimmedNote) ? null : trimmedNote, changedDataCount, checkedBy, checkedDate);
+        }
+
+        public SubmissionQaLog ReviewQa(int result, string? reason, IReadOnlyCollection<int> wrongDocumentFieldIds,
+            IReadOnlyCollection<int> configuredDocumentFieldIds, string reviewedBy, string userName, DateTime reviewedDate)
+        {
+            if (!SubmissionConst.QA_RESULTS.Contains(result))
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Kết quả QA chỉ nhận 1 (Đạt) hoặc 2 (Không đạt)");
+            }
+            if (StatusCheck != SubmissionConst.CHECKED)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionNotCheckedForQa);
+            }
+
+            var trimmedReason = reason?.Trim();
+            if (String.IsNullOrEmpty(trimmedReason))
+            {
+                trimmedReason = null;
+            }
+            if (result == SubmissionConst.QA_FAILED && trimmedReason == null)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaReasonRequired);
+            }
+            if (trimmedReason?.Length > SubmissionConst.QA_REASON_MAX_LENGTH)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, $"Lý do tối đa {SubmissionConst.QA_REASON_MAX_LENGTH} ký tự");
+            }
+            if (result == SubmissionConst.QA_FAILED)
+            {
+                if (wrongDocumentFieldIds.Count == 0)
+                {
+                    throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaWrongFieldRequired);
+                }
+                if (wrongDocumentFieldIds.Distinct().Count() != wrongDocumentFieldIds.Count)
+                {
+                    throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionDataDuplicateField);
+                }
+                if (wrongDocumentFieldIds.Any(documentFieldId => !configuredDocumentFieldIds.Contains(documentFieldId)))
+                {
+                    throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentFieldNotInProject);
+                }
+            }
+
+            var oldStatusQa = StatusQa;
+            var oldStatusCheck = StatusCheck;
+            string description;
+            if (result == SubmissionConst.QA_PASSED)
+            {
+                StatusQa = SubmissionConst.QA_PASSED;
+                QaReason = null;
+                description = $"Người dùng: {userName} đánh giá hồ sơ ĐẠT.";
+            }
+            else
+            {
+                StatusQa = SubmissionConst.QA_FAILED;
+                QaReason = trimmedReason;
+                StatusCheck = SubmissionConst.RETURNED;
+                description = $"Người dùng: {userName} đánh giá hồ sơ KHÔNG ĐẠT và trả lại.";
+            }
+
+            QaBy = reviewedBy;
+            QaDate = reviewedDate;
+            ModifiedBy = reviewedBy;
+            ModifiedDate = reviewedDate;
+
+            return SubmissionQaLog.Create(Id, ProjectId, DocumentTypeId, reviewedBy, oldStatusQa, StatusQa, oldStatusCheck, StatusCheck,
+                QaReason, description, reviewedBy, reviewedDate);
         }
 
         public void EnsureBelongsTo(int projectId, int documentTypeId)

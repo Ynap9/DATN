@@ -5,6 +5,7 @@ namespace sh.be.applications.Module.Construction.Dtos.Submission
         int ProjectId { get; }
         int DocumentTypeId { get; }
         int? StatusCheck { get; }
+        int? StatusQa { get; }
         int? DocumentFieldId1 { get; }
         string? FieldValue1 { get; }
         int? DocumentFieldId2 { get; }

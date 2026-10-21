@@ -20,6 +20,7 @@
 | [10-lo-ky.md](10-lo-ky.md) | Lô ký (`SigningBatch`): tạo lô, tải / xoá file PDF, phiên ký, runner 3 chặng, đưa thư plugin, tạm dừng / huỷ, tiến độ, bản ký |
 | [11-ho-so-import.md](11-ho-so-import.md) | Hồ sơ (`Submission`, `SubmissionData`): import append / blank / overwrite từ Google Sheet, proxy xem file PDF |
 | [12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md) | Hồ sơ: danh sách, lọc, chi tiết, hồ sơ liền kề, đếm, kiểm tra / tái kiểm tra (`SubmissionLog`), lịch sử |
+| [13-ho-so-qa.md](13-ho-so-qa.md) | Hồ sơ: QA Đạt / Không đạt, trả lại, `StatusQa` độc lập với `StatusCheck`, lịch sử QA (`SubmissionQaLog`) |
 
 ## Thuật ngữ
 
@@ -38,7 +39,7 @@
 ## Ba quy tắc xuyên suốt
 
 - Mọi thao tác ghi đều tạo `AuditLog` **trong cùng transaction** với thay đổi dữ liệu (xem [04-nhat-ky-he-thong.md](04-nhat-ky-he-thong.md)).
-- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`108` (Auth), `201`–`210` (Core), `301`–`319` (Construction) hoặc `601`–`635` (DigitalSignature).
+- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`108` (Auth), `201`–`210` (Core), `301`–`321`, `324` (Construction) hoặc `601`–`635` (DigitalSignature).
 - Thời gian thao tác lấy theo giờ Việt Nam, người thao tác lấy từ token đăng nhập.
 
 Route trong các file nghiệp vụ viết rút gọn `api/<module>/...`; route thật có version: `api/v1/<module>/...` (từ 2026-10-20,

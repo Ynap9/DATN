@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using sh.be.shared.Constants.Construction;
 using sh.be.shared.Constants.Db;
 using sh.be.shared.Interfaces;
 using System.ComponentModel.DataAnnotations;
@@ -56,6 +57,17 @@ namespace sh.be.domain.Module.Construction.Entities
                 CreatedBy = createdBy,
                 CreatedDate = createdDate,
             };
+        }
+
+        public List<SubmissionQaLogField> CreateWrongFields(IReadOnlyCollection<int> wrongDocumentFieldIds, string? createdBy, DateTime createdDate)
+        {
+            if (NewStatusQa != SubmissionConst.QA_FAILED)
+            {
+                return [];
+            }
+            return wrongDocumentFieldIds
+                .Select(documentFieldId => SubmissionQaLogField.Create(Id, documentFieldId, createdBy, createdDate))
+                .ToList();
         }
     }
 }
