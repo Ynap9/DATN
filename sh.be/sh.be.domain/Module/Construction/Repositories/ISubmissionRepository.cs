@@ -6,6 +6,8 @@ namespace sh.be.domain.Module.Construction.Repositories
     public interface ISubmissionRepository
     {
         Task<Submission?> FindByIdAsync(int id);
+        Task<List<Submission>> GetByIdsAsync(IReadOnlyCollection<int> ids);
+        Task<int> SoftDeleteDatasBySubmissionIdsAsync(IReadOnlyCollection<int> submissionIds, string? deletedBy, DateTime deletedDate);
         Task<List<SubmissionData>> GetDatasBySubmissionIdAsync(int submissionId);
         void AddDatas(IEnumerable<SubmissionData> datas);
         void AddLog(SubmissionLog log);

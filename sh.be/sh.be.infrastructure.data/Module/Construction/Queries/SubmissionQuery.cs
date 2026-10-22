@@ -9,11 +9,30 @@ using sh.be.infrastructure.data.Base;
 using sh.be.infrastructure.data.Persistence.Db;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.HttpRequest.BaseRequest;
+using sh.be.shared.HttpRequest.Error;
+using sh.be.shared.HttpRequest.Exception;
 
 namespace sh.be.infrastructure.data.Module.Construction.Queries
 {
     public class SubmissionQuery : BaseQuery, ISubmissionQuery
     {
+        private const string ExportDateFormat = "dd/MM/yyyy HH:mm:ss";
+        private static readonly IReadOnlyList<string> ExportFixedHeaders =
+            ["STT", "Tên file", "Hồ sơ", "Hộp", "Đường dẫn", "Trạng thái kiểm tra", "Người kiểm tra", "Thời gian kiểm tra", "Trạng thái QA", "Lý do QA",
+                "Người sửa cuối", "Ngày sửa cuối"];
+        private static readonly IReadOnlyDictionary<int, string> CheckStatusNames = new Dictionary<int, string>
+        {
+            { SubmissionConst.NOT_CHECKED, "Chưa kiểm tra" },
+            { SubmissionConst.CHECKED, "Đã kiểm tra" },
+            { SubmissionConst.RETURNED, "Trả lại" },
+        };
+        private static readonly IReadOnlyDictionary<int, string> QaStatusNames = new Dictionary<int, string>
+        {
+            { SubmissionConst.QA_NOT_REVIEWED, "Chưa QA" },
+            { SubmissionConst.QA_PASSED, "Đạt" },
+            { SubmissionConst.QA_FAILED, "Không đạt" },
+        };
+
         public SubmissionQuery(ShDbContext shDbContext, IMapper mapper) : base(shDbContext, mapper)
         {
         }
@@ -506,6 +525,89 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 .Where(c => isChargeableByFieldId[c.DocumentFieldId] && c.StatusCheck == SubmissionConst.CHECKED)
                 .Sum(c => c.FilledCells);
             return summary;
+        }
+
+        public async Task<SubmissionExportTableDto> FindExportTable(ISubmissionFilter filter)
+        {
+            var query = ApplyFilter(filter, filter.StatusCheck, filter.StatusQa);
+            if (await query.CountAsync() > SubmissionConst.EXPORT_MAX_ROWS)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorExportTooManyRows,
+                    $"Số hồ sơ cần xuất vượt quá {SubmissionConst.EXPORT_MAX_ROWS}, hãy lọc bớt");
+            }
+
+            var submissions = await (from s in query.OrderBy(s => s.Id)
+                                     let lastLog = _shDbContext.SubmissionLogs
+                                         .Where(l => l.SubmissionId == s.Id)
+                                         .OrderByDescending(l => l.CreatedDate)
+                                         .ThenByDescending(l => l.Id)
+                                         .FirstOrDefault()
+                                     select new
+                                     {
+                                         s.Id,
+                                         s.FileName,
+                                         s.ProfileRange,
+                                         s.Box,
+                                         s.FileUrlS3Object,
+                                         s.StatusCheck,
+                                         CheckedBy = lastLog != null ? lastLog.UserId : null,
+                                         CheckedDate = lastLog != null ? (DateTime?)lastLog.CreatedDate : null,
+                                         s.StatusQa,
+                                         s.QaReason,
+                                         s.ModifiedBy,
+                                         s.ModifiedDate,
+                                     })
+                .ToListAsync();
+
+            var documentFields = await (from pf in _shDbContext.ProjectDocumentTypeDocumentFields.AsNoTracking()
+                                        join d in _shDbContext.DocumentFields.AsNoTracking() on pf.DocumentFieldId equals d.Id
+                                        where pf.ProjectId == filter.ProjectId && pf.DocumentTypeId == filter.DocumentTypeId && d.IsShowTableView
+                                        orderby d.OrderTableView, d.Id
+                                        select new { d.Id, d.Name })
+                .ToListAsync();
+            var documentFieldIds = documentFields.Select(d => d.Id).ToList();
+
+            var submissionIds = query.Select(s => s.Id);
+            var dataByCell = _shDbContext.SubmissionDatas
+                .AsNoTracking()
+                .Where(sd => sd.ProjectId == filter.ProjectId && sd.DocumentTypeId == filter.DocumentTypeId
+                    && documentFieldIds.Contains(sd.DocumentFieldId) && submissionIds.Contains(sd.SubmissionId))
+                .Select(sd => new { sd.SubmissionId, sd.DocumentFieldId, sd.Data })
+                .ToDictionary(sd => (sd.SubmissionId, sd.DocumentFieldId), sd => sd.Data);
+
+            var userIds = submissions.Select(s => s.CheckedBy).Concat(submissions.Select(s => s.ModifiedBy))
+                .Where(userId => userId != null).Select(userId => userId!).Distinct().ToList();
+            var userNameById = await _shDbContext.Users
+                .AsNoTracking()
+                .Where(u => userIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => u.UserName ?? u.Id);
+
+            return new SubmissionExportTableDto
+            {
+                ProjectName = await _shDbContext.Projects.AsNoTracking().Where(p => p.Id == filter.ProjectId).Select(p => p.Name).FirstOrDefaultAsync()
+                    ?? String.Empty,
+                DocumentTypeName = await _shDbContext.DocumentTypes.AsNoTracking().Where(d => d.Id == filter.DocumentTypeId).Select(d => d.Name).FirstOrDefaultAsync()
+                    ?? String.Empty,
+                Headers = ExportFixedHeaders.Concat(documentFields.Select(d => d.Name)).ToList(),
+                Rows = submissions.Select((s, index) => new List<string>
+                    {
+                        (index + 1).ToString(),
+                        s.FileName,
+                        s.ProfileRange,
+                        s.Box,
+                        s.FileUrlS3Object,
+                        CheckStatusNames.GetValueOrDefault(s.StatusCheck, String.Empty),
+                        s.CheckedBy != null ? userNameById.GetValueOrDefault(s.CheckedBy, s.CheckedBy) : String.Empty,
+                        s.CheckedDate?.ToString(ExportDateFormat) ?? String.Empty,
+                        QaStatusNames.GetValueOrDefault(s.StatusQa, String.Empty),
+                        s.QaReason ?? String.Empty,
+                        s.ModifiedBy != null ? userNameById.GetValueOrDefault(s.ModifiedBy, s.ModifiedBy) : String.Empty,
+                        s.ModifiedDate?.ToString(ExportDateFormat) ?? String.Empty,
+                    }
+                    .Concat(documentFieldIds.Select(fieldId => dataByCell.GetValueOrDefault((s.Id, fieldId), String.Empty)))
+                    .ToList())
+                    .ToList(),
+            };
         }
 
         private static SubmissionTreeCountDto SumTreeCounts(IEnumerable<SubmissionTreeCountDto> counts)

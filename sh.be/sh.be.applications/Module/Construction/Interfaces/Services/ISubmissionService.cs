@@ -1,3 +1,4 @@
+using sh.be.applications.Base.Dtos.Excel;
 using sh.be.applications.Module.Construction.Dtos.Submission;
 using sh.be.shared.HttpRequest.BaseRequest;
 
@@ -26,5 +27,7 @@ namespace sh.be.applications.Module.Construction.Interfaces.Services
         Task<ViewSubmissionTreeDto> FindTree(FindSubmissionTreeDto dto);
         Task<BaseResponsePagingDto<GetListProjectSubmissionLogDto>> FindProjectLogPaging(FindPagingProjectSubmissionLogDto dto);
         Task<ViewSubmissionSummaryDto> FindSummary(FindSubmissionSummaryDto dto);
+        Task<ViewDeleteSubmissionResultDto> Delete(DeleteSubmissionDto dto);
+        Task<ExportFileDto> ExportExcel(ExportSubmissionDto dto);
     }
 }

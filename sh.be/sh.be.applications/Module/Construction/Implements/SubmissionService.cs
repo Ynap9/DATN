@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using sh.be.applications.Base;
+using sh.be.applications.Base.Dtos.Excel;
 using sh.be.applications.Base.Interfaces;
 using sh.be.applications.Module.Construction.Dtos.Submission;
 using sh.be.applications.Module.Construction.Interfaces.Queries;
@@ -34,10 +35,11 @@ namespace sh.be.applications.Module.Construction.Implements
         private readonly IUserRepository _userRepository;
         private readonly SubmissionDomainService _submissionDomainService;
         private readonly IDataReader _dataReader;
+        private readonly IExcelTableWriter _excelTableWriter;
 
         public SubmissionService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<SubmissionService> logger, IRequestContext requestContext, TimeProvider timeProvider,
             ISubmissionQuery submissionQuery, ISubmissionRepository submissionRepository, IRoleRepository roleRepository, IUserRepository userRepository,
-            SubmissionDomainService submissionDomainService, IDataReader dataReader
+            SubmissionDomainService submissionDomainService, IDataReader dataReader, IExcelTableWriter excelTableWriter
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _submissionQuery = submissionQuery;
@@ -46,6 +48,7 @@ namespace sh.be.applications.Module.Construction.Implements
             _userRepository = userRepository;
             _submissionDomainService = submissionDomainService;
             _dataReader = dataReader;
+            _excelTableWriter = excelTableWriter;
         }
 
         public async Task<ViewVerifyImportAppendSubmissionDto> VerifyImportAppend(ImportSubmissionDto dto)
@@ -417,6 +420,55 @@ namespace sh.be.applications.Module.Construction.Implements
             _logger.LogInformation($"{nameof(FindSummary)}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
             return await _submissionQuery.FindSummary(dto.ProjectId, dto.DocumentTypeId);
+        }
+
+        public async Task<ViewDeleteSubmissionResultDto> Delete(DeleteSubmissionDto dto)
+        {
+            _logger.LogInformation($"{nameof(Delete)}, dto={JsonSerializer.Serialize(dto)}");
+            var currentUserId = getCurrentUserId();
+            var isSuperAdmin = PermissionGrantPolicy.IsSuperAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            var project = await _submissionDomainService.EnsureEditableProjectAsync(dto.ProjectId, isSuperAdmin);
+            var now = GetVietnamTime();
+
+            await using var transaction = await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                await _submissionDomainService.LockImportAsync(dto.ProjectId, dto.DocumentTypeId);
+                var submissions = await _submissionDomainService.EnsureSubmissionsDeletableAsync(dto.ProjectId, dto.DocumentTypeId, dto.Ids, isSuperAdmin);
+                foreach (var submission in submissions)
+                {
+                    submission.Delete(currentUserId, now);
+                }
+
+                var deletedDataCount = await _submissionRepository.SoftDeleteDatasBySubmissionIdsAsync(
+                    submissions.Select(submission => submission.Id).ToList(), currentUserId, now);
+                AddAuditLog(AuditLogConstants.ACTION_SUBMISSION_DELETE, AuditLogConstants.ACTION_TYPE_DELETE,
+                    $"Xóa {submissions.Count} hồ sơ của dự án {project.Name}, loại văn bản Id = {dto.DocumentTypeId}",
+                    submissions.Select(submission => new { submission.Id, submission.FileName, submission.ProfileRange, submission.Box, submission.StatusCheck, submission.StatusQa }));
+                await _unitOfWork.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+                return new ViewDeleteSubmissionResultDto
+                {
+                    DeletedSubmissionCount = submissions.Count,
+                    DeletedDataCount = deletedDataCount,
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{nameof(Delete)}, projectId={dto.ProjectId}, documentTypeId={dto.DocumentTypeId}");
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        public async Task<ExportFileDto> ExportExcel(ExportSubmissionDto dto)
+        {
+            _logger.LogInformation($"{nameof(ExportExcel)}, dto={JsonSerializer.Serialize(dto)}");
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            var table = await _submissionQuery.FindExportTable(dto);
+            return _excelTableWriter.CreateTable($"{table.ProjectName}_{table.DocumentTypeName}_{GetVietnamTime():yyyyMMddHHmm}", table.DocumentTypeName,
+                table.Headers, table.Rows);
         }
 
         private async Task<ProjectSheetSource> LoadAppendSheetAsync(ImportSubmissionDto dto)

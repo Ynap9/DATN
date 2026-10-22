@@ -59,7 +59,9 @@ namespace sh.be.shared.HttpRequest.Error
         public const int ConstructionErrorSubmissionNotInDocumentType = 319;
         public const int ConstructionErrorSubmissionNotCheckedForQa = 320;
         public const int ConstructionErrorQaReasonRequired = 321;
+        public const int ConstructionErrorExportTooManyRows = 322;
         public const int ConstructionErrorQaWrongFieldRequired = 324;
+        public const int ConstructionErrorSubmissionCheckedNotDeletable = 325;
 
         public const int DigitalSignatureErrorTemplateNotFound = 601;
         public const int DigitalSignatureErrorInvalidTemplatePositionKind = 602;

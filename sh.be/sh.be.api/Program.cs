@@ -257,6 +257,7 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddScoped<IDataReader, GoogleSheetReader>();
 builder.Services.AddScoped<IExcelTemplateWriter, ExcelTemplateWriter>();
+builder.Services.AddScoped<IExcelTableWriter, ExcelTableWriter>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IDocumentTypeRepository, DocumentTypeRepository>();

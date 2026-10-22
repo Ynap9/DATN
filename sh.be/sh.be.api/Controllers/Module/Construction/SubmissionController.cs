@@ -347,6 +347,36 @@ namespace sh.be.api.Controllers.Module.Construction
             }
         }
 
+        [HttpDelete("")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_DELETE)]
+        public async Task<ApiResponse> Delete([FromBody] DeleteSubmissionDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.Delete(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("export-excel")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_EXPORT)]
+        public async Task<IActionResult> ExportExcel([FromQuery] ExportSubmissionDto dto)
+        {
+            try
+            {
+                var file = await _submissionService.ExportExcel(dto);
+                return File(file.Content, file.ContentType, file.FileName);
+            }
+            catch (Exception ex)
+            {
+                return Ok(OkException(ex));
+            }
+        }
+
         [HttpGet("proxy-file")]
         [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
         public async Task<IActionResult> ProxyFile([FromQuery] string url)

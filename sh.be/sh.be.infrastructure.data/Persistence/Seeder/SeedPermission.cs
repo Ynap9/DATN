@@ -66,6 +66,8 @@ namespace sh.be.infrastructure.data.Persistence.Seeder
             Permission.Create(PermissionConstants.FUNCTION_SUBMISSION_IMPORT, "Import hồ sơ từ Google Sheet", PermissionConstants.MENU_SUBMISSION, PermissionConstants.MODULE_CONSTRUCTION, null),
             Permission.Create(PermissionConstants.FUNCTION_SUBMISSION_CHECK, "Kiểm tra và sửa dữ liệu hồ sơ", PermissionConstants.MENU_SUBMISSION, PermissionConstants.MODULE_CONSTRUCTION, null),
             Permission.Create(PermissionConstants.FUNCTION_SUBMISSION_QA, "Đánh giá QA hồ sơ", PermissionConstants.MENU_SUBMISSION, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_SUBMISSION_DELETE, "Xoá hồ sơ", PermissionConstants.MENU_SUBMISSION, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_SUBMISSION_EXPORT, "Xuất Excel hồ sơ", PermissionConstants.MENU_SUBMISSION, PermissionConstants.MODULE_CONSTRUCTION, null),
 
             Permission.Create(PermissionConstants.MENU_DIGITAL_SIGNATURE, "Menu ký số", null, PermissionConstants.MODULE_DIGITAL_SIGNATURE, null),
 

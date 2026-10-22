@@ -1,5 +1,6 @@
 using sh.be.domain.Module.Construction.Entities;
 using sh.be.domain.Module.Construction.Repositories;
+using sh.be.shared.Constants.Construction;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
 
@@ -37,6 +38,38 @@ namespace sh.be.domain.Module.Construction.Services
         {
             return await _submissionRepository.FindByIdAsync(submissionId)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionNotFound);
+        }
+
+        public async Task<List<Submission>> EnsureSubmissionsDeletableAsync(int projectId, int documentTypeId, IReadOnlyCollection<int> ids, bool isSuperAdmin)
+        {
+            var distinctIds = ids.Distinct().ToList();
+            if (distinctIds.Count == 0)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Chưa chọn hồ sơ");
+            }
+            if (distinctIds.Count > SubmissionConst.DELETE_MAX_ITEMS)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, $"Tối đa {SubmissionConst.DELETE_MAX_ITEMS} hồ sơ mỗi lần");
+            }
+
+            var submissions = await _submissionRepository.GetByIdsAsync(distinctIds);
+            var missingIds = distinctIds.Except(submissions.Select(submission => submission.Id)).ToList();
+            if (missingIds.Count > 0)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionNotFound, $"Hồ sơ không tồn tại: Id = {string.Join(", ", missingIds)}");
+            }
+            foreach (var submission in submissions)
+            {
+                submission.EnsureBelongsTo(projectId, documentTypeId);
+            }
+
+            var checkedIds = submissions.Where(submission => submission.IsChecked()).Select(submission => submission.Id).ToList();
+            if (!isSuperAdmin && checkedIds.Count > 0)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionCheckedNotDeletable,
+                    $"Không được xoá hồ sơ đã kiểm tra: Id = {string.Join(", ", checkedIds)}");
+            }
+            return submissions;
         }
 
         public async Task<Project> EnsureEditableProjectAsync(int projectId, bool isSuperAdmin)
