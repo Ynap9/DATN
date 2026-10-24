@@ -14,6 +14,9 @@ namespace sh.be.applications.Module.Construction.Dtos.Submission
         [FromQuery(Name = "statusCheck")]
         public int? StatusCheck { get; set; }
 
+        [FromQuery(Name = "statusQa")]
+        public int? StatusQa { get; set; }
+
         [FromQuery(Name = "documentFieldId1")]
         public int? DocumentFieldId1 { get; set; }
 

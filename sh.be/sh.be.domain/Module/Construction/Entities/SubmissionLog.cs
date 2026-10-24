@@ -8,6 +8,7 @@ namespace sh.be.domain.Module.Construction.Entities
 {
     [Table(nameof(SubmissionLog), Schema = DbSchemas.Construction)]
     [Index(nameof(SubmissionId), nameof(CreatedDate), Name = "IX_SubmissionLog_SubmissionId_CreatedDate")]
+    [Index(nameof(ProjectId), nameof(DocumentTypeId), nameof(CreatedDate), Name = "IX_SubmissionLog_ProjectId_DocumentTypeId_CreatedDate")]
     public class SubmissionLog : ISoftDeleted
     {
         [Key]

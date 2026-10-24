@@ -34,6 +34,8 @@ namespace sh.be.infrastructure.data.Persistence.Db
         public DbSet<Submission> Submissions { get; set; }
         public DbSet<SubmissionData> SubmissionDatas { get; set; }
         public DbSet<SubmissionLog> SubmissionLogs { get; set; }
+        public DbSet<SubmissionQaLog> SubmissionQaLogs { get; set; }
+        public DbSet<SubmissionQaLogField> SubmissionQaLogFields { get; set; }
         public DbSet<Template> Templates { get; set; }
         public DbSet<TemplatePosition> TemplatePositions { get; set; }
         public DbSet<SigningBatch> SigningBatches { get; set; }
@@ -132,6 +134,18 @@ namespace sh.be.infrastructure.data.Persistence.Db
                 entity.Property(e => e.Deleted).HasDefaultValue(0);
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
             });
+            modelBuilder.Entity<SubmissionQaLog>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
+            modelBuilder.Entity<SubmissionQaLogField>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
             modelBuilder.Entity<Template>(entity =>
             {
                 entity.HasQueryFilter(e => !e.Deleted);
@@ -171,6 +185,8 @@ namespace sh.be.infrastructure.data.Persistence.Db
                 .HasKey(pd => new { pd.ProjectId, pd.DocumentTypeId });
             modelBuilder.Entity<ProjectDocumentTypeDocumentField>()
                 .HasKey(pf => new { pf.ProjectId, pf.DocumentTypeId, pf.DocumentFieldId });
+            modelBuilder.Entity<SubmissionQaLogField>()
+                .HasKey(qf => new { qf.SubmissionQaLogId, qf.DocumentFieldId });
             base.OnModelCreating(modelBuilder);
         }
     }
