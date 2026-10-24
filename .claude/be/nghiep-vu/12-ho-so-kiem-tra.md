@@ -1,10 +1,10 @@
 # Hồ sơ — xem, lọc, kiểm tra
 
-> **Phần 12/13** · trước: [11-ho-so-import.md](11-ho-so-import.md) · mục lục: [README.md](README.md)
+> **Phần 12/14** · trước: [11-ho-so-import.md](11-ho-so-import.md) · mục lục: [README.md](README.md)
 
 Sau khi import ([11-ho-so-import.md](11-ho-so-import.md)), người kiểm tra mở màn hình hồ sơ của **một dự án + một loại văn bản**:
 xem bảng, lọc, mở từng hồ sơ (PDF bên trái qua `proxy-file`, form trường bên phải), sửa dữ liệu rồi bấm **Kiểm tra**.
-Không có phân việc: mọi user có quyền đều thấy toàn bộ hồ sơ của dự án.
+Không có phân việc: mọi user có quyền đều thấy toàn bộ hồ sơ của dự án. Xoá hồ sơ và xuất Excel nằm ở [14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md).
 
 ## Các chức năng
 

@@ -1,4 +1,4 @@
-using sh.be.applications.Base.Dtos.File;
+using sh.be.applications.Base.Dtos.Storage;
 
 namespace sh.be.applications.Module.Construction.Interfaces.Services
 {

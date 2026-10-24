@@ -1,15 +1,18 @@
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using sh.be.applications.Base;
-using sh.be.applications.Base.Dtos.Spreadsheet;
-using sh.be.applications.Base.Interfaces;
+using sh.be.applications.Base.Dtos.DataReader;
+using sh.be.applications.Base.Interfaces.External.DataReader;
+using sh.be.applications.Base.Interfaces.Api;
 using sh.be.applications.Module.Construction.Dtos.Project;
 using sh.be.applications.Module.Construction.Interfaces.Queries;
 using sh.be.applications.Module.Construction.Interfaces.Services;
 using sh.be.domain.Base;
-using sh.be.domain.Module.Construction.Entities;
-using sh.be.domain.Module.Construction.Repositories;
-using sh.be.domain.Module.Construction.Services;
+using sh.be.domain.Module.Construction.DocumentFields.Repositories;
+using sh.be.domain.Module.Construction.DocumentTypes.Services;
+using sh.be.domain.Module.Construction.Projects.Entities;
+using sh.be.domain.Module.Construction.Projects.Repositories;
+using sh.be.domain.Module.Construction.Projects.Services;
 using sh.be.domain.Module.Core.Repositories;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.Constants.Core;
@@ -28,11 +31,11 @@ namespace sh.be.applications.Module.Construction.Implements
         private readonly ProjectDomainService _projectDomainService;
         private readonly DocumentTypeDomainService _documentTypeDomainService;
         private readonly ProjectConfigDomainService _projectConfigDomainService;
-        private readonly ISpreadsheetWriter _spreadsheetWriter;
+        private readonly IGoogleSheetExternal _googleSheetExternal;
 
         public ProjectService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<ProjectService> logger, IRequestContext requestContext, TimeProvider timeProvider,
             IProjectRepository projectRepository, IDocumentFieldRepository documentFieldRepository, IProjectQuery projectQuery, ProjectDomainService projectDomainService,
-            DocumentTypeDomainService documentTypeDomainService, ProjectConfigDomainService projectConfigDomainService, ISpreadsheetWriter spreadsheetWriter
+            DocumentTypeDomainService documentTypeDomainService, ProjectConfigDomainService projectConfigDomainService, IGoogleSheetExternal googleSheetExternal
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _projectRepository = projectRepository;
@@ -41,7 +44,7 @@ namespace sh.be.applications.Module.Construction.Implements
             _projectDomainService = projectDomainService;
             _documentTypeDomainService = documentTypeDomainService;
             _projectConfigDomainService = projectConfigDomainService;
-            _spreadsheetWriter = spreadsheetWriter;
+            _googleSheetExternal = googleSheetExternal;
         }
 
         public async Task<List<GetListProjectDto>> GetList()
@@ -83,7 +86,7 @@ namespace sh.be.applications.Module.Construction.Implements
 
             var project = Project.Create(dto.Name, dto.StartedAt, dto.EndedAt, currentUserId, now);
             var account = await GetSpreadsheetAccountAsync();
-            var spreadsheet = await _spreadsheetWriter.CreateSpreadsheetAsync(account, project.Name, project.GoogleSheetName);
+            var spreadsheet = await _googleSheetExternal.CreateSpreadsheetAsync(account, project.Name, project.GoogleSheetName);
 
             await using var transaction = await _unitOfWork.BeginTransactionAsync();
             try
@@ -103,7 +106,7 @@ namespace sh.be.applications.Module.Construction.Implements
             {
                 _logger.LogError(ex, $"{nameof(Create)}, spreadsheetId={spreadsheet.SpreadsheetId}");
                 await transaction.RollbackAsync();
-                await _spreadsheetWriter.TryDeleteSpreadsheetAsync(account, spreadsheet.SpreadsheetId);
+                await _googleSheetExternal.TryDeleteSpreadsheetAsync(account, spreadsheet.SpreadsheetId);
                 throw;
             }
 
@@ -134,7 +137,7 @@ namespace sh.be.applications.Module.Construction.Implements
             if (project.Name != oldName)
             {
                 renamedAccount = await GetSpreadsheetAccountAsync();
-                await _spreadsheetWriter.RenameSpreadsheetAsync(renamedAccount, project.UrlGoogleSheetSync, project.Name);
+                await _googleSheetExternal.RenameSpreadsheetAsync(renamedAccount, project.UrlGoogleSheetSync, project.Name);
             }
 
             await using var transaction = await _unitOfWork.BeginTransactionAsync();
@@ -156,7 +159,7 @@ namespace sh.be.applications.Module.Construction.Implements
                 await transaction.RollbackAsync();
                 if (renamedAccount != null)
                 {
-                    await _spreadsheetWriter.TryRenameSpreadsheetAsync(renamedAccount, project.UrlGoogleSheetSync, oldName);
+                    await _googleSheetExternal.TryRenameSpreadsheetAsync(renamedAccount, project.UrlGoogleSheetSync, oldName);
                 }
                 throw;
             }

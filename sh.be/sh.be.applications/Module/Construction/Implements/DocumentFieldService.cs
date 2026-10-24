@@ -2,14 +2,16 @@ using AutoMapper;
 using Microsoft.Extensions.Logging;
 using sh.be.applications.Base;
 using sh.be.applications.Base.Dtos.DataReader;
-using sh.be.applications.Base.Interfaces;
+using sh.be.applications.Base.Interfaces.External.DataReader;
+using sh.be.applications.Base.Interfaces.Api;
 using sh.be.applications.Module.Construction.Dtos.DocumentField;
 using sh.be.applications.Module.Construction.Interfaces.Queries;
 using sh.be.applications.Module.Construction.Interfaces.Services;
 using sh.be.domain.Base;
-using sh.be.domain.Module.Construction.Entities;
-using sh.be.domain.Module.Construction.Repositories;
-using sh.be.domain.Module.Construction.Services;
+using sh.be.domain.Module.Construction.DocumentFields.Entities;
+using sh.be.domain.Module.Construction.DocumentFields.Repositories;
+using sh.be.domain.Module.Construction.DocumentFields.Services;
+using sh.be.domain.Module.Construction.Projects.Repositories;
 using sh.be.domain.Module.Core.Repositories;
 using sh.be.shared.Constants.Core;
 using sh.be.shared.HttpRequest.BaseRequest;
@@ -25,17 +27,17 @@ namespace sh.be.applications.Module.Construction.Implements
         private readonly IProjectRepository _projectRepository;
         private readonly IDocumentFieldQuery _documentFieldQuery;
         private readonly DocumentFieldDomainService _documentFieldDomainService;
-        private readonly IDataReader _dataReader;
+        private readonly IDataReaderExternal _dataReaderExternal;
 
         public DocumentFieldService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<DocumentFieldService> logger, IRequestContext requestContext, TimeProvider timeProvider,
-            IDocumentFieldRepository documentFieldRepository, IProjectRepository projectRepository, IDocumentFieldQuery documentFieldQuery, DocumentFieldDomainService documentFieldDomainService, IDataReader dataReader
+            IDocumentFieldRepository documentFieldRepository, IProjectRepository projectRepository, IDocumentFieldQuery documentFieldQuery, DocumentFieldDomainService documentFieldDomainService, IDataReaderExternal dataReaderExternal
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _documentFieldRepository = documentFieldRepository;
             _projectRepository = projectRepository;
             _documentFieldQuery = documentFieldQuery;
             _documentFieldDomainService = documentFieldDomainService;
-            _dataReader = dataReader;
+            _dataReaderExternal = dataReaderExternal;
         }
 
         public async Task<List<GetListDocumentFieldDropDownDto>> GetDocumentFieldDropDown(int documentTypeId)
@@ -60,14 +62,14 @@ namespace sh.be.applications.Module.Construction.Implements
         public async Task<List<SheetHeaderDto>> GetSheetHeaders(GetSheetHeaderDto dto)
         {
             _logger.LogInformation($"{nameof(GetSheetHeaders)}, dto={JsonSerializer.Serialize(dto)}");
-            return await _dataReader.GetSheetHeadersAsync(dto.Url);
+            return await _dataReaderExternal.GetSheetHeadersAsync(dto.Url);
         }
 
         public async Task<List<FieldImportHeaderDto>> MapFieldImport(MapFieldImportDto dto)
         {
             _logger.LogInformation($"{nameof(MapFieldImport)}, dto={JsonSerializer.Serialize(dto)}");
             await _documentFieldDomainService.EnsureDocumentTypeExistsAsync(dto.DocumentTypeId);
-            var headers = await _dataReader.GetHeadersAsync(dto.Url, dto.SheetName, dto.HeaderStartIndex);
+            var headers = await _dataReaderExternal.GetHeadersAsync(dto.Url, dto.SheetName, dto.HeaderStartIndex);
             var fieldImports = await _documentFieldQuery.GetListFieldImport(dto.DocumentTypeId);
 
             foreach (var fieldImport in fieldImports)

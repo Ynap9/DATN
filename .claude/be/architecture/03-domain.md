@@ -12,7 +12,12 @@ Module/<TenModule>/
   Entities/                     dữ liệu + hành vi của chính entity
   Services/                     domain service (cần repository) và policy (hàm thuần)
   Repositories/                 interface repository — implement ở infrastructure.data
+Module/Construction/<NghiepVu>/ module lớn: gom theo nghiệp vụ trước, vai trò sau
+  DocumentTypes/ DocumentFields/ Projects/ Submissions/   mỗi thư mục có Entities/ Repositories/ Services/
 ```
+
+⚠️ Thư mục nghiệp vụ đặt tên **số nhiều** (`Submissions/`, không `Submission/`): namespace `...Construction.Submission`
+sẽ che entity `Submission` trong code domain (CS0118).
 
 ## Entity giàu hành vi
 
@@ -65,9 +70,9 @@ gọi chúng bên trong method của aggregate gốc hoặc seeder; đừng gọ
 | Tra cứu dữ liệu khác (qua repository) | Domain service | `UserDomainService.EnsureUniqueAsync`, `RoleDomainService.EnsureAllExistAsync` |
 | Phép tính thuần, không I/O | Policy tĩnh | `PermissionGrantPolicy.ResolveGrantedKeys`, `IsSuperAdmin`, `HasAnyPermission`; `FieldImportMatchPolicy.IsMatch` / `ToMatchKey`; `TemplateImagePolicy` (kiểm ảnh mẫu chữ ký → `612`, dựng object key); `PluginVersionPolicy` (whitelist phiên bản plugin); `SigningBatchFilePolicy` (trần 200 file / lượt → `617`, nhận `.pdf` không rỗng, ký đè → `628`, dựng key nguồn / bản ký, đổi exception thành lỗi lưu cho file) |
 
-`Services/Import/` (Construction) là policy **thuần**, chạy song song an toàn: `SubmissionKeyPolicy`, `SheetCellAddressPolicy`,
+`Construction/Submissions/Services/Import/` là policy **thuần**, chạy song song an toàn: `SubmissionKeyPolicy`, `SheetCellAddressPolicy`,
 `SubmissionImportColumnPolicy`, `SubmissionImportPolicy` (dựng `Append/Blank/OverwriteImportPlan` dùng chung cho verify và import) +
-record trong `Import/Models/`. `Services/Check/SubmissionCheckPolicy` cũng thuần: dựng `SubmissionCheckPlan` (ô sửa, ô thêm, thay đổi cho audit) cho API kiểm tra hồ sơ, lỗi `318` / `311`. Bảng đọc từ nguồn (`SheetTable`, `SheetRow`) ở `domain/Base/Models` vì `IDataReader` dùng chung mọi module.
+record trong `Import/Models/`. `Submissions/Services/Check/SubmissionCheckPolicy` cũng thuần: dựng `SubmissionCheckPlan` (ô sửa, ô thêm, thay đổi cho audit) cho API kiểm tra hồ sơ, lỗi `318` / `311`. Bảng đọc từ nguồn (`SheetTable`, `SheetRow`) ở `domain/Base/Models` vì `IDataReaderExternal` dùng chung mọi module.
 
 Entity **không** được giữ repository. Domain service nhận repository qua constructor và được đăng ký DI dạng
 class cụ thể.

@@ -21,7 +21,7 @@
 | Lưu / nạp aggregate | Interface `domain/.../Repositories/` + implement `infrastructure.data/.../Repositories/` |
 | Màn hình danh sách, chi tiết, dropdown | Interface `applications/.../Interfaces/Queries/` + implement `infrastructure.data/.../Queries/` |
 | Luồng use case, transaction, audit | `applications/.../Implements/` |
-| Gọi dịch vụ ngoài | Interface ở applications + implement ở `infrastructure.external` |
+| Gọi dịch vụ ngoài | `I<Ten>External` ở `applications/Base/Interfaces/External/<Muc>/` + implement ở `infrastructure.external/<Muc>/Implements/` |
 | Nhận HTTP, kiểm quyền | `api/Controllers`, `[Permission]` |
 
 ## Comment
@@ -49,6 +49,7 @@
   `sh.be.applications.Module.Auth.Interfaces.Queries`…
 - Interface tiền tố `I`; implement cùng tên bỏ `I` (`IRoleQuery` → `RoleQuery`).
 - Repository: `I<Aggregate>Repository`. Query: `I<Aggregate>Query`. Domain service: `<Aggregate>DomainService`.
+  Cổng ra bên thứ ba: `I<Ten>External` → `<NhaCungCap><Ten>External`, field `_<ten>External` (không dùng `Service`, `Client`, `Writer`…).
 - Factory entity: `static Create(...)`. Đổi trạng thái: động từ nghiệp vụ (`Delete`, `AssignRoles`).
 - Field private dạng `_camelCase`. Method async có hậu tố `Async` ở repository / domain service.
 - ⚠️ `BaseService.getCurrentUserId()` viết thường chữ đầu (quy ước cũ). Giữ nguyên, đừng đổi tên lan khắp nơi.

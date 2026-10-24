@@ -1,4 +1,4 @@
-using sh.be.applications.Base.Dtos.Plugin;
+using sh.be.applications.Base.Dtos.Storage;
 using sh.be.applications.Module.DigitalSignature.Dtos.Plugin;
 
 namespace sh.be.applications.Module.DigitalSignature.Interfaces.Services
