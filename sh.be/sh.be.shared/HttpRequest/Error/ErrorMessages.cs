@@ -60,6 +60,7 @@ namespace sh.be.shared.HttpRequest.Error
             { ErrorCodes.ConstructionErrorSubmissionNotCheckedForQa, "Chỉ QA được hồ sơ đã kiểm tra" },
             { ErrorCodes.ConstructionErrorQaReasonRequired, "Đánh giá không đạt phải nhập lý do" },
             { ErrorCodes.ConstructionErrorExportTooManyRows, "Số hồ sơ cần xuất vượt quá giới hạn, hãy lọc bớt" },
+            { ErrorCodes.ConstructionErrorProjectExpired, "Dự án đã hết hạn, không được thao tác hồ sơ" },
             { ErrorCodes.ConstructionErrorQaWrongFieldRequired, "Đánh giá không đạt phải chọn ít nhất một trường sai" },
             { ErrorCodes.ConstructionErrorSubmissionCheckedNotDeletable, "Không được xoá hồ sơ đã kiểm tra" },
             { ErrorCodes.DigitalSignatureErrorTemplateNotFound, "Mẫu chữ ký không tồn tại" },

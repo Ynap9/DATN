@@ -12,7 +12,7 @@ Service và external chỉ nối qua interface: đổi nhà cung cấp không ch
 | `BackgroundJob` | `IBackgroundJobExternal` → `HangfireBackgroundJobExternal`; cấu hình Hangfire ở `Base/HangfireExtensions` |
 | `DataReader` | `IDataReaderExternal` → `GoogleSheetReaderExternal` (qua `Base/DataReaderExternalBase`); `IExcelExternal` → `ExcelExternal`; `IGoogleSheetExternal` → `GoogleSheetExternal` |
 | `DigitalSignature` | `IPdfSignerExternal`, `ISigningQueueExternal`, `ITimestampExternal`, `ICertificateValidatorExternal` → `...External` cùng tên (singleton). Xem [09-chu-ky-so.md](09-chu-ky-so.md) |
-| `Mail` | `IMailExternal` → `MailExternal`; HTML ở `Mail/Templates/` (embedded resource) |
+| `Mail` | `IMailExternal` → `MailExternal`; HTML ở `Mail/Templates/` (embedded resource: `AccountCreated`, `ProjectDeadline`), đọc qua `Base/MailTemplateLoader` |
 | `SignalR` | `ISignalRExternal` → `SignalRExternal` (singleton); hub, tracker, cấu hình ở `Base/` |
 | `Storage` | `IFileStorageExternal` → `S3FileStorageExternal` (MinIO); `IFileDownloadExternal` → `HttpFileDownloadExternal`; `ISampleFileExternal` → `SampleFileExternal` (PDF nhúng `Storage/Files/*.pdf`); `IPluginSetupExternal` → `PluginSetupExternal` |
 
@@ -26,16 +26,16 @@ Service và external chỉ nối qua interface: đổi nhà cung cấp không ch
 
 ## BackgroundJob — Hangfire
 
-`AddHangfireBackgroundJob(connectionString)` (`#region hangfire`, ngay sau `#region db`): storage SQL Server chung `SO_HOA_DB`,
-`SchemaName = DbSchemas.Hangfire` (`hangfire`), kèm `AddHangfireServer()`. 11 bảng (`Job`, `State`, `Server`…) do **Hangfire tự tạo** lúc
-khởi động, không qua EF migration — `has-pending-model-changes` không thấy. Bản 1.8.25, mặc định đã là cấu hình khuyến nghị.
-
-`UseHangfireBackgroundJobDashboard(isReadOnly)` mở `/hangfire` (`BackgroundJobConst.DASHBOARD_PATH`) sau `UseAuthorization()`;
-`AnonymousDashboardAuthorizationFilter` cho mọi request, chỉ đọc khi **không** phải Development. `GET api/v1/core/background-job/connection`
-(`[AllowAnonymous]`) trả `{ isConnected, serverCount }` qua `GetMonitoringApi().Servers()`; lỗi storage → `isConnected = false`.
-
-⚠️ Dashboard và API kiểm tra kết nối **không cần đăng nhập** theo yêu cầu: ai vào được máy chủ đều xem được job (ngoài Development chỉ
-xem). Muốn khoá thì thay filter, đừng thêm `[Authorize]` vào `/hangfire`. Hub SignalR thì **bắt buộc** token (mục dưới).
+`AddHangfireBackgroundJob(connectionString, BackgroundJobSettings)`: SQL Server chung `SO_HOA_DB`, schema `hangfire` (11 bảng Hangfire **tự tạo**,
+ngoài EF migration), bản 1.8.25, retry `RETRY_ATTEMPTS = 2`, `AddHangfireServer(WorkerCount)` chỉ khi `BackgroundJob:Enabled`. Cổng ra:
+`AddOrUpdateRecurring<TJob>(id, job => job.ExecuteAsync(), cron, timeZone)`, `TriggerRecurring` (trả jobId, chưa đăng ký → `null`), `FindRecurring`
+(giờ đổi về múi giờ của job). Job là class thường ở `applications/Module/<M>/Jobs/` kế thừa `BaseService`, `AddScoped`, người thao tác `SYSTEM_USER`;
+`api/Worker/RecurringJobRegistrar` đăng ký lịch từ `BackgroundJob:Jobs` (giờ VN). Job đầu tiên: [../nghiep-vu/15-han-du-an.md](../nghiep-vu/15-han-du-an.md).
+⚠️ Đổi tên class / method / namespace của job đã đăng ký thì Hangfire không tìm thấy kiểu: đăng ký lại; tham số job chỉ truyền kiểu đơn giản.
+`UseHangfireBackgroundJobDashboard(isReadOnly)` mở `/hangfire` sau `UseAuthorization()`, chỉ đọc khi **không** phải Development;
+`GET api/v1/core/background-job/connection` (`[AllowAnonymous]`) trả `{ isConnected, serverCount }`, lỗi storage → `isConnected = false`.
+⚠️ Dashboard và API kết nối **không cần đăng nhập** theo yêu cầu (`AnonymousDashboardAuthorizationFilter`). Muốn khoá thì thay filter, đừng
+thêm `[Authorize]` vào `/hangfire`. Hub SignalR thì **bắt buộc** token (mục dưới).
 
 ## SignalR — đẩy tin realtime
 

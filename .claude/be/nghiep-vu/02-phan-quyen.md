@@ -1,6 +1,6 @@
 # Phân quyền
 
-> **Phần 2/14** · trước: [01-nguoi-dung.md](01-nguoi-dung.md) · mục lục: [README.md](README.md)
+> **Phần 2/15** · trước: [01-nguoi-dung.md](01-nguoi-dung.md) · mục lục: [README.md](README.md)
 
 Quyền là một **cây** định danh bằng `Key`. Vai trò giữ một tập key; user có quyền = hợp quyền của các vai trò còn hoạt động.
 Hằng số key nằm ở `PermissionConstants` (shared); cây được seed bởi `SeedPermission`.
@@ -42,7 +42,8 @@ Menu.Construction                  Menu nghiệp vụ xây dựng
 │   ├── Function.Construction.Project.View
 │   ├── Function.Construction.Project.Create
 │   ├── Function.Construction.Project.Update
-│   └── Function.Construction.Project.Delete
+│   ├── Function.Construction.Project.Delete
+│   └── Function.Construction.Project.Deadline  (hạn dự án, chạy job kiểm tra hạn, lịch sử mail)
 ├── Menu.Construction.ProjectConfig Menu cấu hình dự án
 │   ├── Function.Construction.ProjectConfig.View
 │   ├── Function.Construction.ProjectConfig.Create
@@ -123,6 +124,7 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `POST api/construction/project` | `Function.Construction.Project.Create` |
 | `PUT api/construction/project/{id}` | `Function.Construction.Project.Update` |
 | `DELETE api/construction/project/{id}` | `Function.Construction.Project.Delete` |
+| `GET api/construction/project/deadline`, `POST .../deadline-check/run`, `GET .../deadline-check/status`, `GET .../deadline-notification/paging` | `Function.Construction.Project.Deadline` |
 | `GET api/construction/project-config`, `GET .../{id}` | `Function.Construction.ProjectConfig.View` |
 | `POST` / `PUT {id}` / `DELETE {id}` `api/construction/project-config` | `...ProjectConfig.Create` / `.Update` / `.Delete` |
 | `GET api/construction/project-config/google-authorization-url` | `Function.Construction.ProjectConfig.Update` |

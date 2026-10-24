@@ -1,3 +1,4 @@
+using sh.be.infrastructure.external.Mail.Base;
 using sh.be.shared.Constants.Mail;
 using System.Net;
 
@@ -7,17 +8,7 @@ namespace sh.be.infrastructure.external.Mail.Templates
     {
         private const string FILE_NAME = "AccountCreated.html";
 
-        private static readonly Type TemplateType = typeof(AccountCreatedMailTemplate);
-
-        private static readonly string ResourceName = $"{TemplateType.Namespace}.{FILE_NAME}";
-
-        private static readonly Lazy<string> Body = new(() =>
-        {
-            using var stream = TemplateType.Assembly.GetManifestResourceStream(ResourceName)
-                ?? throw new FileNotFoundException(ResourceName);
-            using var reader = new StreamReader(stream);
-            return reader.ReadToEnd();
-        });
+        private static readonly Lazy<string> Body = new(() => MailTemplateLoader.Load(typeof(AccountCreatedMailTemplate), FILE_NAME));
 
         public static string Build(string userName, string password)
         {

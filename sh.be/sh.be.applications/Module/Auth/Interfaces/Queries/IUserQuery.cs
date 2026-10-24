@@ -7,5 +7,6 @@ namespace sh.be.applications.Module.Auth.Interfaces.Queries
     {
         ViewMeDto? GetMe(string userId);
         Task<BaseResponsePagingDto<ViewUserDto>> FindPaging(FindPagingUserDto dto);
+        Task<List<string>> GetEmailsByRoleNamesAsync(IReadOnlyCollection<string> roleNames);
     }
 }
