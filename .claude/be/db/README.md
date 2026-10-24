@@ -16,8 +16,8 @@ Cần `dotnet-ef` đúng bản EF của dự án: `dotnet tool install --global 
 ## Dữ liệu test hồ sơ (DB dev)
 
 `test-data-ho-so.sql` tạo 15 hồ sơ + 1 hồ sơ khác loại văn bản (dự án 3, loại văn bản 3/4), 5 trường (`Ghi chú` cố ý không cấu hình
-cho dự án), user `tester` (role QA, được cấp tạm `Submission.View` + `Check`) và `viewer` (role User, không quyền), mật khẩu như
-`admin`. Mọi dòng gắn `CreatedBy = 'TESTDATA'`; `test-data-ho-so-xoa.sql` xoá sạch, kể cả log kiểm tra và quyền cấp tạm.
+cho dự án), user `tester` (role QA, được cấp tạm `Submission.View` + `Check` + `Qa`) và `viewer` (role User, không quyền), mật khẩu như
+`admin`. Mọi dòng gắn `CreatedBy = 'TESTDATA'`; `test-data-ho-so-xoa.sql` xoá sạch, kể cả log kiểm tra, log QA và quyền cấp tạm.
 
 ```bash
 sqlcmd -C -I -f 65001 -S 127.0.0.1,14330 -U sa -P <mật khẩu> -d SO_HOA_DB -i .claude/be/db/test-data-ho-so.sql

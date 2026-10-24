@@ -8,6 +8,9 @@ INSERT INTO @subs SELECT Id FROM construction.Submission WHERE CreatedBy = 'TEST
 DELETE FROM core.AuditLog WHERE UserId IN ('testdata-tester', 'testdata-viewer')
     OR Content LIKE N'%HS[_]0[0-9][0-9].pdf%' OR Content LIKE N'%HS[_]KHAC[_]LOAI.pdf%';
 DELETE FROM construction.SubmissionLog WHERE SubmissionId IN (SELECT Id FROM @subs);
+DELETE FROM construction.SubmissionQaLogField WHERE SubmissionQaLogId IN
+    (SELECT Id FROM construction.SubmissionQaLog WHERE SubmissionId IN (SELECT Id FROM @subs));
+DELETE FROM construction.SubmissionQaLog WHERE SubmissionId IN (SELECT Id FROM @subs);
 DELETE FROM construction.SubmissionData WHERE SubmissionId IN (SELECT Id FROM @subs);
 DELETE FROM construction.Submission WHERE Id IN (SELECT Id FROM @subs);
 DELETE FROM construction.ProjectDocumentTypeDocumentField WHERE CreatedBy = 'TESTDATA';

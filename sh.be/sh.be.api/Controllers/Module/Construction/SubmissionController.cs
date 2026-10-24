@@ -197,13 +197,13 @@ namespace sh.be.api.Controllers.Module.Construction
             }
         }
 
-        [HttpPut("{id:int}/check")]
+        [HttpPut("check")]
         [Permission(PermissionConstants.FUNCTION_SUBMISSION_CHECK)]
-        public async Task<ApiResponse> Check([FromRoute] int id, [FromBody] CheckSubmissionDto dto)
+        public async Task<ApiResponse> Check([FromBody] CheckSubmissionDto dto)
         {
             try
             {
-                var data = await _submissionService.Check(id, dto);
+                var data = await _submissionService.Check(dto);
                 return new(data);
             }
             catch (Exception ex)
@@ -224,6 +224,156 @@ namespace sh.be.api.Controllers.Module.Construction
             catch (Exception ex)
             {
                 return OkException(ex);
+            }
+        }
+
+        [HttpGet("qa/paging")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindQaPaging([FromQuery] FindPagingQaSubmissionDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindQaPaging(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("{id:int}/qa")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindQaById([FromRoute] int id, [FromQuery] FindQaSubmissionDetailDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindQaById(id, dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPut("qa")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_QA)]
+        public async Task<ApiResponse> ReviewQa([FromBody] ReviewQaSubmissionDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.ReviewQa(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("{id:int}/qa-logs")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindQaLogPaging([FromRoute] int id, [FromQuery] FindPagingSubmissionQaLogDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindQaLogPaging(id, dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("field-values")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindFieldValues([FromQuery] FindSubmissionFieldValueDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindFieldValues(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("tree")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindTree([FromQuery] FindSubmissionTreeDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindTree(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("logs")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindProjectLogPaging([FromQuery] FindPagingProjectSubmissionLogDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindProjectLogPaging(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("summary")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindSummary([FromQuery] FindSubmissionSummaryDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindSummary(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpDelete("")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_DELETE)]
+        public async Task<ApiResponse> Delete([FromBody] DeleteSubmissionDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.Delete(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("export-excel")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_EXPORT)]
+        public async Task<IActionResult> ExportExcel([FromQuery] ExportSubmissionDto dto)
+        {
+            try
+            {
+                var file = await _submissionService.ExportExcel(dto);
+                return File(file.Content, file.ContentType, file.FileName);
+            }
+            catch (Exception ex)
+            {
+                return Ok(OkException(ex));
             }
         }
 

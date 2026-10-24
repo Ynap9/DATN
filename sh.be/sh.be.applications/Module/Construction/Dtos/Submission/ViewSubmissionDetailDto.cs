@@ -11,6 +11,9 @@ namespace sh.be.applications.Module.Construction.Dtos.Submission
         public string ProfileRange { get; set; } = String.Empty;
         public string Box { get; set; } = String.Empty;
         public int StatusCheck { get; set; }
+        public int StatusQa { get; set; }
+        public string? QaReason { get; set; }
+        public List<int> QaWrongDocumentFieldIds { get; set; } = new();
         public DateTime? CreatedDate { get; set; }
         public DateTime? ModifiedDate { get; set; }
         public string? ModifiedBy { get; set; }
