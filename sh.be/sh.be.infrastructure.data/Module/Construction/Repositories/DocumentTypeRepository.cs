@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using sh.be.domain.Module.Construction.Entities;
-using sh.be.domain.Module.Construction.Repositories;
+using sh.be.domain.Module.Construction.DocumentTypes.Entities;
+using sh.be.domain.Module.Construction.DocumentTypes.Repositories;
 using sh.be.infrastructure.data.Persistence.Db;
 
 namespace sh.be.infrastructure.data.Module.Construction.Repositories

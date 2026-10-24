@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.DataProtection;
-using sh.be.applications.Base.Interfaces;
+using sh.be.applications.Base.Interfaces.Api;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;

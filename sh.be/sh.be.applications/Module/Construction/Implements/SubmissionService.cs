@@ -1,8 +1,9 @@
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using sh.be.applications.Base;
-using sh.be.applications.Base.Dtos.Excel;
-using sh.be.applications.Base.Interfaces;
+using sh.be.applications.Base.Dtos.DataReader;
+using sh.be.applications.Base.Interfaces.External.DataReader;
+using sh.be.applications.Base.Interfaces.Api;
 using sh.be.applications.Module.Construction.Dtos.Submission;
 using sh.be.applications.Module.Construction.Interfaces.Queries;
 using sh.be.applications.Module.Construction.Interfaces.Services;
@@ -10,13 +11,13 @@ using sh.be.domain.Base;
 using sh.be.domain.Base.Models;
 using sh.be.domain.Module.Auth.Repositories;
 using sh.be.domain.Module.Auth.Services;
-using sh.be.domain.Module.Construction.Entities;
-using sh.be.domain.Module.Construction.Repositories;
-using sh.be.domain.Module.Construction.Services;
-using sh.be.domain.Module.Construction.Services.Check;
-using sh.be.domain.Module.Construction.Services.Check.Models;
-using sh.be.domain.Module.Construction.Services.Import;
-using sh.be.domain.Module.Construction.Services.Import.Models;
+using sh.be.domain.Module.Construction.Projects.Entities;
+using sh.be.domain.Module.Construction.Submissions.Repositories;
+using sh.be.domain.Module.Construction.Submissions.Services;
+using sh.be.domain.Module.Construction.Submissions.Services.Check;
+using sh.be.domain.Module.Construction.Submissions.Services.Check.Models;
+using sh.be.domain.Module.Construction.Submissions.Services.Import;
+using sh.be.domain.Module.Construction.Submissions.Services.Import.Models;
 using sh.be.domain.Module.Core.Repositories;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.Constants.Core;
@@ -34,12 +35,12 @@ namespace sh.be.applications.Module.Construction.Implements
         private readonly IRoleRepository _roleRepository;
         private readonly IUserRepository _userRepository;
         private readonly SubmissionDomainService _submissionDomainService;
-        private readonly IDataReader _dataReader;
-        private readonly IExcelTableWriter _excelTableWriter;
+        private readonly IDataReaderExternal _dataReaderExternal;
+        private readonly IExcelExternal _excelExternal;
 
         public SubmissionService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<SubmissionService> logger, IRequestContext requestContext, TimeProvider timeProvider,
             ISubmissionQuery submissionQuery, ISubmissionRepository submissionRepository, IRoleRepository roleRepository, IUserRepository userRepository,
-            SubmissionDomainService submissionDomainService, IDataReader dataReader, IExcelTableWriter excelTableWriter
+            SubmissionDomainService submissionDomainService, IDataReaderExternal dataReaderExternal, IExcelExternal excelExternal
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _submissionQuery = submissionQuery;
@@ -47,8 +48,8 @@ namespace sh.be.applications.Module.Construction.Implements
             _roleRepository = roleRepository;
             _userRepository = userRepository;
             _submissionDomainService = submissionDomainService;
-            _dataReader = dataReader;
-            _excelTableWriter = excelTableWriter;
+            _dataReaderExternal = dataReaderExternal;
+            _excelExternal = excelExternal;
         }
 
         public async Task<ViewVerifyImportAppendSubmissionDto> VerifyImportAppend(ImportSubmissionDto dto)
@@ -467,7 +468,7 @@ namespace sh.be.applications.Module.Construction.Implements
             _logger.LogInformation($"{nameof(ExportExcel)}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
             var table = await _submissionQuery.FindExportTable(dto);
-            return _excelTableWriter.CreateTable($"{table.ProjectName}_{table.DocumentTypeName}_{GetVietnamTime():yyyyMMddHHmm}", table.DocumentTypeName,
+            return _excelExternal.CreateTable($"{table.ProjectName}_{table.DocumentTypeName}_{GetVietnamTime():yyyyMMddHHmm}", table.DocumentTypeName,
                 table.Headers, table.Rows);
         }
 
@@ -482,7 +483,7 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             var project = await _submissionDomainService.EnsureImportableProjectAsync(dto.ProjectId);
             await _submissionDomainService.EnsureDocumentTypeInProjectAsync(dto.ProjectId, dto.DocumentTypeId);
-            var tableTask = _dataReader.ReadTableAsync(project.UrlGoogleSheetSync, project.GoogleSheetName);
+            var tableTask = _dataReaderExternal.ReadTableAsync(project.UrlGoogleSheetSync, project.GoogleSheetName);
             var mappings = await _submissionDomainService.GetImportMappingsAsync(dto.ProjectId, dto.DocumentTypeId);
             var table = await tableTask;
 
@@ -493,7 +494,7 @@ namespace sh.be.applications.Module.Construction.Implements
 
         private async Task<OverwriteSheetSource> LoadOverwriteSheetAsync(ImportOverwriteSubmissionDto dto)
         {
-            var tableTask = _dataReader.ReadTableAsync(dto.Url, dto.SheetName);
+            var tableTask = _dataReaderExternal.ReadTableAsync(dto.Url, dto.SheetName);
             var project = await _submissionDomainService.EnsureImportableProjectAsync(dto.ProjectId);
             await _submissionDomainService.EnsureDocumentTypeInProjectAsync(dto.ProjectId, dto.DocumentTypeId);
             var mapping = await _submissionDomainService.EnsureDocumentFieldInProjectAsync(dto.ProjectId, dto.DocumentTypeId, dto.DocumentFieldId);

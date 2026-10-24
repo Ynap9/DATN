@@ -1,4 +1,4 @@
-using sh.be.applications.Base.Interfaces;
+using sh.be.applications.Base.Interfaces.Api;
 using System.Security.Claims;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 

@@ -7,18 +7,24 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Module\Construction\Entities\**" />
+    <Compile Remove="Module\Construction\Repositories\**" />
+    <Compile Remove="Module\Construction\Services\**" />
+    <EmbeddedResource Remove="Module\Construction\Entities\**" />
+    <EmbeddedResource Remove="Module\Construction\Repositories\**" />
+    <EmbeddedResource Remove="Module\Construction\Services\**" />
+    <None Remove="Module\Construction\Entities\**" />
+    <None Remove="Module\Construction\Repositories\**" />
+    <None Remove="Module\Construction\Services\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.6" />
     <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="9.0.6" />
   </ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\sh.be.shared\sh.be.shared.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Module\Construction\Entities\" />
-	  <Folder Include="Module\Construction\Services\" />
-	  <Folder Include="Module\Construction\Repositories\" />
 	</ItemGroup>
 
 </Project>

@@ -1,6 +1,6 @@
 # Hồ sơ — QA, trả lại, lịch sử QA
 
-> **Phần 13/13** · trước: [12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md) · mục lục: [README.md](README.md)
+> **Phần 13/14** · trước: [12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md) · mục lục: [README.md](README.md)
 
 Sau khi người nhập liệu kiểm tra hồ sơ ([12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md)), người QA mở hồ sơ, đối chiếu PDF với dữ liệu
 rồi chấm **Đạt** hoặc **Không đạt (kèm lý do)**. Không đạt thì hồ sơ bị **trả lại** cho người nhập liệu sửa. Bản gốc `nhaplieu.be`
@@ -29,6 +29,8 @@ thêm cột `int NOT NULL` default `0` nên hồ sơ có từ trước là "Chư
 | QA hồ sơ chưa kiểm tra / đang trả lại | 0 / x, 2 / x | lỗi `320` | |
 
 Luật nằm ở `Submission.ReviewQa` và `Submission.Check`. Hồ sơ `1 / 2` không thể có vì Không đạt luôn kèm trả lại.
+Xoá hồ sơ không phải chuyển trạng thái: chỉ được khi `StatusCheck` là `0` hoặc `2`, trừ SuperAdmin ([14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md)).
+Xuất Excel không đổi trạng thái nào.
 Import overwrite với `overwriteChecked = false` chỉ bảo vệ hồ sơ `CHECKED`: hồ sơ đang trả lại **bị** ghi đè (đang chờ sửa).
 Import blank / overwrite không đổi `StatusQa`.
 
@@ -103,3 +105,5 @@ Cùng ngày, sau khi đưa `id` vào body (`PUT qa`, `PUT check`) và thêm trư
 thì sửa `Submission.Check` / policy import — đổi nghiệp vụ, hỏi trước.
 
 ⚠️ User bị xoá là xoá **cứng** (`UserManager.DeleteAsync`), nên `qaUserName` / `checkedUserName` / `userName` của người đã xoá là `null`.
+
+> **Tiếp:** [14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md) — xoá hồ sơ (mở khoá theo trạng thái kiểm tra) và xuất Excel theo bộ lọc.

@@ -1,6 +1,6 @@
 using AutoMapper;
 using Microsoft.Extensions.Logging;
-using sh.be.applications.Base.Interfaces;
+using sh.be.applications.Base.Interfaces.Api;
 using sh.be.domain.Base;
 using sh.be.domain.Module.Core.Entities;
 using sh.be.domain.Module.Core.Repositories;

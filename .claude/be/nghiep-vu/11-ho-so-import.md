@@ -1,6 +1,6 @@
 # Hồ sơ — import Google Sheet và xem file (Construction)
 
-> **Phần 11/13** · trước: [10-lo-ky.md](10-lo-ky.md) · mục lục: [README.md](README.md)
+> **Phần 11/14** · trước: [10-lo-ky.md](10-lo-ky.md) · mục lục: [README.md](README.md)
 
 Hồ sơ (`construction.Submission`) = một file tài liệu số hoá = một dòng trên Google Sheet, thuộc một dự án và một loại văn bản.
 Giá trị từng trường của hồ sơ nằm ở `construction.SubmissionData` (một dòng cho mỗi cặp hồ sơ – trường). Nghiệp vụ lấy từ
@@ -28,6 +28,7 @@ Body chung (`ImportSubmissionDto`): `projectId`, `documentTypeId`, `fileColumnIm
   (trim, **không phân biệt hoa thường**) ở mọi nơi. DB lưu giá trị đã trim, giữ nguyên hoa thường; unique index có filter chặn trùng ở DB.
 - Dòng `1` là header; mọi ô đã trim. Dòng có tên file rỗng bị bỏ qua ở mọi API. `IndexGoogleSheet` (ví dụ `G5`) dùng **số dòng thật**.
 - Tên cột so bằng `FieldImportMatchPolicy` (giống API `map-field-import`): không phân biệt hoa thường, gộp khoảng trắng.
+- Hồ sơ đã xoá mềm (xem [14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md)) không tính vào khoá: import lại cùng khoá sẽ tạo hồ sơ mới.
 - Cột trường lấy theo cấu hình `ProjectDocumentTypeDocumentField` của dự án + loại văn bản: bỏ `FieldImport` rỗng, xếp theo
   `OrderFieldImport` rồi `DocumentFieldId`, mỗi cấu hình lấy cột **đầu tiên** khớp mà chưa bị cấu hình khác dùng; không có cột thì bỏ qua.
   `IndexRow` = thứ tự trong danh sách đã khớp. Import **chỉ đọc** `OrderFieldImport`, không ghi.
@@ -96,7 +97,7 @@ transaction phía SQL Server vẫn mở và giữ khoá → mọi import sau c�
 ## Xem file — proxy
 
 `GET proxy-file?url=`: `url` phải là `FileUrlS3Object` của một hồ sơ (không thì `305`). BE tải bằng `HttpClient`
-(`IFileDownloader` → `HttpFileDownloader`) và trả **stream** `application/pdf`, `Content-Disposition: inline`,
+(`IFileDownloadExternal` → `HttpFileDownloadExternal`) và trả **stream** `application/pdf`, `Content-Disposition: inline`,
 `Cache-Control: private, max-age=300`. Link không phải http(s), lỗi mạng, HTTP lỗi hoặc `Content-Type` khác `application/pdf` /
 `application/octet-stream` → `315` (vẫn `ApiResponse` JSON, HTTP 200). FE kiểm `Content-Type` của response: JSON là lỗi.
 FE phải gọi bằng `HttpClient` kèm Bearer token rồi tạo blob URL (iframe không gửi được header token).

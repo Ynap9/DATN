@@ -1,6 +1,6 @@
 # Dự án (Construction)
 
-> **Phần 7/13** · trước: [06-truong-van-ban.md](06-truong-van-ban.md) · mục lục: [README.md](README.md)
+> **Phần 7/14** · trước: [06-truong-van-ban.md](06-truong-van-ban.md) · mục lục: [README.md](README.md)
 
 Danh mục dự án, bảng `construction.Project`. Mỗi dự án có một Google Sheet riêng, hệ thống **tự tạo** lúc tạo dự án.
 Trường: `Name`, `StartedAt`, `EndedAt`, `Status`, `UrlGoogleSheetSync`, `GoogleSheetName`, cột tạo / sửa / xoá, cờ `Deleted` (`ISoftDeleted`, đổi tên từ `IsDeleted` ở migration `Rename_Project_Deleted_Add_Submission`).
@@ -80,13 +80,13 @@ Thứ tự trong `ProjectService.Create`:
 
 1. Kiểm tên trùng, dựng `Project.Create` (kiểm ngày, gán `DEPLOYING`, `GoogleSheetName = Name`) — lỗi ở đây thì **chưa** gọi Google.
 2. Đọc tài khoản Google từ bảng cấu hình ([08-cau-hinh-du-an.md](08-cau-hinh-du-an.md)); thiếu dòng nào → `304` nêu tên.
-   `ISpreadsheetWriter.CreateSpreadsheetAsync(account, Name, GoogleSheetName)`: tạo file trong thư mục `GoogleFolderId`,
+   `IGoogleSheetExternal.CreateSpreadsheetAsync(account, Name, GoogleSheetName)`: tạo file trong thư mục `GoogleFolderId`,
    tên file = `Name`, sheet đầu đổi tên = `GoogleSheetName`. Lỗi Google → `205`, không lưu gì.
 3. `LinkGoogleSheet(url)` (`https://docs.google.com/spreadsheets/d/<id>/edit`), lưu dự án, gắn loại văn bản + audit
    (audit có đúng `Id`), tất cả trong một transaction.
 4. Lưu DB lỗi → rollback, `TryDeleteSpreadsheetAsync` xoá file vừa tạo rồi ném lại lỗi gốc.
 
-URL lưu đúng dạng `GoogleSheetReader` đọc được, nên dùng thẳng cho `sheet-header` / `map-field-import`.
+URL lưu đúng dạng `GoogleSheetReaderExternal` đọc được, nên dùng thẳng cho `sheet-header` / `map-field-import`.
 
 ## Sửa dự án và đổi tên file
 
@@ -116,7 +116,7 @@ Chưa có `GoogleRefreshToken` → tạo trả `304` "Thiếu cấu hình dự �
 
 ⚠️ Chưa có unique index cho `Name` (index `IX_Project_Name` không unique); hai request tạo cùng tên đồng thời vẫn có thể lọt.
 
-⚠️ Xoá dự án không xoá file Google Sheet. Muốn đồng bộ thêm thì thêm method vào `ISpreadsheetWriter`, đừng gọi Google API
+⚠️ Xoá dự án không xoá file Google Sheet. Muốn đồng bộ thêm thì thêm method vào `IGoogleSheetExternal`, đừng gọi Google API
 thẳng từ service.
 
 ⚠️ Xoá file khi tạo lỗi và đổi tên ngược khi sửa lỗi là **bù trừ**, không phải transaction: nếu cả lưu DB lẫn bước bù trừ
