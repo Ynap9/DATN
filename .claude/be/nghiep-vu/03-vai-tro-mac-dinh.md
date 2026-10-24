@@ -1,6 +1,6 @@
 # Vai trò và quyền mặc định
 
-> **Phần 3/12** · trước: [02-phan-quyen.md](02-phan-quyen.md) · mục lục: [README.md](README.md)
+> **Phần 3/13** · trước: [02-phan-quyen.md](02-phan-quyen.md) · mục lục: [README.md](README.md)
 
 ## Vai trò mặc định
 

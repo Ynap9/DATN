@@ -46,6 +46,23 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
             return _shDbContext.Submissions.FirstOrDefaultAsync(s => s.Id == id);
         }
 
+        public Task<List<Submission>> GetByIdsAsync(IReadOnlyCollection<int> ids)
+        {
+            return _shDbContext.Submissions
+                .Where(s => ids.Contains(s.Id))
+                .ToListAsync();
+        }
+
+        public Task<int> SoftDeleteDatasBySubmissionIdsAsync(IReadOnlyCollection<int> submissionIds, string? deletedBy, DateTime deletedDate)
+        {
+            return _shDbContext.SubmissionDatas
+                .Where(sd => submissionIds.Contains(sd.SubmissionId))
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(sd => sd.Deleted, true)
+                    .SetProperty(sd => sd.DeletedBy, deletedBy)
+                    .SetProperty(sd => sd.DeletedDate, deletedDate));
+        }
+
         public Task<List<SubmissionData>> GetDatasBySubmissionIdAsync(int submissionId)
         {
             return _shDbContext.SubmissionDatas
@@ -61,6 +78,16 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
         public void AddLog(SubmissionLog log)
         {
             _shDbContext.SubmissionLogs.Add(log);
+        }
+
+        public void AddQaLog(SubmissionQaLog log)
+        {
+            _shDbContext.SubmissionQaLogs.Add(log);
+        }
+
+        public void AddQaLogFields(IEnumerable<SubmissionQaLogField> fields)
+        {
+            _shDbContext.SubmissionQaLogFields.AddRange(fields);
         }
 
         public Task<bool> ExistsByFileUrlAsync(string fileUrl)

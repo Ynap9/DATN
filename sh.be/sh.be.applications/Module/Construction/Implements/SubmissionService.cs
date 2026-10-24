@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using sh.be.applications.Base;
+using sh.be.applications.Base.Dtos.Excel;
 using sh.be.applications.Base.Interfaces;
 using sh.be.applications.Module.Construction.Dtos.Submission;
 using sh.be.applications.Module.Construction.Interfaces.Queries;
@@ -34,10 +35,11 @@ namespace sh.be.applications.Module.Construction.Implements
         private readonly IUserRepository _userRepository;
         private readonly SubmissionDomainService _submissionDomainService;
         private readonly IDataReader _dataReader;
+        private readonly IExcelTableWriter _excelTableWriter;
 
         public SubmissionService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<SubmissionService> logger, IRequestContext requestContext, TimeProvider timeProvider,
             ISubmissionQuery submissionQuery, ISubmissionRepository submissionRepository, IRoleRepository roleRepository, IUserRepository userRepository,
-            SubmissionDomainService submissionDomainService, IDataReader dataReader
+            SubmissionDomainService submissionDomainService, IDataReader dataReader, IExcelTableWriter excelTableWriter
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _submissionQuery = submissionQuery;
@@ -46,6 +48,7 @@ namespace sh.be.applications.Module.Construction.Implements
             _userRepository = userRepository;
             _submissionDomainService = submissionDomainService;
             _dataReader = dataReader;
+            _excelTableWriter = excelTableWriter;
         }
 
         public async Task<ViewVerifyImportAppendSubmissionDto> VerifyImportAppend(ImportSubmissionDto dto)
@@ -254,17 +257,17 @@ namespace sh.be.applications.Module.Construction.Implements
             return await _submissionQuery.Count(dto);
         }
 
-        public async Task<ViewCheckSubmissionResultDto> Check(int id, CheckSubmissionDto dto)
+        public async Task<ViewCheckSubmissionResultDto> Check(CheckSubmissionDto dto)
         {
-            _logger.LogInformation($"{nameof(Check)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
-            var submission = await _submissionDomainService.EnsureSubmissionExistsAsync(id);
+            _logger.LogInformation($"{nameof(Check)}, dto={JsonSerializer.Serialize(dto)}");
+            var submission = await _submissionDomainService.EnsureSubmissionExistsAsync(dto.Id);
             submission.EnsureBelongsTo(dto.ProjectId, dto.DocumentTypeId);
 
             var currentUserId = getCurrentUserId();
             var isSuperAdmin = PermissionGrantPolicy.IsSuperAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
             var project = await _submissionDomainService.EnsureEditableProjectAsync(dto.ProjectId, isSuperAdmin);
             var mappings = await _submissionDomainService.GetImportMappingsAsync(dto.ProjectId, dto.DocumentTypeId);
-            var existingDatas = await _submissionRepository.GetDatasBySubmissionIdAsync(id);
+            var existingDatas = await _submissionRepository.GetDatasBySubmissionIdAsync(dto.Id);
             var userName = (await _userRepository.FindByIdAsync(currentUserId))?.UserName ?? currentUserId;
 
             var now = GetVietnamTime();
@@ -275,7 +278,7 @@ namespace sh.be.applications.Module.Construction.Implements
             _submissionRepository.AddDatas(plan.DatasToInsert);
             _submissionRepository.AddLog(log);
             AddAuditLog(AuditLogConstants.ACTION_SUBMISSION_CHECK, AuditLogConstants.ACTION_TYPE_UPDATE,
-                $"Kiểm tra hồ sơ {submission.FileName} (Id = {id}) của dự án {project.Name}, sửa {plan.ChangedDataCount} trường",
+                $"Kiểm tra hồ sơ {submission.FileName} (Id = {dto.Id}) của dự án {project.Name}, sửa {plan.ChangedDataCount} trường",
                 new { StatusCheck = log.OldStatus, Datas = plan.Changes.Select(change => new { change.DocumentFieldId, Data = change.OldData }) },
                 new { StatusCheck = log.NewStatus, Datas = plan.Changes.Select(change => new { change.DocumentFieldId, Data = change.NewData }), log.Note });
 
@@ -285,13 +288,13 @@ namespace sh.be.applications.Module.Construction.Implements
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"{nameof(Check)}, id={id}");
+                _logger.LogError(ex, $"{nameof(Check)}, id={dto.Id}");
                 throw;
             }
 
             return new ViewCheckSubmissionResultDto
             {
-                SubmissionId = id,
+                SubmissionId = dto.Id,
                 StatusCheck = submission.StatusCheck,
                 ChangedDataCount = plan.ChangedDataCount,
                 LogId = log.Id,
@@ -303,6 +306,169 @@ namespace sh.be.applications.Module.Construction.Implements
             _logger.LogInformation($"{nameof(FindLogPaging)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureSubmissionExistsAsync(id);
             return await _submissionQuery.FindLogPaging(id, dto);
+        }
+
+        public async Task<BaseResponsePagingDto<GetListQaSubmissionDto>> FindQaPaging(FindPagingQaSubmissionDto dto)
+        {
+            _logger.LogInformation($"{nameof(FindQaPaging)}, dto={JsonSerializer.Serialize(dto)}");
+            if (dto.PageSize <= 0 || dto.PageSize > SubmissionConst.MAX_PAGE_SIZE)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, $"pageSize phải từ 1 đến {SubmissionConst.MAX_PAGE_SIZE}");
+            }
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            return await _submissionQuery.FindQaPaging(dto);
+        }
+
+        public async Task<ViewQaSubmissionDetailDto> FindQaById(int id, FindQaSubmissionDetailDto dto)
+        {
+            _logger.LogInformation($"{nameof(FindQaById)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            var detail = await _submissionQuery.FindQaById(id, dto, dto.IncludePosition)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionNotFound);
+            if (detail.ProjectId != dto.ProjectId || detail.DocumentTypeId != dto.DocumentTypeId)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionNotInDocumentType);
+            }
+            return detail;
+        }
+
+        public async Task<ViewQaResultDto> ReviewQa(ReviewQaSubmissionDto dto)
+        {
+            _logger.LogInformation($"{nameof(ReviewQa)}, dto={JsonSerializer.Serialize(dto)}");
+            var submission = await _submissionDomainService.EnsureSubmissionExistsAsync(dto.Id);
+            submission.EnsureBelongsTo(dto.ProjectId, dto.DocumentTypeId);
+
+            var currentUserId = getCurrentUserId();
+            var isSuperAdmin = PermissionGrantPolicy.IsSuperAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            var project = await _submissionDomainService.EnsureEditableProjectAsync(dto.ProjectId, isSuperAdmin);
+            var mappings = await _submissionDomainService.GetImportMappingsAsync(dto.ProjectId, dto.DocumentTypeId);
+            var userName = (await _userRepository.FindByIdAsync(currentUserId))?.UserName ?? currentUserId;
+
+            var now = GetVietnamTime();
+            var qaLog = submission.ReviewQa(dto.Result, dto.Reason, dto.WrongDocumentFieldIds,
+                mappings.Select(mapping => mapping.DocumentFieldId).ToList(), currentUserId, userName, now);
+
+            await using var transaction = await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                _submissionRepository.AddQaLog(qaLog);
+                await _unitOfWork.SaveChangesAsync();
+
+                var wrongFields = qaLog.CreateWrongFields(dto.WrongDocumentFieldIds, currentUserId, now);
+                _submissionRepository.AddQaLogFields(wrongFields);
+                AddAuditLog(AuditLogConstants.ACTION_SUBMISSION_QA, AuditLogConstants.ACTION_TYPE_UPDATE,
+                    $"QA hồ sơ {submission.FileName} (Id = {dto.Id}) của dự án {project.Name}: {(qaLog.NewStatusQa == SubmissionConst.QA_PASSED ? "Đạt" : "Không đạt")}",
+                    new { qaLog.OldStatusCheck, qaLog.OldStatusQa },
+                    new { qaLog.NewStatusCheck, qaLog.NewStatusQa, qaLog.Reason, WrongDocumentFieldIds = wrongFields.Select(field => field.DocumentFieldId) });
+                await _unitOfWork.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                return new ViewQaResultDto
+                {
+                    SubmissionId = dto.Id,
+                    StatusCheck = submission.StatusCheck,
+                    StatusQa = submission.StatusQa,
+                    QaReason = submission.QaReason,
+                    WrongDocumentFieldIds = wrongFields.Select(field => field.DocumentFieldId).ToList(),
+                    QaLogId = qaLog.Id,
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{nameof(ReviewQa)}, id={dto.Id}");
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        public async Task<BaseResponsePagingDto<GetListSubmissionQaLogDto>> FindQaLogPaging(int id, FindPagingSubmissionQaLogDto dto)
+        {
+            _logger.LogInformation($"{nameof(FindQaLogPaging)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
+            await _submissionDomainService.EnsureSubmissionExistsAsync(id);
+            return await _submissionQuery.FindQaLogPaging(id, dto);
+        }
+
+        public async Task<List<GetListSubmissionFieldValueDto>> FindFieldValues(FindSubmissionFieldValueDto dto)
+        {
+            _logger.LogInformation($"{nameof(FindFieldValues)}, dto={JsonSerializer.Serialize(dto)}");
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            await _submissionDomainService.EnsureDocumentFieldInProjectAsync(dto.ProjectId, dto.DocumentTypeId, dto.DocumentFieldId);
+            return await _submissionQuery.FindFieldValues(dto);
+        }
+
+        public async Task<ViewSubmissionTreeDto> FindTree(FindSubmissionTreeDto dto)
+        {
+            _logger.LogInformation($"{nameof(FindTree)}, dto={JsonSerializer.Serialize(dto)}");
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            return await _submissionQuery.FindTree(dto);
+        }
+
+        public async Task<BaseResponsePagingDto<GetListProjectSubmissionLogDto>> FindProjectLogPaging(FindPagingProjectSubmissionLogDto dto)
+        {
+            _logger.LogInformation($"{nameof(FindProjectLogPaging)}, dto={JsonSerializer.Serialize(dto)}");
+            if (dto.FromDate.HasValue && dto.ToDate.HasValue && dto.FromDate.Value.Date > dto.ToDate.Value.Date)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Từ ngày không được sau đến ngày");
+            }
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            return await _submissionQuery.FindProjectLogPaging(dto);
+        }
+
+        public async Task<ViewSubmissionSummaryDto> FindSummary(FindSubmissionSummaryDto dto)
+        {
+            _logger.LogInformation($"{nameof(FindSummary)}, dto={JsonSerializer.Serialize(dto)}");
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            return await _submissionQuery.FindSummary(dto.ProjectId, dto.DocumentTypeId);
+        }
+
+        public async Task<ViewDeleteSubmissionResultDto> Delete(DeleteSubmissionDto dto)
+        {
+            _logger.LogInformation($"{nameof(Delete)}, dto={JsonSerializer.Serialize(dto)}");
+            var currentUserId = getCurrentUserId();
+            var isSuperAdmin = PermissionGrantPolicy.IsSuperAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            var project = await _submissionDomainService.EnsureEditableProjectAsync(dto.ProjectId, isSuperAdmin);
+            var now = GetVietnamTime();
+
+            await using var transaction = await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                await _submissionDomainService.LockImportAsync(dto.ProjectId, dto.DocumentTypeId);
+                var submissions = await _submissionDomainService.EnsureSubmissionsDeletableAsync(dto.ProjectId, dto.DocumentTypeId, dto.Ids, isSuperAdmin);
+                foreach (var submission in submissions)
+                {
+                    submission.Delete(currentUserId, now);
+                }
+
+                var deletedDataCount = await _submissionRepository.SoftDeleteDatasBySubmissionIdsAsync(
+                    submissions.Select(submission => submission.Id).ToList(), currentUserId, now);
+                AddAuditLog(AuditLogConstants.ACTION_SUBMISSION_DELETE, AuditLogConstants.ACTION_TYPE_DELETE,
+                    $"Xóa {submissions.Count} hồ sơ của dự án {project.Name}, loại văn bản Id = {dto.DocumentTypeId}",
+                    submissions.Select(submission => new { submission.Id, submission.FileName, submission.ProfileRange, submission.Box, submission.StatusCheck, submission.StatusQa }));
+                await _unitOfWork.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+                return new ViewDeleteSubmissionResultDto
+                {
+                    DeletedSubmissionCount = submissions.Count,
+                    DeletedDataCount = deletedDataCount,
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{nameof(Delete)}, projectId={dto.ProjectId}, documentTypeId={dto.DocumentTypeId}");
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        public async Task<ExportFileDto> ExportExcel(ExportSubmissionDto dto)
+        {
+            _logger.LogInformation($"{nameof(ExportExcel)}, dto={JsonSerializer.Serialize(dto)}");
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            var table = await _submissionQuery.FindExportTable(dto);
+            return _excelTableWriter.CreateTable($"{table.ProjectName}_{table.DocumentTypeName}_{GetVietnamTime():yyyyMMddHHmm}", table.DocumentTypeName,
+                table.Headers, table.Rows);
         }
 
         private async Task<ProjectSheetSource> LoadAppendSheetAsync(ImportSubmissionDto dto)

@@ -71,7 +71,7 @@ VALUES ('testdata-tester', (SELECT Id FROM auth.Role WHERE Name = 'QA'), 'TESTDA
 
 INSERT INTO auth.RolePermission (RoleId, PermissionKey, CreatedBy)
 SELECT (SELECT Id FROM auth.Role WHERE Name = 'QA'), k.PermissionKey, 'TESTDATA'
-FROM (VALUES ('Function.Construction.Submission.View'), ('Function.Construction.Submission.Check')) k(PermissionKey)
+FROM (VALUES ('Function.Construction.Submission.View'), ('Function.Construction.Submission.Check'), ('Function.Construction.Submission.Qa')) k(PermissionKey)
 WHERE NOT EXISTS (SELECT 1 FROM auth.RolePermission rp WHERE rp.RoleId = (SELECT Id FROM auth.Role WHERE Name = 'QA') AND rp.PermissionKey = k.PermissionKey);
 
 COMMIT;
