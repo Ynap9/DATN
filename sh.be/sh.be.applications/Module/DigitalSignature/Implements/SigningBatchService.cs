@@ -2,8 +2,10 @@ using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using sh.be.applications.Base;
-using sh.be.applications.Base.Dtos.Signing;
-using sh.be.applications.Base.Interfaces;
+using sh.be.applications.Base.Dtos.DigitalSignature;
+using sh.be.applications.Base.Interfaces.External.DigitalSignature;
+using sh.be.applications.Base.Interfaces.Api;
+using sh.be.applications.Base.Interfaces.External.Storage;
 using sh.be.applications.Module.DigitalSignature.Dtos.SigningBatch;
 using sh.be.applications.Module.DigitalSignature.Interfaces.Queries;
 using sh.be.applications.Module.DigitalSignature.Interfaces.Services;
@@ -25,22 +27,22 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
         private readonly ISigningBatchRepository _signingBatchRepository;
         private readonly ISigningBatchQuery _signingBatchQuery;
         private readonly ITemplateRepository _templateRepository;
-        private readonly IFileStorage _fileStorage;
-        private readonly ICertificateValidator _certificateValidator;
-        private readonly ISigningQueue _signingQueue;
+        private readonly IFileStorageExternal _fileStorageExternal;
+        private readonly ICertificateValidatorExternal _certificateValidatorExternal;
+        private readonly ISigningQueueExternal _signingQueueExternal;
         private readonly ISigningRunner _signingRunner;
 
         public SigningBatchService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<SigningBatchService> logger, IRequestContext requestContext, TimeProvider timeProvider,
-            ISigningBatchRepository signingBatchRepository, ISigningBatchQuery signingBatchQuery, ITemplateRepository templateRepository, IFileStorage fileStorage,
-            ICertificateValidator certificateValidator, ISigningQueue signingQueue, ISigningRunner signingRunner
+            ISigningBatchRepository signingBatchRepository, ISigningBatchQuery signingBatchQuery, ITemplateRepository templateRepository, IFileStorageExternal fileStorageExternal,
+            ICertificateValidatorExternal certificateValidatorExternal, ISigningQueueExternal signingQueueExternal, ISigningRunner signingRunner
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _signingBatchRepository = signingBatchRepository;
             _signingBatchQuery = signingBatchQuery;
             _templateRepository = templateRepository;
-            _fileStorage = fileStorage;
-            _certificateValidator = certificateValidator;
-            _signingQueue = signingQueue;
+            _fileStorageExternal = fileStorageExternal;
+            _certificateValidatorExternal = certificateValidatorExternal;
+            _signingQueueExternal = signingQueueExternal;
             _signingRunner = signingRunner;
         }
 
@@ -98,7 +100,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
                 async (upload, _) =>
                 {
                     await using var content = upload.FormFile.OpenReadStream();
-                    await _fileStorage.UploadPrivateAsync(content, upload.File.SourceObjectKey, SigningBatchConst.PDF_CONTENT_TYPE);
+                    await _fileStorageExternal.UploadPrivateAsync(content, upload.File.SourceObjectKey, SigningBatchConst.PDF_CONTENT_TYPE);
                 });
 
             _signingBatchRepository.AddFiles(uploads.Select(u => u.File).ToList());
@@ -124,7 +126,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
                 new { signingBatch.Id, FileId = file.Id, file.FileName }, null);
             await _unitOfWork.SaveChangesAsync();
 
-            await _fileStorage.DeleteAsync(file.SourceObjectKey);
+            await _fileStorageExternal.DeleteAsync(file.SourceObjectKey);
             return await FindById(id);
         }
 
@@ -132,11 +134,11 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
         {
             _logger.LogInformation($"{nameof(OpenSession)}, id={id}");
             var signingBatch = await FindOwnedSigningBatchAsync(id);
-            var certificate = _certificateValidator.LoadTrusted(dto.CertificateBase64, _timeProvider.GetUtcNow().UtcDateTime);
+            var certificate = _certificateValidatorExternal.LoadTrusted(dto.CertificateBase64, _timeProvider.GetUtcNow().UtcDateTime);
             var oldData = new { signingBatch.Id, signingBatch.CertificateThumbprint };
 
             signingBatch.ChangeCertificate(certificate.Thumbprint, getCurrentUserId(), GetVietnamTime());
-            _signingQueue.OpenSession(id, certificate);
+            _signingQueueExternal.OpenSession(id, certificate);
 
             _signingBatchRepository.Update(signingBatch);
             AddAuditLog(AuditLogConstants.ACTION_SIGNING_BATCH_OPEN_SESSION, AuditLogConstants.ACTION_TYPE_UPDATE, $"Mở phiên ký lô {signingBatch.SignedFolderName}",
@@ -150,7 +152,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
         {
             _logger.LogInformation($"{nameof(CloseSession)}, id={id}");
             await FindOwnedSigningBatchAsync(id);
-            _signingQueue.CloseSession(id);
+            _signingQueueExternal.CloseSession(id);
         }
 
         public async Task<FindSigningBatchByIdDto> Start(int id)
@@ -166,7 +168,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
             failedFiles.ForEach(file => file.Retry(currentUserId, now));
             signingBatch.RequeueFailedFiles(failedFiles.Count);
             var pendingFiles = await _signingBatchRepository.CountPendingFilesAsync(id) + failedFiles.Count;
-            signingBatch.Start(_signingQueue.GetSessionThumbprint(id), pendingFiles, currentUserId, now);
+            signingBatch.Start(_signingQueueExternal.GetSessionThumbprint(id), pendingFiles, currentUserId, now);
 
             _signingBatchRepository.Update(signingBatch);
             AddAuditLog(AuditLogConstants.ACTION_SIGNING_BATCH_START, AuditLogConstants.ACTION_TYPE_UPDATE, $"Bắt đầu ký lô {signingBatch.SignedFolderName}",
@@ -205,7 +207,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
             await _unitOfWork.SaveChangesAsync();
 
             _signingRunner.Stop(id);
-            _signingQueue.CloseSession(id);
+            _signingQueueExternal.CloseSession(id);
             return await FindById(id);
         }
 
@@ -218,15 +220,15 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
         public async Task<List<SignatureRequestDto>> TakeRequests(int id, CancellationToken cancellationToken)
         {
             await FindOwnedSigningBatchAsync(id);
-            return await _signingQueue.TakeRequestsAsync(id, cancellationToken);
+            return await _signingQueueExternal.TakeRequestsAsync(id, cancellationToken);
         }
 
         public async Task<List<SignatureRequestDto>> SubmitSignatures(int id, List<SignatureResultDto> results, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"{nameof(SubmitSignatures)}, id={id}, resultCount={results.Count}");
             await FindOwnedSigningBatchAsync(id);
-            _signingQueue.SubmitSignatures(id, results);
-            return await _signingQueue.TakeRequestsAsync(id, cancellationToken);
+            _signingQueueExternal.SubmitSignatures(id, results);
+            return await _signingQueueExternal.TakeRequestsAsync(id, cancellationToken);
         }
 
         public async Task<string> GetSignedFileUrl(int id, int fileId)
@@ -235,7 +237,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
             await FindOwnedSigningBatchAsync(id);
             var file = await _signingBatchRepository.FindFileAsync(id, fileId)
                 ?? throw new UserFriendlyException(ErrorCodes.DigitalSignatureErrorSigningBatchFileNotFound);
-            return _fileStorage.GetTemporaryUrl(file.GetSignedObjectKey(), file.FileName, TimeSpan.FromMinutes(SigningBatchConst.SIGNED_URL_MINUTES));
+            return _fileStorageExternal.GetTemporaryUrl(file.GetSignedObjectKey(), file.FileName, TimeSpan.FromMinutes(SigningBatchConst.SIGNED_URL_MINUTES));
         }
 
         private async Task<FindSigningBatchByIdDto> FindById(int id)

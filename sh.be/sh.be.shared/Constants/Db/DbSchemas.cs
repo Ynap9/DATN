@@ -15,5 +15,6 @@ namespace sh.be.shared.Constants.Db
         public const string Core = "core";
         public const string Construction = "construction";
         public const string DigitalSignature = "digitalsignature";
+        public const string Hangfire = "hangfire";
     }
 }

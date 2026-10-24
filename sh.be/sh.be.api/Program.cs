@@ -2,6 +2,7 @@
 using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +15,13 @@ using sh.be.api.Services;
 using sh.be.api.Swagger;
 using sh.be.api.Worker;
 using sh.be.applications.Base;
-using sh.be.applications.Base.Interfaces;
+using sh.be.applications.Base.Interfaces.External.DataReader;
+using sh.be.applications.Base.Interfaces.External.DigitalSignature;
+using sh.be.applications.Base.Interfaces.Api;
+using sh.be.applications.Base.Interfaces.External.BackgroundJob;
+using sh.be.applications.Base.Interfaces.External.Mail;
+using sh.be.applications.Base.Interfaces.External.SignalR;
+using sh.be.applications.Base.Interfaces.External.Storage;
 using sh.be.applications.Module.Auth.Implements;
 using sh.be.applications.Module.Auth.Interfaces.Services;
 using sh.be.applications.Module.Auth.Interfaces.Queries;
@@ -32,8 +39,14 @@ using sh.be.domain.Module.Auth.Entities;
 using sh.be.domain.Module.Auth.Repositories;
 using sh.be.domain.Module.Auth.Services;
 using sh.be.domain.Module.Core.Repositories;
-using sh.be.domain.Module.Construction.Repositories;
-using sh.be.domain.Module.Construction.Services;
+using sh.be.domain.Module.Construction.DocumentFields.Repositories;
+using sh.be.domain.Module.Construction.DocumentFields.Services;
+using sh.be.domain.Module.Construction.DocumentTypes.Repositories;
+using sh.be.domain.Module.Construction.DocumentTypes.Services;
+using sh.be.domain.Module.Construction.Projects.Repositories;
+using sh.be.domain.Module.Construction.Projects.Services;
+using sh.be.domain.Module.Construction.Submissions.Repositories;
+using sh.be.domain.Module.Construction.Submissions.Services;
 using sh.be.domain.Module.DigitalSignature.Repositories;
 using sh.be.infrastructure.data.Base;
 using sh.be.infrastructure.data.Module.Auth.Queries;
@@ -46,20 +59,17 @@ using sh.be.infrastructure.data.Module.DigitalSignature.Queries;
 using sh.be.infrastructure.data.Module.DigitalSignature.Repositories;
 using sh.be.infrastructure.data.Persistence.Db;
 using sh.be.infrastructure.data.Persistence.Seeder;
+using sh.be.infrastructure.external.BackgroundJob.Base;
+using sh.be.infrastructure.external.BackgroundJob.Implements;
 using sh.be.infrastructure.external.DataReader.Implements;
-using sh.be.infrastructure.external.Excel.Implements;
-using sh.be.infrastructure.external.FileDownloader.Implements;
-using sh.be.infrastructure.external.Certificate.Implements;
+using sh.be.infrastructure.external.DigitalSignature.Implements;
 using sh.be.infrastructure.external.Mail.Implements;
-using sh.be.infrastructure.external.Pdf.Implements;
-using sh.be.infrastructure.external.Plugin.Implements;
-using sh.be.infrastructure.external.Signing.Implements;
-using sh.be.infrastructure.external.SampleFile.Implements;
-using sh.be.infrastructure.external.Spreadsheet.Implements;
+using sh.be.infrastructure.external.SignalR.Base;
+using sh.be.infrastructure.external.SignalR.Implements;
 using sh.be.infrastructure.external.Storage.Implements;
-using sh.be.infrastructure.external.Timestamp.Implements;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.DigitalSignature;
+using sh.be.shared.Constants.SignalR;
 using sh.be.shared.Constants.Swagger;
 using sh.be.shared.Constants.Versioning;
 using sh.be.shared.Settings;
@@ -96,6 +106,14 @@ builder.Services.AddDbContext<ShDbContext>(options =>
 }, ServiceLifetime.Scoped);
 #endregion
 
+#region hangfire
+builder.Services.AddHangfireBackgroundJob(connectionString);
+#endregion
+
+#region signalr
+builder.Services.AddSignalRNotification();
+#endregion
+
 #region cors
 string allowOrigins = builder.Configuration.GetSection("AllowedHosts")!.Value!;
 //File.WriteAllText("cors.now.txt", $"CORS: {allowOrigins}");;/'\,
@@ -118,10 +136,10 @@ builder.Services.AddCors(options =>
                 .WithExposedHeaders("Content-Disposition");
         }
     );
-    options.AddPolicy("SignalRPolicy", builder =>
+    options.AddPolicy(SignalRConst.CORS_POLICY, builder =>
     {
         builder
-            .SetIsOriginAllowed(_ => true)
+            .SetIsOriginAllowed(origin => origins.Contains(CorsConstants.AnyOrigin) || origins.Contains(origin, StringComparer.OrdinalIgnoreCase))
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
@@ -226,6 +244,18 @@ builder.Services.AddAuthentication(options =>
                 ValidTypes = new[] { "JWT", "at+jwt" }
             };
             options.RequireHttpsMetadata = false;
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query[SignalRConst.ACCESS_TOKEN_QUERY];
+                    if (!string.IsNullOrEmpty(accessToken) && context.Request.Path.StartsWithSegments(SignalRConst.HUB_PATH))
+                    {
+                        context.Token = accessToken;
+                    }
+                    return Task.CompletedTask;
+                }
+            };
         }
     )
     .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -240,66 +270,79 @@ builder.Services.AddHostedService<AuthWorker>();
 
 #region services
 // Add other services here
+// common
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IRequestContext, HttpRequestContext>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IAuthorizationStateProtector, AuthorizationStateProtector>();
+
+// repositories
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+builder.Services.AddScoped<IDocumentTypeRepository, DocumentTypeRepository>();
+builder.Services.AddScoped<IDocumentFieldRepository, DocumentFieldRepository>();
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+builder.Services.AddScoped<IProjectConfigRepository, ProjectConfigRepository>();
+builder.Services.AddScoped<ISubmissionRepository, SubmissionRepository>();
+builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();
+builder.Services.AddScoped<ISigningBatchRepository, SigningBatchRepository>();
+
+// queries
 builder.Services.AddScoped<IRoleQuery, RoleQuery>();
 builder.Services.AddScoped<IUserQuery, UserQuery>();
 builder.Services.AddScoped<IAuditLogQuery, AuditLogQuery>();
+builder.Services.AddScoped<IDocumentTypeQuery, DocumentTypeQuery>();
+builder.Services.AddScoped<IDocumentFieldQuery, DocumentFieldQuery>();
+builder.Services.AddScoped<IProjectQuery, ProjectQuery>();
+builder.Services.AddScoped<IProjectConfigQuery, ProjectConfigQuery>();
+builder.Services.AddScoped<ISubmissionQuery, SubmissionQuery>();
+builder.Services.AddScoped<ITemplateQuery, TemplateQuery>();
+builder.Services.AddScoped<ISigningBatchQuery, SigningBatchQuery>();
+
+// domain services
 builder.Services.AddScoped<RoleDomainService>();
 builder.Services.AddScoped<UserDomainService>();
+builder.Services.AddScoped<DocumentTypeDomainService>();
+builder.Services.AddScoped<DocumentFieldDomainService>();
+builder.Services.AddScoped<ProjectDomainService>();
+builder.Services.AddScoped<ProjectConfigDomainService>();
+builder.Services.AddScoped<SubmissionDomainService>();
+
+// application services
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
-builder.Services.AddScoped<IMailService, MailService>();
-builder.Services.AddScoped<IDataReader, GoogleSheetReader>();
-builder.Services.AddScoped<IExcelTemplateWriter, ExcelTemplateWriter>();
-builder.Services.AddScoped<IExcelTableWriter, ExcelTableWriter>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
-builder.Services.AddScoped<IDocumentTypeRepository, DocumentTypeRepository>();
-builder.Services.AddScoped<IDocumentTypeQuery, DocumentTypeQuery>();
-builder.Services.AddScoped<DocumentTypeDomainService>();
+builder.Services.AddScoped<IBackgroundJobService, BackgroundJobService>();
+builder.Services.AddScoped<ISignalRService, SignalRService>();
 builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();
-builder.Services.AddScoped<IDocumentFieldRepository, DocumentFieldRepository>();
-builder.Services.AddScoped<IDocumentFieldQuery, DocumentFieldQuery>();
-builder.Services.AddScoped<DocumentFieldDomainService>();
 builder.Services.AddScoped<IDocumentFieldService, DocumentFieldService>();
-builder.Services.AddScoped<ISpreadsheetWriter, GoogleSheetWriter>();
-builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
-builder.Services.AddScoped<IProjectQuery, ProjectQuery>();
-builder.Services.AddScoped<ProjectDomainService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
-builder.Services.AddScoped<IAuthorizationStateProtector, AuthorizationStateProtector>();
-builder.Services.AddScoped<ISpreadsheetAuthorizer, GoogleSheetAuthorizer>();
-builder.Services.AddScoped<IProjectConfigRepository, ProjectConfigRepository>();
-builder.Services.AddScoped<IProjectConfigQuery, ProjectConfigQuery>();
-builder.Services.AddScoped<ProjectConfigDomainService>();
 builder.Services.AddScoped<IProjectConfigService, ProjectConfigService>();
-builder.Services.AddScoped<IFileDownloader, HttpFileDownloader>();
-builder.Services.AddScoped<ISubmissionRepository, SubmissionRepository>();
-builder.Services.AddScoped<SubmissionDomainService>();
-builder.Services.AddScoped<ISubmissionQuery, SubmissionQuery>();
 builder.Services.AddScoped<ISubmissionService, SubmissionService>();
 builder.Services.AddScoped<ISubmissionFileService, SubmissionFileService>();
-builder.Services.AddScoped<IFileStorage, S3FileStorage>();
-builder.Services.AddScoped<ISampleFileReader, SampleFileReader>();
-builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();
-builder.Services.AddScoped<ITemplateQuery, TemplateQuery>();
 builder.Services.AddScoped<ITemplateService, TemplateService>();
-builder.Services.AddScoped<ISigningBatchRepository, SigningBatchRepository>();
-builder.Services.AddScoped<ISigningBatchQuery, SigningBatchQuery>();
 builder.Services.AddScoped<ISigningBatchService, SigningBatchService>();
-builder.Services.AddScoped<IPluginSetupProvider, PluginSetupProvider>();
 builder.Services.AddScoped<IPluginService, PluginService>();
-builder.Services.AddSingleton<ICertificateValidator, CertificateValidator>();
-builder.Services.AddSingleton<ISigningQueue, SigningQueue>();
-builder.Services.AddSingleton<IPdfSigner, PdfSigner>();
-builder.Services.AddSingleton<ITimestampClient, TimestampClient>();
 builder.Services.AddSingleton<ISigningRunner, SigningRunner>();
+
+// third-party services
+builder.Services.AddScoped<IMailExternal, MailExternal>();
+builder.Services.AddScoped<IDataReaderExternal, GoogleSheetReaderExternal>();
+builder.Services.AddScoped<IExcelExternal, ExcelExternal>();
+builder.Services.AddScoped<IGoogleSheetExternal, GoogleSheetExternal>();
+builder.Services.AddScoped<IFileDownloadExternal, HttpFileDownloadExternal>();
+builder.Services.AddScoped<IFileStorageExternal, S3FileStorageExternal>();
+builder.Services.AddScoped<ISampleFileExternal, SampleFileExternal>();
+builder.Services.AddScoped<IPluginSetupExternal, PluginSetupExternal>();
+builder.Services.AddSingleton<ICertificateValidatorExternal, CertificateValidatorExternal>();
+builder.Services.AddSingleton<ISigningQueueExternal, SigningQueueExternal>();
+builder.Services.AddSingleton<IPdfSignerExternal, PdfSignerExternal>();
+builder.Services.AddSingleton<ITimestampExternal, TimestampExternal>();
+builder.Services.AddScoped<IBackgroundJobExternal, HangfireBackgroundJobExternal>();
+builder.Services.AddSingleton<ISignalRExternal, SignalRExternal>();
 #endregion
 
 
@@ -453,7 +496,10 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseHangfireBackgroundJobDashboard(!app.Environment.IsDevelopment());
+
 app.MapControllers();
+app.MapSignalRNotificationHub(JwtBearerDefaults.AuthenticationScheme);
 
 
 app.MapHealthChecks("/health");

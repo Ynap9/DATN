@@ -1,16 +1,17 @@
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using sh.be.applications.Base;
-using sh.be.applications.Base.Dtos.Excel;
-using sh.be.applications.Base.Interfaces;
+using sh.be.applications.Base.Dtos.DataReader;
+using sh.be.applications.Base.Interfaces.External.DataReader;
+using sh.be.applications.Base.Interfaces.Api;
 using sh.be.applications.Module.Construction.Dtos.DocumentField;
 using sh.be.applications.Module.Construction.Dtos.DocumentType;
 using sh.be.applications.Module.Construction.Interfaces.Queries;
 using sh.be.applications.Module.Construction.Interfaces.Services;
 using sh.be.domain.Base;
-using sh.be.domain.Module.Construction.Entities;
-using sh.be.domain.Module.Construction.Repositories;
-using sh.be.domain.Module.Construction.Services;
+using sh.be.domain.Module.Construction.DocumentTypes.Entities;
+using sh.be.domain.Module.Construction.DocumentTypes.Repositories;
+using sh.be.domain.Module.Construction.DocumentTypes.Services;
 using sh.be.domain.Module.Core.Repositories;
 using sh.be.shared.Constants.Core;
 using sh.be.shared.HttpRequest.BaseRequest;
@@ -25,16 +26,16 @@ namespace sh.be.applications.Module.Construction.Implements
         private readonly IDocumentTypeRepository _documentTypeRepository;
         private readonly IDocumentTypeQuery _documentTypeQuery;
         private readonly DocumentTypeDomainService _documentTypeDomainService;
-        private readonly IExcelTemplateWriter _excelTemplateWriter;
+        private readonly IExcelExternal _excelExternal;
 
         public DocumentTypeService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<DocumentTypeService> logger, IRequestContext requestContext, TimeProvider timeProvider,
-            IDocumentTypeRepository documentTypeRepository, IDocumentTypeQuery documentTypeQuery, DocumentTypeDomainService documentTypeDomainService, IExcelTemplateWriter excelTemplateWriter
+            IDocumentTypeRepository documentTypeRepository, IDocumentTypeQuery documentTypeQuery, DocumentTypeDomainService documentTypeDomainService, IExcelExternal excelExternal
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _documentTypeRepository = documentTypeRepository;
             _documentTypeQuery = documentTypeQuery;
             _documentTypeDomainService = documentTypeDomainService;
-            _excelTemplateWriter = excelTemplateWriter;
+            _excelExternal = excelExternal;
         }
 
         public async Task<List<GetListDocumentTypeDropDownDto>> GetDocumentTypeDropDown()
@@ -70,7 +71,7 @@ namespace sh.be.applications.Module.Construction.Implements
             var documentType = await _documentTypeQuery.FindById(id)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentTypeNotFound);
             var headers = await _documentTypeQuery.GetListTemplateHeader(id);
-            return _excelTemplateWriter.CreateTemplate(documentType.Name, headers);
+            return _excelExternal.CreateTemplate(documentType.Name, headers);
         }
 
         public async Task Create(CreateDocumentTypeDto dto)

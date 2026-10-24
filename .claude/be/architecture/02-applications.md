@@ -11,7 +11,9 @@
 Base/
   BaseService.cs          lớp cha của mọi service: audit log, user hiện tại, giờ Việt Nam
   MappingProfile.cs       profile AutoMapper: map entity → DTO đọc, dùng qua ProjectTo
-  Interfaces/             cổng ra dùng chung: IRequestContext, IMailService
+  Interfaces/Api/         cổng ra do api implement: IRequestContext, IAuthorizationStateProtector
+  Interfaces/External/<Muc>/  cổng ra bên thứ ba I<Ten>External (BackgroundJob, DataReader, DigitalSignature, Mail, SignalR, Storage)
+  Dtos/<Muc>/             DTO trao đổi với cổng ra, cùng 6 mục
 Module/<TenModule>/
   Dtos/<Nhom>/            DTO vào/ra của API
   Interfaces/Services/    use case (input port) — controller gọi vào
@@ -55,7 +57,7 @@ catch (Exception ex)
 }
 ```
 
-- **Được:** nạp aggregate, gọi method entity / domain service, mở transaction, ghi audit, log, gọi `IMailService`.
+- **Được:** nạp aggregate, gọi method entity / domain service, mở transaction, ghi audit, log, gọi cổng ra `I...External`.
 - **Không được:** `if` nghiệp vụ, gán thẳng thuộc tính entity, tự viết luật quyền, truy vấn LINQ trên DB.
 - Lệnh ghi nhiều bước (xoá + thêm, tạo user + gán role) **phải** nằm trong transaction như trên.
 - Ngoại lệ: `SubmissionService.Check` ghi 4 bảng bằng **một** `SaveChanges` (EF tự bọc transaction, gộp batch) nên không mở

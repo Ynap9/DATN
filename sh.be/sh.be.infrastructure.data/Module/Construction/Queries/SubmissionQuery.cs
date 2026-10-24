@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using sh.be.applications.Module.Construction.Dtos.DocumentField;
 using sh.be.applications.Module.Construction.Dtos.Submission;
 using sh.be.applications.Module.Construction.Interfaces.Queries;
-using sh.be.domain.Module.Construction.Entities;
+using sh.be.domain.Module.Construction.Submissions.Entities;
 using sh.be.infrastructure.data.Base;
 using sh.be.infrastructure.data.Persistence.Db;
 using sh.be.shared.Constants.Construction;

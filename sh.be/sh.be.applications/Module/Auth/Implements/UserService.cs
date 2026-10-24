@@ -1,7 +1,8 @@
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using sh.be.applications.Base;
-using sh.be.applications.Base.Interfaces;
+using sh.be.applications.Base.Interfaces.Api;
+using sh.be.applications.Base.Interfaces.External.Mail;
 using sh.be.applications.Module.Auth.Dtos.User;
 using sh.be.applications.Module.Auth.Interfaces.Services;
 using sh.be.applications.Module.Auth.Interfaces.Queries;
@@ -28,19 +29,19 @@ namespace sh.be.applications.Module.Auth.Implements
         private readonly IUserRepository _userRepository;
         private readonly IRoleRepository _roleRepository;
         private readonly IUserQuery _userQuery;
-        private readonly IMailService _mailService;
+        private readonly IMailExternal _mailExternal;
         private readonly UserDomainService _userDomainService;
         private readonly RoleDomainService _roleDomainService;
 
         public UserService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<UserService> logger, IRequestContext requestContext, TimeProvider timeProvider,
-            IUserRepository userRepository, IRoleRepository roleRepository, IUserQuery userQuery, IMailService mailService,
+            IUserRepository userRepository, IRoleRepository roleRepository, IUserQuery userQuery, IMailExternal mailExternal,
             UserDomainService userDomainService, RoleDomainService roleDomainService
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _userRepository = userRepository;
             _roleRepository = roleRepository;
             _userQuery = userQuery;
-            _mailService = mailService;
+            _mailExternal = mailExternal;
             _userDomainService = userDomainService;
             _roleDomainService = roleDomainService;
         }
@@ -87,7 +88,7 @@ namespace sh.be.applications.Module.Auth.Implements
                     null, new { user.Id, user.UserName, user.FullName, user.Email, user.PhoneNumber, RoleIds = roleIds });
                 await _unitOfWork.SaveChangesAsync();
 
-                await _mailService.SendAccountCreatedAsync(dto.Email, dto.UserName, password);
+                await _mailExternal.SendAccountCreatedAsync(dto.Email, dto.UserName, password);
 
                 await transaction.CommitAsync();
             }

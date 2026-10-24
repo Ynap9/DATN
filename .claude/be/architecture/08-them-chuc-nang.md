@@ -44,14 +44,20 @@ xoá mềm thì thêm `HasQueryFilter(e => !e.Deleted)` cho nó trong `ShDbConte
 
 ## Đăng ký DI
 
-Trong `#region services` của `Program.cs`, tất cả `AddScoped`:
+Trong `#region services` của `Program.cs`, mỗi dòng vào đúng nhóm của nó, tất cả `AddScoped`:
 
 ```csharp
+// repositories
 builder.Services.AddScoped<ICatalogRepository, CatalogRepository>();
+// queries
 builder.Services.AddScoped<ICatalogQuery, CatalogQuery>();
+// domain services
 builder.Services.AddScoped<CatalogDomainService>();
+// application services
 builder.Services.AddScoped<ICatalogService, CatalogService>();
 ```
+
+Dịch vụ ngoài mới: xem bước ở [05-infrastructure-external.md](05-infrastructure-external.md#thêm-một-dịch-vụ-ngoài).
 
 ⚠️ Quên đăng ký thì build vẫn qua nhưng request đầu tiên lỗi `Unable to resolve service`. Chạy app và gọi thử
 ít nhất một API của phần vừa thêm.

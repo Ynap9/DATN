@@ -2,8 +2,9 @@ using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using sh.be.applications.Base;
-using sh.be.applications.Base.Dtos.Excel;
-using sh.be.applications.Base.Interfaces;
+using sh.be.applications.Base.Dtos.DataReader;
+using sh.be.applications.Base.Interfaces.Api;
+using sh.be.applications.Base.Interfaces.External.Storage;
 using sh.be.applications.Module.DigitalSignature.Dtos.Template;
 using sh.be.applications.Module.DigitalSignature.Interfaces.Queries;
 using sh.be.applications.Module.DigitalSignature.Interfaces.Services;
@@ -25,17 +26,17 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
     {
         private readonly ITemplateRepository _templateRepository;
         private readonly ITemplateQuery _templateQuery;
-        private readonly IFileStorage _fileStorage;
-        private readonly ISampleFileReader _sampleFileReader;
+        private readonly IFileStorageExternal _fileStorageExternal;
+        private readonly ISampleFileExternal _sampleFileExternal;
 
         public TemplateService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<TemplateService> logger, IRequestContext requestContext, TimeProvider timeProvider,
-            ITemplateRepository templateRepository, ITemplateQuery templateQuery, IFileStorage fileStorage, ISampleFileReader sampleFileReader
+            ITemplateRepository templateRepository, ITemplateQuery templateQuery, IFileStorageExternal fileStorageExternal, ISampleFileExternal sampleFileExternal
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _templateRepository = templateRepository;
             _templateQuery = templateQuery;
-            _fileStorage = fileStorage;
-            _sampleFileReader = sampleFileReader;
+            _fileStorageExternal = fileStorageExternal;
+            _sampleFileExternal = sampleFileExternal;
         }
 
         public async Task<BaseResponsePagingDto<GetListTemplateDto>> FindPaging(FindPagingTemplateDto dto)
@@ -54,7 +55,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
         public ExportFileDto GetSampleFile()
         {
             _logger.LogInformation($"{nameof(GetSampleFile)}");
-            return _sampleFileReader.ReadSigningSampleFile();
+            return _sampleFileExternal.ReadSigningSampleFile();
         }
 
         public async Task<FindTemplateByIdDto> Create(CreateTemplateDto dto)
@@ -145,7 +146,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
                 new { template.Id, template.Name }, null);
             await _unitOfWork.SaveChangesAsync();
 
-            await _fileStorage.DeleteByPrefixAsync(TemplateImagePolicy.BuildObjectKeyPrefix(id));
+            await _fileStorageExternal.DeleteByPrefixAsync(TemplateImagePolicy.BuildObjectKeyPrefix(id));
         }
 
         private async Task ChangeImagesAsync(Template template, UpdateConfigTemplateDto dto)
@@ -185,7 +186,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
         private async Task<string> UploadImageAsync(IFormFile image, string objectKey)
         {
             await using var content = image.OpenReadStream();
-            return await _fileStorage.UploadAsync(content, objectKey, image.ContentType);
+            return await _fileStorageExternal.UploadAsync(content, objectKey, image.ContentType);
         }
 
         private async Task DeleteObsoleteImagesAsync(IEnumerable<string?> oldImageObjectKeys, Template template)
@@ -193,7 +194,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
             var currentImageObjectKeys = new[] { template.StampImageObjectKey, template.WetSignatureImageObjectKey }.OfType<string>();
             foreach (var objectKey in oldImageObjectKeys.OfType<string>().Except(currentImageObjectKeys))
             {
-                await _fileStorage.DeleteAsync(objectKey);
+                await _fileStorageExternal.DeleteAsync(objectKey);
             }
         }
 

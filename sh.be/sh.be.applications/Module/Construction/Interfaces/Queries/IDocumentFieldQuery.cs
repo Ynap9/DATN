@@ -5,7 +5,8 @@ namespace sh.be.applications.Module.Construction.Interfaces.Queries
 {
     public interface IDocumentFieldQuery
     {
-        Task<List<GetListDocumentFieldDropDownDto>> GetDocumentFieldDropDown(int documentTypeId);        Task<BaseResponsePagingDto<GetListDocumentFieldDto>> FindPaging(FindPagingDocumentFieldDto dto);
+        Task<List<GetListDocumentFieldDropDownDto>> GetDocumentFieldDropDown(int documentTypeId);        
+        Task<BaseResponsePagingDto<GetListDocumentFieldDto>> FindPaging(FindPagingDocumentFieldDto dto);
         Task<FindDocumentFieldByIdDto?> FindById(int id);
         Task<List<FieldImportHeaderDto>> GetListFieldImport(int documentTypeId);
     }
