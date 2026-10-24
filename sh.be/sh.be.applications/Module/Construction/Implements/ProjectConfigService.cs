@@ -1,15 +1,16 @@
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using sh.be.applications.Base;
-using sh.be.applications.Base.Dtos.Spreadsheet;
-using sh.be.applications.Base.Interfaces;
+using sh.be.applications.Base.Dtos.DataReader;
+using sh.be.applications.Base.Interfaces.External.DataReader;
+using sh.be.applications.Base.Interfaces.Api;
 using sh.be.applications.Module.Construction.Dtos.ProjectConfig;
 using sh.be.applications.Module.Construction.Interfaces.Queries;
 using sh.be.applications.Module.Construction.Interfaces.Services;
 using sh.be.domain.Base;
-using sh.be.domain.Module.Construction.Entities;
-using sh.be.domain.Module.Construction.Repositories;
-using sh.be.domain.Module.Construction.Services;
+using sh.be.domain.Module.Construction.Projects.Entities;
+using sh.be.domain.Module.Construction.Projects.Repositories;
+using sh.be.domain.Module.Construction.Projects.Services;
 using sh.be.domain.Module.Core.Repositories;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.Constants.Core;
@@ -23,18 +24,18 @@ namespace sh.be.applications.Module.Construction.Implements
         private readonly IProjectConfigRepository _projectConfigRepository;
         private readonly IProjectConfigQuery _projectConfigQuery;
         private readonly ProjectConfigDomainService _projectConfigDomainService;
-        private readonly ISpreadsheetAuthorizer _spreadsheetAuthorizer;
+        private readonly IGoogleSheetExternal _googleSheetExternal;
         private readonly IAuthorizationStateProtector _authorizationStateProtector;
 
         public ProjectConfigService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<ProjectConfigService> logger, IRequestContext requestContext, TimeProvider timeProvider,
             IProjectConfigRepository projectConfigRepository, IProjectConfigQuery projectConfigQuery, ProjectConfigDomainService projectConfigDomainService,
-            ISpreadsheetAuthorizer spreadsheetAuthorizer, IAuthorizationStateProtector authorizationStateProtector
+            IGoogleSheetExternal googleSheetExternal, IAuthorizationStateProtector authorizationStateProtector
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _projectConfigRepository = projectConfigRepository;
             _projectConfigQuery = projectConfigQuery;
             _projectConfigDomainService = projectConfigDomainService;
-            _spreadsheetAuthorizer = spreadsheetAuthorizer;
+            _googleSheetExternal = googleSheetExternal;
             _authorizationStateProtector = authorizationStateProtector;
         }
 
@@ -98,7 +99,7 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             _logger.LogInformation($"{nameof(GetGoogleAuthorizationUrl)}");
             var account = await GetGoogleClientAsync();
-            return _spreadsheetAuthorizer.BuildAuthorizationUrl(account, _authorizationStateProtector.CreateState(getCurrentUserId()));
+            return _googleSheetExternal.BuildAuthorizationUrl(account, _authorizationStateProtector.CreateState(getCurrentUserId()));
         }
 
         public async Task CompleteGoogleAuthorization(GoogleAuthorizationCallbackDto dto)
@@ -107,7 +108,7 @@ namespace sh.be.applications.Module.Construction.Implements
             var userId = _authorizationStateProtector.ReadUserId(dto.State);
 
             var account = await GetGoogleClientAsync();
-            var refreshToken = await _spreadsheetAuthorizer.ExchangeRefreshTokenAsync(account, dto.Code ?? String.Empty);
+            var refreshToken = await _googleSheetExternal.ExchangeRefreshTokenAsync(account, dto.Code ?? String.Empty);
             var projectConfig = await _projectConfigDomainService.SaveValueAsync(ProjectConfigConst.GOOGLE_REFRESH_TOKEN, refreshToken,
                 userId, GetVietnamTime());
 

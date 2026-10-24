@@ -90,7 +90,7 @@ bằng incremental update thì bản PDF/A vẫn giữ nguyên tuân thủ). **�
 ký để tiện tái dùng file đã ký.
 
 ⚠️ **sh.be hiện chưa có công cụ nào sinh hay kiểm PDF/A** — mới có `PdfRevisionReader`, `PdfSignatureReader`
-(đọc chữ ký) ở `infrastructure.external/Pdf/Base`. Thư viện PDF đọc/ghi thông thường không chuẩn hoá sang PDF/A:
+(đọc chữ ký) ở `infrastructure.external/DigitalSignature/Base`. Thư viện PDF đọc/ghi thông thường không chuẩn hoá sang PDF/A:
 không nhúng `/OutputIntent`, không ép nhúng font, không dựng được lớp text. Bật tuỳ chọn này nghĩa là **thêm
 phụ thuộc ngoài** — Ghostscript, hoặc OCRmyPDF + Tesseract kèm dữ liệu tiếng Việt như gói mẫu đã dùng. Đó
 chính là lý do nó nằm sau một cờ chứ không bật sẵn.

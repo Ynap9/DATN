@@ -1,6 +1,6 @@
 # Lô ký (DigitalSignature)
 
-> **Phần 10/13** · trước: [09-mau-chu-ky.md](09-mau-chu-ky.md) · mục lục: [README.md](README.md)
+> **Phần 10/14** · trước: [09-mau-chu-ky.md](09-mau-chu-ky.md) · mục lục: [README.md](README.md)
 
 Lô ký (`digitalsignature.SigningBatch`) gom các file PDF người dùng tải lên để ký số hàng loạt bằng USB token qua plugin
 theo một mẫu chữ ký. Mỗi file là một dòng `digitalsignature.SigningBatchFile`. Kiến trúc ký và thứ tự thi công:
@@ -46,7 +46,7 @@ rảnh) bằng `isSessionLost = true` → server đóng phiên, lô tự `PAUSED
 | Chỉ thêm file khi lô `NEW` → `607`; lô dự án → `606`; tối đa **200 file / lượt** → `617`, thân request ≤ 512 MB | `CreateFile`, `EnsureAcceptUpload`, `SigningBatchFilePolicy` |
 | File rỗng, không đuôi `.pdf`, **trùng tên trong lô** (không phân biệt hoa thường) bị **bỏ qua lặng lẽ** | `SigningBatchFilePolicy.IsAcceptedFile` |
 | Xoá file: lô `SIGNING` → `608`; không thuộc lô → `610`; chỉ file `PENDING` / `FAILED` → `611`. Xoá file cuối **không** xoá lô | `RemoveFile`, `SigningBatchFile.Delete` |
-| Mở phiên: chứng thư hỏng → `614`, không chuỗi về CA Ban Cơ yếu đã ghim hoặc hết hạn → `615`; lô phải `NEW` / `PAUSED` / `FAILED` → `618`; lưu thumbprint | `ICertificateValidator.LoadTrusted`, `ChangeCertificate` |
+| Mở phiên: chứng thư hỏng → `614`, không chuỗi về CA Ban Cơ yếu đã ghim hoặc hết hạn → `615`; lô phải `NEW` / `PAUSED` / `FAILED` → `618`; lưu thumbprint | `ICertificateValidatorExternal.LoadTrusted`, `ChangeCertificate` |
 | Bắt đầu: đúng trạng thái trên → `618`; chưa chọn chứng thư → `609`; không có phiên → `619`; phiên khác chứng thư đã lưu → `620`; không còn file chờ → `621`; runner còn đang chạy lô → `608`. File `FAILED` được đưa lại `PENDING` | `SigningBatch.Start`, `ISigningRunner.EnsureNotRunning` |
 | Tạm dừng chỉ khi `SIGNING` → `622`; huỷ khi chưa `DONE` / `CANCELLED` → `623` (huỷ đóng luôn phiên) | `Pause`, `Cancel` |
 | Hết file: còn file lỗi → `FAILED` kèm lý do (ký tiếp để ký lại), không thì `DONE`; đóng phiên | `SigningBatch.Complete` |
@@ -61,8 +61,8 @@ rảnh) bằng `isSessionLost = true` → server đóng phiên, lô tự `PAUSED
 | Chặng | Việc | Lỗi của file |
 |---|---|---|
 | Nhận việc | Một `UPDATE` chuyển 8 file `PENDING` → `SIGNING` | — |
-| Chuẩn bị (4 worker / lô) | Tải nguồn MinIO, kiểm đã ký, `IPdfSigner.Prepare` (ảnh dấu / chữ ký tay đã vẽ cache theo lô) | PDF hỏng `625`, mã hoá `626`, `/DocMDP /P 1` `627`, `628`, ảnh mẫu `633`, vẽ chữ `635` |
-| Ký (8 yêu cầu đang bay) | `ISigningQueue.RequestSignatureAsync`, chờ plugin tối đa 120 s | Plugin báo lỗi `632`, quá giờ `634`; mất phiên → lô `PAUSED` |
+| Chuẩn bị (4 worker / lô) | Tải nguồn MinIO, kiểm đã ký, `IPdfSignerExternal.Prepare` (ảnh dấu / chữ ký tay đã vẽ cache theo lô) | PDF hỏng `625`, mã hoá `626`, `/DocMDP /P 1` `627`, `628`, ảnh mẫu `633`, vẽ chữ `635` |
+| Ký (8 yêu cầu đang bay) | `ISigningQueueExternal.RequestSignatureAsync`, chờ plugin tối đa 120 s | Plugin báo lỗi `632`, quá giờ `634`; mất phiên → lô `PAUSED` |
 | Hoàn tất (4 worker / lô) | TSA (3 lần thử) → ghép CMS → tự kiểm → đẩy bản ký riêng tư → ghi DB → xoá nguồn | TSA `630`, chữ ký sai / không phủ trọn file `631`, chữ ký quá chỗ trống `629` |
 
 - **Cầu dao TSA**: 5 file lỗi TSA **liên tiếp** → lô `PAUSED` lý do TSA; file đó đã `FAILED`, ký tiếp sẽ ký lại.
@@ -98,6 +98,6 @@ Runner **không** ghi nhật ký từng file (lô 1000 file sẽ là 1000 dòng)
 - ⚠️ Hai lượt thêm file **đồng thời** vào cùng lô có thể lấy trùng `Order`; FE phải gửi tuần tự từng đợt.
 - Huỷ lô chưa dọn bản nguồn còn lại; lô `NEW` bỏ dở không bị dọn; chưa có API xoá lô, danh sách lô.
 - Luồng đầy đủ qua API với USB token thật **chưa chạy thử**; phần mật mã đã ký thật qua TSA và OpenSSL xác nhận
-  (chương trình thử gọi thẳng `PdfSigner`, chứng thư tự ký).
+  (chương trình thử gọi thẳng `PdfSignerExternal`, chứng thư tự ký).
 
 > **Tiếp:** [11-ho-so-import.md](11-ho-so-import.md) — import hồ sơ từ Google Sheet và xem file.

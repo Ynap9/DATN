@@ -2,8 +2,9 @@ using AutoMapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using sh.be.applications.Base;
-using sh.be.applications.Base.Dtos.Signing;
-using sh.be.applications.Base.Interfaces;
+using sh.be.applications.Base.Dtos.DigitalSignature;
+using sh.be.applications.Base.Interfaces.External.DigitalSignature;
+using sh.be.applications.Base.Interfaces.External.Storage;
 using sh.be.applications.Module.DigitalSignature.Dtos.SigningBatch;
 using sh.be.applications.Module.DigitalSignature.Interfaces.Services;
 using sh.be.domain.Base;
@@ -21,9 +22,9 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
     public class SigningRunner : ISigningRunner
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
-        private readonly IPdfSigner _pdfSigner;
-        private readonly ITimestampClient _timestampClient;
-        private readonly ISigningQueue _signingQueue;
+        private readonly IPdfSignerExternal _pdfSignerExternal;
+        private readonly ITimestampExternal _timestampExternal;
+        private readonly ISigningQueueExternal _signingQueueExternal;
         private readonly ILogger<SigningRunner> _logger;
         private readonly TimeProvider _timeProvider;
         private readonly ConcurrentDictionary<int, RunningBatch> _runningBatches = new();
@@ -32,13 +33,13 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
         private readonly SemaphoreSlim _timestampSlots = new(SigningBatchConst.TSA_CONNECTIONS);
         private readonly SemaphoreSlim _finishSlots = new(SigningBatchConst.FINISH_SLOTS);
 
-        public SigningRunner(IServiceScopeFactory serviceScopeFactory, IPdfSigner pdfSigner, ITimestampClient timestampClient, ISigningQueue signingQueue,
+        public SigningRunner(IServiceScopeFactory serviceScopeFactory, IPdfSignerExternal pdfSignerExternal, ITimestampExternal timestampExternal, ISigningQueueExternal signingQueueExternal,
             ILogger<SigningRunner> logger, TimeProvider timeProvider)
         {
             _serviceScopeFactory = serviceScopeFactory;
-            _pdfSigner = pdfSigner;
-            _timestampClient = timestampClient;
-            _signingQueue = signingQueue;
+            _pdfSignerExternal = pdfSignerExternal;
+            _timestampExternal = timestampExternal;
+            _signingQueueExternal = signingQueueExternal;
             _logger = logger;
             _timeProvider = timeProvider;
         }
@@ -130,11 +131,11 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
         private async Task RunPipelineAsync(RunningBatch running)
         {
             using var storageScope = _serviceScopeFactory.CreateScope();
-            var fileStorage = storageScope.ServiceProvider.GetRequiredService<IFileStorage>();
+            var fileStorageExternal = storageScope.ServiceProvider.GetRequiredService<IFileStorageExternal>();
             PdfSigningContextDto context;
             try
             {
-                context = await CreateContextAsync(running, fileStorage);
+                context = await CreateContextAsync(running, fileStorageExternal);
             }
             catch (UserFriendlyException ex)
             {
@@ -149,9 +150,9 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
             var prepared = Channel.CreateBounded<PreparedFile>(SigningBatchConst.PREFETCH_FILES);
             var signed = Channel.CreateBounded<SignedFile>(SigningBatchConst.REQUEST_BATCH_SIZE);
 
-            var prepareTasks = StartWorkers(SigningBatchConst.PREPARE_WORKERS, () => PrepareAsync(running, context, fileStorage, claimed.Reader, prepared.Writer, token), running);
+            var prepareTasks = StartWorkers(SigningBatchConst.PREPARE_WORKERS, () => PrepareAsync(running, context, fileStorageExternal, claimed.Reader, prepared.Writer, token), running);
             var signTasks = StartWorkers(SigningBatchConst.REQUEST_BATCH_SIZE, () => SignAsync(running, prepared.Reader, signed.Writer, token), running);
-            var finishTasks = StartWorkers(SigningBatchConst.TSA_CONNECTIONS, () => FinishAsync(running, context, fileStorage, signed.Reader, token), running);
+            var finishTasks = StartWorkers(SigningBatchConst.TSA_CONNECTIONS, () => FinishAsync(running, context, fileStorageExternal, signed.Reader, token), running);
             var tasks = new List<Task>
             {
                 Guard(() => ClaimAsync(running, claimed.Writer, token), running),
@@ -187,10 +188,10 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
             }
 
             await StopBatchAsync(running, signingBatch => signingBatch.Complete(running.CreatedBy, GetVietnamTime()));
-            _signingQueue.CloseSession(running.Id);
+            _signingQueueExternal.CloseSession(running.Id);
         }
 
-        private async Task<PdfSigningContextDto> CreateContextAsync(RunningBatch running, IFileStorage fileStorage)
+        private async Task<PdfSigningContextDto> CreateContextAsync(RunningBatch running, IFileStorageExternal fileStorageExternal)
         {
             using var scope = _serviceScopeFactory.CreateScope();
             var templateRepository = scope.ServiceProvider.GetRequiredService<ITemplateRepository>();
@@ -200,13 +201,13 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
 
             var options = mapper.Map<PdfSigningOptionsDto>(template);
             options.Positions = mapper.Map<List<PdfSigningPositionDto>>(await templateRepository.GetPositionsAsync(template.Id));
-            options.StampImage = await DownloadTemplateImageAsync(fileStorage, template.StampImageObjectKey);
-            options.WetSignatureImage = await DownloadTemplateImageAsync(fileStorage, template.WetSignatureImageObjectKey);
+            options.StampImage = await DownloadTemplateImageAsync(fileStorageExternal, template.StampImageObjectKey);
+            options.WetSignatureImage = await DownloadTemplateImageAsync(fileStorageExternal, template.WetSignatureImageObjectKey);
             running.AllowSigningSignedPdf = template.AllowSigningSignedPdf;
-            return _pdfSigner.CreateContext(_signingQueue.CopySessionCertificate(running.Id), options);
+            return _pdfSignerExternal.CreateContext(_signingQueueExternal.CopySessionCertificate(running.Id), options);
         }
 
-        private static async Task<byte[]?> DownloadTemplateImageAsync(IFileStorage fileStorage, string? objectKey)
+        private static async Task<byte[]?> DownloadTemplateImageAsync(IFileStorageExternal fileStorageExternal, string? objectKey)
         {
             if (string.IsNullOrWhiteSpace(objectKey))
             {
@@ -214,7 +215,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
             }
             try
             {
-                return await fileStorage.DownloadAsync(objectKey);
+                return await fileStorageExternal.DownloadAsync(objectKey);
             }
             catch (UserFriendlyException)
             {
@@ -247,7 +248,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
             }
         }
 
-        private async Task PrepareAsync(RunningBatch running, PdfSigningContextDto context, IFileStorage fileStorage, ChannelReader<SigningBatchFile> reader,
+        private async Task PrepareAsync(RunningBatch running, PdfSigningContextDto context, IFileStorageExternal fileStorageExternal, ChannelReader<SigningBatchFile> reader,
             ChannelWriter<PreparedFile> writer, CancellationToken token)
         {
             await foreach (var file in reader.ReadAllAsync(token))
@@ -255,13 +256,13 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
                 PdfPreparedSignatureDto preparedSignature;
                 try
                 {
-                    var pdf = await fileStorage.DownloadAsync(file.SourceObjectKey, token);
+                    var pdf = await fileStorageExternal.DownloadAsync(file.SourceObjectKey, token);
                     await _prepareSlots.WaitAsync(token);
                     try
                     {
-                        SigningBatchFilePolicy.EnsureSignable(_pdfSigner.HasSignature(pdf), running.AllowSigningSignedPdf);
+                        SigningBatchFilePolicy.EnsureSignable(_pdfSignerExternal.HasSignature(pdf), running.AllowSigningSignedPdf);
                         var now = _timeProvider.GetUtcNow();
-                        preparedSignature = _pdfSigner.Prepare(pdf, context, TimeZoneInfo.ConvertTime(now, BaseService.VietnamTimeZone).DateTime, now.UtcDateTime);
+                        preparedSignature = _pdfSignerExternal.Prepare(pdf, context, TimeZoneInfo.ConvertTime(now, BaseService.VietnamTimeZone).DateTime, now.UtcDateTime);
                     }
                     finally
                     {
@@ -284,7 +285,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
                 byte[] signature;
                 try
                 {
-                    signature = await _signingQueue.RequestSignatureAsync(running.Id, item.Prepared.SignedAttributes, token);
+                    signature = await _signingQueueExternal.RequestSignatureAsync(running.Id, item.Prepared.SignedAttributes, token);
                 }
                 catch (UserFriendlyException ex) when (ex.ErrorCode == ErrorCodes.DigitalSignatureErrorSigningSessionNotOpen)
                 {
@@ -300,7 +301,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
             }
         }
 
-        private async Task FinishAsync(RunningBatch running, PdfSigningContextDto context, IFileStorage fileStorage, ChannelReader<SignedFile> reader, CancellationToken token)
+        private async Task FinishAsync(RunningBatch running, PdfSigningContextDto context, IFileStorageExternal fileStorageExternal, ChannelReader<SignedFile> reader, CancellationToken token)
         {
             await foreach (var item in reader.ReadAllAsync(token))
             {
@@ -325,7 +326,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
                     await _finishSlots.WaitAsync(token);
                     try
                     {
-                        await SaveSignedFileAsync(running, context, fileStorage, item, timestampToken);
+                        await SaveSignedFileAsync(running, context, fileStorageExternal, item, timestampToken);
                     }
                     finally
                     {
@@ -344,7 +345,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
             await _timestampSlots.WaitAsync(token);
             try
             {
-                return await _timestampClient.RequestTokenAsync(signature, token);
+                return await _timestampExternal.RequestTokenAsync(signature, token);
             }
             finally
             {
@@ -352,16 +353,16 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
             }
         }
 
-        private async Task SaveSignedFileAsync(RunningBatch running, PdfSigningContextDto context, IFileStorage fileStorage, SignedFile item, byte[] timestampToken)
+        private async Task SaveSignedFileAsync(RunningBatch running, PdfSigningContextDto context, IFileStorageExternal fileStorageExternal, SignedFile item, byte[] timestampToken)
         {
-            var signedPdf = _pdfSigner.Complete(item.Prepared, item.Signature, timestampToken, context);
+            var signedPdf = _pdfSignerExternal.Complete(item.Prepared, item.Signature, timestampToken, context);
             var signedObjectKey = SigningBatchFilePolicy.BuildSignedObjectKey(running.Id, item.File.Order);
             using (var content = new MemoryStream(signedPdf))
             {
-                await fileStorage.UploadPrivateAsync(content, signedObjectKey, SigningBatchConst.PDF_CONTENT_TYPE);
+                await fileStorageExternal.UploadPrivateAsync(content, signedObjectKey, SigningBatchConst.PDF_CONTENT_TYPE);
             }
 
-            var timestampedAtUtc = _timestampClient.ReadTimeUtc(timestampToken);
+            var timestampedAtUtc = _timestampExternal.ReadTimeUtc(timestampToken);
             DateTime? timestampedAt = timestampedAtUtc.HasValue ? TimeZoneInfo.ConvertTimeFromUtc(timestampedAtUtc.Value, BaseService.VietnamTimeZone) : null;
             using (var scope = _serviceScopeFactory.CreateScope())
             {
@@ -369,7 +370,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
                     .MarkFileSignedAsync(item.File, signedObjectKey, item.Prepared.SignedAt, timestampedAt, running.CreatedBy, GetVietnamTime());
             }
             running.CountSigned();
-            await fileStorage.DeleteAsync(item.File.SourceObjectKey);
+            await fileStorageExternal.DeleteAsync(item.File.SourceObjectKey);
         }
 
         private async Task MarkFailedAsync(RunningBatch running, SigningBatchFile file, Exception exception)

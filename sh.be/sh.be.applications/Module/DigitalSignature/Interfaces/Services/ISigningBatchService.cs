@@ -1,4 +1,4 @@
-using sh.be.applications.Base.Dtos.Signing;
+using sh.be.applications.Base.Dtos.DigitalSignature;
 using sh.be.applications.Module.DigitalSignature.Dtos.SigningBatch;
 
 namespace sh.be.applications.Module.DigitalSignature.Interfaces.Services

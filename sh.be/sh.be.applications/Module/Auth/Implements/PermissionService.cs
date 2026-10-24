@@ -1,7 +1,7 @@
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using sh.be.applications.Base;
-using sh.be.applications.Base.Interfaces;
+using sh.be.applications.Base.Interfaces.Api;
 using sh.be.applications.Module.Auth.Dtos.Permission;
 using sh.be.applications.Module.Auth.Interfaces.Services;
 using sh.be.domain.Base;

@@ -1,7 +1,7 @@
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using sh.be.applications.Base;
-using sh.be.applications.Base.Interfaces;
+using sh.be.applications.Base.Interfaces.Api;
 using sh.be.applications.Module.Core.Dtos.AuditLog;
 using sh.be.applications.Module.Core.Interfaces.Services;
 using sh.be.applications.Module.Core.Interfaces.Queries;

@@ -2,13 +2,13 @@
 
 > **Trạng thái:** 🔶 làm dở — kiến trúc A–G chốt 2026-10-17; ✅ bước 2–8 (code + tài liệu, [../nghiep-vu/10-lo-ky.md](../nghiep-vu/10-lo-ky.md)); còn bước 1 (đo) và chạy thử
 > luồng qua API với USB token thật — phần mật mã đã ký thật qua TSA, OpenSSL xác nhận. Đã xong: mẫu chữ ký
-> ([../nghiep-vu/09-mau-chu-ky.md](../nghiep-vu/09-mau-chu-ky.md)), API plugin, `ICertificateValidator`
+> ([../nghiep-vu/09-mau-chu-ky.md](../nghiep-vu/09-mau-chu-ky.md)), API plugin, `ICertificateValidatorExternal`
 > ([../architecture/05-infrastructure-external.md](../architecture/05-infrastructure-external.md)).
 > Nghiệp vụ chi tiết (BR-01…BR-35, G1–G8): `C:\Users\Admin\Downloads\bao-cao-nghiep-vu-ky-so-local-datn.md`.
 
 ## Input
 
-- Entity `SigningBatch`, `SigningBatchFile` đã migrate; `IFileStorage` (MinIO), plugin `3.0.0`, 5 CA ghim.
+- Entity `SigningBatch`, `SigningBatchFile` đã migrate; `IFileStorageExternal` (MinIO), plugin `3.0.0`, 5 CA ghim.
 - Thiếu: repository / service / API lô, hàng đợi phiên, runner, phần mật mã PDF (port từ `kssm.be`).
 
 ## Nút cổ chai — vì sao chọn kiến trúc này
@@ -42,7 +42,7 @@ Con số đã chốt (3 lô, 4 kết nối TSA, cầu dao 5 file lỗi TSA liên
 1. **Đo**: `T_token` trên token thật + thời gian TSA trung bình hiện tại; chỉnh các hằng số.
 2. **Lô — dữ liệu**: `ISigningBatchRepository` + query; API tạo lô, thêm / xoá file, danh sách file, lô đang dở
    (route gốc `api/digital-signature/signing-batch`, quyền `Function.DigitalSignature.SigningBatch.*` — hỏi duyệt).
-3. **Phiên**: hàng đợi phiên trong RAM (singleton) — mở (`ICertificateValidator.Load` + `IsTrusted`, sai → `615`,
+3. **Phiên**: hàng đợi phiên trong RAM (singleton) — mở (`ICertificateValidatorExternal.LoadTrusted` + `IsTrusted`, sai → `615`,
    lưu thumbprint), đóng, còn sống; API `session`.
 4. **Mật mã**: port `PdfPreparer`, `CmsAssembler`, `PdfContentWriter`, `TimestampClient`, `SignatureVerifier` vào
    `infrastructure.external`; ký thử bằng chứng thư test, mở trong Adobe / Foxit.

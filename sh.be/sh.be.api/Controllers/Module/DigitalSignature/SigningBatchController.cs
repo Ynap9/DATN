@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using sh.be.api.Attributes;
 using sh.be.api.Base;
-using sh.be.applications.Base.Dtos.Signing;
+using sh.be.applications.Base.Dtos.DigitalSignature;
 using sh.be.applications.Module.DigitalSignature.Dtos.SigningBatch;
 using sh.be.applications.Module.DigitalSignature.Interfaces.Services;
 using sh.be.shared.Constants.Auth;
