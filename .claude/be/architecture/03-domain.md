@@ -50,7 +50,7 @@ sẽ che entity `Submission` trong code domain (CS0118).
 | `SigningBatchFile` | DigitalSignature | Một file trong lô, trạng thái `SigningBatchFileConst`: `Create` (`PENDING`), `StartSigning`, `MarkSigned` (ghi `SignedObjectKey` — bản đã ký lưu trên MinIO, không lên Google Drive như kssm), `MarkFailed`, `ReturnToQueue`, `Retry` (xoá lỗi và kết quả kiểm chữ ký), `GetSignedObjectKey` (chưa `DONE` → `624`), `Delete` (chỉ `PENDING`/`FAILED`, không thì `611`). Chỉ tạo qua `SigningBatch.CreateFile` |
 | `PackageSchema` | Packaging | Một cặp (loại gói `PackageConst`, loại metadata `PackageSchemaConst`), migration `Init_Packaging`: chỉ `Create`; `Name` ≤ 31 ký tự vì làm tên sheet Excel |
 | `PackageSchemaField` | Packaging | Một phần tử XML trong `<simpledc>` của schema, đúng thứ tự `SortOrder`; kiểu, độ dài, `Requirement` (`REQUIRED`/`OPTIONAL`/`CONDITIONAL` + phần tử, mã điều kiện), `CodeGroup`: chỉ `Create` |
-| `PackageCodeValue` | Packaging | Giá trị hợp lệ của trường mã theo `CodeGroup` (`maintenance`, `typeName`…): chỉ `Create`. Cả 3 entity chỉ do seeder ghi, chưa có repository ([../nghiep-vu/15-dong-goi-cau-hinh.md](../nghiep-vu/15-dong-goi-cau-hinh.md)) |
+| `PackageCodeValue` | Packaging | Giá trị hợp lệ của trường mã theo `CodeGroup` (`maintenance`, `typeName`…): chỉ `Create`. Cả 3 entity chỉ do seeder ghi, chưa có repository; đọc qua `PackageConfigQuery` ([../nghiep-vu/15-dong-goi-cau-hinh.md](../nghiep-vu/15-dong-goi-cau-hinh.md)) |
 
 **Vì sao hành vi nằm trong entity:** setter `private` chỉ có nghĩa khi entity tự cung cấp cách thay đổi. Tách
 các method này ra class khác thì setter phải mở `public` — entity thành anemic model, ai cũng gán được
@@ -71,7 +71,7 @@ gọi chúng bên trong method của aggregate gốc hoặc seeder; đừng gọ
 |---|---|---|
 | Chỉ dữ liệu của chính entity | Method của entity | `Role.Update`, `AppUser.UpdateProfile` |
 | Tra cứu dữ liệu khác (qua repository) | Domain service | `UserDomainService.EnsureUniqueAsync`, `RoleDomainService.EnsureAllExistAsync` |
-| Phép tính thuần, không I/O | Policy tĩnh | `PermissionGrantPolicy.ResolveGrantedKeys`, `IsSuperAdmin`, `HasAnyPermission`; `FieldImportMatchPolicy.IsMatch` / `ToMatchKey`; `TemplateImagePolicy` (kiểm ảnh mẫu chữ ký → `612`, dựng object key); `PluginVersionPolicy` (whitelist phiên bản plugin); `SigningBatchFilePolicy` (trần 200 file / lượt → `617`, nhận `.pdf` không rỗng, ký đè → `628`, dựng key nguồn / bản ký, đổi exception thành lỗi lưu cho file) |
+| Phép tính thuần, không I/O | Policy tĩnh | `PermissionGrantPolicy.ResolveGrantedKeys`, `IsSuperAdmin`, `HasAnyPermission`; `FieldImportMatchPolicy.IsMatch` / `ToMatchKey`; `TemplateImagePolicy` (kiểm ảnh mẫu chữ ký → `612`, dựng object key); `PluginVersionPolicy` (whitelist phiên bản plugin); `SigningBatchFilePolicy` (trần 200 file / lượt → `617`, nhận `.pdf` không rỗng, ký đè → `628`, dựng key nguồn / bản ký, đổi exception thành lỗi lưu cho file); `PackageSchemaPolicy` (loại gói ngoài `PACKAGE_TYPES` → `701`, loại metadata ngoài `METADATA_TYPES` → `702`) |
 
 `Construction/Submissions/Services/Import/` là policy **thuần**, chạy song song an toàn: `SubmissionKeyPolicy`, `SheetCellAddressPolicy`,
 `SubmissionImportColumnPolicy`, `SubmissionImportPolicy` (dựng `Append/Blank/OverwriteImportPlan` dùng chung cho verify và import) +

@@ -13,6 +13,7 @@ Presentation + **composition root**. Tham chiếu `applications`, `infrastructur
 | `Controllers/Module/Core/` | `AuditLogController`; `BackgroundJobController`, `SignalRController` (API test kết nối Hangfire / SignalR, [05](05-infrastructure-external.md)) |
 | `Controllers/Module/Construction/` | `DocumentTypeController`, `DocumentFieldController`, `ProjectController`, `ProjectConfigController` (callback Google `[AllowAnonymous]`), `SubmissionController` (một `ISubmissionService` cho cả import, xem, kiểm tra + `ISubmissionFileService`; `proxy-file` trả stream PDF, lỗi vẫn `Ok(OkException(ex))`; 6 API import + 7 API xem / kiểm tra + 4 API QA + 4 API tra cứu + 1 `proxy-file` = 22 route; route có id luôn ràng buộc `{id:int}` để không nuốt `paging`, `count`, `tree`, `summary`, `proxy-file`…) |
 | `Controllers/Module/DigitalSignature/` | `TemplateController` (mẫu chữ ký; `PUT {id}/config` nhận `[FromForm]` multipart), `PluginController` (phiên bản + bộ cài plugin ký số, chỉ cần đăng nhập), `SigningBatchController` (lô ký; `POST {id}/files` multipart, `[RequestSizeLimit]` 512 MB) |
+| `Controllers/Module/Packaging/` | `PackageConfigController` (`packaging/config`: `dropdown`, `paging`, `excel-template` trả file nhiều sheet; chỉ đọc, [../nghiep-vu/15-dong-goi-cau-hinh.md](../nghiep-vu/15-dong-goi-cau-hinh.md)) |
 | `Attributes/PermissionAttribute.cs` | Kiểm quyền theo key, gọi `IPermissionService.HasAnyPermission` |
 | `Services/HttpRequestContext.cs` | Implement `IRequestContext`: `UserId`, `Source`, `ContentType` từ `HttpContext` |
 | `Services/AuthorizationStateProtector.cs` | Implement `IAuthorizationStateProtector`: ký / đọc `state` OAuth bằng `ITimeLimitedDataProtector` |
@@ -94,7 +95,6 @@ khi cấp token. Đây là chỗ còn dính Identity ở tầng api, đã biết
 - Connection string tên `SO_HOA_DB`, `MultipleActiveResultSets=False` (bật MARS làm bulk import treo transaction — xem
   [../nghiep-vu/11-ho-so-import.md](../nghiep-vu/11-ho-so-import.md)); CORS lấy từ `AllowedHosts` (phân cách `;`), riêng hub dùng `SignalRPolicy`.
 
-⚠️ `UseRequestLocalization` ép culture **invariant**: form-data bind số theo culture của máy, máy `vi-VN` đọc `0.6` thành
-`6` nên toạ độ mẫu chữ ký bị báo `603`. Đừng gỡ dòng này khi dọn `Program.cs`.
+⚠️ `UseRequestLocalization` ép culture **invariant**: form-data bind số theo culture của máy, máy `vi-VN` đọc `0.6` thành `6` nên toạ độ mẫu chữ ký bị báo `603`. Đừng gỡ dòng này khi dọn `Program.cs`.
 
 > **Tiếp:** [02-applications.md](02-applications.md) — service điều phối use case.

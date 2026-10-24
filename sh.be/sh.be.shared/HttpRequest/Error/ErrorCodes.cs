@@ -99,5 +99,9 @@ namespace sh.be.shared.HttpRequest.Error
         public const int DigitalSignatureErrorSigningRequestTimeout = 634;
         public const int DigitalSignatureErrorAppearanceBuildFailed = 635;
 
+        public const int PackagingErrorPackageTypeInvalid = 701;
+        public const int PackagingErrorMetadataTypeInvalid = 702;
+        public const int PackagingErrorSchemaFieldNotFound = 703;
+
     }
 }

@@ -3,8 +3,8 @@
 > **Phần 15/15** · trước: [14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md) · mục lục: [README.md](README.md)
 
 Nền của module đóng gói: dữ liệu cho biết **loại gói nào có những trường metadata nào**, đúng thứ tự, kiểu, độ dài, mức bắt buộc,
-theo Thông tư 05/2025/TT-BNV. Quy định gốc ở [../dong-goi/README.md](../dong-goi/README.md). Cập nhật 2026-10-25: đã có bảng + seed,
-**chưa có API** (cấu hình chỉ vào bằng seeder).
+theo Thông tư 05/2025/TT-BNV. Quy định gốc ở [../dong-goi/README.md](../dong-goi/README.md). Cập nhật 2026-10-25: đã có bảng + seed
+và 3 API **chỉ đọc**; cấu hình chỉ vào bằng seeder.
 
 ## Mô hình — ba bảng schema `packaging`
 
@@ -120,6 +120,27 @@ chờ API ghi; sửa `PackagingSeedData` không tác động lên DB đang chạ
 
 ⚠️ Dòng bị xoá mềm không tính là "đã có": khởi động lại sẽ seed bù một dòng mới (unique index có filter cho phép).
 
+## API — `api/packaging/config`
+
+Cả ba cần `Function.Packaging.Config.View` (một key cho xem và tải Excel, giống `DocumentType`); không ghi gì nên không có audit.
+
+| Endpoint | Vào | Ra |
+|---|---|---|
+| `GET dropdown` | — | Loại gói theo thứ tự `PACKAGE_TYPES`, mỗi loại `{ packageType, code, name, schemas: [{ packageSchemaId, packageType, metadataType, name }] }`; loại không có schema thì bỏ |
+| `GET paging` | `packageType` (bắt buộc), `metadataType` (bỏ trống = mọi loại), `keyword` (khớp `DisplayName` hoặc `ElementName`), `pageSize` (`-1` = hết), `pageNumber` | `{ items, totalItems }`; sắp `MetadataType` → `SortOrder` → `Id`; mỗi dòng kèm `codes: [{ code, name }]` (rỗng nếu không phải trường mã) |
+| `GET excel-template` | `packageType`, `metadataTypes` lặp lại (bỏ trống = mọi loại, trùng được gộp) | File `Mau metadata <code>_template.xlsx`, mỗi schema một sheet tên `Name`, dòng 1 = `DisplayName` theo `SortOrder` |
+
+| Lỗi | Mã |
+|---|---|
+| `packageType` ngoài `1`–`5` (cả `paging` và `excel-template`) | `701` |
+| `metadataType` / một phần tử `metadataTypes` ngoài `1`–`4` | `702` |
+| `excel-template`: các schema đã chọn không còn trường nào | `703` |
+
+- Kiểm `701` / `702` ở `PackageSchemaPolicy` (domain). Loại gói hợp lệ mà không có trường thì `paging` trả rỗng, **không** báo lỗi.
+- `paging` chạy 3 câu: đếm, lấy trang, rồi **một** câu lấy mã cho mọi `CodeGroup` trong trang (không truy vấn theo từng dòng).
+- Schema không có trường bị bỏ khỏi file Excel; tiêu đề cột là tên tiếng Việt, tên thẻ xem ở `paging`. Chưa đánh dấu cột bắt buộc
+  (để tới khi chốt bước kiểm tra metadata).
+
 ## Đã kiểm thực tế
 
 Ngày 2026-10-25 trên DB dev (`SO_HOA_DB`, SQL Server Docker), migration `Init_Packaging`:
@@ -132,7 +153,22 @@ Ngày 2026-10-25 trên DB dev (`SO_HOA_DB`, SQL Server Docker), migration `Init_
 - Chạy app lần 2: không thêm dòng, không thêm audit. Xoá mềm một trường rồi chạy lại: seed bù đúng 1 dòng, audit "0 mã, 0 schema,
   1 trường" (đã dọn dữ liệu thử).
 
+API, gọi thật bằng `admin` / `viewer` cùng ngày:
+
+- `dropdown`: 5 loại đúng thứ tự, mỗi loại 4 schema đúng tên. `paging` `SIP_hoso` `pageSize=-1`: 76 dòng đúng thứ tự;
+  `metadataType=2` chỉ 21 trường văn bản; `keyword=docCode` và `keyword=Mã lưu trữ` đều ra đúng `docCode`; `maintenance` 7 mã đúng
+  thứ tự, `title` không có mã, `language` cho chọn nhiều; trang 2 (`pageSize=5`) không trùng trang 1, `totalItems` vẫn 76.
+- `packageType=0` / `6` → `701`, `metadataType=9` → `702` ở cả `paging` lẫn `excel-template`; xoá mềm hết trường "Phim âm bản, ảnh" →
+  `excel-template` chỉ loại đó → `703`, `paging` trả rỗng, file đủ loại còn 3 sheet (đã khôi phục).
+- Excel `SIP_hoso`: 4 sheet đúng tên, thứ tự, số cột 18 / 21 / 18 / 19, dòng 1 in đậm + cố định; `metadataTypes=1&metadataTypes=1`
+  → 1 sheet. Excel mẫu cũ của `DocumentType` vẫn tải được.
+- Không token → `401`; `viewer` (không có quyền) → `403` cả 3 API; Swagger nhóm `packaging` đủ 3 route.
+
+Thời gian (máy dev, SQL Server trong Docker, build Debug, đo từ client, 5 lần sau khi warm-up): `dropdown` 330–380 ms, `paging` 590–660 ms,
+`excel-template` ~400 ms. ⚠️ Không đạt mục tiêu 30 / 50 / 300 ms của bản task, nhưng nền của môi trường cũng vậy: API sẵn có
+`document-type/dropdown` 380–450 ms, `user/me` 220–350 ms. Thời gian gần như tỉ lệ với số lượt đi – về DB (`[Permission]` truy vấn quyền
+mỗi request + 1 / 3 câu của API), nên phải đo lại trên môi trường deploy trước khi kết luận chậm.
+
 ## 🔬 Chưa thi công
 
-API đọc cấu hình (dropdown loại gói, danh sách trường, Excel mẫu nhiều sheet), API ghi cấu hình, phiên kiểm tra metadata, đóng gói
-ZIP / METS / EAD / PREMIS.
+API ghi cấu hình, phiên kiểm tra metadata, đóng gói ZIP / METS / EAD / PREMIS.

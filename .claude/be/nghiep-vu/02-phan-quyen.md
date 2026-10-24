@@ -67,6 +67,10 @@ Menu.DigitalSignature              Menu ký số
     ├── Function.DigitalSignature.SigningBatch.Create   (tạo lô, tải file lên)
     ├── Function.DigitalSignature.SigningBatch.Sign     (phiên ký, bắt đầu / tạm dừng / huỷ, đưa thư plugin)
     └── Function.DigitalSignature.SigningBatch.Delete   (xoá file khỏi lô)
+
+Menu.Packaging                     Menu đóng gói
+└── Menu.Packaging.Config          Menu cấu hình metadata đóng gói
+    └── Function.Packaging.Config.View   (xem cấu hình metadata và tải Excel mẫu)
 ```
 
 Quy ước đặt key: `Menu.<Module>.<Tên>` cho mục menu, `Function.<Module>.<Tên>.<Hành động>` cho thao tác.
@@ -138,6 +142,7 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `GET api/digital-signature/signing-batch/running`, `GET .../{id}/files`, `.../{id}/progress`, `.../{id}/files/{fileId}/signed-url` | `Function.DigitalSignature.SigningBatch.View` |
 | `POST` / `DELETE .../{id}/session`, `POST .../{id}/start` / `pause` / `cancel`, `GET .../{id}/requests`, `POST .../{id}/signatures` | `...SigningBatch.Sign` |
 | `POST api/digital-signature/signing-batch`, `POST .../{id}/files` / `DELETE .../{id}/files/{fileId}` | `...SigningBatch.Create` / `.Delete` |
+| `GET api/packaging/config/dropdown`, `GET .../paging`, `GET .../excel-template` | `Function.Packaging.Config.View` |
 | `GET api/digital-signature/plugin/version`, `.../setup`, `.../setup/content` | — (chỉ cần đăng nhập) |
 
 ## Quyền người dùng: đang lệch so với cây

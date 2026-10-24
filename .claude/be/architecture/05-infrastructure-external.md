@@ -73,8 +73,8 @@ Refresh token hết hạn / bị thu hồi → `207`, phải xác thực lại. 
 (service account không có dung lượng) — đừng quay lại. ⚠️ OAuth consent screen ở **Testing** thì refresh token hết hạn sau 7 ngày.
 
 `IExcelExternal` (ClosedXML): `CreateTemplate(templateName, headers)` = `CreateTable` không có dòng dữ liệu, tên file thêm `_template`;
-cả hai dùng chung `CreateWorkbook` (header dòng `1` in đậm + freeze, giãn cột theo 200 dòng đầu, kẹp rộng 8–60). Luật tên sheet / file
-Excel (31 ký tự, ký tự cấm) ở `Base/ExcelNaming`. Controller trả `File(...)`; lỗi vẫn trả `ApiResponse`.
+`CreateMultiSheetTemplate(templateName, sheets)` như `CreateTemplate` nhưng mỗi `ExcelSheetTemplateDto` một sheet. Cả ba dùng chung `CreateWorkbook` + `AddWorksheet` (header dòng `1` in đậm + freeze, giãn cột theo 200 dòng đầu, kẹp rộng 8–60). Luật tên sheet / file Excel (31 ký tự, ký tự cấm) ở `Base/ExcelNaming`. Controller trả `File(...)`; lỗi vẫn trả `ApiResponse`.
+⚠️ Hai tên sheet trùng nhau sau khi cắt 31 ký tự thì ClosedXML ném lỗi — chưa xử lý vì 6 tên schema đóng gói hiện tại không trùng.
 
 ## Storage, Mail
 
