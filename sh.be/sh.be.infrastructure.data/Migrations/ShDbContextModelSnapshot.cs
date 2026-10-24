@@ -550,7 +550,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("UserRole", "auth");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.DocumentField", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.DocumentFields.Entities.DocumentField", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -643,7 +643,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("DocumentField", "construction");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.DocumentType", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.DocumentTypes.Entities.DocumentType", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -692,7 +692,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("DocumentType", "construction");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.Project", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Projects.Entities.Project", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -753,7 +753,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("Project", "construction");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.ProjectConfig", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Projects.Entities.ProjectConfig", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -805,7 +805,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("ProjectConfig", "construction");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.ProjectDocumentType", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Projects.Entities.ProjectDocumentType", b =>
                 {
                     b.Property<int>("ProjectId")
                         .HasColumnType("int");
@@ -845,7 +845,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("ProjectDocumentType", "construction");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.ProjectDocumentTypeDocumentField", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Projects.Entities.ProjectDocumentTypeDocumentField", b =>
                 {
                     b.Property<int>("ProjectId")
                         .HasColumnType("int");
@@ -895,7 +895,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("ProjectDocumentTypeDocumentField", "construction");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.Submission", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Submissions.Entities.Submission", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1003,7 +1003,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("Submission", "construction");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.SubmissionData", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Submissions.Entities.SubmissionData", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1070,7 +1070,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("SubmissionData", "construction");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.SubmissionLog", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Submissions.Entities.SubmissionLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1144,7 +1144,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("SubmissionLog", "construction");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.SubmissionQaLog", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Submissions.Entities.SubmissionQaLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1219,7 +1219,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("SubmissionQaLog", "construction");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.SubmissionQaLogField", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Submissions.Entities.SubmissionQaLogField", b =>
                 {
                     b.Property<int>("SubmissionQaLogId")
                         .HasColumnType("int");
@@ -1651,6 +1651,217 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("TemplatePosition", "digitalsignature");
                 });
 
+            modelBuilder.Entity("sh.be.domain.Module.Packaging.Entities.PackageCodeValue", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("CodeGroup")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<bool>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "CodeGroup", "Code" }, "IX_PackageCodeValue_CodeGroup_Code")
+                        .IsUnique()
+                        .HasFilter("[Deleted] = 0");
+
+                    b.ToTable("PackageCodeValue", "packaging");
+                });
+
+            modelBuilder.Entity("sh.be.domain.Module.Packaging.Entities.PackageSchema", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<bool>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("MetadataFilePrefix")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("MetadataType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(31)
+                        .HasColumnType("nvarchar(31)");
+
+                    b.Property<int>("PackageType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("XsdFileName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "PackageType", "MetadataType" }, "IX_PackageSchema_PackageType_MetadataType")
+                        .IsUnique()
+                        .HasFilter("[Deleted] = 0");
+
+                    b.ToTable("PackageSchema", "packaging");
+                });
+
+            modelBuilder.Entity("sh.be.domain.Module.Packaging.Entities.PackageSchemaField", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("AllowMultipleValues")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("CodeGroup")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ConditionElement")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ConditionValues")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<int>("DataType")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ElementName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("MaxLength")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PackageSchemaId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Requirement")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "PackageSchemaId", "ElementName" }, "IX_PackageSchemaField_PackageSchemaId_ElementName")
+                        .IsUnique()
+                        .HasFilter("[Deleted] = 0");
+
+                    b.HasIndex(new[] { "PackageSchemaId", "SortOrder" }, "IX_PackageSchemaField_PackageSchemaId_SortOrder");
+
+                    b.ToTable("PackageSchemaField", "packaging");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
                     b.HasOne("sh.be.domain.Module.Auth.Entities.AppUser", null)
@@ -1700,6 +1911,15 @@ namespace sh.be.infrastructure.data.Migrations
                     b.Navigation("Application");
 
                     b.Navigation("Authorization");
+                });
+
+            modelBuilder.Entity("sh.be.domain.Module.Packaging.Entities.PackageSchemaField", b =>
+                {
+                    b.HasOne("sh.be.domain.Module.Packaging.Entities.PackageSchema", null)
+                        .WithMany()
+                        .HasForeignKey("PackageSchemaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication", b =>

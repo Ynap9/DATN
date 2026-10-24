@@ -67,6 +67,7 @@ namespace sh.be.shared.Constants.Core
         public const string ACTION_SEED_PERMISSION = "Đồng bộ danh sách quyền";
         public const string ACTION_SEED_USER = "Khởi tạo tài khoản quản trị mặc định";
         public const string ACTION_SEED_ROLE_PERMISSION = "Khởi tạo quyền cho vai trò mặc định";
+        public const string ACTION_SEED_PACKAGING = "Khởi tạo cấu hình đóng gói";
 
         public const string SOURCE_SYSTEM = "System";
     }

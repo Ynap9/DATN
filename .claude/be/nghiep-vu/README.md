@@ -1,7 +1,7 @@
 # Nghiệp vụ backend sh.be
 
 > Chức năng và luật nghiệp vụ của module `Auth` (người dùng, vai trò, quyền), `Core` (nhật ký hệ thống) và
-> `Construction` (loại văn bản, dự án, hồ sơ) và `DigitalSignature` (mẫu chữ ký, lô ký).
+> `Construction` (loại văn bản, dự án, hồ sơ), `DigitalSignature` (mẫu chữ ký, lô ký) và `Packaging` (cấu hình đóng gói TT05).
 > Đối chiếu với code `sh.be` ngày 2026-10-19. Kiến trúc và quy ước code nằm ở [../architecture/README.md](../architecture/README.md).
 
 ## Mục lục
@@ -22,6 +22,7 @@
 | [12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md) | Hồ sơ: danh sách, lọc, chi tiết, hồ sơ liền kề, đếm, kiểm tra / tái kiểm tra (`SubmissionLog`), lịch sử |
 | [13-ho-so-qa.md](13-ho-so-qa.md) | Hồ sơ: QA Đạt / Không đạt, trả lại, `StatusQa` độc lập với `StatusCheck`, lịch sử QA (`SubmissionQaLog`) |
 | [14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md) | Hồ sơ: xoá mềm nhiều hồ sơ (chặn hồ sơ đã kiểm tra), xuất Excel theo bộ lọc |
+| [15-dong-goi-cau-hinh.md](15-dong-goi-cau-hinh.md) | Đóng gói: 20 schema (5 loại gói × 4 loại metadata), trường đúng thứ tự, luật bắt buộc, 13 nhóm mã, seeder |
 
 ## Thuật ngữ
 

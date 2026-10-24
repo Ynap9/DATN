@@ -440,6 +440,7 @@ using (var scope = app.Services.CreateScope())
     await SeedPermission.SeedAsync(shDbContext);
     await SeedUser.SeedAsync(shDbContext,userManager);
     await SeedRolePermission.SeedAsync(shDbContext);
+    await SeedPackaging.SeedAsync(shDbContext);
 }
 await app.Services.GetRequiredService<ISigningRunner>().RecoverAsync();
 #endregion

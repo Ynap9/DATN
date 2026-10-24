@@ -1,6 +1,6 @@
 # Hồ sơ — xoá và xuất Excel (Construction)
 
-> **Phần 14/14** · trước: [13-ho-so-qa.md](13-ho-so-qa.md) · mục lục: [README.md](README.md)
+> **Phần 14/15** · trước: [13-ho-so-qa.md](13-ho-so-qa.md) · mục lục: [README.md](README.md)
 
 Hai thao tác trên màn danh sách hồ sơ của một dự án + loại văn bản: chọn hồ sơ để xoá, hoặc tải danh sách theo bộ lọc
 hiện tại về Excel. Cùng `SubmissionController` và cùng bộ lọc với [12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md#bộ-lọc-chung).
@@ -79,3 +79,5 @@ thì đổi `ExcelExternal` và kiểu dữ liệu của hàng, đừng xử lý
 
 Hai API này mới viết (commit `2070cd1`), chưa gọi thật trên DB có dữ liệu, chưa kiểm luồng xoá bị khoá bởi import, chưa đo
 thời gian xuất. Kiểm trên `.claude/be/db/test-data-ho-so.sql` trước khi dựa vào các con số hoặc hành vi ở trên.
+
+> **Tiếp:** [15-dong-goi-cau-hinh.md](15-dong-goi-cau-hinh.md) — cấu hình metadata đóng gói theo TT05: loại gói, schema, trường, bảng mã.
