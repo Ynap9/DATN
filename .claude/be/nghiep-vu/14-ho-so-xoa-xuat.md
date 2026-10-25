@@ -1,6 +1,6 @@
 # Hồ sơ — xoá và xuất Excel (Construction)
 
-> **Phần 14/16** · trước: [13-ho-so-qa.md](13-ho-so-qa.md) · mục lục: [README.md](README.md)
+> **Phần 14/17** · trước: [13-ho-so-qa.md](13-ho-so-qa.md) · mục lục: [README.md](README.md)
 
 Hai thao tác trên màn danh sách hồ sơ của một dự án + loại văn bản: chọn hồ sơ để xoá, hoặc tải danh sách theo bộ lọc
 hiện tại về Excel. Cùng `SubmissionController` và cùng bộ lọc với [12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md#bộ-lọc-chung).

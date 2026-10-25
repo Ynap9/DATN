@@ -63,6 +63,7 @@ namespace sh.be.shared.Constants.Auth
         public const string FUNCTION_SUBMISSION_IMPORT = "Function.Construction.Submission.Import";
         public const string FUNCTION_SUBMISSION_CHECK = "Function.Construction.Submission.Check";
         public const string FUNCTION_SUBMISSION_QA = "Function.Construction.Submission.Qa";
+        public const string FUNCTION_SUBMISSION_QA_STATS = "Function.Construction.Submission.QaStats";
         public const string FUNCTION_SUBMISSION_DELETE = "Function.Construction.Submission.Delete";
         public const string FUNCTION_SUBMISSION_EXPORT = "Function.Construction.Submission.Export";
 

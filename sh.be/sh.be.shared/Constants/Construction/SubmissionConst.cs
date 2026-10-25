@@ -14,6 +14,16 @@ namespace sh.be.shared.Constants.Construction
         public static readonly IReadOnlyList<int> QA_RESULTS = [QA_PASSED, QA_FAILED];
         public const int QA_REASON_MAX_LENGTH = 1000;
 
+        public const int QA_STATS_DEFAULT_DAYS = 30;
+        public const int QA_STATS_MAX_DAYS = 366;
+        public const string QA_STATS_ORDER_REVIEW = "review";
+        public const string QA_STATS_ORDER_ACCURACY = "accuracy";
+        public const string UNKNOWN_ENTRY_USER_NAME = "Không xác định";
+        public const string DELETED_FIELD_NAME_SUFFIX = " (đã xoá)";
+        public const int TIMELINE_MAX_EVENTS = 500;
+        public const string TIMELINE_EVENT_CHECK = "CHECK";
+        public const string TIMELINE_EVENT_QA = "QA";
+
         public const int MAX_PAGE_SIZE = 200;
         public const int CHECK_NOTE_MAX_LENGTH = 1000;
         public const int FIELD_VALUE_MAX_ITEMS = 200;

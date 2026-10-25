@@ -1,6 +1,6 @@
 # Lô ký (DigitalSignature)
 
-> **Phần 10/16** · trước: [09-mau-chu-ky.md](09-mau-chu-ky.md) · mục lục: [README.md](README.md)
+> **Phần 10/17** · trước: [09-mau-chu-ky.md](09-mau-chu-ky.md) · mục lục: [README.md](README.md)
 
 Lô ký (`digitalsignature.SigningBatch`) gom các file PDF người dùng tải lên để ký số hàng loạt bằng USB token qua plugin
 theo một mẫu chữ ký. Mỗi file là một dòng `digitalsignature.SigningBatchFile`. Kiến trúc ký và thứ tự thi công:

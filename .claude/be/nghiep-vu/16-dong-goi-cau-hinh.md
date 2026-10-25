@@ -1,6 +1,6 @@
 # Đóng gói — cấu hình metadata TT05 (Packaging)
 
-> **Phần 16/16** · trước: [15-han-du-an.md](15-han-du-an.md) · mục lục: [README.md](README.md)
+> **Phần 16/17** · trước: [15-han-du-an.md](15-han-du-an.md) · mục lục: [README.md](README.md)
 
 Nền của module đóng gói: dữ liệu cho biết **loại gói nào có những trường metadata nào**, đúng thứ tự, kiểu, độ dài, mức bắt buộc,
 theo Thông tư 05/2025/TT-BNV. Quy định gốc ở [../dong-goi/README.md](../dong-goi/README.md). Cập nhật 2026-10-25: đã có bảng + seed
@@ -172,3 +172,5 @@ mỗi request + 1 / 3 câu của API), nên phải đo lại trên môi trườn
 ## 🔬 Chưa thi công
 
 API ghi cấu hình, phiên kiểm tra metadata, đóng gói ZIP / METS / EAD / PREMIS.
+
+> **Tiếp:** [17-thong-ke-qa.md](17-thong-ke-qa.md) — thống kê QA theo trường, người nhập, tỉ lệ đúng, dòng thời gian văn bản.

@@ -527,6 +527,196 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             return summary;
         }
 
+        public async Task<ViewQaStatsSummaryDto> FindQaStatsSummary(FindQaStatsDto dto, DateTime fromDate, DateTime toDateExclusive)
+        {
+            var reviews = await FindQaReviewsAsync(dto.ProjectId, dto.DocumentTypeId, fromDate, toDateExclusive);
+            var chargeableFieldIds = await FindConfiguredFieldIdsAsync(dto.ProjectId, dto.DocumentTypeId, true);
+
+            var entryUserId = dto.EntryUserId?.Trim();
+            var isAllEntryUsers = string.IsNullOrEmpty(entryUserId);
+            var summary = BuildQaStats<ViewQaStatsSummaryDto>(
+                reviews.Where(r => isAllEntryUsers || r.EntryUserId == entryUserId).ToList(),
+                reviews.Where(r => r.IsFirstReview && (isAllEntryUsers || r.FirstEntryUserId == entryUserId)).ToList(),
+                chargeableFieldIds);
+            summary.ChargeableFieldCount = chargeableFieldIds.Count;
+            return summary;
+        }
+
+        public async Task<List<GetListQaFieldStatsDto>> FindQaFieldStats(FindQaStatsDto dto, DateTime fromDate, DateTime toDateExclusive)
+        {
+            var entryUserId = dto.EntryUserId?.Trim();
+            var reviews = (await FindQaReviewsAsync(dto.ProjectId, dto.DocumentTypeId, fromDate, toDateExclusive))
+                .Where(r => string.IsNullOrEmpty(entryUserId) || r.EntryUserId == entryUserId)
+                .ToList();
+            var configuredFieldIds = await FindConfiguredFieldIdsAsync(dto.ProjectId, dto.DocumentTypeId, false);
+            var wrongCountByFieldId = reviews
+                .SelectMany(r => r.WrongDocumentFieldIds)
+                .GroupBy(documentFieldId => documentFieldId)
+                .ToDictionary(g => g.Key, g => g.Count());
+            var documentFieldIds = configuredFieldIds.Union(wrongCountByFieldId.Keys).ToList();
+
+            var documentFields = await _shDbContext.DocumentFields
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .Where(d => documentFieldIds.Contains(d.Id))
+                .Select(d => new { d.Id, d.Name, d.Field, d.IsChargeable, d.OrderListView, d.Deleted })
+                .ToListAsync();
+
+            return documentFields
+                .OrderByDescending(d => wrongCountByFieldId.GetValueOrDefault(d.Id))
+                .ThenBy(d => d.OrderListView)
+                .ThenBy(d => d.Id)
+                .Select(d =>
+                {
+                    var wrongCount = wrongCountByFieldId.GetValueOrDefault(d.Id);
+                    return new GetListQaFieldStatsDto
+                    {
+                        DocumentFieldId = d.Id,
+                        Name = d.Deleted ? d.Name + SubmissionConst.DELETED_FIELD_NAME_SUFFIX : d.Name,
+                        Field = d.Field,
+                        IsConfigured = configuredFieldIds.Contains(d.Id),
+                        IsChargeable = d.IsChargeable,
+                        ReviewCount = reviews.Count,
+                        WrongCount = wrongCount,
+                        WrongRate = ToPercent(wrongCount, reviews.Count),
+                        AccuracyRate = ToPercent(reviews.Count - wrongCount, reviews.Count),
+                    };
+                })
+                .ToList();
+        }
+
+        public async Task<BaseResponsePagingDto<GetListQaEntryUserStatsDto>> FindQaEntryUserStatsPaging(FindPagingQaEntryUserStatsDto dto, DateTime fromDate,
+            DateTime toDateExclusive)
+        {
+            var reviews = await FindQaReviewsAsync(dto.ProjectId, dto.DocumentTypeId, fromDate, toDateExclusive);
+            var chargeableFieldIds = await FindConfiguredFieldIdsAsync(dto.ProjectId, dto.DocumentTypeId, true);
+
+            var entryUserIds = reviews.Select(r => r.EntryUserId)
+                .Concat(reviews.Where(r => r.IsFirstReview).Select(r => r.FirstEntryUserId))
+                .Distinct()
+                .ToList();
+            var knownUserIds = entryUserIds.Where(userId => userId != null).Select(userId => userId!).ToList();
+            var userById = await _shDbContext.Users
+                .AsNoTracking()
+                .Where(u => knownUserIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => new { u.UserName, u.FullName });
+
+            var entryUsers = entryUserIds
+                .Select(userId =>
+                {
+                    var entryUser = BuildQaStats<GetListQaEntryUserStatsDto>(
+                        reviews.Where(r => r.EntryUserId == userId).ToList(),
+                        reviews.Where(r => r.IsFirstReview && r.FirstEntryUserId == userId).ToList(),
+                        chargeableFieldIds);
+                    var user = userId != null ? userById.GetValueOrDefault(userId) : null;
+                    entryUser.UserId = userId;
+                    entryUser.UserName = userId == null ? SubmissionConst.UNKNOWN_ENTRY_USER_NAME : user?.UserName;
+                    entryUser.FullName = user?.FullName;
+                    return entryUser;
+                })
+                .Where(u => string.IsNullOrEmpty(dto.Keyword)
+                    || (u.UserName?.Contains(dto.Keyword, StringComparison.OrdinalIgnoreCase) ?? false)
+                    || (u.FullName?.Contains(dto.Keyword, StringComparison.OrdinalIgnoreCase) ?? false))
+                .ToList();
+
+            var orderedEntryUsers = dto.OrderBy == SubmissionConst.QA_STATS_ORDER_ACCURACY
+                ? entryUsers.OrderBy(u => u.FieldAccuracyRate)
+                : entryUsers.OrderByDescending(u => u.ReviewCount);
+
+            return new BaseResponsePagingDto<GetListQaEntryUserStatsDto>
+            {
+                Items = orderedEntryUsers
+                    .ThenBy(u => u.UserName, StringComparer.OrdinalIgnoreCase)
+                    .Skip(dto.GetSkip())
+                    .Take(dto.PageSize)
+                    .ToList(),
+                TotalItems = entryUsers.Count,
+            };
+        }
+
+        public async Task<List<GetListSubmissionTimelineDto>> FindTimeline(int submissionId)
+        {
+            var checkLogs = await _shDbContext.SubmissionLogs
+                .AsNoTracking()
+                .Where(l => l.SubmissionId == submissionId)
+                .Select(l => new { l.Id, l.UserId, l.OldStatus, l.NewStatus, l.Note, l.ChangedDataCount, l.Description, l.CreatedDate })
+                .ToListAsync();
+            var qaLogs = await _shDbContext.SubmissionQaLogs
+                .AsNoTracking()
+                .Where(l => l.SubmissionId == submissionId)
+                .Select(l => new { l.Id, l.UserId, l.NewStatusQa, l.Reason, l.Description, l.CreatedDate })
+                .ToListAsync();
+
+            var qaLogIds = qaLogs.Select(l => l.Id).ToList();
+            var wrongFieldsByQaLogId = (await (from f in _shDbContext.SubmissionQaLogFields.AsNoTracking()
+                                               join d in _shDbContext.DocumentFields.IgnoreQueryFilters().AsNoTracking() on f.DocumentFieldId equals d.Id
+                                               where qaLogIds.Contains(f.SubmissionQaLogId)
+                                               orderby d.OrderListView, d.Id
+                                               select new
+                                               {
+                                                   f.SubmissionQaLogId,
+                                                   d.Id,
+                                                   Name = d.Deleted ? d.Name + SubmissionConst.DELETED_FIELD_NAME_SUFFIX : d.Name,
+                                               })
+                .ToListAsync())
+                .ToLookup(f => f.SubmissionQaLogId, f => new SubmissionTimelineWrongFieldDto { DocumentFieldId = f.Id, Name = f.Name });
+
+            var entryUserIdByQaLogId = await QueryQaLogEntryUsers(_shDbContext.SubmissionQaLogs.Where(l => l.SubmissionId == submissionId))
+                .ToDictionaryAsync(e => e.QaLogId, e => e.EntryUserId);
+
+            var userIds = checkLogs.Select(l => l.UserId)
+                .Concat(qaLogs.Select(l => l.UserId))
+                .Concat(entryUserIdByQaLogId.Values.Where(userId => userId != null).Select(userId => userId!))
+                .Distinct()
+                .ToList();
+            var userById = await _shDbContext.Users
+                .AsNoTracking()
+                .Where(u => userIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => new { u.UserName, u.FullName });
+
+            var checkEvents = checkLogs.Select(l => new GetListSubmissionTimelineDto
+            {
+                EventType = SubmissionConst.TIMELINE_EVENT_CHECK,
+                LogId = l.Id,
+                CreatedDate = l.CreatedDate,
+                UserId = l.UserId,
+                UserName = userById.GetValueOrDefault(l.UserId)?.UserName,
+                FullName = userById.GetValueOrDefault(l.UserId)?.FullName,
+                Description = l.Description,
+                OldStatusCheck = l.OldStatus,
+                NewStatusCheck = l.NewStatus,
+                Note = l.Note,
+                ChangedDataCount = l.ChangedDataCount,
+            });
+            var qaEvents = qaLogs.Select(l =>
+            {
+                var entryUserId = entryUserIdByQaLogId[l.Id];
+                return new GetListSubmissionTimelineDto
+                {
+                    EventType = SubmissionConst.TIMELINE_EVENT_QA,
+                    LogId = l.Id,
+                    CreatedDate = l.CreatedDate,
+                    UserId = l.UserId,
+                    UserName = userById.GetValueOrDefault(l.UserId)?.UserName,
+                    FullName = userById.GetValueOrDefault(l.UserId)?.FullName,
+                    Description = l.Description,
+                    NewStatusQa = l.NewStatusQa,
+                    Reason = l.Reason,
+                    WrongFields = wrongFieldsByQaLogId[l.Id].ToList(),
+                    EntryUserId = entryUserId,
+                    EntryUserName = entryUserId == null ? SubmissionConst.UNKNOWN_ENTRY_USER_NAME : userById.GetValueOrDefault(entryUserId)?.UserName,
+                };
+            });
+
+            return checkEvents
+                .Concat(qaEvents)
+                .OrderBy(e => e.CreatedDate)
+                .ThenBy(e => e.EventType == SubmissionConst.TIMELINE_EVENT_CHECK ? 0 : 1)
+                .ThenBy(e => e.LogId)
+                .Take(SubmissionConst.TIMELINE_MAX_EVENTS)
+                .ToList();
+        }
+
         public async Task<SubmissionExportTableDto> FindExportTable(ISubmissionFilter filter)
         {
             var query = ApplyFilter(filter, filter.StatusCheck, filter.StatusQa);
@@ -617,6 +807,97 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                           where p.Id == projectId && d.Id == documentTypeId
                           select new SubmissionExportNameDto { ProjectName = p.Name, DocumentTypeName = d.Name })
                 .FirstOrDefaultAsync();
+        }
+
+        private async Task<List<QaReview>> FindQaReviewsAsync(int projectId, int documentTypeId, DateTime fromDate, DateTime toDateExclusive)
+        {
+            var qaLogs = from q in _shDbContext.SubmissionQaLogs.AsNoTracking()
+                         join s in _shDbContext.Submissions.AsNoTracking() on q.SubmissionId equals s.Id
+                         where q.ProjectId == projectId && q.DocumentTypeId == documentTypeId && q.CreatedDate >= fromDate && q.CreatedDate < toDateExclusive
+                         select q;
+
+            var reviewLogs = await (from q in qaLogs
+                                    join e in QueryQaLogEntryUsers(qaLogs) on q.Id equals e.QaLogId
+                                    select new
+                                    {
+                                        q.Id,
+                                        q.SubmissionId,
+                                        q.NewStatusQa,
+                                        e.EntryUserId,
+                                        IsFirstReview = !_shDbContext.SubmissionQaLogs.Any(o => o.SubmissionId == q.SubmissionId && o.Id < q.Id),
+                                    })
+                .ToListAsync();
+
+            var wrongFieldIdsByQaLogId = (await (from f in _shDbContext.SubmissionQaLogFields.AsNoTracking()
+                                                 join q in qaLogs on f.SubmissionQaLogId equals q.Id
+                                                 select new { f.SubmissionQaLogId, f.DocumentFieldId })
+                .ToListAsync())
+                .ToLookup(f => f.SubmissionQaLogId, f => f.DocumentFieldId);
+
+            return reviewLogs
+                .GroupBy(l => l.SubmissionId)
+                .Select(g =>
+                {
+                    var lastLog = g.MaxBy(l => l.Id)!;
+                    var firstLog = g.FirstOrDefault(l => l.IsFirstReview);
+                    return new QaReview(g.Key, lastLog.NewStatusQa, lastLog.EntryUserId, wrongFieldIdsByQaLogId[lastLog.Id].ToList(),
+                        firstLog != null, firstLog?.NewStatusQa == SubmissionConst.QA_PASSED, firstLog?.EntryUserId);
+                })
+                .ToList();
+        }
+
+        private IQueryable<QaLogEntryUser> QueryQaLogEntryUsers(IQueryable<SubmissionQaLog> qaLogs)
+        {
+            return qaLogs.Select(q => new QaLogEntryUser
+            {
+                QaLogId = q.Id,
+                EntryUserId = _shDbContext.SubmissionLogs
+                    .Where(l => l.SubmissionId == q.SubmissionId && l.CreatedDate <= q.CreatedDate)
+                    .OrderByDescending(l => l.CreatedDate)
+                    .ThenByDescending(l => l.Id)
+                    .Select(l => l.UserId)
+                    .FirstOrDefault(),
+            });
+        }
+
+        private async Task<HashSet<int>> FindConfiguredFieldIdsAsync(int projectId, int documentTypeId, bool isChargeableOnly)
+        {
+            return (await (from pf in _shDbContext.ProjectDocumentTypeDocumentFields.AsNoTracking()
+                           join d in _shDbContext.DocumentFields.AsNoTracking() on pf.DocumentFieldId equals d.Id
+                           where pf.ProjectId == projectId && pf.DocumentTypeId == documentTypeId && (!isChargeableOnly || d.IsChargeable)
+                           select d.Id)
+                .ToListAsync())
+                .ToHashSet();
+        }
+
+        private static TStats BuildQaStats<TStats>(IReadOnlyCollection<QaReview> reviews, IReadOnlyCollection<QaReview> firstReviews,
+            IReadOnlySet<int> chargeableFieldIds) where TStats : QaStatsMetricDto, new()
+        {
+            var reviewedDocumentCount = reviews.Select(r => r.SubmissionId).Distinct().Count();
+            var failedCount = reviews.Count(r => r.NewStatusQa == SubmissionConst.QA_FAILED);
+            var firstPassCount = firstReviews.Count(r => r.IsFirstPassed);
+            var wrongFieldCount = reviews.Sum(r => r.WrongDocumentFieldIds.Count(chargeableFieldIds.Contains));
+            var reviewedCellCount = reviews.Count * chargeableFieldIds.Count;
+
+            return new TStats
+            {
+                ReviewCount = reviews.Count,
+                PassedCount = reviews.Count(r => r.NewStatusQa == SubmissionConst.QA_PASSED),
+                FailedCount = failedCount,
+                ReviewedDocumentCount = reviewedDocumentCount,
+                FirstReviewCount = firstReviews.Count,
+                FirstPassCount = firstPassCount,
+                FirstPassRate = ToPercent(firstPassCount, firstReviews.Count),
+                WrongFieldCount = wrongFieldCount,
+                ReviewedCellCount = reviewedCellCount,
+                FieldAccuracyRate = ToPercent(reviewedCellCount - wrongFieldCount, reviewedCellCount),
+                AvgReturnPerDocument = reviewedDocumentCount == 0 ? 0 : Math.Round((decimal)failedCount / reviewedDocumentCount, 2),
+            };
+        }
+
+        private static decimal ToPercent(int value, int total)
+        {
+            return total == 0 ? 0 : Math.Round(value * 100m / total, 2);
         }
 
         private static SubmissionTreeCountDto SumTreeCounts(IEnumerable<SubmissionTreeCountDto> counts)
@@ -716,6 +997,15 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
 
             query = ApplyFieldFilter(query, filter.DocumentFieldId1, filter.FieldValue1, excludedDocumentFieldId);
             return ApplyFieldFilter(query, filter.DocumentFieldId2, filter.FieldValue2, excludedDocumentFieldId);
+        }
+
+        private record QaReview(int SubmissionId, int NewStatusQa, string? EntryUserId, List<int> WrongDocumentFieldIds, bool IsFirstReview,
+            bool IsFirstPassed, string? FirstEntryUserId);
+
+        private class QaLogEntryUser
+        {
+            public int QaLogId { get; init; }
+            public string? EntryUserId { get; init; }
         }
 
         private IQueryable<Submission> ApplyFieldFilter(IQueryable<Submission> query, int? documentFieldId, string? fieldValue, int? excludedDocumentFieldId)
