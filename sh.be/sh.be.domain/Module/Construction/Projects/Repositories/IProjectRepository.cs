@@ -6,6 +6,9 @@ namespace sh.be.domain.Module.Construction.Projects.Repositories
     {
         Task<Project?> FindByIdAsync(int id);
         Task<bool> ExistsByNameAsync(string name, int? excludedId = null);
+        Task<List<Project>> GetWithEndedAtByStatusesAsync(IReadOnlyCollection<int> statuses);
+        Task<bool> TryLockDeadlineCheckAsync();
+        Task ReleaseDeadlineCheckLockAsync();
         void Add(Project project);
         void Update(Project project);
         Task<List<ProjectDocumentType>> GetDocumentTypesAsync(int projectId);

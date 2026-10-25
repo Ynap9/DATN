@@ -54,6 +54,7 @@ namespace sh.be.infrastructure.data.Persistence.Seeder
             Permission.Create(PermissionConstants.FUNCTION_PROJECT_CREATE, "Tạo mới dự án", PermissionConstants.MENU_PROJECT, PermissionConstants.MODULE_CONSTRUCTION, null),
             Permission.Create(PermissionConstants.FUNCTION_PROJECT_UPDATE, "Cập nhật dự án", PermissionConstants.MENU_PROJECT, PermissionConstants.MODULE_CONSTRUCTION, null),
             Permission.Create(PermissionConstants.FUNCTION_PROJECT_DELETE, "Xóa dự án", PermissionConstants.MENU_PROJECT, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_PROJECT_DEADLINE, "Xem hạn dự án, chạy kiểm tra hạn, xem lịch sử gửi mail", PermissionConstants.MENU_PROJECT, PermissionConstants.MODULE_CONSTRUCTION, null),
 
             Permission.Create(PermissionConstants.MENU_PROJECT_CONFIG, "Menu cấu hình dự án", PermissionConstants.MENU_CONSTRUCTION, PermissionConstants.MODULE_CONSTRUCTION, null),
             Permission.Create(PermissionConstants.FUNCTION_PROJECT_CONFIG_VIEW, "Xem cấu hình dự án", PermissionConstants.MENU_PROJECT_CONFIG, PermissionConstants.MODULE_CONSTRUCTION, null),
@@ -82,6 +83,11 @@ namespace sh.be.infrastructure.data.Persistence.Seeder
             Permission.Create(PermissionConstants.FUNCTION_SIGNING_BATCH_CREATE, "Tạo lô ký và tải file lên", PermissionConstants.MENU_SIGNING_BATCH, PermissionConstants.MODULE_DIGITAL_SIGNATURE, null),
             Permission.Create(PermissionConstants.FUNCTION_SIGNING_BATCH_SIGN, "Ký số lô (mở / đóng phiên, bắt đầu, tạm dừng, huỷ)", PermissionConstants.MENU_SIGNING_BATCH, PermissionConstants.MODULE_DIGITAL_SIGNATURE, null),
             Permission.Create(PermissionConstants.FUNCTION_SIGNING_BATCH_DELETE, "Xóa file khỏi lô ký", PermissionConstants.MENU_SIGNING_BATCH, PermissionConstants.MODULE_DIGITAL_SIGNATURE, null),
+
+            Permission.Create(PermissionConstants.MENU_PACKAGING, "Menu đóng gói", null, PermissionConstants.MODULE_PACKAGING, null),
+
+            Permission.Create(PermissionConstants.MENU_PACKAGE_CONFIG, "Menu cấu hình metadata đóng gói", PermissionConstants.MENU_PACKAGING, PermissionConstants.MODULE_PACKAGING, null),
+            Permission.Create(PermissionConstants.FUNCTION_PACKAGE_CONFIG_VIEW, "Xem cấu hình metadata và tải Excel mẫu", PermissionConstants.MENU_PACKAGE_CONFIG, PermissionConstants.MODULE_PACKAGING, null),
         ];
 
         public static async Task SeedAsync(ShDbContext dbContext)

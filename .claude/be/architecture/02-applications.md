@@ -19,6 +19,7 @@ Module/<TenModule>/
   Interfaces/Services/    use case (input port) — controller gọi vào
   Interfaces/Queries/     cổng đọc (output port) — infrastructure.data implement
   Implements/             service implement Interfaces/Services
+  Jobs/                   job Hangfire: class thường, không attribute Hangfire, gọi qua IBackgroundJobExternal
 ```
 
 ## Services vs Queries

@@ -1,6 +1,6 @@
 # Phân quyền
 
-> **Phần 2/14** · trước: [01-nguoi-dung.md](01-nguoi-dung.md) · mục lục: [README.md](README.md)
+> **Phần 2/16** · trước: [01-nguoi-dung.md](01-nguoi-dung.md) · mục lục: [README.md](README.md)
 
 Quyền là một **cây** định danh bằng `Key`. Vai trò giữ một tập key; user có quyền = hợp quyền của các vai trò còn hoạt động.
 Hằng số key nằm ở `PermissionConstants` (shared); cây được seed bởi `SeedPermission`.
@@ -42,7 +42,8 @@ Menu.Construction                  Menu nghiệp vụ xây dựng
 │   ├── Function.Construction.Project.View
 │   ├── Function.Construction.Project.Create
 │   ├── Function.Construction.Project.Update
-│   └── Function.Construction.Project.Delete
+│   ├── Function.Construction.Project.Delete
+│   └── Function.Construction.Project.Deadline  (hạn dự án, chạy job kiểm tra hạn, lịch sử mail)
 ├── Menu.Construction.ProjectConfig Menu cấu hình dự án
 │   ├── Function.Construction.ProjectConfig.View
 │   ├── Function.Construction.ProjectConfig.Create
@@ -67,6 +68,10 @@ Menu.DigitalSignature              Menu ký số
     ├── Function.DigitalSignature.SigningBatch.Create   (tạo lô, tải file lên)
     ├── Function.DigitalSignature.SigningBatch.Sign     (phiên ký, bắt đầu / tạm dừng / huỷ, đưa thư plugin)
     └── Function.DigitalSignature.SigningBatch.Delete   (xoá file khỏi lô)
+
+Menu.Packaging                     Menu đóng gói
+└── Menu.Packaging.Config          Menu cấu hình metadata đóng gói
+    └── Function.Packaging.Config.View   (xem cấu hình metadata và tải Excel mẫu)
 ```
 
 Quy ước đặt key: `Menu.<Module>.<Tên>` cho mục menu, `Function.<Module>.<Tên>.<Hành động>` cho thao tác.
@@ -123,6 +128,7 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `POST api/construction/project` | `Function.Construction.Project.Create` |
 | `PUT api/construction/project/{id}` | `Function.Construction.Project.Update` |
 | `DELETE api/construction/project/{id}` | `Function.Construction.Project.Delete` |
+| `GET api/construction/project/deadline`, `POST .../deadline-check/run`, `GET .../deadline-check/status`, `GET .../deadline-notification/paging` | `Function.Construction.Project.Deadline` |
 | `GET api/construction/project-config`, `GET .../{id}` | `Function.Construction.ProjectConfig.View` |
 | `POST` / `PUT {id}` / `DELETE {id}` `api/construction/project-config` | `...ProjectConfig.Create` / `.Update` / `.Delete` |
 | `GET api/construction/project-config/google-authorization-url` | `Function.Construction.ProjectConfig.Update` |
@@ -132,12 +138,13 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `PUT api/construction/submission/check` (id trong body) | `Function.Construction.Submission.Check` |
 | `PUT api/construction/submission/qa` (id trong body) | `Function.Construction.Submission.Qa` |
 | `DELETE api/construction/submission` (ids trong body) | `Function.Construction.Submission.Delete` |
-| `GET api/construction/submission/export-excel` | `Function.Construction.Submission.Export` |
+| `GET api/construction/submission/export-excel`, `POST .../export-excel/job`, `GET .../export-excel/job/{jobId}` | `Function.Construction.Submission.Export` |
 | `GET api/digital-signature/template/paging`, `GET .../{id}`, `GET .../sample-file` | `Function.DigitalSignature.Template.View` |
 | `POST` / `PUT {id}` + `PUT {id}/config` / `DELETE {id}` `api/digital-signature/template` | `...Template.Create` / `.Update` / `.Delete` |
 | `GET api/digital-signature/signing-batch/running`, `GET .../{id}/files`, `.../{id}/progress`, `.../{id}/files/{fileId}/signed-url` | `Function.DigitalSignature.SigningBatch.View` |
 | `POST` / `DELETE .../{id}/session`, `POST .../{id}/start` / `pause` / `cancel`, `GET .../{id}/requests`, `POST .../{id}/signatures` | `...SigningBatch.Sign` |
 | `POST api/digital-signature/signing-batch`, `POST .../{id}/files` / `DELETE .../{id}/files/{fileId}` | `...SigningBatch.Create` / `.Delete` |
+| `GET api/packaging/config/dropdown`, `GET .../paging`, `GET .../excel-template` | `Function.Packaging.Config.View` |
 | `GET api/digital-signature/plugin/version`, `.../setup`, `.../setup/content` | — (chỉ cần đăng nhập) |
 
 ## Quyền người dùng: đang lệch so với cây

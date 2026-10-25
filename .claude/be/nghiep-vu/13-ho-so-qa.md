@@ -1,6 +1,6 @@
 # Hồ sơ — QA, trả lại, lịch sử QA
 
-> **Phần 13/14** · trước: [12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md) · mục lục: [README.md](README.md)
+> **Phần 13/16** · trước: [12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md) · mục lục: [README.md](README.md)
 
 Sau khi người nhập liệu kiểm tra hồ sơ ([12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md)), người QA mở hồ sơ, đối chiếu PDF với dữ liệu
 rồi chấm **Đạt** hoặc **Không đạt (kèm lý do)**. Không đạt thì hồ sơ bị **trả lại** cho người nhập liệu sửa. Bản gốc `nhaplieu.be`
@@ -65,7 +65,7 @@ Import blank / overwrite không đổi `StatusQa`.
   ít nhất một trường (rỗng → `324`); trường gửi trùng → `318`; trường không thuộc cấu hình dự án + loại văn bản → `311`.
 - Đạt: `reason` và `wrongDocumentFieldIds` gửi kèm bị bỏ qua, không kiểm, không lưu.
 - Được chấm lại hồ sơ đã chấm (Đạt → Không đạt…). QA **không** sửa dữ liệu trường.
-- Lỗi khác: hồ sơ không có `305`; sai dự án / loại văn bản `319`; dự án không có `303`; dự án `DONE` `316` (**trừ SuperAdmin**).
+- Lỗi khác: hồ sơ không có `305`; sai dự án / loại văn bản `319`; dự án không có `303`; dự án `DONE` `316`, hết hạn `323` (**trừ SuperAdmin**).
 - Mỗi lần chấm: **một** `SubmissionQaLog` (trạng thái QA và kiểm tra cũ / mới, `Reason`, mô tả `Người dùng: {UserName} đánh giá
   hồ sơ ĐẠT.` / `... KHÔNG ĐẠT và trả lại.`), các dòng `SubmissionQaLogField (SubmissionQaLogId, DocumentFieldId)` khi Không đạt
   (migration `Add_SubmissionQaLogField`), **một** `AuditLog` `QA hồ sơ`, `Update` (có `WrongDocumentFieldIds`).

@@ -50,6 +50,7 @@ namespace sh.be.shared.Constants.Auth
         public const string FUNCTION_PROJECT_CREATE = "Function.Construction.Project.Create";
         public const string FUNCTION_PROJECT_UPDATE = "Function.Construction.Project.Update";
         public const string FUNCTION_PROJECT_DELETE = "Function.Construction.Project.Delete";
+        public const string FUNCTION_PROJECT_DEADLINE = "Function.Construction.Project.Deadline";
 
         public const string MENU_PROJECT_CONFIG = "Menu.Construction.ProjectConfig";
         public const string FUNCTION_PROJECT_CONFIG_VIEW = "Function.Construction.ProjectConfig.View";
@@ -80,5 +81,12 @@ namespace sh.be.shared.Constants.Auth
         public const string FUNCTION_SIGNING_BATCH_CREATE = "Function.DigitalSignature.SigningBatch.Create";
         public const string FUNCTION_SIGNING_BATCH_SIGN = "Function.DigitalSignature.SigningBatch.Sign";
         public const string FUNCTION_SIGNING_BATCH_DELETE = "Function.DigitalSignature.SigningBatch.Delete";
+
+        public const string MODULE_PACKAGING = "Packaging";
+
+        public const string MENU_PACKAGING = "Menu.Packaging";
+
+        public const string MENU_PACKAGE_CONFIG = "Menu.Packaging.Config";
+        public const string FUNCTION_PACKAGE_CONFIG_VIEW = "Function.Packaging.Config.View";
     }
 }

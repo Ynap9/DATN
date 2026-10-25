@@ -37,6 +37,8 @@ namespace sh.be.shared.Constants.Core
         public const string ACTION_PROJECT_CREATE = "Tạo dự án";
         public const string ACTION_PROJECT_UPDATE = "Cập nhật dự án";
         public const string ACTION_PROJECT_DELETE = "Xóa dự án";
+        public const string ACTION_PROJECT_EXPIRE = "Chuyển dự án sang hết hạn";
+        public const string ACTION_PROJECT_DEADLINE_RUN = "Chạy kiểm tra hạn dự án";
 
         public const string ACTION_PROJECT_CONFIG_CREATE = "Tạo cấu hình dự án";
         public const string ACTION_PROJECT_CONFIG_UPDATE = "Cập nhật cấu hình dự án";
@@ -67,6 +69,7 @@ namespace sh.be.shared.Constants.Core
         public const string ACTION_SEED_PERMISSION = "Đồng bộ danh sách quyền";
         public const string ACTION_SEED_USER = "Khởi tạo tài khoản quản trị mặc định";
         public const string ACTION_SEED_ROLE_PERMISSION = "Khởi tạo quyền cho vai trò mặc định";
+        public const string ACTION_SEED_PACKAGING = "Khởi tạo cấu hình đóng gói";
 
         public const string SOURCE_SYSTEM = "System";
     }

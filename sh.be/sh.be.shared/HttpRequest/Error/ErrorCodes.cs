@@ -37,6 +37,7 @@ namespace sh.be.shared.HttpRequest.Error
         public const int CoreErrorStorageNotConfigured = 208;
         public const int CoreErrorUploadFileFailed = 209;
         public const int CoreErrorDownloadFileFailed = 210;
+        public const int CoreErrorBackgroundJobUnavailable = 211;
 
         public const int ConstructionErrorDocumentTypeNotFound = 301;
         public const int ConstructionErrorDocumentFieldNotFound = 302;
@@ -60,8 +61,10 @@ namespace sh.be.shared.HttpRequest.Error
         public const int ConstructionErrorSubmissionNotCheckedForQa = 320;
         public const int ConstructionErrorQaReasonRequired = 321;
         public const int ConstructionErrorExportTooManyRows = 322;
+        public const int ConstructionErrorProjectExpired = 323;
         public const int ConstructionErrorQaWrongFieldRequired = 324;
         public const int ConstructionErrorSubmissionCheckedNotDeletable = 325;
+        public const int ConstructionErrorExportJobNotFound = 326;
 
         public const int DigitalSignatureErrorTemplateNotFound = 601;
         public const int DigitalSignatureErrorInvalidTemplatePositionKind = 602;
@@ -98,6 +101,10 @@ namespace sh.be.shared.HttpRequest.Error
         public const int DigitalSignatureErrorTemplateImageUnreadable = 633;
         public const int DigitalSignatureErrorSigningRequestTimeout = 634;
         public const int DigitalSignatureErrorAppearanceBuildFailed = 635;
+
+        public const int PackagingErrorPackageTypeInvalid = 701;
+        public const int PackagingErrorMetadataTypeInvalid = 702;
+        public const int PackagingErrorSchemaFieldNotFound = 703;
 
     }
 }

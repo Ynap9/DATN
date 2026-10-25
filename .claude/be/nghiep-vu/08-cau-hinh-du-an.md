@@ -1,6 +1,6 @@
 # Cấu hình dự án (Construction)
 
-> **Phần 8/14** · trước: [07-du-an.md](07-du-an.md) · mục lục: [README.md](README.md)
+> **Phần 8/16** · trước: [07-du-an.md](07-du-an.md) · mục lục: [README.md](README.md)
 
 Bảng key-value `construction.ProjectConfig` (`Name`, `Value`, `Description`, cột tạo / sửa / xoá mềm). Hiện dùng để lưu tài khoản
 Google mà hệ thống dùng tạo, đổi tên, xoá Google Sheet của dự án ([07-du-an.md](07-du-an.md)).
@@ -28,6 +28,9 @@ Body tạo / sửa: `{ "name", "value", "description" }`.
 | `GoogleRedirectUri` | URL callback ở trên (có version: `.../api/v1/construction/project-config/google-callback`), **trùng từng ký tự** với Authorized redirect URI trên Google Cloud. ⚠️ Giá trị cũ không có `v1` giờ trả `404` — sửa cả dòng cấu hình lẫn Google Cloud | |
 | `GoogleFolderId` | Id thư mục Drive chứa sheet dự án | |
 | `GoogleRefreshToken` | Hệ thống tự ghi khi xác thực xong; cũng nhập tay được | ✔ |
+
+Hai key hạn dự án, thiếu thì job dùng mặc định ([15-han-du-an.md](15-han-du-an.md#cấu-hình)): `DeadlineWarningDays` (số ngày báo trước,
+mặc định `3`), `DeadlineMailEnabled` (`true` / `false`, mặc định `true`).
 
 ## Luật nghiệp vụ
 

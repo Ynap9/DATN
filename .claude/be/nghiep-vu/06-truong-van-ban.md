@@ -1,6 +1,6 @@
 # Trường của loại văn bản (Construction)
 
-> **Phần 6/14** · trước: [05-loai-van-ban.md](05-loai-van-ban.md) · mục lục: [README.md](README.md)
+> **Phần 6/16** · trước: [05-loai-van-ban.md](05-loai-van-ban.md) · mục lục: [README.md](README.md)
 
 Cấu hình các trường của một loại văn bản, bảng `construction.DocumentField`. Mỗi bản ghi thuộc một `DocumentType` qua
 `DocumentTypeId`; có cờ hiển thị, thứ tự ở bảng (`OrderTableView`) và danh sách (`OrderListView`), độ rộng cột, cờ tính
