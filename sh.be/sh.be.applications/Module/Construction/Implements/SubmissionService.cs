@@ -432,6 +432,50 @@ namespace sh.be.applications.Module.Construction.Implements
             return await _submissionQuery.FindSummary(dto.ProjectId, dto.DocumentTypeId);
         }
 
+        public async Task<ViewQaStatsSummaryDto> FindQaStatsSummary(FindQaStatsDto dto)
+        {
+            _logger.LogInformation($"{nameof(FindQaStatsSummary)}, dto={JsonSerializer.Serialize(dto)}");
+            var (fromDate, toDate) = NormalizeQaStatsDateRange(dto.FromDate, dto.ToDate);
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+
+            var summary = await _submissionQuery.FindQaStatsSummary(dto, fromDate, toDate.AddDays(1));
+            summary.FromDate = fromDate;
+            summary.ToDate = toDate;
+            return summary;
+        }
+
+        public async Task<List<GetListQaFieldStatsDto>> FindQaFieldStats(FindQaStatsDto dto)
+        {
+            _logger.LogInformation($"{nameof(FindQaFieldStats)}, dto={JsonSerializer.Serialize(dto)}");
+            var (fromDate, toDate) = NormalizeQaStatsDateRange(dto.FromDate, dto.ToDate);
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            return await _submissionQuery.FindQaFieldStats(dto, fromDate, toDate.AddDays(1));
+        }
+
+        public async Task<BaseResponsePagingDto<GetListQaEntryUserStatsDto>> FindQaEntryUserStatsPaging(FindPagingQaEntryUserStatsDto dto)
+        {
+            _logger.LogInformation($"{nameof(FindQaEntryUserStatsPaging)}, dto={JsonSerializer.Serialize(dto)}");
+            if (dto.PageSize <= 0 || dto.PageSize > SubmissionConst.MAX_PAGE_SIZE)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, $"pageSize phải từ 1 đến {SubmissionConst.MAX_PAGE_SIZE}");
+            }
+            if (dto.OrderBy is not (null or SubmissionConst.QA_STATS_ORDER_REVIEW or SubmissionConst.QA_STATS_ORDER_ACCURACY))
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest,
+                    $"orderBy chỉ nhận {SubmissionConst.QA_STATS_ORDER_REVIEW} hoặc {SubmissionConst.QA_STATS_ORDER_ACCURACY}");
+            }
+            var (fromDate, toDate) = NormalizeQaStatsDateRange(dto.FromDate, dto.ToDate);
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            return await _submissionQuery.FindQaEntryUserStatsPaging(dto, fromDate, toDate.AddDays(1));
+        }
+
+        public async Task<List<GetListSubmissionTimelineDto>> FindTimeline(int id)
+        {
+            _logger.LogInformation($"{nameof(FindTimeline)}, id={id}");
+            await _submissionDomainService.EnsureSubmissionExistsAsync(id);
+            return await _submissionQuery.FindTimeline(id);
+        }
+
         public async Task<ViewDeleteSubmissionResultDto> Delete(DeleteSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(Delete)}, dto={JsonSerializer.Serialize(dto)}");
@@ -624,6 +668,21 @@ namespace sh.be.applications.Module.Construction.Implements
                 await transaction.RollbackAsync();
                 throw;
             }
+        }
+
+        private (DateTime FromDate, DateTime ToDate) NormalizeQaStatsDateRange(DateTime? fromDate, DateTime? toDate)
+        {
+            var normalizedToDate = (toDate ?? GetVietnamTime()).Date;
+            var normalizedFromDate = (fromDate ?? normalizedToDate.AddDays(-(SubmissionConst.QA_STATS_DEFAULT_DAYS - 1))).Date;
+            if (normalizedFromDate > normalizedToDate)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Từ ngày không được sau đến ngày");
+            }
+            if ((normalizedToDate - normalizedFromDate).Days + 1 > SubmissionConst.QA_STATS_MAX_DAYS)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, $"Khoảng thời gian tối đa {SubmissionConst.QA_STATS_MAX_DAYS} ngày");
+            }
+            return (normalizedFromDate, normalizedToDate);
         }
 
         private record ProjectSheetSource(Project Project, SheetTable Table, SubmissionImportColumns Columns, List<MappedImportColumn> MappedColumns);

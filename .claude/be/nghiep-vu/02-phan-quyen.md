@@ -1,6 +1,6 @@
 # Phân quyền
 
-> **Phần 2/16** · trước: [01-nguoi-dung.md](01-nguoi-dung.md) · mục lục: [README.md](README.md)
+> **Phần 2/17** · trước: [01-nguoi-dung.md](01-nguoi-dung.md) · mục lục: [README.md](README.md)
 
 Quyền là một **cây** định danh bằng `Key`. Vai trò giữ một tập key; user có quyền = hợp quyền của các vai trò còn hoạt động.
 Hằng số key nằm ở `PermissionConstants` (shared); cây được seed bởi `SeedPermission`.
@@ -54,6 +54,7 @@ Menu.Construction                  Menu nghiệp vụ xây dựng
     ├── Function.Construction.Submission.Import   (6 API verify / import)
     ├── Function.Construction.Submission.Check    (kiểm tra và sửa dữ liệu hồ sơ)
     ├── Function.Construction.Submission.Qa       (đánh giá QA Đạt / Không đạt)
+    ├── Function.Construction.Submission.QaStats  (thống kê QA theo trường, người nhập)
     ├── Function.Construction.Submission.Delete   (xoá mềm hồ sơ)
     └── Function.Construction.Submission.Export   (xuất Excel theo bộ lọc)
 
@@ -134,11 +135,12 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `GET api/construction/project-config/google-authorization-url` | `Function.Construction.ProjectConfig.Update` |
 | `GET api/construction/project-config/google-callback` | — (không cần token, kiểm `state` đã ký) |
 | `POST api/construction/submission/import/{append\|blank\|overwrite}` và `.../verify` | `Function.Construction.Submission.Import` |
-| `GET api/construction/submission/proxy-file`, `GET .../paging`, `GET .../count`, `GET .../{id}`, `GET .../{id}/next`, `GET .../{id}/previous`, `GET .../{id}/logs`, `GET .../qa/paging`, `GET .../{id}/qa`, `GET .../{id}/qa-logs`, `GET .../field-values`, `GET .../tree`, `GET .../logs`, `GET .../summary` | `Function.Construction.Submission.View` |
+| `GET api/construction/submission/proxy-file`, `GET .../paging`, `GET .../count`, `GET .../{id}`, `GET .../{id}/next`, `GET .../{id}/previous`, `GET .../{id}/logs`, `GET .../qa/paging`, `GET .../{id}/qa`, `GET .../{id}/qa-logs`, `GET .../field-values`, `GET .../tree`, `GET .../logs`, `GET .../summary`, `GET .../{id}/timeline` | `Function.Construction.Submission.View` |
 | `PUT api/construction/submission/check` (id trong body) | `Function.Construction.Submission.Check` |
 | `PUT api/construction/submission/qa` (id trong body) | `Function.Construction.Submission.Qa` |
 | `DELETE api/construction/submission` (ids trong body) | `Function.Construction.Submission.Delete` |
 | `GET api/construction/submission/export-excel`, `POST .../export-excel/job`, `GET .../export-excel/job/{jobId}` | `Function.Construction.Submission.Export` |
+| `GET api/construction/submission/qa-stats/summary`, `GET .../qa-stats/fields`, `GET .../qa-stats/entry-users` | `Function.Construction.Submission.QaStats` |
 | `GET api/digital-signature/template/paging`, `GET .../{id}`, `GET .../sample-file` | `Function.DigitalSignature.Template.View` |
 | `POST` / `PUT {id}` + `PUT {id}/config` / `DELETE {id}` `api/digital-signature/template` | `...Template.Create` / `.Update` / `.Delete` |
 | `GET api/digital-signature/signing-batch/running`, `GET .../{id}/files`, `.../{id}/progress`, `.../{id}/files/{fileId}/signed-url` | `Function.DigitalSignature.SigningBatch.View` |
