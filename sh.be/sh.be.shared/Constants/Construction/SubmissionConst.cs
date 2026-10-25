@@ -19,6 +19,13 @@ namespace sh.be.shared.Constants.Construction
         public const int FIELD_VALUE_MAX_ITEMS = 200;
         public const int DELETE_MAX_ITEMS = 500;
         public const int EXPORT_MAX_ROWS = 1048575;
+        public const string EXPORT_JOB_TYPE = "submission-export";
+        public const string EXPORT_OBJECT_KEY_PREFIX = "construction/submission-export";
+        public const int EXPORT_DOWNLOAD_URL_MINUTES = 15;
+        public const int EXPORT_FILE_RETENTION_DAYS = 1;
+        public const int EXPORT_CLEANUP_LOOKBACK_DAYS = 7;
+        public const string EXPORT_CLEANUP_RECURRING_JOB_ID = "submission-export-cleanup";
+        public const string EXPORT_FAILED_MESSAGE = "Xuất Excel thất bại, hãy thử lại";
 
         public const int IMPORT_LOCK_TIMEOUT_MILLISECONDS = 5000;
         public const int BULK_BATCH_SIZE = 100000;

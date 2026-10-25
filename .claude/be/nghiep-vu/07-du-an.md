@@ -1,6 +1,6 @@
 # Dự án (Construction)
 
-> **Phần 7/15** · trước: [06-truong-van-ban.md](06-truong-van-ban.md) · mục lục: [README.md](README.md)
+> **Phần 7/16** · trước: [06-truong-van-ban.md](06-truong-van-ban.md) · mục lục: [README.md](README.md)
 
 Danh mục dự án, bảng `construction.Project`. Mỗi dự án có một Google Sheet riêng, hệ thống **tự tạo** lúc tạo dự án.
 Trường: `Name`, `StartedAt`, `EndedAt`, `Status`, `UrlGoogleSheetSync`, `GoogleSheetName`, cột tạo / sửa / xoá, cờ `Deleted` (`ISoftDeleted`, đổi tên từ `IsDeleted` ở migration `Rename_Project_Deleted_Add_Submission`).
@@ -16,6 +16,7 @@ Trường: `Name`, `StartedAt`, `EndedAt`, `Status`, `UrlGoogleSheetSync`, `Goog
 | Tạo mới (kèm tạo Google Sheet) | `POST api/construction/project` | `Function.Construction.Project.Create` |
 | Cập nhật | `PUT api/construction/project/{id}` | `Function.Construction.Project.Update` |
 | Xoá | `DELETE api/construction/project/{id}` | `Function.Construction.Project.Delete` |
+| Hạn dự án: danh sách, chạy job, trạng thái job, lịch sử mail ([15-han-du-an.md](15-han-du-an.md)) | `GET deadline`, `POST deadline-check/run`, `GET deadline-check/status`, `GET deadline-notification/paging` | `Function.Construction.Project.Deadline` |
 
 Body tạo: `{ "name", "startedAt", "endedAt", "documentTypeIds": [] }`. Hệ thống tự gán `status = DEPLOYING` (đang triển khai)
 và `googleSheetName = name`; FE không gửi hai trường này. Tạo xong trả `data` cùng dạng `GET {id}` (`FindProjectByIdDto`:
@@ -64,6 +65,7 @@ khoá ngoại; chưa có API riêng — chỉ được ghi qua CRUD dự án (xe
 | `DOING` | `2` | Đang làm |
 | `ACCEPTING` | `3` | Đang nghiệm thu |
 | `DONE` | `4` | Đã xong |
+| `EXPIRED` | `5` | Hết hạn: job tự chuyển khi qua `EndedAt`, chặn thao tác hồ sơ như `DONE` (mã `323`); mở lại bằng `PUT` |
 
 ## Luật nghiệp vụ
 

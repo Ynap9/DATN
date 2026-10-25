@@ -2,7 +2,7 @@
 
 > Bộ này chỉ chép **quy định** của Thông tư 05/2025/TT-BNV về gói SIP / AIP / DIP (cấu trúc gói, METS, EAD, PREMIS,
 > bảng mã, PDF/A). Nghiệp vụ và thiết kế module đóng gói của sh.be **chốt riêng ở ĐATN**, không bê theo sao_mai / kssm.
-> ✅ Đã thi công phần **cấu hình metadata** (bảng + seed): [../nghiep-vu/15-dong-goi-cau-hinh.md](../nghiep-vu/15-dong-goi-cau-hinh.md).
+> ✅ Đã thi công phần **cấu hình metadata** (bảng + seed): [../nghiep-vu/16-dong-goi-cau-hinh.md](../nghiep-vu/16-dong-goi-cau-hinh.md).
 > 🔬 Chưa thi công: API, kiểm tra metadata, đóng gói ZIP / METS / EAD / PREMIS.
 
 Nguồn: bê từ `C:\Users\Admin\workspace\ksts\.claude\docs\tt05-*.md` ngày 2026-10-21 (bản tổng hợp từ PDF chính thức

@@ -2,11 +2,14 @@ using AutoMapper;
 using Microsoft.Extensions.Logging;
 using sh.be.applications.Base;
 using sh.be.applications.Base.Dtos.DataReader;
+using sh.be.applications.Base.Interfaces.External.BackgroundJob;
 using sh.be.applications.Base.Interfaces.External.DataReader;
+using sh.be.applications.Base.Interfaces.External.Storage;
 using sh.be.applications.Base.Interfaces.Api;
 using sh.be.applications.Module.Construction.Dtos.Submission;
 using sh.be.applications.Module.Construction.Interfaces.Queries;
 using sh.be.applications.Module.Construction.Interfaces.Services;
+using sh.be.applications.Module.Construction.Jobs;
 using sh.be.domain.Base;
 using sh.be.domain.Base.Models;
 using sh.be.domain.Module.Auth.Repositories;
@@ -19,6 +22,7 @@ using sh.be.domain.Module.Construction.Submissions.Services.Check.Models;
 using sh.be.domain.Module.Construction.Submissions.Services.Import;
 using sh.be.domain.Module.Construction.Submissions.Services.Import.Models;
 using sh.be.domain.Module.Core.Repositories;
+using sh.be.shared.Constants.BackgroundJob;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.Constants.Core;
 using sh.be.shared.HttpRequest.BaseRequest;
@@ -37,10 +41,13 @@ namespace sh.be.applications.Module.Construction.Implements
         private readonly SubmissionDomainService _submissionDomainService;
         private readonly IDataReaderExternal _dataReaderExternal;
         private readonly IExcelExternal _excelExternal;
+        private readonly IBackgroundJobExternal _backgroundJobExternal;
+        private readonly IFileStorageExternal _fileStorageExternal;
 
         public SubmissionService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<SubmissionService> logger, IRequestContext requestContext, TimeProvider timeProvider,
             ISubmissionQuery submissionQuery, ISubmissionRepository submissionRepository, IRoleRepository roleRepository, IUserRepository userRepository,
-            SubmissionDomainService submissionDomainService, IDataReaderExternal dataReaderExternal, IExcelExternal excelExternal
+            SubmissionDomainService submissionDomainService, IDataReaderExternal dataReaderExternal, IExcelExternal excelExternal,
+            IBackgroundJobExternal backgroundJobExternal, IFileStorageExternal fileStorageExternal
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _submissionQuery = submissionQuery;
@@ -50,6 +57,8 @@ namespace sh.be.applications.Module.Construction.Implements
             _submissionDomainService = submissionDomainService;
             _dataReaderExternal = dataReaderExternal;
             _excelExternal = excelExternal;
+            _backgroundJobExternal = backgroundJobExternal;
+            _fileStorageExternal = fileStorageExternal;
         }
 
         public async Task<ViewVerifyImportAppendSubmissionDto> VerifyImportAppend(ImportSubmissionDto dto)
@@ -470,6 +479,63 @@ namespace sh.be.applications.Module.Construction.Implements
             var table = await _submissionQuery.FindExportTable(dto);
             return _excelExternal.CreateTable($"{table.ProjectName}_{table.DocumentTypeName}_{GetVietnamTime():yyyyMMddHHmm}", table.DocumentTypeName,
                 table.Headers, table.Rows);
+        }
+
+        public async Task<ViewSubmissionExportJobDto> CreateExportJob(ExportSubmissionDto dto)
+        {
+            _logger.LogInformation($"{nameof(CreateExportJob)}, dto={JsonSerializer.Serialize(dto)}");
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            var names = await _submissionQuery.FindExportName(dto.ProjectId, dto.DocumentTypeId)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
+            if (!_backgroundJobExternal.HasServerForQueue(BackgroundJobConst.QUEUE_EXPORT))
+            {
+                throw new UserFriendlyException(ErrorCodes.CoreErrorBackgroundJobUnavailable);
+            }
+
+            var now = GetVietnamTime();
+            var fileName = $"{names.ProjectName}_{names.DocumentTypeName}_{now:yyyyMMddHHmm}.xlsx";
+            var objectKey = $"{SubmissionConst.EXPORT_OBJECT_KEY_PREFIX}/{now:yyyyMMdd}/{Guid.NewGuid():N}.xlsx";
+            var jobId = _backgroundJobExternal.Enqueue<SubmissionExportJob>(job => job.ExecuteAsync(dto, objectKey), BackgroundJobConst.QUEUE_EXPORT,
+                new Dictionary<string, string>
+                {
+                    [BackgroundJobConst.PARAMETER_JOB_TYPE] = SubmissionConst.EXPORT_JOB_TYPE,
+                    [BackgroundJobConst.PARAMETER_USER_ID] = getCurrentUserId(),
+                    [BackgroundJobConst.PARAMETER_FILE_NAME] = fileName,
+                    [BackgroundJobConst.PARAMETER_OBJECT_KEY] = objectKey,
+                });
+
+            return new ViewSubmissionExportJobDto
+            {
+                JobId = jobId,
+                Status = BackgroundJobConst.STATUS_WAITING,
+                FileName = fileName,
+            };
+        }
+
+        public Task<ViewSubmissionExportJobDto> FindExportJob(string jobId)
+        {
+            _logger.LogInformation($"{nameof(FindExportJob)}, jobId={jobId}");
+            var job = _backgroundJobExternal.FindJob(jobId, [BackgroundJobConst.PARAMETER_JOB_TYPE, BackgroundJobConst.PARAMETER_USER_ID,
+                BackgroundJobConst.PARAMETER_FILE_NAME, BackgroundJobConst.PARAMETER_OBJECT_KEY]);
+            if (job == null
+                || job.Parameters[BackgroundJobConst.PARAMETER_JOB_TYPE] != SubmissionConst.EXPORT_JOB_TYPE
+                || job.Parameters[BackgroundJobConst.PARAMETER_USER_ID] != getCurrentUserId())
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorExportJobNotFound);
+            }
+
+            var fileName = job.Parameters[BackgroundJobConst.PARAMETER_FILE_NAME]!;
+            return Task.FromResult(new ViewSubmissionExportJobDto
+            {
+                JobId = job.JobId,
+                Status = job.Status,
+                FileName = fileName,
+                DownloadUrl = job.Status == BackgroundJobConst.STATUS_SUCCEEDED
+                    ? _fileStorageExternal.GetTemporaryUrl(job.Parameters[BackgroundJobConst.PARAMETER_OBJECT_KEY]!, fileName,
+                        TimeSpan.FromMinutes(SubmissionConst.EXPORT_DOWNLOAD_URL_MINUTES))
+                    : null,
+                ErrorMessage = job.Status == BackgroundJobConst.STATUS_FAILED ? job.ErrorMessage ?? SubmissionConst.EXPORT_FAILED_MESSAGE : null,
+            });
         }
 
         private async Task<ProjectSheetSource> LoadAppendSheetAsync(ImportSubmissionDto dto)

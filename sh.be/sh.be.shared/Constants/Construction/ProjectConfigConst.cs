@@ -7,6 +7,8 @@ namespace sh.be.shared.Constants.Construction
         public const string GOOGLE_REDIRECT_URI = "GoogleRedirectUri";
         public const string GOOGLE_FOLDER_ID = "GoogleFolderId";
         public const string GOOGLE_REFRESH_TOKEN = "GoogleRefreshToken";
+        public const string DEADLINE_WARNING_DAYS = "DeadlineWarningDays";
+        public const string DEADLINE_MAIL_ENABLED = "DeadlineMailEnabled";
 
         public static readonly string[] SECRET_NAMES = [GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN];
         public const string MASKED_VALUE = "******";

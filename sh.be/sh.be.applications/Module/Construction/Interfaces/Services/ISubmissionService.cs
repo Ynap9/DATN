@@ -29,5 +29,7 @@ namespace sh.be.applications.Module.Construction.Interfaces.Services
         Task<ViewSubmissionSummaryDto> FindSummary(FindSubmissionSummaryDto dto);
         Task<ViewDeleteSubmissionResultDto> Delete(DeleteSubmissionDto dto);
         Task<ExportFileDto> ExportExcel(ExportSubmissionDto dto);
+        Task<ViewSubmissionExportJobDto> CreateExportJob(ExportSubmissionDto dto);
+        Task<ViewSubmissionExportJobDto> FindExportJob(string jobId);
     }
 }

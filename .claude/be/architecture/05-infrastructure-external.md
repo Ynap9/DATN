@@ -12,30 +12,34 @@ Service và external chỉ nối qua interface: đổi nhà cung cấp không ch
 | `BackgroundJob` | `IBackgroundJobExternal` → `HangfireBackgroundJobExternal`; cấu hình Hangfire ở `Base/HangfireExtensions` |
 | `DataReader` | `IDataReaderExternal` → `GoogleSheetReaderExternal` (qua `Base/DataReaderExternalBase`); `IExcelExternal` → `ExcelExternal`; `IGoogleSheetExternal` → `GoogleSheetExternal` |
 | `DigitalSignature` | `IPdfSignerExternal`, `ISigningQueueExternal`, `ITimestampExternal`, `ICertificateValidatorExternal` → `...External` cùng tên (singleton). Xem [09-chu-ky-so.md](09-chu-ky-so.md) |
-| `Mail` | `IMailExternal` → `MailExternal`; HTML ở `Mail/Templates/` (embedded resource) |
+| `Mail` | `IMailExternal` → `MailExternal`; HTML ở `Mail/Templates/` (embedded resource: `AccountCreated`, `ProjectDeadline`), đọc qua `Base/MailTemplateLoader` |
 | `SignalR` | `ISignalRExternal` → `SignalRExternal` (singleton); hub, tracker, cấu hình ở `Base/` |
 | `Storage` | `IFileStorageExternal` → `S3FileStorageExternal` (MinIO); `IFileDownloadExternal` → `HttpFileDownloadExternal`; `ISampleFileExternal` → `SampleFileExternal` (PDF nhúng `Storage/Files/*.pdf`); `IPluginSetupExternal` → `PluginSetupExternal` |
 
 - Mỗi mục: `Implements/` (lớp implement cổng ra), `Base/` (lớp nền, helper, cấu hình), `Models/` (model nội bộ, không lộ ra applications).
   DTO ở `applications/Base/Dtos/<Muc>/`. Tên: `I<Ten>External` → `<NhaCungCap><Ten>External`, field trong service `_<ten>External`.
-- `IRequestContext`, `IAuthorizationStateProtector` do **api** implement → `Base/Interfaces/Api/`, không hậu tố. `DataReader/` gom đọc / ghi
-  dữ liệu với **mọi** bên thứ ba (Google Sheet, Excel, PDF…).
-
-⚠️ Namespace `sh.be.infrastructure.external.BackgroundJob` trùng tên lớp tĩnh `Hangfire.BackgroundJob`: ở mọi namespace `sh.be.infrastructure.external.*`,
-`BackgroundJob.Enqueue(...)` trỏ vào namespace (CS0234). Inject `IBackgroundJobClient` thay vì gọi lớp tĩnh; đừng đổi tên mục.
+- `IRequestContext`, `IAuthorizationStateProtector` do **api** implement → `Base/Interfaces/Api/`, không hậu tố. `DataReader/` gom đọc / ghi mọi bên thứ ba.
 
 ## BackgroundJob — Hangfire
 
-`AddHangfireBackgroundJob(connectionString)` (`#region hangfire`, ngay sau `#region db`): storage SQL Server chung `SO_HOA_DB`,
-`SchemaName = DbSchemas.Hangfire` (`hangfire`), kèm `AddHangfireServer()`. 11 bảng (`Job`, `State`, `Server`…) do **Hangfire tự tạo** lúc
-khởi động, không qua EF migration — `has-pending-model-changes` không thấy. Bản 1.8.25, mặc định đã là cấu hình khuyến nghị.
+`AddHangfireBackgroundJob(connectionString, BackgroundJobSettings)`: Hangfire 1.8.25 trên `SO_HOA_DB`, schema `hangfire` (11 bảng **tự tạo**, ngoài EF migration).
 
-`UseHangfireBackgroundJobDashboard(isReadOnly)` mở `/hangfire` (`BackgroundJobConst.DASHBOARD_PATH`) sau `UseAuthorization()`;
-`AnonymousDashboardAuthorizationFilter` cho mọi request, chỉ đọc khi **không** phải Development. `GET api/v1/core/background-job/connection`
-(`[AllowAnonymous]`) trả `{ isConnected, serverCount }` qua `GetMonitoringApi().Servers()`; lỗi storage → `isConnected = false`.
+- Retry `RETRY_ATTEMPTS = 2`, trừ `UserFriendlyException` (`ExceptOn`: lỗi nghiệp vụ Failed ngay). Khi `BackgroundJob:Enabled` dựng **2 server**: queue
+  `default` (`WorkerCount`) và queue `export` (`ExportWorkerCount`, tên `{máy}:export`), nên mỗi app có `serverCount = 2`.
+- Cổng ra: `AddOrUpdateRecurring` / `TriggerRecurring` / `FindRecurring` (job định kỳ); `Enqueue<TJob>(job, queue, parameters)` (tham số ghi **cùng lúc**
+  tạo job, `IBackgroundJobClientV2.Create`); `FindJob(jobId, names)` (không có / hết hạn / id không phải số → `null`; `0` chờ, `1` chạy, `2` xong, `3` Failed /
+  Deleted; `ErrorMessage` chỉ khi lỗi là `UserFriendlyException`); `HasServerForQueue` (server nghe queue có heartbeat trong `SERVER_ALIVE_SECONDS = 90`).
+- Job là class thường ở `applications/Module/<M>/Jobs/`, `AddScoped` nhóm `// jobs`, người thao tác `SYSTEM_USER`. Định kỳ: thêm cron vào
+  `BackgroundJobScheduleSettings` + `api/Worker/RecurringJobRegistrar` (giờ VN); theo yêu cầu: `Enqueue`. Ví dụ [15](../nghiep-vu/15-han-du-an.md), [14](../nghiep-vu/14-ho-so-xoa-xuat.md#xuất-excel-chạy-nền).
+- `UseHangfireBackgroundJobDashboard(isReadOnly)` mở `/hangfire` sau `UseAuthorization()`, chỉ đọc khi **không** phải Development;
+  `GET api/v1/core/background-job/connection` (`[AllowAnonymous]`) trả `{ isConnected, serverCount }`, lỗi storage → `isConnected = false`.
 
-⚠️ Dashboard và API kiểm tra kết nối **không cần đăng nhập** theo yêu cầu: ai vào được máy chủ đều xem được job (ngoài Development chỉ
-xem). Muốn khoá thì thay filter, đừng thêm `[Authorize]` vào `/hangfire`. Hub SignalR thì **bắt buộc** token (mục dưới).
+⚠️ Đổi tên class / method / namespace của job khi DB còn job chờ hoặc lịch đã đăng ký thì Hangfire không tìm thấy kiểu, job lỗi: đợi hàng đợi trống hoặc
+xoá job cũ trên dashboard. Tham số job serialize JSON vào DB: chỉ truyền DTO nhỏ và chuỗi, không entity / `byte[]`. `JobParameter` lưu JSON (`"abc"` có ngoặc
+kép) nên đọc phải qua `SerializationHelper.Deserialize`. ⚠️ Múi giờ lịch là `BaseService.VietnamTimeZone` (tên Windows); chạy Linux phải đổi.
+⚠️ Mọi app trỏ cùng DB đều là server Hangfire: máy đồng đội chạy code cũ vẫn nhận job queue `default` mà không có kiểu job mới → Failed.
+⚠️ Namespace `...external.BackgroundJob` trùng lớp tĩnh `Hangfire.BackgroundJob` (CS0234): inject client, đừng gọi lớp tĩnh, đừng đổi tên mục.
+⚠️ Dashboard và API kết nối **không cần đăng nhập** theo yêu cầu (`AnonymousDashboardAuthorizationFilter`); muốn khoá thì thay filter, đừng thêm `[Authorize]`.
 
 ## SignalR — đẩy tin realtime
 
@@ -43,9 +47,8 @@ xem). Muốn khoá thì thay filter, đừng thêm `[Authorize]` vào `/hangfire
 `MapSignalRNotificationHub(JwtBearer)` map `NotificationHub` tại `/hubs/notification` (`SignalRConst.HUB_PATH`), bắt buộc token, CORS
 `SignalRPolicy`. WebSocket không gửi được header nên JwtBearer `OnMessageReceived` đọc query `access_token` (chỉ đường dẫn hub). Gửi theo
 user (`NameIdentifier`, map từ `sub`) bằng `ISignalRExternal.SendToUserAsync(userId, eventName, payload)`, dùng được cả trong job Hangfire.
-Hub **không** có method cho client gọi (`invoke` → `Method does not exist`). Test: `GET api/v1/core/signalr/connection` (`[AllowAnonymous]`,
-`{ isConnected, connectionCount }`); `POST .../ping` (cần token) đẩy sự kiện `Ping` `{ message, sentDate }` tới mọi kết nối của người gọi.
-
+Hub **không** có method cho client gọi. Test: `GET api/v1/core/signalr/connection` (`[AllowAnonymous]`, `{ isConnected, connectionCount }`);
+`POST .../ping` (cần token) đẩy sự kiện `Ping` `{ message, sentDate }` tới mọi kết nối của người gọi.
 ⚠️ Client SignalR gửi credentials nên `SignalRPolicy` phải `AllowCredentials`; `AllowedHosts = *` mà dùng `WithOrigins("*")` thì app **chết lúc
 khởi động**. Giữ `SetIsOriginAllowed` (có `*` → mọi origin, không thì đúng danh sách). ⚠️ Tracker trong RAM: chỉ đúng với **một** instance.
 
@@ -55,9 +58,7 @@ khởi động**. Giữ `SetIsOriginAllowed` (có `*` → mọi origin, không t
 `headerRowIndex >= 1` → `400`; `ReadTableAsync` trim mọi ô, **giữ** ô trống để đúng cột, dòng `1` là header, `SheetRowNumber` = số dòng thật),
 lớp con chỉ override `ReadHeaderRowsAsync`, `ReadHeaderCellsAsync`, `ReadRowsAsync`. `GoogleSheetReaderExternal` dùng **service account**
 (`CredentialsPath`, `sh.be.api/Credentials/` trong `.gitignore`): link sai `202`, `GoogleApiException` `203`, không có sheet `204`; chia sẻ cho `client_email`.
-
-⚠️ Thêm nguồn đọc thứ hai (ví dụ Excel) thì `IDataReaderExternal` không còn biết lấy implement nào (DI trả cái đăng ký sau cùng) —
-cần keyed service hoặc factory theo loại nguồn; đừng đăng ký thêm `AddScoped<IDataReaderExternal, ...>` rồi để vậy.
+⚠️ Thêm nguồn đọc thứ hai thì DI trả implement đăng ký sau cùng: cần keyed service hoặc factory theo loại nguồn, đừng `AddScoped` thêm rồi để vậy.
 ⚠️ Dùng `CredentialFactory.FromFile<ServiceAccountCredential | UserCredential>(...)`, **không** `GoogleCredential.FromFile` (CS0618).
 
 `IGoogleSheetExternal` ghi bằng **Gmail** (OAuth), nhận `SpreadsheetAccountDto` từ `ProjectConfig` ([08](../nghiep-vu/08-cau-hinh-du-an.md)):
@@ -84,8 +85,7 @@ Refresh token hết hạn / bị thu hồi → `207`, phải xác thực lại. 
 - `IFileDownloadExternal.OpenPdfAsync`: trả **stream** (không nạp RAM); không phải http(s), lỗi mạng / HTTP, `Content-Type` lạ → `315`.
 - `IPluginSetupExternal`: whitelist `PluginSettings.SupportedVersions` (`IOptionsMonitor`, sửa appsettings không cần build) + bộ cài
   `sh.be.api/Plugins/` đúng tên `PluginConst.SETUP_FILE_NAME`. ⚠️ Exe ~160 MB trong `.gitignore`: máy chủ phải chép tay, thiếu thì `613`.
-- `IMailExternal`: `SendAsync`, `SendAccountCreatedAsync`; tiêu đề + HTML ở tầng ngoài (sửa email không chạm `UserService`); section `Email`.
-
+- `IMailExternal`: `SendAsync`, `SendAccountCreatedAsync`, `SendProjectDeadlineAsync`; tiêu đề + HTML ở tầng ngoài; section `Email`.
 ⚠️ Đổi chỗ embedded resource (`Mail/Templates`, `Storage/Files`) phải sửa cả csproj và `SampleFileExternal.FilesNamespace` — build qua nhưng đọc ra `null`.
 
 ## Thêm một dịch vụ ngoài

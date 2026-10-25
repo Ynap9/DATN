@@ -35,6 +35,7 @@ namespace sh.be.infrastructure.data.Persistence.Db
         public DbSet<ProjectConfig> ProjectConfigs { get; set; }
         public DbSet<ProjectDocumentType> ProjectDocumentTypes { get; set; }
         public DbSet<ProjectDocumentTypeDocumentField> ProjectDocumentTypeDocumentFields { get; set; }
+        public DbSet<ProjectDeadlineNotification> ProjectDeadlineNotifications { get; set; }
         public DbSet<Submission> Submissions { get; set; }
         public DbSet<SubmissionData> SubmissionDatas { get; set; }
         public DbSet<SubmissionLog> SubmissionLogs { get; set; }
@@ -116,6 +117,13 @@ namespace sh.be.infrastructure.data.Persistence.Db
                 entity.HasQueryFilter(e => !e.Deleted);
                 entity.Property(e => e.Deleted).HasDefaultValue(0);
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
+            modelBuilder.Entity<ProjectDeadlineNotification>(entity =>
+            {
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.HasIndex([nameof(ProjectDeadlineNotification.ProjectId), nameof(ProjectDeadlineNotification.NotificationType),
+                        nameof(ProjectDeadlineNotification.EndedAt), nameof(ProjectDeadlineNotification.ToAddress)], ProjectDeadlineNotification.UniqueSentIndexName)
+                    .HasFilter("[IsSuccess] = 1");
             });
             modelBuilder.Entity<Submission>(entity =>
             {

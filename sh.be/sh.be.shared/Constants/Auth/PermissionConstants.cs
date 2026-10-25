@@ -50,6 +50,7 @@ namespace sh.be.shared.Constants.Auth
         public const string FUNCTION_PROJECT_CREATE = "Function.Construction.Project.Create";
         public const string FUNCTION_PROJECT_UPDATE = "Function.Construction.Project.Update";
         public const string FUNCTION_PROJECT_DELETE = "Function.Construction.Project.Delete";
+        public const string FUNCTION_PROJECT_DEADLINE = "Function.Construction.Project.Deadline";
 
         public const string MENU_PROJECT_CONFIG = "Menu.Construction.ProjectConfig";
         public const string FUNCTION_PROJECT_CONFIG_VIEW = "Function.Construction.ProjectConfig.View";

@@ -54,6 +54,7 @@ namespace sh.be.infrastructure.data.Persistence.Seeder
             Permission.Create(PermissionConstants.FUNCTION_PROJECT_CREATE, "Tạo mới dự án", PermissionConstants.MENU_PROJECT, PermissionConstants.MODULE_CONSTRUCTION, null),
             Permission.Create(PermissionConstants.FUNCTION_PROJECT_UPDATE, "Cập nhật dự án", PermissionConstants.MENU_PROJECT, PermissionConstants.MODULE_CONSTRUCTION, null),
             Permission.Create(PermissionConstants.FUNCTION_PROJECT_DELETE, "Xóa dự án", PermissionConstants.MENU_PROJECT, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_PROJECT_DEADLINE, "Xem hạn dự án, chạy kiểm tra hạn, xem lịch sử gửi mail", PermissionConstants.MENU_PROJECT, PermissionConstants.MODULE_CONSTRUCTION, null),
 
             Permission.Create(PermissionConstants.MENU_PROJECT_CONFIG, "Menu cấu hình dự án", PermissionConstants.MENU_CONSTRUCTION, PermissionConstants.MODULE_CONSTRUCTION, null),
             Permission.Create(PermissionConstants.FUNCTION_PROJECT_CONFIG_VIEW, "Xem cấu hình dự án", PermissionConstants.MENU_PROJECT_CONFIG, PermissionConstants.MODULE_CONSTRUCTION, null),

@@ -1,6 +1,6 @@
 # Hồ sơ — import Google Sheet và xem file (Construction)
 
-> **Phần 11/15** · trước: [10-lo-ky.md](10-lo-ky.md) · mục lục: [README.md](README.md)
+> **Phần 11/16** · trước: [10-lo-ky.md](10-lo-ky.md) · mục lục: [README.md](README.md)
 
 Hồ sơ (`construction.Submission`) = một file tài liệu số hoá = một dòng trên Google Sheet, thuộc một dự án và một loại văn bản.
 Giá trị từng trường của hồ sơ nằm ở `construction.SubmissionData` (một dòng cho mỗi cặp hồ sơ – trường). Nghiệp vụ lấy từ
@@ -39,6 +39,7 @@ Body chung (`ImportSubmissionDto`): `projectId`, `documentTypeId`, `fileColumnIm
 |---|---|
 | Dự án không tồn tại / đã xoá | `303` |
 | Dự án `Status = DONE` (`Project.EnsureImportable`) | `313` |
+| Dự án hết hạn `Status = EXPIRED` ([15-han-du-an.md](15-han-du-an.md)) | `323` |
 | Loại văn bản không tồn tại / chưa gắn vào dự án | `301` / `312` |
 | Link sheet sai / không đọc được (chưa share cho service account) / không có sheet | `202` / `203` / `204` |
 | Sheet không có dòng dữ liệu | `306` |

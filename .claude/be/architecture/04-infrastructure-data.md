@@ -42,7 +42,7 @@ gọi thêm `SaveChanges` trong các luồng đó.
   Cột chuỗi có index thành `nvarchar(450)` — giá trị dài hơn sẽ lỗi khi lưu.
 - Unique index có filter: attribute khai index + `IsUnique`, `OnModelCreating` gọi `HasIndex([...], <tên>).HasFilter("[Deleted] = 0")` theo
   **cùng tên** (hằng `Submission.UniqueKeyIndexName`, `SubmissionData.UniqueFieldIndexName`, `PackageSchema.UniqueTypeIndexName`,
-  `PackageSchemaField.UniqueElementIndexName`, `PackageCodeValue.UniqueCodeIndexName`). ⚠️ Khoá index nonclustered tối đa 1700 byte:
+  `PackageSchemaField.UniqueElementIndexName`, `PackageCodeValue.UniqueCodeIndexName`; `ProjectDeadlineNotification.UniqueSentIndexName` lọc `[IsSuccess] = 1`). ⚠️ Khoá index nonclustered tối đa 1700 byte:
   `Submission (ProjectId, DocumentTypeId, FileName 255, ProfileRange 100, Box 100)` ≈ 918 byte; đừng nới các cột này lên `nvarchar(500)`.
 - `Deleted` mặc định `0`, `CreatedDate` mặc định `getdate()` (cấu hình trong `OnModelCreating`).
 - EF map được setter/constructor `private` của entity, nên entity giàu hành vi không đổi schema.
@@ -54,7 +54,7 @@ gọi thêm `SaveChanges` trong các luồng đó.
 
 `DocumentTypeRepository.LockAsync` khoá dòng loại văn bản (`UPDLOCK, HOLDLOCK`) để tuần tự hoá việc ghi thứ tự trường;
 chỉ có tác dụng **bên trong transaction** (xem [../nghiep-vu/06-truong-van-ban.md](../nghiep-vu/06-truong-van-ban.md)).
-`SubmissionRepository.LockImportAsync` khoá dòng `ProjectDocumentType` cùng cách (`SET LOCK_TIMEOUT` 5 giây, lỗi `1222` → `310`); bulk (`EFCore.BulkExtensions`) chạy trên cùng `ShDbContext` nên tự vào transaction của `UnitOfWork`.
+`ProjectRepository.TryLockDeadlineCheckAsync` dùng `sp_getapplock` mức **phiên** (tự mở connection, chờ 0 ms; nhả + đóng ở `ReleaseDeadlineCheckLockAsync`) để khoá giữ qua nhiều transaction. `SubmissionRepository.LockImportAsync` khoá dòng `ProjectDocumentType` cùng cách (`SET LOCK_TIMEOUT` 5 giây, lỗi `1222` → `310`); bulk (`EFCore.BulkExtensions`) chạy trên cùng `ShDbContext` nên tự vào transaction của `UnitOfWork`.
 ⚠️ Bulk và đọc cột `nvarchar(max)` số lượng lớn: dùng API **sync**, connection string **tắt MARS** — lý do và số đo ở [../nghiep-vu/11-ho-so-import.md](../nghiep-vu/11-ho-so-import.md#hiệu-năng--sheet-20000-dòng--30-trường-600000-dữ-liệu).
 ⚠️ Bảng có filtered index (`Submission`, `SubmissionData`) chỉ ghi được khi `QUOTED_IDENTIFIER ON` (EF bật sẵn); `sqlcmd` tắt → `Msg 1934`, dùng `sqlcmd -I`.
 
@@ -93,7 +93,7 @@ Chạy mỗi lần khởi động (từ `Program.cs`), idempotent: chỉ thêm c
 | `SeedPermission` | Đồng bộ cây quyền với danh sách cứng: thêm mới, `Sync` cái đã có, xoá cứng cái thừa |
 | `SeedUser` | Tạo role `SuperAdmin`, tài khoản `admin`, gán role |
 | `SeedRolePermission` | Gán đủ mọi quyền cho `SuperAdmin`, `Admin` |
-| `SeedPackaging` | Thêm mã, schema, trường đóng gói còn thiếu từ `PackagingSeedData`; **không sửa** bản ghi đã có ([../nghiep-vu/15-dong-goi-cau-hinh.md](../nghiep-vu/15-dong-goi-cau-hinh.md)) |
+| `SeedPackaging` | Thêm mã, schema, trường đóng gói còn thiếu từ `PackagingSeedData`; **không sửa** bản ghi đã có ([../nghiep-vu/16-dong-goi-cau-hinh.md](../nghiep-vu/16-dong-goi-cau-hinh.md)) |
 
 Thêm quyền mới = thêm hằng trong `PermissionConstants` + một dòng `Permission.Create(...)` trong `SeedPermission`. Seeder là class tĩnh nên dùng `DateTimeUtils.GetVietnamTime()` thay vì `TimeProvider`.
 

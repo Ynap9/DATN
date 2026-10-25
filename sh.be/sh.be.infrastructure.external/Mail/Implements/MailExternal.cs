@@ -51,5 +51,10 @@ namespace sh.be.infrastructure.external.Mail.Implements
         {
             return SendAsync(toAddress, MailTemplateConstants.SUBJECT_ACCOUNT_CREATED, AccountCreatedMailTemplate.Build(userName, password));
         }
+
+        public Task SendProjectDeadlineAsync(string toAddress, string subject, string projectName, DateTime endedAt, int daysLeft, bool isExpired)
+        {
+            return SendAsync(toAddress, subject, ProjectDeadlineMailTemplate.Build(projectName, endedAt, daysLeft, isExpired));
+        }
     }
 }

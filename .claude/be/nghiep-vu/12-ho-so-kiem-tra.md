@@ -1,6 +1,6 @@
 # Hồ sơ — xem, lọc, kiểm tra
 
-> **Phần 12/15** · trước: [11-ho-so-import.md](11-ho-so-import.md) · mục lục: [README.md](README.md)
+> **Phần 12/16** · trước: [11-ho-so-import.md](11-ho-so-import.md) · mục lục: [README.md](README.md)
 
 Sau khi import ([11-ho-so-import.md](11-ho-so-import.md)), người kiểm tra mở màn hình hồ sơ của **một dự án + một loại văn bản**:
 xem bảng, lọc, mở từng hồ sơ (PDF bên trái qua `proxy-file`, form trường bên phải), sửa dữ liệu rồi bấm **Kiểm tra**.
@@ -71,7 +71,7 @@ Body: `{ id, projectId, documentTypeId, datas: [{ documentFieldId, data }], note
   - trường đã có dữ liệu → so sau khi trim, khác thì ghi (cho phép xoá trắng); giữ nguyên `IndexGoogleSheet`, `IndexRow`;
   - trường chưa có dữ liệu → giá trị rỗng thì bỏ qua, khác rỗng thì thêm mới (`IndexRow` = `OrderFieldImport`, `IndexGoogleSheet` rỗng);
   - trường không gửi lên → giữ nguyên.
-- Lỗi, không ghi gì: hồ sơ không tồn tại `305`; sai dự án / loại văn bản `319`; dự án không tồn tại `303`; dự án `DONE` `316`
+- Lỗi, không ghi gì: hồ sơ không tồn tại `305`; sai dự án / loại văn bản `319`; dự án không tồn tại `303`; dự án `DONE` `316`, hết hạn `323` (trừ SuperAdmin)
   (**trừ SuperAdmin**); trường gửi trùng `318`; trường không thuộc cấu hình dự án + loại văn bản `311`; ghi chú quá 1000 ký tự `400`.
 - `changedDataCount` = số ô sửa + số ô thêm. Audit `Kiểm tra hồ sơ`, `Update`, lưu `StatusCheck` và giá trị cũ / mới từng trường.
 - Ghi bằng **một** `SaveChanges` (EF tự bọc transaction): `Submission`, `SubmissionData`, `SubmissionLog`, `AuditLog` cùng thành công
