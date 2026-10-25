@@ -1,6 +1,6 @@
 # Nhật ký hệ thống (Core)
 
-> **Phần 4/15** · trước: [03-vai-tro-mac-dinh.md](03-vai-tro-mac-dinh.md) · mục lục: [README.md](README.md)
+> **Phần 4/16** · trước: [03-vai-tro-mac-dinh.md](03-vai-tro-mac-dinh.md) · mục lục: [README.md](README.md)
 
 Mọi thao tác ghi nghiệp vụ để lại một `AuditLog`. Module `Core` chỉ **đọc** nhật ký qua API; việc ghi nằm trong
 `BaseService.AddAuditLog` và được gọi từ các service nghiệp vụ.

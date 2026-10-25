@@ -1,7 +1,7 @@
 # Nghiệp vụ backend sh.be
 
 > Chức năng và luật nghiệp vụ của module `Auth` (người dùng, vai trò, quyền), `Core` (nhật ký hệ thống) và
-> `Construction` (loại văn bản, dự án, hồ sơ) và `DigitalSignature` (mẫu chữ ký, lô ký).
+> `Construction` (loại văn bản, dự án, hồ sơ), `DigitalSignature` (mẫu chữ ký, lô ký) và `Packaging` (cấu hình đóng gói TT05).
 > Đối chiếu với code `sh.be` ngày 2026-10-19. Kiến trúc và quy ước code nằm ở [../architecture/README.md](../architecture/README.md).
 
 ## Mục lục
@@ -23,6 +23,7 @@
 | [13-ho-so-qa.md](13-ho-so-qa.md) | Hồ sơ: QA Đạt / Không đạt, trả lại, `StatusQa` độc lập với `StatusCheck`, lịch sử QA (`SubmissionQaLog`) |
 | [14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md) | Hồ sơ: xoá mềm nhiều hồ sơ (chặn hồ sơ đã kiểm tra), xuất Excel theo bộ lọc (trả file ngay hoặc chạy nền Hangfire + link tải) |
 | [15-han-du-an.md](15-han-du-an.md) | Hạn dự án: job Hangfire hằng ngày chuyển `EXPIRED`, mail báo sắp / đã hết hạn chống trùng, lịch sử gửi |
+| [16-dong-goi-cau-hinh.md](16-dong-goi-cau-hinh.md) | Đóng gói: 20 schema (5 loại gói × 4 loại metadata), trường đúng thứ tự, luật bắt buộc, 13 nhóm mã, seeder |
 
 ## Thuật ngữ
 
@@ -41,7 +42,7 @@
 ## Ba quy tắc xuyên suốt
 
 - Mọi thao tác ghi đều tạo `AuditLog` **trong cùng transaction** với thay đổi dữ liệu (xem [04-nhat-ky-he-thong.md](04-nhat-ky-he-thong.md)).
-- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`108` (Auth), `201`–`210` (Core), `301`–`325` (Construction) hoặc `601`–`635` (DigitalSignature).
+- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`108` (Auth), `201`–`211` (Core), `301`–`326` (Construction), `601`–`635` (DigitalSignature) hoặc `701`–`703` (Packaging).
 - Thời gian thao tác lấy theo giờ Việt Nam, người thao tác lấy từ token đăng nhập.
 
 Route trong các file nghiệp vụ viết rút gọn `api/<module>/...`; route thật có version: `api/v1/<module>/...` (từ 2026-10-20,

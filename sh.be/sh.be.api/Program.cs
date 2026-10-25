@@ -35,6 +35,9 @@ using sh.be.applications.Module.Construction.Jobs;
 using sh.be.applications.Module.DigitalSignature.Implements;
 using sh.be.applications.Module.DigitalSignature.Interfaces.Queries;
 using sh.be.applications.Module.DigitalSignature.Interfaces.Services;
+using sh.be.applications.Module.Packaging.Implements;
+using sh.be.applications.Module.Packaging.Interfaces.Queries;
+using sh.be.applications.Module.Packaging.Interfaces.Services;
 using sh.be.domain.Base;
 using sh.be.domain.Module.Auth.Entities;
 using sh.be.domain.Module.Auth.Repositories;
@@ -58,6 +61,7 @@ using sh.be.infrastructure.data.Module.Construction.Queries;
 using sh.be.infrastructure.data.Module.Construction.Repositories;
 using sh.be.infrastructure.data.Module.DigitalSignature.Queries;
 using sh.be.infrastructure.data.Module.DigitalSignature.Repositories;
+using sh.be.infrastructure.data.Module.Packaging.Queries;
 using sh.be.infrastructure.data.Persistence.Db;
 using sh.be.infrastructure.data.Persistence.Seeder;
 using sh.be.infrastructure.external.BackgroundJob.Base;
@@ -307,6 +311,7 @@ builder.Services.AddScoped<IProjectDeadlineQuery, ProjectDeadlineQuery>();
 builder.Services.AddScoped<ISubmissionQuery, SubmissionQuery>();
 builder.Services.AddScoped<ITemplateQuery, TemplateQuery>();
 builder.Services.AddScoped<ISigningBatchQuery, SigningBatchQuery>();
+builder.Services.AddScoped<IPackageConfigQuery, PackageConfigQuery>();
 
 // domain services
 builder.Services.AddScoped<RoleDomainService>();
@@ -334,6 +339,7 @@ builder.Services.AddScoped<ISubmissionFileService, SubmissionFileService>();
 builder.Services.AddScoped<ITemplateService, TemplateService>();
 builder.Services.AddScoped<ISigningBatchService, SigningBatchService>();
 builder.Services.AddScoped<IPluginService, PluginService>();
+builder.Services.AddScoped<IPackageConfigService, PackageConfigService>();
 builder.Services.AddSingleton<ISigningRunner, SigningRunner>();
 
 // jobs
@@ -453,6 +459,7 @@ using (var scope = app.Services.CreateScope())
     await SeedPermission.SeedAsync(shDbContext);
     await SeedUser.SeedAsync(shDbContext,userManager);
     await SeedRolePermission.SeedAsync(shDbContext);
+    await SeedPackaging.SeedAsync(shDbContext);
 }
 await app.Services.GetRequiredService<ISigningRunner>().RecoverAsync();
 #endregion

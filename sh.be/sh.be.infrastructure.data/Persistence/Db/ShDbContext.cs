@@ -8,6 +8,7 @@ using sh.be.domain.Module.Construction.DocumentTypes.Entities;
 using sh.be.domain.Module.Construction.Projects.Entities;
 using sh.be.domain.Module.Construction.Submissions.Entities;
 using sh.be.domain.Module.DigitalSignature.Entities;
+using sh.be.domain.Module.Packaging.Entities;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.Constants.DigitalSignature;
 using System;
@@ -44,6 +45,9 @@ namespace sh.be.infrastructure.data.Persistence.Db
         public DbSet<TemplatePosition> TemplatePositions { get; set; }
         public DbSet<SigningBatch> SigningBatches { get; set; }
         public DbSet<SigningBatchFile> SigningBatchFiles { get; set; }
+        public DbSet<PackageSchema> PackageSchemas { get; set; }
+        public DbSet<PackageSchemaField> PackageSchemaFields { get; set; }
+        public DbSet<PackageCodeValue> PackageCodeValues { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.UseOpenIddict();
@@ -187,6 +191,34 @@ namespace sh.be.infrastructure.data.Persistence.Db
                 entity.HasQueryFilter(e => !e.Deleted);
                 entity.Property(e => e.Deleted).HasDefaultValue(0);
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
+            modelBuilder.Entity<PackageSchema>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.HasIndex([nameof(PackageSchema.PackageType), nameof(PackageSchema.MetadataType)], PackageSchema.UniqueTypeIndexName)
+                    .HasFilter("[Deleted] = 0");
+            });
+            modelBuilder.Entity<PackageSchemaField>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.HasIndex([nameof(PackageSchemaField.PackageSchemaId), nameof(PackageSchemaField.ElementName)], PackageSchemaField.UniqueElementIndexName)
+                    .HasFilter("[Deleted] = 0");
+                entity.HasOne<PackageSchema>()
+                    .WithMany()
+                    .HasForeignKey(e => e.PackageSchemaId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<PackageCodeValue>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.HasIndex([nameof(PackageCodeValue.CodeGroup), nameof(PackageCodeValue.Code)], PackageCodeValue.UniqueCodeIndexName)
+                    .HasFilter("[Deleted] = 0");
             });
             modelBuilder.Entity<RolePermission>()
                 .HasKey(rp => new { rp.RoleId, rp.PermissionKey });

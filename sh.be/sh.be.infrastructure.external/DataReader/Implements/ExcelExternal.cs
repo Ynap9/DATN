@@ -15,17 +15,42 @@ namespace sh.be.infrastructure.external.DataReader.Implements
 
         public ExportFileDto CreateTemplate(string templateName, IReadOnlyList<string> headers)
         {
-            return CreateWorkbook(ExcelNaming.ToFileName(templateName, TemplateFileSuffix), templateName, headers, []);
+            return CreateWorkbook(ExcelNaming.ToFileName(templateName, TemplateFileSuffix), workbook => AddWorksheet(workbook, templateName, headers, []));
+        }
+
+        public ExportFileDto CreateMultiSheetTemplate(string templateName, IReadOnlyList<ExcelSheetTemplateDto> sheets)
+        {
+            return CreateWorkbook(ExcelNaming.ToFileName(templateName, TemplateFileSuffix), workbook =>
+            {
+                foreach (var sheet in sheets)
+                {
+                    AddWorksheet(workbook, sheet.SheetName, sheet.Headers, []);
+                }
+            });
         }
 
         public ExportFileDto CreateTable(string fileName, string sheetName, IReadOnlyList<string> headers, IEnumerable<IReadOnlyList<string>> rows)
         {
-            return CreateWorkbook(ExcelNaming.ToFileName(fileName), sheetName, headers, rows);
+            return CreateWorkbook(ExcelNaming.ToFileName(fileName), workbook => AddWorksheet(workbook, sheetName, headers, rows));
         }
 
-        private static ExportFileDto CreateWorkbook(string fileName, string sheetName, IReadOnlyList<string> headers, IEnumerable<IReadOnlyList<string>> rows)
+        private static ExportFileDto CreateWorkbook(string fileName, Action<XLWorkbook> addWorksheets)
         {
             using var workbook = new XLWorkbook();
+            addWorksheets(workbook);
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            return new ExportFileDto
+            {
+                FileName = fileName,
+                ContentType = ExcelNaming.ContentType,
+                Content = stream.ToArray(),
+            };
+        }
+
+        private static void AddWorksheet(XLWorkbook workbook, string sheetName, IReadOnlyList<string> headers, IEnumerable<IReadOnlyList<string>> rows)
+        {
             var worksheet = workbook.Worksheets.Add(ExcelNaming.ToSheetName(sheetName));
 
             for (var columnIndex = 0; columnIndex < headers.Count; columnIndex++)
@@ -47,15 +72,6 @@ namespace sh.be.infrastructure.external.DataReader.Implements
             worksheet.SheetView.FreezeRows(HeaderRowIndex);
             worksheet.Columns(1, headers.Count).AdjustToContents(HeaderRowIndex, Math.Min(rowIndex, HeaderRowIndex + AdjustWidthRowCount),
                 MinColumnWidth, MaxColumnWidth);
-
-            using var stream = new MemoryStream();
-            workbook.SaveAs(stream);
-            return new ExportFileDto
-            {
-                FileName = fileName,
-                ContentType = ExcelNaming.ContentType,
-                Content = stream.ToArray(),
-            };
         }
     }
 }
