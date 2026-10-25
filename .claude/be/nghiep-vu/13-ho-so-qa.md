@@ -1,6 +1,6 @@
 # Hồ sơ — QA, trả lại, lịch sử QA
 
-> **Phần 13/16** · trước: [12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md) · mục lục: [README.md](README.md)
+> **Phần 13/17** · trước: [12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md) · mục lục: [README.md](README.md)
 
 Sau khi người nhập liệu kiểm tra hồ sơ ([12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md)), người QA mở hồ sơ, đối chiếu PDF với dữ liệu
 rồi chấm **Đạt** hoặc **Không đạt (kèm lý do)**. Không đạt thì hồ sơ bị **trả lại** cho người nhập liệu sửa. Bản gốc `nhaplieu.be`
@@ -35,6 +35,8 @@ Import overwrite với `overwriteChecked = false` chỉ bảo vệ hồ sơ `CHE
 Import blank / overwrite không đổi `StatusQa`.
 
 ## Các chức năng
+
+Thống kê QA theo trường, theo người nhập và dòng thời gian một văn bản: [17-thong-ke-qa.md](17-thong-ke-qa.md).
 
 | Endpoint (`api/v1/construction/submission/...`) | Quyền | Việc |
 |---|---|---|

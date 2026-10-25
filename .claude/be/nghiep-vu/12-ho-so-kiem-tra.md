@@ -1,6 +1,6 @@
 # Hồ sơ — xem, lọc, kiểm tra
 
-> **Phần 12/16** · trước: [11-ho-so-import.md](11-ho-so-import.md) · mục lục: [README.md](README.md)
+> **Phần 12/17** · trước: [11-ho-so-import.md](11-ho-so-import.md) · mục lục: [README.md](README.md)
 
 Sau khi import ([11-ho-so-import.md](11-ho-so-import.md)), người kiểm tra mở màn hình hồ sơ của **một dự án + một loại văn bản**:
 xem bảng, lọc, mở từng hồ sơ (PDF bên trái qua `proxy-file`, form trường bên phải), sửa dữ liệu rồi bấm **Kiểm tra**.
