@@ -610,6 +610,15 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             };
         }
 
+        public async Task<SubmissionExportNameDto?> FindExportName(int projectId, int documentTypeId)
+        {
+            return await (from p in _shDbContext.Projects.AsNoTracking()
+                          from d in _shDbContext.DocumentTypes.AsNoTracking()
+                          where p.Id == projectId && d.Id == documentTypeId
+                          select new SubmissionExportNameDto { ProjectName = p.Name, DocumentTypeName = d.Name })
+                .FirstOrDefaultAsync();
+        }
+
         private static SubmissionTreeCountDto SumTreeCounts(IEnumerable<SubmissionTreeCountDto> counts)
         {
             var countList = counts.ToList();

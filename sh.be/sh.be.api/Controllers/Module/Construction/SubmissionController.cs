@@ -377,6 +377,36 @@ namespace sh.be.api.Controllers.Module.Construction
             }
         }
 
+        [HttpPost("export-excel/job")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_EXPORT)]
+        public async Task<ApiResponse> CreateExportJob([FromQuery] ExportSubmissionDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.CreateExportJob(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("export-excel/job/{jobId}")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_EXPORT)]
+        public async Task<ApiResponse> FindExportJob([FromRoute] string jobId)
+        {
+            try
+            {
+                var data = await _submissionService.FindExportJob(jobId);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
         [HttpGet("proxy-file")]
         [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
         public async Task<IActionResult> ProxyFile([FromQuery] string url)

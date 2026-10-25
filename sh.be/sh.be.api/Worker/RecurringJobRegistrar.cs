@@ -29,6 +29,8 @@ namespace sh.be.api.Worker
             var backgroundJobExternal = scope.ServiceProvider.GetRequiredService<IBackgroundJobExternal>();
             backgroundJobExternal.AddOrUpdateRecurring<ProjectDeadlineJob>(ProjectDeadlineConst.RECURRING_JOB_ID,
                 job => job.ExecuteAsync(), _backgroundJobSettings.Jobs.ProjectDeadlineCheck, BaseService.VietnamTimeZone);
+            backgroundJobExternal.AddOrUpdateRecurring<SubmissionExportCleanupJob>(SubmissionConst.EXPORT_CLEANUP_RECURRING_JOB_ID,
+                job => job.ExecuteAsync(), _backgroundJobSettings.Jobs.SubmissionExportCleanup, BaseService.VietnamTimeZone);
             return Task.CompletedTask;
         }
 

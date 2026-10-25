@@ -338,6 +338,8 @@ builder.Services.AddSingleton<ISigningRunner, SigningRunner>();
 
 // jobs
 builder.Services.AddScoped<ProjectDeadlineJob>();
+builder.Services.AddScoped<SubmissionExportJob>();
+builder.Services.AddScoped<SubmissionExportCleanupJob>();
 
 // third-party services
 builder.Services.AddScoped<IMailExternal, MailExternal>();

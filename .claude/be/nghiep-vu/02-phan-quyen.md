@@ -134,7 +134,7 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `PUT api/construction/submission/check` (id trong body) | `Function.Construction.Submission.Check` |
 | `PUT api/construction/submission/qa` (id trong body) | `Function.Construction.Submission.Qa` |
 | `DELETE api/construction/submission` (ids trong body) | `Function.Construction.Submission.Delete` |
-| `GET api/construction/submission/export-excel` | `Function.Construction.Submission.Export` |
+| `GET api/construction/submission/export-excel`, `POST .../export-excel/job`, `GET .../export-excel/job/{jobId}` | `Function.Construction.Submission.Export` |
 | `GET api/digital-signature/template/paging`, `GET .../{id}`, `GET .../sample-file` | `Function.DigitalSignature.Template.View` |
 | `POST` / `PUT {id}` + `PUT {id}/config` / `DELETE {id}` `api/digital-signature/template` | `...Template.Create` / `.Update` / `.Delete` |
 | `GET api/digital-signature/signing-batch/running`, `GET .../{id}/files`, `.../{id}/progress`, `.../{id}/files/{fileId}/signed-url` | `Function.DigitalSignature.SigningBatch.View` |

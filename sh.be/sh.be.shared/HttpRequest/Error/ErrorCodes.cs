@@ -37,6 +37,7 @@ namespace sh.be.shared.HttpRequest.Error
         public const int CoreErrorStorageNotConfigured = 208;
         public const int CoreErrorUploadFileFailed = 209;
         public const int CoreErrorDownloadFileFailed = 210;
+        public const int CoreErrorBackgroundJobUnavailable = 211;
 
         public const int ConstructionErrorDocumentTypeNotFound = 301;
         public const int ConstructionErrorDocumentFieldNotFound = 302;
@@ -63,6 +64,7 @@ namespace sh.be.shared.HttpRequest.Error
         public const int ConstructionErrorProjectExpired = 323;
         public const int ConstructionErrorQaWrongFieldRequired = 324;
         public const int ConstructionErrorSubmissionCheckedNotDeletable = 325;
+        public const int ConstructionErrorExportJobNotFound = 326;
 
         public const int DigitalSignatureErrorTemplateNotFound = 601;
         public const int DigitalSignatureErrorInvalidTemplatePositionKind = 602;
