@@ -65,6 +65,15 @@ namespace sh.be.shared.HttpRequest.Error
         public const int ConstructionErrorQaWrongFieldRequired = 324;
         public const int ConstructionErrorSubmissionCheckedNotDeletable = 325;
         public const int ConstructionErrorExportJobNotFound = 326;
+        public const int ConstructionErrorQaTicketNotFound = 327;
+        public const int ConstructionErrorQaNoSubmissionToAssign = 328;
+        public const int ConstructionErrorQaTicketTooLarge = 329;
+        public const int ConstructionErrorQaAssignConflict = 330;
+        public const int ConstructionErrorQaSameAsEntry = 331;
+        public const int ConstructionErrorQaSubmissionLocked = 332;
+        public const int ConstructionErrorQaSubmissionNotSample = 333;
+        public const int ConstructionErrorQaNotAssignee = 334;
+        public const int ConstructionErrorQaTicketStatusInvalid = 335;
 
         public const int DigitalSignatureErrorTemplateNotFound = 601;
         public const int DigitalSignatureErrorInvalidTemplatePositionKind = 602;

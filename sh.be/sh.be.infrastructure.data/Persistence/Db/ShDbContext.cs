@@ -6,6 +6,7 @@ using sh.be.domain.Module.Core.Entities;
 using sh.be.domain.Module.Construction.DocumentFields.Entities;
 using sh.be.domain.Module.Construction.DocumentTypes.Entities;
 using sh.be.domain.Module.Construction.Projects.Entities;
+using sh.be.domain.Module.Construction.QaAssignments.Entities;
 using sh.be.domain.Module.Construction.Submissions.Entities;
 using sh.be.domain.Module.DigitalSignature.Entities;
 using sh.be.domain.Module.Packaging.Entities;
@@ -41,6 +42,10 @@ namespace sh.be.infrastructure.data.Persistence.Db
         public DbSet<SubmissionLog> SubmissionLogs { get; set; }
         public DbSet<SubmissionQaLog> SubmissionQaLogs { get; set; }
         public DbSet<SubmissionQaLogField> SubmissionQaLogFields { get; set; }
+        public DbSet<SubmissionUser> SubmissionUsers { get; set; }
+        public DbSet<QaSamplingConfig> QaSamplingConfigs { get; set; }
+        public DbSet<QaReviewerMode> QaReviewerModes { get; set; }
+        public DbSet<QaTicket> QaTickets { get; set; }
         public DbSet<Template> Templates { get; set; }
         public DbSet<TemplatePosition> TemplatePositions { get; set; }
         public DbSet<SigningBatch> SigningBatches { get; set; }
@@ -160,6 +165,52 @@ namespace sh.be.infrastructure.data.Persistence.Db
                 entity.HasQueryFilter(e => !e.Deleted);
                 entity.Property(e => e.Deleted).HasDefaultValue(0);
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
+            modelBuilder.Entity<SubmissionUser>(entity =>
+            {
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.HasOne<Submission>()
+                    .WithMany()
+                    .HasForeignKey(e => e.SubmissionId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<QaSamplingConfig>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.HasIndex([nameof(QaSamplingConfig.ProjectId)], QaSamplingConfig.UniqueProjectIndexName)
+                    .HasFilter("[Deleted] = 0");
+                entity.HasOne<Project>()
+                    .WithMany()
+                    .HasForeignKey(e => e.ProjectId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<QaReviewerMode>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.HasIndex([nameof(QaReviewerMode.ProjectId), nameof(QaReviewerMode.UserId)], QaReviewerMode.UniqueReviewerIndexName)
+                    .HasFilter("[Deleted] = 0");
+                entity.HasOne<Project>()
+                    .WithMany()
+                    .HasForeignKey(e => e.ProjectId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<QaTicket>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.HasOne<Project>()
+                    .WithMany()
+                    .HasForeignKey(e => e.ProjectId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<DocumentType>()
+                    .WithMany()
+                    .HasForeignKey(e => e.DocumentTypeId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<Template>(entity =>
             {
