@@ -100,6 +100,9 @@ namespace sh.be.shared.HttpRequest.Error
             { ErrorCodes.DigitalSignatureErrorTemplateImageUnreadable, "Không đọc được ảnh dấu đỏ hoặc chữ ký tay của mẫu chữ ký" },
             { ErrorCodes.DigitalSignatureErrorSigningRequestTimeout, "Quá thời gian chờ plugin ký" },
             { ErrorCodes.DigitalSignatureErrorAppearanceBuildFailed, "Không dựng được hình chữ ký trên trang" },
+            { ErrorCodes.PackagingErrorPackageTypeInvalid, "Loại gói không hợp lệ" },
+            { ErrorCodes.PackagingErrorMetadataTypeInvalid, "Loại metadata không hợp lệ" },
+            { ErrorCodes.PackagingErrorSchemaFieldNotFound, "Loại gói và loại metadata đã chọn chưa có cấu hình trường" },
         };
         public static string GetMessage(int code)
         {

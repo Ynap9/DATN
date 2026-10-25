@@ -14,8 +14,8 @@ repository, `IUnitOfWork`).
 | `Module/<TenModule>/Repositories/` | Implement `I...Repository` của domain |
 | `Module/<TenModule>/Queries/` | Implement `I...Query` của applications, trả DTO |
 | `Persistence/Db/ShDbContext.cs` | `IdentityUserContext<AppUser>` + `DbSet` + cấu hình model + OpenIddict |
-| `Persistence/Seeder/` | `SeedRole`, `SeedPermission`, `SeedUser`, `SeedRolePermission` |
-| `Migrations/Auth/`, `Core/`, `Construction/`, `DigitalSignature/` | Migration tách theo module; `ShDbContextModelSnapshot.cs` chung |
+| `Persistence/Seeder/` | `SeedRole`, `SeedPermission`, `SeedUser`, `SeedRolePermission`, `SeedPackaging` (+ dữ liệu `PackagingSeedData`) |
+| `Migrations/Auth/`, `Core/`, `Construction/`, `DigitalSignature/`, `Packaging/` | Migration tách theo module; `ShDbContextModelSnapshot.cs` chung |
 
 ## Repository vs Query
 
@@ -31,16 +31,18 @@ gọi thêm `SaveChanges` trong các luồng đó.
 
 ## Schema
 
-- Bảng Auth ở schema `auth`, Core ở `core`, Construction ở `construction`, DigitalSignature ở `digitalsignature` (`[Table(..., Schema = DbSchemas.X)]` trên entity).
+- Bảng Auth ở schema `auth`, Core ở `core`, Construction ở `construction`, DigitalSignature ở `digitalsignature`, Packaging ở `packaging` (`[Table(..., Schema = DbSchemas.X)]` trên entity).
 - Khoá ghép: `RolePermission (RoleId, PermissionKey)`, `UserRole (UserId, RoleId)`, `ProjectDocumentType (ProjectId, DocumentTypeId)`,
   `ProjectDocumentTypeDocumentField (ProjectId, DocumentTypeId, DocumentFieldId)`, `SubmissionQaLogField (SubmissionQaLogId, DocumentFieldId)`.
+  FK thật duy nhất ngoài Identity: `PackageSchemaField.PackageSchemaId → PackageSchema` (`HasOne<PackageSchema>().WithMany()`, `Restrict`, không navigation).
 - Index khai bằng `[Index(..., Name = "IX_<Bang>_<Cot>")]` trên entity (không `HasIndex`): `AuditLog` (`CreatedDate`, `UserId`, `ActionType`),
   `Permission.Key` (unique), `UserRole.RoleId`, `DocumentType.Name`, `Submission.FileName`, `DocumentField (DocumentTypeId, Field)` và `(DocumentTypeId, OrderTableView)`, `Project.Name`, `ProjectConfig.Name`,
   `ProjectDocumentType.DocumentTypeId`, `ProjectDocumentTypeDocumentField.DocumentFieldId`, `SubmissionData (ProjectId, DocumentTypeId, DocumentFieldId)`, `TemplatePosition.TemplateId`,
   `SigningBatchFile (SigningBatchId, Status, Order)` (runner lấy file kế tiếp liên tục theo lô + trạng thái + thứ tự), `Submission (ProjectId, DocumentTypeId, StatusCheck)` và `(..., StatusQa)` (hồ sơ liền kề theo keyset `Id` và đếm theo trạng thái là seek thuần), `SubmissionLog` / `SubmissionQaLog (SubmissionId, CreatedDate)`, `SubmissionLog (ProjectId, DocumentTypeId, CreatedDate)` (lịch sử kiểm tra cả dự án).
   Cột chuỗi có index thành `nvarchar(450)` — giá trị dài hơn sẽ lỗi khi lưu.
 - Unique index có filter: attribute khai index + `IsUnique`, `OnModelCreating` gọi `HasIndex([...], <tên>).HasFilter("[Deleted] = 0")` theo
-  **cùng tên** (hằng `Submission.UniqueKeyIndexName`, `SubmissionData.UniqueFieldIndexName`; `ProjectDeadlineNotification.UniqueSentIndexName` lọc `[IsSuccess] = 1`). ⚠️ Khoá index nonclustered tối đa 1700 byte:
+  **cùng tên** (hằng `Submission.UniqueKeyIndexName`, `SubmissionData.UniqueFieldIndexName`, `PackageSchema.UniqueTypeIndexName`,
+  `PackageSchemaField.UniqueElementIndexName`, `PackageCodeValue.UniqueCodeIndexName`; `ProjectDeadlineNotification.UniqueSentIndexName` lọc `[IsSuccess] = 1`). ⚠️ Khoá index nonclustered tối đa 1700 byte:
   `Submission (ProjectId, DocumentTypeId, FileName 255, ProfileRange 100, Box 100)` ≈ 918 byte; đừng nới các cột này lên `nvarchar(500)`.
 - `Deleted` mặc định `0`, `CreatedDate` mặc định `getdate()` (cấu hình trong `OnModelCreating`).
 - EF map được setter/constructor `private` của entity, nên entity giàu hành vi không đổi schema.
@@ -59,14 +61,13 @@ chỉ có tác dụng **bên trong transaction** (xem [../nghiep-vu/06-truong-va
 ## Xoá mềm — global query filter
 
 `Role`, `Permission`, `UserRole`, `RolePermission`, `DocumentType`, `DocumentField`, `Project`, `ProjectConfig`, `ProjectDocumentType`, `ProjectDocumentTypeDocumentField`,
-`Submission`, `SubmissionData`, `SubmissionLog`, `SubmissionQaLog`, `SubmissionQaLogField`, `Template`, `TemplatePosition`, `SigningBatch`, `SigningBatchFile` có `HasQueryFilter(e => !e.Deleted)` trong `ShDbContext`.
+`Submission`, `SubmissionData`, `SubmissionLog`, `SubmissionQaLog`, `SubmissionQaLogField`, `Template`, `TemplatePosition`, `SigningBatch`, `SigningBatchFile`,
+`PackageSchema`, `PackageSchemaField`, `PackageCodeValue` có `HasQueryFilter(e => !e.Deleted)` trong `ShDbContext`.
 Mọi truy vấn LINQ (kể cả `join`, subquery, `Any`, `Count`) tự loại bản ghi đã xoá mềm.
 
 - **Không** viết tay `!x.Deleted` nữa.
 - Cần thấy cả bản ghi đã xoá ⇒ `.IgnoreQueryFilters()`. Hiện dùng ở: `ReplacePermissionsAsync`, `TemplateRepository.ReplacePositionsAsync`,
-  `DeleteUserRolesAsync` (xoá cứng theo khoá ghép), `DocumentFieldRepository.GetMaxOrderAsync` (thứ tự mới tính cả trường
-đã xoá), `SigningBatchRepository.GetLastFileOrderAsync` (key nguồn MinIO theo thứ tự, không được dùng lại; các hàm runner `ClaimFilesAsync` / `MarkFile*Async` / `PauseInterruptedAsync` ghi bằng `ExecuteUpdate`, không qua UnitOfWork), `SeedPermission` (khôi phục quyền), `SeedRolePermission`,
-  `SeedUser` (kiểm cặp khoá đã có).
+  `DeleteUserRolesAsync` (xoá cứng theo khoá ghép), `DocumentFieldRepository.GetMaxOrderAsync` (thứ tự mới tính cả trường đã xoá), `SigningBatchRepository.GetLastFileOrderAsync` (key nguồn MinIO theo thứ tự, không được dùng lại; các hàm runner `ClaimFilesAsync` / `MarkFile*Async` / `PauseInterruptedAsync` ghi bằng `ExecuteUpdate`, không qua UnitOfWork), `SeedPermission` (khôi phục quyền), `SeedRolePermission`, `SeedUser` (kiểm cặp khoá đã có).
 
 ⚠️ Bẫy: `ExecuteDeleteAsync` cũng bị filter lọc. Xoá cứng mà quên `IgnoreQueryFilters()` thì bản ghi xoá mềm
 còn nằm lại và lần `Add` sau trùng khoá ghép. Đừng "sửa" bằng cách bỏ filter khỏi entity.
@@ -76,12 +77,11 @@ còn nằm lại và lần `Add` sau trùng khoá ghép. Đừng "sửa" bằng 
 Đổi entity hoặc `OnModelCreating` là **đổi schema** — phải hỏi trước (skill `task-workflow`). Khi đã được duyệt:
 
 ```bash
-dotnet ef migrations add <Ten> --project sh.be/sh.be.infrastructure.data --startup-project sh.be/sh.be.api --output-dir Migrations/<Auth|Core|Construction|DigitalSignature>
+dotnet ef migrations add <Ten> --project sh.be/sh.be.infrastructure.data --startup-project sh.be/sh.be.api --output-dir Migrations/<Auth|Core|Construction|DigitalSignature|Packaging>
 dotnet ef migrations has-pending-model-changes --project sh.be/sh.be.infrastructure.data --startup-project sh.be/sh.be.api
 ```
 
-Refactor không định đổi schema thì lệnh thứ hai **phải** trả "No changes have been made to the model…".
-Lệnh `database update` và `migrations remove`: xem [../db/README.md](../db/README.md).
+Refactor không định đổi schema thì lệnh thứ hai **phải** trả "No changes have been made to the model…". Lệnh `database update` và `migrations remove`: xem [../db/README.md](../db/README.md).
 
 ## Seeder
 
@@ -93,8 +93,8 @@ Chạy mỗi lần khởi động (từ `Program.cs`), idempotent: chỉ thêm c
 | `SeedPermission` | Đồng bộ cây quyền với danh sách cứng: thêm mới, `Sync` cái đã có, xoá cứng cái thừa |
 | `SeedUser` | Tạo role `SuperAdmin`, tài khoản `admin`, gán role |
 | `SeedRolePermission` | Gán đủ mọi quyền cho `SuperAdmin`, `Admin` |
+| `SeedPackaging` | Thêm mã, schema, trường đóng gói còn thiếu từ `PackagingSeedData`; **không sửa** bản ghi đã có ([../nghiep-vu/16-dong-goi-cau-hinh.md](../nghiep-vu/16-dong-goi-cau-hinh.md)) |
 
-Thêm quyền mới = thêm hằng trong `PermissionConstants` + một dòng `Permission.Create(...)` trong
-`SeedPermission`. Seeder là class tĩnh nên dùng `DateTimeUtils.GetVietnamTime()` thay vì `TimeProvider`.
+Thêm quyền mới = thêm hằng trong `PermissionConstants` + một dòng `Permission.Create(...)` trong `SeedPermission`. Seeder là class tĩnh nên dùng `DateTimeUtils.GetVietnamTime()` thay vì `TimeProvider`.
 
 > **Tiếp:** [05-infrastructure-external.md](05-infrastructure-external.md) — dịch vụ bên ngoài.

@@ -1,6 +1,6 @@
 # Hạn dự án — job kiểm tra hạn, chuyển hết hạn, gửi mail (Construction)
 
-> **Phần 15/15** · trước: [14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md) · mục lục: [README.md](README.md)
+> **Phần 15/16** · trước: [14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md) · mục lục: [README.md](README.md)
 
 Mỗi ngày job nền `ProjectDeadlineJob` (Hangfire, [../architecture/05-infrastructure-external.md](../architecture/05-infrastructure-external.md#backgroundjob--hangfire))
 xét các dự án có `EndedAt`: dự án đã quá ngày kết thúc chuyển sang **hết hạn** (`EXPIRED = 5`), dự án sắp tới hạn được báo mail
@@ -98,3 +98,5 @@ triển khai phải đổi sang `Asia/Ho_Chi_Minh` ở một chỗ (`BaseService
 
 ⚠️ DB dev có dự án `EndedAt` đã qua và một admin có email thật: bật app với `BackgroundJob:Enabled = true` là 07:00 job sẽ
 chuyển dự án sang `EXPIRED` và gửi mail thật. Máy dev không muốn vậy thì đặt `Enabled = false` hoặc `DeadlineMailEnabled = false`.
+
+> **Tiếp:** [16-dong-goi-cau-hinh.md](16-dong-goi-cau-hinh.md) — cấu hình metadata đóng gói theo TT05: loại gói, schema, trường, bảng mã.
