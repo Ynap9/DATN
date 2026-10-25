@@ -31,6 +31,7 @@ using sh.be.applications.Module.Core.Interfaces.Queries;
 using sh.be.applications.Module.Construction.Implements;
 using sh.be.applications.Module.Construction.Interfaces.Queries;
 using sh.be.applications.Module.Construction.Interfaces.Services;
+using sh.be.applications.Module.Construction.Jobs;
 using sh.be.applications.Module.DigitalSignature.Implements;
 using sh.be.applications.Module.DigitalSignature.Interfaces.Queries;
 using sh.be.applications.Module.DigitalSignature.Interfaces.Services;
@@ -68,6 +69,7 @@ using sh.be.infrastructure.external.SignalR.Base;
 using sh.be.infrastructure.external.SignalR.Implements;
 using sh.be.infrastructure.external.Storage.Implements;
 using sh.be.shared.Constants.Auth;
+using sh.be.shared.Constants.BackgroundJob;
 using sh.be.shared.Constants.DigitalSignature;
 using sh.be.shared.Constants.SignalR;
 using sh.be.shared.Constants.Swagger;
@@ -107,7 +109,9 @@ builder.Services.AddDbContext<ShDbContext>(options =>
 #endregion
 
 #region hangfire
-builder.Services.AddHangfireBackgroundJob(connectionString);
+var backgroundJobSettings = builder.Configuration.GetSection(BackgroundJobConst.CONFIG_SECTION).Get<BackgroundJobSettings>() ?? new();
+builder.Services.Configure<BackgroundJobSettings>(builder.Configuration.GetSection(BackgroundJobConst.CONFIG_SECTION));
+builder.Services.AddHangfireBackgroundJob(connectionString, backgroundJobSettings);
 #endregion
 
 #region signalr
@@ -266,6 +270,7 @@ builder.Services.AddAuthorization();
 
 
 builder.Services.AddHostedService<AuthWorker>();
+builder.Services.AddHostedService<RecurringJobRegistrar>();
 #endregion
 
 #region services
@@ -285,6 +290,7 @@ builder.Services.AddScoped<IDocumentTypeRepository, DocumentTypeRepository>();
 builder.Services.AddScoped<IDocumentFieldRepository, DocumentFieldRepository>();
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IProjectConfigRepository, ProjectConfigRepository>();
+builder.Services.AddScoped<IProjectDeadlineNotificationRepository, ProjectDeadlineNotificationRepository>();
 builder.Services.AddScoped<ISubmissionRepository, SubmissionRepository>();
 builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();
 builder.Services.AddScoped<ISigningBatchRepository, SigningBatchRepository>();
@@ -297,6 +303,7 @@ builder.Services.AddScoped<IDocumentTypeQuery, DocumentTypeQuery>();
 builder.Services.AddScoped<IDocumentFieldQuery, DocumentFieldQuery>();
 builder.Services.AddScoped<IProjectQuery, ProjectQuery>();
 builder.Services.AddScoped<IProjectConfigQuery, ProjectConfigQuery>();
+builder.Services.AddScoped<IProjectDeadlineQuery, ProjectDeadlineQuery>();
 builder.Services.AddScoped<ISubmissionQuery, SubmissionQuery>();
 builder.Services.AddScoped<ITemplateQuery, TemplateQuery>();
 builder.Services.AddScoped<ISigningBatchQuery, SigningBatchQuery>();
@@ -321,12 +328,18 @@ builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();
 builder.Services.AddScoped<IDocumentFieldService, DocumentFieldService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IProjectConfigService, ProjectConfigService>();
+builder.Services.AddScoped<IProjectDeadlineService, ProjectDeadlineService>();
 builder.Services.AddScoped<ISubmissionService, SubmissionService>();
 builder.Services.AddScoped<ISubmissionFileService, SubmissionFileService>();
 builder.Services.AddScoped<ITemplateService, TemplateService>();
 builder.Services.AddScoped<ISigningBatchService, SigningBatchService>();
 builder.Services.AddScoped<IPluginService, PluginService>();
 builder.Services.AddSingleton<ISigningRunner, SigningRunner>();
+
+// jobs
+builder.Services.AddScoped<ProjectDeadlineJob>();
+builder.Services.AddScoped<SubmissionExportJob>();
+builder.Services.AddScoped<SubmissionExportCleanupJob>();
 
 // third-party services
 builder.Services.AddScoped<IMailExternal, MailExternal>();

@@ -11,12 +11,13 @@ Presentation + **composition root**. Tham chiếu `applications`, `infrastructur
 | `Base/BaseController.cs` | `OkException(ex)`: đổi exception thành `ApiResponse` lỗi |
 | `Controllers/Module/Auth/` | `AuthorizationController` (token), `UserController`, `RoleController`, `PermissionController` |
 | `Controllers/Module/Core/` | `AuditLogController`; `BackgroundJobController`, `SignalRController` (API test kết nối Hangfire / SignalR, [05](05-infrastructure-external.md)) |
-| `Controllers/Module/Construction/` | `DocumentTypeController`, `DocumentFieldController`, `ProjectController`, `ProjectConfigController` (callback Google `[AllowAnonymous]`), `SubmissionController` (một `ISubmissionService` cho cả import, xem, kiểm tra + `ISubmissionFileService`; `proxy-file` trả stream PDF, lỗi vẫn `Ok(OkException(ex))`; 6 API import + 7 API xem / kiểm tra + 4 API QA + 4 API tra cứu + 1 `proxy-file` = 22 route; route có id luôn ràng buộc `{id:int}` để không nuốt `paging`, `count`, `tree`, `summary`, `proxy-file`…) |
+| `Controllers/Module/Construction/` | `DocumentTypeController`, `DocumentFieldController`, `ProjectController` (+ 4 API hạn dự án `deadline`, `deadline-check/*`, `deadline-notification/paging`), `ProjectConfigController` (callback Google `[AllowAnonymous]`), `SubmissionController` (một `ISubmissionService` cho cả import, xem, kiểm tra + `ISubmissionFileService`; `proxy-file` trả stream PDF, lỗi vẫn `Ok(OkException(ex))`; 6 API import + 7 API xem / kiểm tra + 4 API QA + 4 API tra cứu + 1 `proxy-file` + xoá + 3 API xuất Excel (`export-excel`, `export-excel/job`, `export-excel/job/{jobId}`) = 26 route; route có id luôn ràng buộc `{id:int}` để không nuốt `paging`, `count`, `tree`, `summary`, `proxy-file`…) |
 | `Controllers/Module/DigitalSignature/` | `TemplateController` (mẫu chữ ký; `PUT {id}/config` nhận `[FromForm]` multipart), `PluginController` (phiên bản + bộ cài plugin ký số, chỉ cần đăng nhập), `SigningBatchController` (lô ký; `POST {id}/files` multipart, `[RequestSizeLimit]` 512 MB) |
 | `Attributes/PermissionAttribute.cs` | Kiểm quyền theo key, gọi `IPermissionService.HasAnyPermission` |
 | `Services/HttpRequestContext.cs` | Implement `IRequestContext`: `UserId`, `Source`, `ContentType` từ `HttpContext` |
 | `Services/AuthorizationStateProtector.cs` | Implement `IAuthorizationStateProtector`: ký / đọc `state` OAuth bằng `ITimeLimitedDataProtector` |
 | `Worker/AuthWorker.cs` | Tạo client OpenIddict lúc khởi động (`service-worker`, `client-web`, `client-web2`, `client-guest-traobang`) |
+| `Worker/RecurringJobRegistrar.cs` | Đăng ký job định kỳ Hangfire lúc khởi động (bỏ qua khi `BackgroundJob:Enabled = false`) |
 | `Swagger/` | Tài liệu Swagger / Scalar theo version × module: `ConfigureSwaggerOptions`, `SwaggerDocumentName`, filter nhóm tag |
 | `Program.cs` | Đăng ký DI, cấu hình auth, CORS, chạy seeder |
 
@@ -69,9 +70,8 @@ gọi `api/v1/...` (`v1.0` cũng nhận). Thư viện `Asp.Versioning.Mvc.ApiExp
 Vòng đời: **(1)** thêm `V2` vào `ApiVersionConstants` + controller / action v2 (`[MapToApiVersion]`), v1 vẫn chạy → **(2)** v2 ổn định:
 `[ApiVersion(V1, Deprecated = true)]`, `DEFAULT_VERSION = V2` → **(3)** khai `ApiVersion:Sunsets`, báo FE → **(4)** qua ngày đó mới xoá code v1.
 
-⚠️ `IApiVersionDescriptionProvider` trả một mô tả cho **mỗi cặp (module, version)**, không phải mỗi version: lặp thẳng nó thì Swagger
-đẻ 25 tài liệu (`auth-all`, `core-auth`…). Luôn gom theo `ApiVersion` rồi đặt tên qua `SwaggerDocumentName.BuildApiVersionGroupName`.
-⚠️ Version không có (`api/v2/...`) trả **404**, không phải 400 — với URL segment, đường dẫn không khớp route nào.
+⚠️ `IApiVersionDescriptionProvider` trả một mô tả cho **mỗi cặp (module, version)**: lặp thẳng nó thì Swagger đẻ 25 tài liệu. Luôn gom theo
+`ApiVersion` rồi đặt tên qua `SwaggerDocumentName.BuildApiVersionGroupName`. ⚠️ Version không có (`api/v2/...`) trả **404**, không phải 400 — với URL segment, đường dẫn không khớp route nào.
 
 ## Xác thực — OpenIddict
 
@@ -88,7 +88,7 @@ khi cấp token. Đây là chỗ còn dính Identity ở tầng api, đã biết
 ## Composition root — Program.cs
 
 - `#region services` chia nhóm bằng comment ngắn (`// common`, `// repositories`, `// queries`, `// domain services`, `// application services`,
-  `// third-party services`), mặc định `AddScoped`; `#region hangfire`, `#region signalr` sau `#region db` ([05](05-infrastructure-external.md)).
+  `// jobs`, `// third-party services`), mặc định `AddScoped`; `#region hangfire`, `#region signalr` sau `#region db` ([05](05-infrastructure-external.md)).
 - Domain service (`RoleDomainService`, `UserDomainService`) đăng ký **class cụ thể**, không qua interface.
 - Seeder chạy sau `builder.Build()` theo thứ tự: Role → Permission → User → RolePermission; rồi `ISigningRunner.RecoverAsync` đưa lô kẹt `SIGNING` về `PAUSED`.
 - Connection string tên `SO_HOA_DB`, `MultipleActiveResultSets=False` (bật MARS làm bulk import treo transaction — xem

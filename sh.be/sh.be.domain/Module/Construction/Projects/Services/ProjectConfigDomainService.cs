@@ -1,5 +1,7 @@
 using sh.be.domain.Module.Construction.Projects.Entities;
 using sh.be.domain.Module.Construction.Projects.Repositories;
+using sh.be.domain.Module.Construction.Projects.Services.Deadline;
+using sh.be.shared.Constants.Construction;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
 
@@ -36,6 +38,14 @@ namespace sh.be.domain.Module.Construction.Projects.Services
                     $"Thiếu cấu hình dự án: {string.Join(", ", missingNames)}");
             }
             return values;
+        }
+
+        public async Task<ProjectDeadlineSettings> GetDeadlineSettingsAsync()
+        {
+            var projectConfigs = await _projectConfigRepository.FindByNamesAsync(
+                [ProjectConfigConst.DEADLINE_WARNING_DAYS, ProjectConfigConst.DEADLINE_MAIL_ENABLED]);
+            var configValues = projectConfigs.ToDictionary(projectConfig => projectConfig.Name, projectConfig => projectConfig.Value.Trim());
+            return ProjectDeadlinePolicy.ResolveSettings(configValues);
         }
 
         public async Task<ProjectConfig> SaveValueAsync(string name, string value, string? modifiedBy, DateTime modifiedDate)

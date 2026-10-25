@@ -3,7 +3,7 @@
 > **Phần 9/9** · trước: [08-them-chuc-nang.md](08-them-chuc-nang.md) · mục lục: [README.md](README.md)
 
 Phần kỹ thuật của ký số PDF. Nghiệp vụ lô ký xem [../nghiep-vu/10-lo-ky.md](../nghiep-vu/10-lo-ky.md), mẫu chữ ký
-xem [../nghiep-vu/09-mau-chu-ky.md](../nghiep-vu/09-mau-chu-ky.md). Đây là phần **duy nhất** có pipeline chạy nền.
+xem [../nghiep-vu/09-mau-chu-ky.md](../nghiep-vu/09-mau-chu-ky.md). Đây là phần duy nhất có pipeline chạy nền **trong RAM** (`Channel`); job lưu DB thì dùng Hangfire ([05](05-infrastructure-external.md#backgroundjob--hangfire)).
 
 ## Thư mục
 

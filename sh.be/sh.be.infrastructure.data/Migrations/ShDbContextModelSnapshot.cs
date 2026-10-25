@@ -550,7 +550,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("UserRole", "auth");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.DocumentField", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.DocumentFields.Entities.DocumentField", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -643,7 +643,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("DocumentField", "construction");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.DocumentType", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.DocumentTypes.Entities.DocumentType", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -692,7 +692,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("DocumentType", "construction");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.Project", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Projects.Entities.Project", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -753,7 +753,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("Project", "construction");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.ProjectConfig", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Projects.Entities.ProjectConfig", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -805,7 +805,68 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("ProjectConfig", "construction");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.ProjectDocumentType", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Projects.Entities.ProjectDeadlineNotification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<int>("DaysLeft")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("EndedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool>("IsSuccess")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("NotificationType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProjectName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ToAddress")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "CreatedDate" }, "IX_ProjectDeadlineNotification_CreatedDate");
+
+                    b.HasIndex(new[] { "ProjectId", "NotificationType", "EndedAt", "ToAddress" }, "IX_ProjectDeadlineNotification_Unique")
+                        .IsUnique()
+                        .HasFilter("[IsSuccess] = 1");
+
+                    b.ToTable("ProjectDeadlineNotification", "construction");
+                });
+
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Projects.Entities.ProjectDocumentType", b =>
                 {
                     b.Property<int>("ProjectId")
                         .HasColumnType("int");
@@ -845,7 +906,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("ProjectDocumentType", "construction");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.ProjectDocumentTypeDocumentField", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Projects.Entities.ProjectDocumentTypeDocumentField", b =>
                 {
                     b.Property<int>("ProjectId")
                         .HasColumnType("int");
@@ -895,7 +956,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("ProjectDocumentTypeDocumentField", "construction");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.Submission", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Submissions.Entities.Submission", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1003,7 +1064,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("Submission", "construction");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.SubmissionData", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Submissions.Entities.SubmissionData", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1070,7 +1131,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("SubmissionData", "construction");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.SubmissionLog", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Submissions.Entities.SubmissionLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1144,7 +1205,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("SubmissionLog", "construction");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.SubmissionQaLog", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Submissions.Entities.SubmissionQaLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1219,7 +1280,7 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("SubmissionQaLog", "construction");
                 });
 
-            modelBuilder.Entity("sh.be.domain.Module.Construction.Entities.SubmissionQaLogField", b =>
+            modelBuilder.Entity("sh.be.domain.Module.Construction.Submissions.Entities.SubmissionQaLogField", b =>
                 {
                     b.Property<int>("SubmissionQaLogId")
                         .HasColumnType("int");

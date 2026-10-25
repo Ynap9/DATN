@@ -47,6 +47,18 @@ namespace sh.be.infrastructure.data.Module.Auth.Queries
                 }).FirstOrDefault();
         }
 
+        public Task<List<string>> GetEmailsByRoleNamesAsync(IReadOnlyCollection<string> roleNames)
+        {
+            return _shDbContext.Users
+                .AsNoTracking()
+                .Where(u => u.Email != null && u.Email != ""
+                    && _shDbContext.UserRoles.Any(ur => ur.UserId == u.Id
+                        && _shDbContext.Roles.Any(r => r.Id == ur.RoleId && roleNames.Contains(r.Name))))
+                .Select(u => u.Email!)
+                .Distinct()
+                .ToListAsync();
+        }
+
         public async Task<BaseResponsePagingDto<ViewUserDto>> FindPaging(FindPagingUserDto dto)
         {
             var query = _shDbContext.Users.AsNoTracking();

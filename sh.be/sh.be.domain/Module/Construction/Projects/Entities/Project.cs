@@ -75,11 +75,28 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
             DeletedBy = deletedBy;
         }
 
+        public bool Expire(DateTime today, string expiredBy, DateTime expiredDate)
+        {
+            if (!ProjectConst.ACTIVE_STATUSES.Contains(Status) || !EndedAt.HasValue || EndedAt.Value.Date >= today.Date)
+            {
+                return false;
+            }
+
+            Status = ProjectConst.EXPIRED;
+            ModifiedBy = expiredBy;
+            ModifiedDate = expiredDate;
+            return true;
+        }
+
         public void EnsureImportable()
         {
             if (Status == ProjectConst.DONE)
             {
                 throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectDone);
+            }
+            if (Status == ProjectConst.EXPIRED)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectExpired);
             }
         }
 
@@ -88,6 +105,10 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
             if (Status == ProjectConst.DONE && !isSuperAdmin)
             {
                 throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectDoneNotEditable);
+            }
+            if (Status == ProjectConst.EXPIRED && !isSuperAdmin)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectExpired);
             }
         }
 

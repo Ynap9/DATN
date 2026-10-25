@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using sh.be.api.Attributes;
 using sh.be.api.Base;
 using sh.be.applications.Module.Construction.Dtos.Project;
+using sh.be.applications.Module.Construction.Dtos.ProjectDeadline;
 using sh.be.applications.Module.Construction.Interfaces.Services;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Versioning;
@@ -19,9 +20,11 @@ namespace sh.be.api.Controllers.Module.Construction
     public class ProjectController : BaseController
     {
         private readonly IProjectService _projectService;
-        public ProjectController(ILogger<ProjectController> logger, IProjectService projectService) : base(logger)
+        private readonly IProjectDeadlineService _projectDeadlineService;
+        public ProjectController(ILogger<ProjectController> logger, IProjectService projectService, IProjectDeadlineService projectDeadlineService) : base(logger)
         {
             _projectService = projectService;
+            _projectDeadlineService = projectDeadlineService;
         }
 
         [HttpGet("")]
@@ -61,6 +64,66 @@ namespace sh.be.api.Controllers.Module.Construction
             try
             {
                 var data = await _projectService.FindPaging(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("deadline")]
+        [Permission(PermissionConstants.FUNCTION_PROJECT_DEADLINE)]
+        public async Task<ApiResponse> FindDeadlinePaging([FromQuery] FindPagingProjectDeadlineDto dto)
+        {
+            try
+            {
+                var data = await _projectDeadlineService.FindPaging(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPost("deadline-check/run")]
+        [Permission(PermissionConstants.FUNCTION_PROJECT_DEADLINE)]
+        public async Task<ApiResponse> RunDeadlineCheck()
+        {
+            try
+            {
+                var data = await _projectDeadlineService.Run();
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("deadline-check/status")]
+        [Permission(PermissionConstants.FUNCTION_PROJECT_DEADLINE)]
+        public async Task<ApiResponse> FindDeadlineCheckStatus()
+        {
+            try
+            {
+                var data = await _projectDeadlineService.FindStatus();
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("deadline-notification/paging")]
+        [Permission(PermissionConstants.FUNCTION_PROJECT_DEADLINE)]
+        public async Task<ApiResponse> FindDeadlineNotificationPaging([FromQuery] FindPagingProjectDeadlineNotificationDto dto)
+        {
+            try
+            {
+                var data = await _projectDeadlineService.FindNotificationPaging(dto);
                 return new(data);
             }
             catch (Exception ex)

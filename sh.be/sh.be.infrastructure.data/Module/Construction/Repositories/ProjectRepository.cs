@@ -2,11 +2,18 @@ using Microsoft.EntityFrameworkCore;
 using sh.be.domain.Module.Construction.Projects.Entities;
 using sh.be.domain.Module.Construction.Projects.Repositories;
 using sh.be.infrastructure.data.Persistence.Db;
+using sh.be.shared.Constants.Construction;
 
 namespace sh.be.infrastructure.data.Module.Construction.Repositories
 {
     public class ProjectRepository : IProjectRepository
     {
+        private const string TryLockDeadlineCheckSql =
+            "DECLARE @result int; "
+            + "EXEC @result = sp_getapplock @Resource = {0}, @LockMode = 'Exclusive', @LockOwner = 'Session', @LockTimeout = 0; "
+            + "SELECT @result AS [Value];";
+        private const string ReleaseDeadlineCheckLockSql = "EXEC sp_releaseapplock @Resource = {0}, @LockOwner = 'Session';";
+
         private readonly ShDbContext _shDbContext;
 
         public ProjectRepository(ShDbContext shDbContext)
@@ -22,6 +29,34 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
         public Task<bool> ExistsByNameAsync(string name, int? excludedId = null)
         {
             return _shDbContext.Projects.AnyAsync(p => p.Name == name && p.Id != excludedId);
+        }
+
+        public Task<List<Project>> GetWithEndedAtByStatusesAsync(IReadOnlyCollection<int> statuses)
+        {
+            return _shDbContext.Projects
+                .Where(p => statuses.Contains(p.Status) && p.EndedAt != null)
+                .OrderBy(p => p.Id)
+                .ToListAsync();
+        }
+
+        public async Task<bool> TryLockDeadlineCheckAsync()
+        {
+            await _shDbContext.Database.OpenConnectionAsync();
+            var lockResults = await _shDbContext.Database
+                .SqlQueryRaw<int>(TryLockDeadlineCheckSql, ProjectDeadlineConst.LOCK_NAME)
+                .ToListAsync();
+            var isLocked = lockResults[0] >= 0;
+            if (!isLocked)
+            {
+                await _shDbContext.Database.CloseConnectionAsync();
+            }
+            return isLocked;
+        }
+
+        public async Task ReleaseDeadlineCheckLockAsync()
+        {
+            await _shDbContext.Database.ExecuteSqlRawAsync(ReleaseDeadlineCheckLockSql, ProjectDeadlineConst.LOCK_NAME);
+            await _shDbContext.Database.CloseConnectionAsync();
         }
 
         public void Add(Project project)
