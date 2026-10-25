@@ -57,6 +57,8 @@ Cây: Loại văn bản → Hộp (`Box`) → Hồ sơ (`ProfileRange`) → Văn
 | `ProjectMemberPrice` | ProjectMemberId, CompanyPrice, ActualPrice, EffectiveFrom, CreatedBy |
 | `AssignmentTicket` | Id, ProjectId, DocumentTypeId, AssigneeUserId, Role (`DATA`/`QA`), Mode (`MANUAL`; chừa `RANDOM`/`AUTO`), Status (`ACTIVE`/`CANCELLED`/`DONE`), DocumentCount, audit |
 | `AssignmentTicketItem` | TicketId, Box, ProfileRange (null = cả hộp) |
-| `construction.Submission` (thêm) | `EntryUserId`, `QaUserId`, index `(ProjectId, DocumentTypeId, Box, ProfileRange)` |
+| `construction.Submission` (thêm) | `EntryUserId`, `EntryTicketId`, `QaUserId`, `QaTicketId`, `EntryReturnCount` (đếm lần bị trả, quá 2 → về pool), index `(ProjectId, DocumentTypeId, Box, ProfileRange)` |
+
+Mô tả giao việc chi tiết cho người làm: `C:\Users\Admin\Downloads\Task_Operation\Task_09` … `Task_15` (mã lỗi 801–823, 11 key quyền).
 
 > **Tiếp:** [02-api.md](02-api.md) — 28 API và quyền mới.
