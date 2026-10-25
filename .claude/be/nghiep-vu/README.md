@@ -24,6 +24,7 @@
 | [14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md) | Hồ sơ: xoá mềm nhiều hồ sơ (chặn hồ sơ đã kiểm tra), xuất Excel theo bộ lọc (trả file ngay hoặc chạy nền Hangfire + link tải) |
 | [15-han-du-an.md](15-han-du-an.md) | Hạn dự án: job Hangfire hằng ngày chuyển `EXPIRED`, mail báo sắp / đã hết hạn chống trùng, lịch sử gửi |
 | [16-dong-goi-cau-hinh.md](16-dong-goi-cau-hinh.md) | Đóng gói: 20 schema (5 loại gói × 4 loại metadata), trường đúng thứ tự, luật bắt buộc, 13 nhóm mã, seeder |
+| [17-thong-ke-qa.md](17-thong-ke-qa.md) | Thống kê QA: 1 văn bản = 1 lượt, người nhập theo lịch sử kiểm tra, tỉ lệ đúng theo ô tính tiền, theo trường / người nhập, dòng thời gian |
 
 ## Thuật ngữ
 

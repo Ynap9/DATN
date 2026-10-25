@@ -242,6 +242,51 @@ namespace sh.be.api.Controllers.Module.Construction
             }
         }
 
+        [HttpGet("qa-stats/summary")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_QA_STATS)]
+        public async Task<ApiResponse> FindQaStatsSummary([FromQuery] FindQaStatsDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindQaStatsSummary(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("qa-stats/fields")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_QA_STATS)]
+        public async Task<ApiResponse> FindQaFieldStats([FromQuery] FindQaStatsDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindQaFieldStats(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("qa-stats/entry-users")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_QA_STATS)]
+        public async Task<ApiResponse> FindQaEntryUserStatsPaging([FromQuery] FindPagingQaEntryUserStatsDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindQaEntryUserStatsPaging(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
         [HttpGet("{id:int}/qa")]
         [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
         public async Task<ApiResponse> FindQaById([FromRoute] int id, [FromQuery] FindQaSubmissionDetailDto dto)
@@ -279,6 +324,21 @@ namespace sh.be.api.Controllers.Module.Construction
             try
             {
                 var data = await _submissionService.FindQaLogPaging(id, dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("{id:int}/timeline")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindTimeline([FromRoute] int id)
+        {
+            try
+            {
+                var data = await _submissionService.FindTimeline(id);
                 return new(data);
             }
             catch (Exception ex)

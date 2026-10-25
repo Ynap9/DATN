@@ -27,6 +27,10 @@ namespace sh.be.applications.Module.Construction.Interfaces.Services
         Task<ViewSubmissionTreeDto> FindTree(FindSubmissionTreeDto dto);
         Task<BaseResponsePagingDto<GetListProjectSubmissionLogDto>> FindProjectLogPaging(FindPagingProjectSubmissionLogDto dto);
         Task<ViewSubmissionSummaryDto> FindSummary(FindSubmissionSummaryDto dto);
+        Task<ViewQaStatsSummaryDto> FindQaStatsSummary(FindQaStatsDto dto);
+        Task<List<GetListQaFieldStatsDto>> FindQaFieldStats(FindQaStatsDto dto);
+        Task<BaseResponsePagingDto<GetListQaEntryUserStatsDto>> FindQaEntryUserStatsPaging(FindPagingQaEntryUserStatsDto dto);
+        Task<List<GetListSubmissionTimelineDto>> FindTimeline(int id);
         Task<ViewDeleteSubmissionResultDto> Delete(DeleteSubmissionDto dto);
         Task<ExportFileDto> ExportExcel(ExportSubmissionDto dto);
         Task<ViewSubmissionExportJobDto> CreateExportJob(ExportSubmissionDto dto);

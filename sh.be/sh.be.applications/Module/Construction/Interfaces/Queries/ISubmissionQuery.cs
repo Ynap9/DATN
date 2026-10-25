@@ -18,6 +18,11 @@ namespace sh.be.applications.Module.Construction.Interfaces.Queries
         Task<ViewSubmissionTreeDto> FindTree(ISubmissionFilter filter);
         Task<BaseResponsePagingDto<GetListProjectSubmissionLogDto>> FindProjectLogPaging(FindPagingProjectSubmissionLogDto dto);
         Task<ViewSubmissionSummaryDto> FindSummary(int projectId, int documentTypeId);
+        Task<ViewQaStatsSummaryDto> FindQaStatsSummary(FindQaStatsDto dto, DateTime fromDate, DateTime toDateExclusive);
+        Task<List<GetListQaFieldStatsDto>> FindQaFieldStats(FindQaStatsDto dto, DateTime fromDate, DateTime toDateExclusive);
+        Task<BaseResponsePagingDto<GetListQaEntryUserStatsDto>> FindQaEntryUserStatsPaging(FindPagingQaEntryUserStatsDto dto, DateTime fromDate,
+            DateTime toDateExclusive);
+        Task<List<GetListSubmissionTimelineDto>> FindTimeline(int submissionId);
         Task<SubmissionExportTableDto> FindExportTable(ISubmissionFilter filter);
         Task<SubmissionExportNameDto?> FindExportName(int projectId, int documentTypeId);
     }
