@@ -36,8 +36,9 @@ Chia tự động (ngẫu nhiên, theo tiến độ) **không** nằm trong plan
 
 1. Tạo module theo [08-them-chuc-nang.md](../../architecture/08-them-chuc-nang.md): `domain/Module/Operation`,
    `applications/Module/Operation`, controller `api/v{version}/operation/...`.
-2. Entity + cấu hình EF + migration schema `operation`; thêm `Submission.EntryUserId`, `QaUserId` và index
-   `(ProjectId, DocumentTypeId, Box, ProfileRange)`.
+2. Entity + cấu hình EF + migration schema `operation`; thêm 5 cột người giữ / phiếu / số lần bị trả vào `Submission` và index
+   `(ProjectId, DocumentTypeId, Box, ProfileRange)` (Task 9).
+   Task 10 nhóm · 11 thành viên · 12 đơn giá · 13 cây + giao phiếu · 14 thu hồi / chuyển / quỹ KPI · 15 ghép với hồ sơ.
 3. Thêm quyền vào `PermissionConstants`, gán role trong seeder.
 4. O2 nhóm nhân viên → O3 thành viên → O4 đơn giá → O5 cây → O6 phiếu → O7 quỹ KPI (thứ tự API ở [02](02-api.md)).
 5. Viết tài liệu nghiệp vụ `.claude/be/nghiep-vu/17-…` trở đi; chạy thử từng API.
