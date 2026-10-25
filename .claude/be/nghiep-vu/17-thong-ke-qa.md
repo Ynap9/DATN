@@ -1,6 +1,6 @@
 # Hồ sơ — thống kê QA chi tiết
 
-> **Phần 17/17** · trước: [16-dong-goi-cau-hinh.md](16-dong-goi-cau-hinh.md) · mục lục: [README.md](README.md)
+> **Phần 17/18** · trước: [16-dong-goi-cau-hinh.md](16-dong-goi-cau-hinh.md) · mục lục: [README.md](README.md)
 
 Tổng hợp dữ liệu QA đã lưu (`SubmissionQaLog`, `SubmissionQaLogField`) của **một dự án + một loại văn bản**. Mục đích là để Leader
 biết trường nào hay sai, người nhập nào hay sai, và tỉ lệ đúng là bao nhiêu. Đây là đầu vào cho KPI và dashboard. Cả 4 API chỉ đọc:
@@ -152,3 +152,5 @@ Không đạt đầu tiên của V1).
 
 ⚠️ Dữ liệu test dựng tay phải dời `CreatedDate` của **cả** `SubmissionLog` lẫn `SubmissionQaLog`. Chỉ dời lần chấm QA về trước lần
 kiểm tra thì người nhập thành "Không xác định".
+
+> **Tiếp:** [18-qa-cham-mau.md](18-qa-cham-mau.md) — chấm mẫu QA: chế độ chấm `FULL` / `SAMPLE`, cấu hình mẫu theo dự án, cỡ mẫu và ngưỡng.
