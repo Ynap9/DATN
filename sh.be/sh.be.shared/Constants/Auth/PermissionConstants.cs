@@ -90,5 +90,23 @@ namespace sh.be.shared.Constants.Auth
 
         public const string MENU_PACKAGE_CONFIG = "Menu.Packaging.Config";
         public const string FUNCTION_PACKAGE_CONFIG_VIEW = "Function.Packaging.Config.View";
+
+        public const string MODULE_OPERATION = "Operation";
+
+        public const string MENU_OPERATION = "Menu.Operation";
+
+        public const string MENU_OPERATION_STAFF_GROUP = "Menu.Operation.StaffGroup";
+        public const string FUNCTION_STAFF_GROUP_MANAGE = "Function.Operation.StaffGroup.Manage";
+
+        public const string MENU_OPERATION_PROJECT_MEMBER = "Menu.Operation.ProjectMember";
+        public const string FUNCTION_PROJECT_MEMBER_MANAGE = "Function.Operation.ProjectMember.Manage";
+        public const string FUNCTION_PRICE_MANAGE_COMPANY = "Function.Operation.Price.ManageCompany";
+        public const string FUNCTION_PRICE_MANAGE_ACTUAL = "Function.Operation.Price.ManageActual";
+
+        public const string MENU_OPERATION_ASSIGNMENT = "Menu.Operation.Assignment";
+        public const string FUNCTION_ASSIGNMENT_MANAGE = "Function.Operation.Assignment.Manage";
+        public const string FUNCTION_ASSIGNMENT_VIEW_OWN = "Function.Operation.Assignment.ViewOwn";
+        public const string FUNCTION_ASSIGNMENT_VIEW_ALL_SUBMISSION = "Function.Operation.Assignment.ViewAllSubmission";
+        public const string FUNCTION_BONUS_POOL_VIEW = "Function.Operation.BonusPool.View";
     }
 }

@@ -58,10 +58,12 @@ Tiền tố `api/v1/operation`. `{p}` = `projectId`, `{dt}` = `documentTypeId`. 
 |---|---|
 | `Menu.Operation.StaffGroup`, `Function.Operation.StaffGroup.Manage` | Admin, Leader |
 | `Function.Operation.ProjectMember.Manage` | Admin, Leader |
-| `Function.Operation.Price.ManageCompany` | Admin |
+| `Function.Operation.Price.ManageCompany`; menu `Menu.Operation`, `.ProjectMember`, `.Assignment` (tick menu = cấp mọi con) | Admin |
 | `Function.Operation.Price.ManageActual` | Admin, Leader |
-| `Function.Operation.Assignment.Manage` | Admin, Leader |
-| `Function.Operation.Assignment.ViewOwn` | Data, QA |
+| `Function.Operation.Assignment.Manage`, `.ViewAllSubmission` | Admin, Leader |
+| `Function.Operation.Assignment.ViewOwn` | Data (QA xem phiếu QA ở `qa-assignment` của 18C) |
 | `Function.Operation.BonusPool.View` | Admin |
+
+Bảng gán đầy đủ ở [../../nghiep-vu/03-vai-tro-mac-dinh.md](../../nghiep-vu/03-vai-tro-mac-dinh.md).
 
 Leader chỉ thao tác trên (dự án, loại văn bản) mà mình là `ProjectMember` vai trò `LEADER` — kiểm ở service, không chỉ dựa vào quyền.

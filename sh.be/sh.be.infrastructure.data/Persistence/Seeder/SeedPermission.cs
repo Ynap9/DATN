@@ -90,6 +90,22 @@ namespace sh.be.infrastructure.data.Persistence.Seeder
 
             Permission.Create(PermissionConstants.MENU_PACKAGE_CONFIG, "Menu cấu hình metadata đóng gói", PermissionConstants.MENU_PACKAGING, PermissionConstants.MODULE_PACKAGING, null),
             Permission.Create(PermissionConstants.FUNCTION_PACKAGE_CONFIG_VIEW, "Xem cấu hình metadata và tải Excel mẫu", PermissionConstants.MENU_PACKAGE_CONFIG, PermissionConstants.MODULE_PACKAGING, null),
+
+            Permission.Create(PermissionConstants.MENU_OPERATION, "Menu vận hành", null, PermissionConstants.MODULE_OPERATION, null),
+
+            Permission.Create(PermissionConstants.MENU_OPERATION_STAFF_GROUP, "Menu nhóm nhân viên", PermissionConstants.MENU_OPERATION, PermissionConstants.MODULE_OPERATION, null),
+            Permission.Create(PermissionConstants.FUNCTION_STAFF_GROUP_MANAGE, "Quản lý nhóm nhân viên và thành viên nhóm", PermissionConstants.MENU_OPERATION_STAFF_GROUP, PermissionConstants.MODULE_OPERATION, null),
+
+            Permission.Create(PermissionConstants.MENU_OPERATION_PROJECT_MEMBER, "Menu thành viên dự án", PermissionConstants.MENU_OPERATION, PermissionConstants.MODULE_OPERATION, null),
+            Permission.Create(PermissionConstants.FUNCTION_PROJECT_MEMBER_MANAGE, "Thêm, sửa, gỡ thành viên dự án", PermissionConstants.MENU_OPERATION_PROJECT_MEMBER, PermissionConstants.MODULE_OPERATION, null),
+            Permission.Create(PermissionConstants.FUNCTION_PRICE_MANAGE_COMPANY, "Đặt đơn giá công ty", PermissionConstants.MENU_OPERATION_PROJECT_MEMBER, PermissionConstants.MODULE_OPERATION, null),
+            Permission.Create(PermissionConstants.FUNCTION_PRICE_MANAGE_ACTUAL, "Đặt đơn giá thực nhận", PermissionConstants.MENU_OPERATION_PROJECT_MEMBER, PermissionConstants.MODULE_OPERATION, null),
+
+            Permission.Create(PermissionConstants.MENU_OPERATION_ASSIGNMENT, "Menu chia phiếu", PermissionConstants.MENU_OPERATION, PermissionConstants.MODULE_OPERATION, null),
+            Permission.Create(PermissionConstants.FUNCTION_ASSIGNMENT_MANAGE, "Giao, thu hồi, chuyển phiếu nhập liệu", PermissionConstants.MENU_OPERATION_ASSIGNMENT, PermissionConstants.MODULE_OPERATION, null),
+            Permission.Create(PermissionConstants.FUNCTION_ASSIGNMENT_VIEW_OWN, "Xem phiếu nhập liệu của mình", PermissionConstants.MENU_OPERATION_ASSIGNMENT, PermissionConstants.MODULE_OPERATION, null),
+            Permission.Create(PermissionConstants.FUNCTION_ASSIGNMENT_VIEW_ALL_SUBMISSION, "Xem mọi văn bản không theo phiếu", PermissionConstants.MENU_OPERATION_ASSIGNMENT, PermissionConstants.MODULE_OPERATION, null),
+            Permission.Create(PermissionConstants.FUNCTION_BONUS_POOL_VIEW, "Xem quỹ KPI", PermissionConstants.MENU_OPERATION_ASSIGNMENT, PermissionConstants.MODULE_OPERATION, null),
         ];
 
         public static async Task SeedAsync(ShDbContext dbContext)

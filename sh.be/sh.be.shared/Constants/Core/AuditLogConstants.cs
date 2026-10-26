@@ -68,6 +68,24 @@ namespace sh.be.shared.Constants.Core
         public const string ACTION_SIGNING_BATCH_PAUSE = "Tạm dừng lô ký";
         public const string ACTION_SIGNING_BATCH_CANCEL = "Hủy lô ký";
 
+        public const string ACTION_STAFF_GROUP_CREATE = "Tạo nhóm nhân viên";
+        public const string ACTION_STAFF_GROUP_UPDATE = "Cập nhật nhóm nhân viên";
+        public const string ACTION_STAFF_GROUP_DELETE = "Xóa nhóm nhân viên";
+        public const string ACTION_STAFF_GROUP_ADD_MEMBERS = "Thêm thành viên nhóm nhân viên";
+        public const string ACTION_STAFF_GROUP_REMOVE_MEMBERS = "Bỏ thành viên nhóm nhân viên";
+
+        public const string ACTION_PROJECT_MEMBER_ADD = "Thêm thành viên dự án";
+        public const string ACTION_PROJECT_MEMBER_UPDATE = "Cập nhật thành viên dự án";
+        public const string ACTION_PROJECT_MEMBER_REMOVE = "Gỡ thành viên dự án";
+
+        public const string ACTION_PRICE_DEFAULT_UPDATE = "Cập nhật đơn giá mặc định dự án";
+        public const string ACTION_MEMBER_PRICE_UPDATE = "Cập nhật đơn giá thành viên";
+
+        public const string ACTION_ASSIGNMENT_CREATE = "Giao phiếu";
+        public const string ACTION_ASSIGNMENT_REVOKE = "Thu hồi phiếu";
+        public const string ACTION_ASSIGNMENT_TRANSFER = "Chuyển phiếu";
+        public const string ACTION_ASSIGNMENT_RELEASE_TO_POOL = "Trả văn bản về pool";
+
         public const string ACTION_SEED_ROLE ="Khởi tạo vai trò mặc định";
         public const string ACTION_SEED_PERMISSION = "Đồng bộ danh sách quyền";
         public const string ACTION_SEED_USER = "Khởi tạo tài khoản quản trị mặc định";

@@ -3,7 +3,7 @@
 > Chạy ở thư mục gốc repo. Đổi schema phải hỏi trước (skill `task-workflow`). Chi tiết: [architecture/04-infrastructure-data.md](../architecture/04-infrastructure-data.md).
 
 ```bash
-dotnet ef migrations add <Ten> --project sh.be/sh.be.infrastructure.data --startup-project sh.be/sh.be.api --output-dir Migrations/<Auth|Core|Construction|DigitalSignature|Packaging>
+dotnet ef migrations add <Ten> --project sh.be/sh.be.infrastructure.data --startup-project sh.be/sh.be.api --output-dir Migrations/<Auth|Core|Construction|DigitalSignature|Packaging|Operation>
 dotnet ef migrations has-pending-model-changes --project sh.be/sh.be.infrastructure.data --startup-project sh.be/sh.be.api
 dotnet ef database update --project sh.be/sh.be.infrastructure.data --startup-project sh.be/sh.be.api
 dotnet ef migrations remove --project sh.be/sh.be.infrastructure.data --startup-project sh.be/sh.be.api
@@ -12,6 +12,10 @@ dotnet ef migrations remove --project sh.be/sh.be.infrastructure.data --startup-
 Thứ tự: `add` → xem lại file sinh ra → `database update` (dùng connection string `SO_HOA_DB` của `sh.be.api`); `remove` chỉ gỡ migration **chưa** update vào DB.
 
 Cần `dotnet-ef` đúng bản EF của dự án: `dotnet tool install --global dotnet-ef --version 9.0.8`.
+
+`Add_OperationModule` (`Migrations/Operation/`, Task 9) phải chạy **sau** `Add_QaAssignment` (bảng `SubmissionUser`): tạo schema `operation`,
+7 bảng và đúng 1 index `IX_Submission_ProjectId_DocumentTypeId_Box_ProfileRange` trên `construction.Submission`, không thêm cột.
+Hồ sơ cũ không có dòng `SubmissionUser` = chưa giao, không cần script dữ liệu.
 
 ## Dữ liệu test hồ sơ (DB dev)
 
