@@ -14,6 +14,8 @@ namespace sh.be.shared.Constants.Auth
         public const string ROLE_DATA = "Data";
         public const string ROLE_QA = "QA";
         public const string ROLE_USER = "User";
+
+        public static readonly IReadOnlyList<string> EXCLUSIVE_STAFF_ROLES = [ROLE_DATA, ROLE_QA];
     }
 
 

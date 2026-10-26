@@ -34,6 +34,14 @@ namespace sh.be.infrastructure.data.Module.Auth.Repositories
             return _shDbContext.Roles.CountAsync(r => ids.Contains(r.Id));
         }
 
+        public Task<List<string>> GetNamesByIdsAsync(List<int> ids)
+        {
+            return _shDbContext.Roles
+                .Where(r => ids.Contains(r.Id))
+                .Select(r => r.Name)
+                .ToListAsync();
+        }
+
         public void Add(Role role)
         {
             _shDbContext.Roles.Add(role);

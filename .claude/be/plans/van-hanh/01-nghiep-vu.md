@@ -17,6 +17,8 @@
 
 - Admin quản lý mọi nhóm; Leader tạo và chỉ thấy nhóm của mình (`OwnerUserId`).
 - Một người thuộc nhiều nhóm. Thành viên chỉ là user role `Data` / `QA`.
+- (2026-10-26) Nhóm thuần 1 vai trò `Data` hoặc `QA`, suy từ role thành viên (không lưu cột); 1 user không vừa Data vừa QA (`109`).
+  ✅ Task 10 — chi tiết ở [../../nghiep-vu/19-nhom-nhan-vien.md](../../nghiep-vu/19-nhom-nhan-vien.md).
 
 ## Đơn giá
 
