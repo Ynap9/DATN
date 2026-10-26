@@ -9,6 +9,9 @@ using sh.be.domain.Module.Construction.Projects.Entities;
 using sh.be.domain.Module.Construction.QaAssignments.Entities;
 using sh.be.domain.Module.Construction.Submissions.Entities;
 using sh.be.domain.Module.DigitalSignature.Entities;
+using sh.be.domain.Module.Operation.Assignments.Entities;
+using sh.be.domain.Module.Operation.ProjectMembers.Entities;
+using sh.be.domain.Module.Operation.StaffGroups.Entities;
 using sh.be.domain.Module.Packaging.Entities;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.Constants.DigitalSignature;
@@ -53,6 +56,13 @@ namespace sh.be.infrastructure.data.Persistence.Db
         public DbSet<PackageSchema> PackageSchemas { get; set; }
         public DbSet<PackageSchemaField> PackageSchemaFields { get; set; }
         public DbSet<PackageCodeValue> PackageCodeValues { get; set; }
+        public DbSet<StaffGroup> StaffGroups { get; set; }
+        public DbSet<StaffGroupMember> StaffGroupMembers { get; set; }
+        public DbSet<ProjectMember> ProjectMembers { get; set; }
+        public DbSet<ProjectPriceDefault> ProjectPriceDefaults { get; set; }
+        public DbSet<ProjectMemberPrice> ProjectMemberPrices { get; set; }
+        public DbSet<AssignmentTicket> AssignmentTickets { get; set; }
+        public DbSet<AssignmentTicketItem> AssignmentTicketItems { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.UseOpenIddict();
@@ -270,6 +280,79 @@ namespace sh.be.infrastructure.data.Persistence.Db
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
                 entity.HasIndex([nameof(PackageCodeValue.CodeGroup), nameof(PackageCodeValue.Code)], PackageCodeValue.UniqueCodeIndexName)
                     .HasFilter("[Deleted] = 0");
+            });
+            modelBuilder.Entity<StaffGroup>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.HasIndex([nameof(StaffGroup.OwnerUserId), nameof(StaffGroup.Name)], StaffGroup.UniqueOwnerNameIndexName)
+                    .HasFilter("[Deleted] = 0");
+            });
+            modelBuilder.Entity<StaffGroupMember>(entity =>
+            {
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.HasOne<StaffGroup>()
+                    .WithMany()
+                    .HasForeignKey(e => e.StaffGroupId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<ProjectMember>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.HasIndex([nameof(ProjectMember.ProjectId), nameof(ProjectMember.DocumentTypeId), nameof(ProjectMember.UserId)], ProjectMember.UniqueMemberIndexName)
+                    .HasFilter("[Deleted] = 0");
+                entity.HasOne<Project>()
+                    .WithMany()
+                    .HasForeignKey(e => e.ProjectId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<DocumentType>()
+                    .WithMany()
+                    .HasForeignKey(e => e.DocumentTypeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<ProjectPriceDefault>(entity =>
+            {
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.Property(e => e.EffectiveFrom).HasColumnType("date");
+                entity.HasOne<Project>()
+                    .WithMany()
+                    .HasForeignKey(e => e.ProjectId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<DocumentType>()
+                    .WithMany()
+                    .HasForeignKey(e => e.DocumentTypeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<ProjectMemberPrice>(entity =>
+            {
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.Property(e => e.EffectiveFrom).HasColumnType("date");
+                entity.HasOne<ProjectMember>()
+                    .WithMany()
+                    .HasForeignKey(e => e.ProjectMemberId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<AssignmentTicket>(entity =>
+            {
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.HasOne<Project>()
+                    .WithMany()
+                    .HasForeignKey(e => e.ProjectId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<DocumentType>()
+                    .WithMany()
+                    .HasForeignKey(e => e.DocumentTypeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<AssignmentTicketItem>(entity =>
+            {
+                entity.HasOne<AssignmentTicket>()
+                    .WithMany()
+                    .HasForeignKey(e => e.AssignmentTicketId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<RolePermission>()
                 .HasKey(rp => new { rp.RoleId, rp.PermissionKey });

@@ -1,6 +1,7 @@
 # Kiến trúc Backend sh.be
 
-> Clean Architecture + DDD, tổ chức modular monolith (module `Auth`, `Core`). Cập nhật 2026-10-24.
+> Clean Architecture + DDD, tổ chức modular monolith (module `Auth`, `Core`, `Construction`, `DigitalSignature`, `Packaging`,
+> `Operation`). Cập nhật 2026-10-26.
 
 .NET 9, ASP.NET Core Web API, EF Core + SQL Server, ASP.NET Identity, OpenIddict, AutoMapper, NLog.
 

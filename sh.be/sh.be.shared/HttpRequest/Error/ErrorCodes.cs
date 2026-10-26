@@ -115,5 +115,28 @@ namespace sh.be.shared.HttpRequest.Error
         public const int PackagingErrorMetadataTypeInvalid = 702;
         public const int PackagingErrorSchemaFieldNotFound = 703;
 
+        public const int OperationErrorStaffGroupNotFound = 801;
+        public const int OperationErrorStaffGroupNameExists = 802;
+        public const int OperationErrorStaffGroupForbidden = 803;
+        public const int OperationErrorUserInvalidRole = 804;
+        public const int OperationErrorNotProjectLeader = 805;
+        public const int OperationErrorMemberNotFound = 806;
+        public const int OperationErrorMemberHasActiveTicket = 807;
+        public const int OperationErrorPriceInvalid = 808;
+        public const int OperationErrorCompanyPriceForbidden = 809;
+        public const int OperationErrorEffectiveFromInvalid = 810;
+        public const int OperationErrorAssigneeNotMember = 811;
+        public const int OperationErrorAssignmentConflict = 812;
+        public const int OperationErrorAssignmentNodeEmpty = 813;
+        public const int OperationErrorTicketNotFound = 815;
+        public const int OperationErrorTicketNotActive = 816;
+        public const int OperationErrorNothingToRevoke = 817;
+        public const int OperationErrorProjectClosed = 818;
+        public const int OperationErrorDateRangeInvalid = 819;
+        public const int OperationErrorSubmissionNotAssigned = 820;
+        public const int OperationErrorLeaderForbiddenTarget = 821;
+        public const int OperationErrorPriceDefaultMissing = 822;
+        public const int OperationErrorLeaderNotMember = 823;
+
     }
 }

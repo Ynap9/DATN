@@ -1,7 +1,8 @@
 # Nghiệp vụ backend sh.be
 
 > Chức năng và luật nghiệp vụ của module `Auth` (người dùng, vai trò, quyền), `Core` (nhật ký hệ thống) và
-> `Construction` (loại văn bản, dự án, hồ sơ), `DigitalSignature` (mẫu chữ ký, lô ký) và `Packaging` (cấu hình đóng gói TT05).
+> `Construction` (loại văn bản, dự án, hồ sơ), `DigitalSignature` (mẫu chữ ký, lô ký), `Packaging` (cấu hình đóng gói TT05) và `Operation` (vận hành — mới có nền móng
+> Task 9, plan ở [../plans/van-hanh/README.md](../plans/van-hanh/README.md)).
 > Đối chiếu với code `sh.be` ngày 2026-10-19. Kiến trúc và quy ước code nằm ở [../architecture/README.md](../architecture/README.md).
 
 ## Mục lục
@@ -44,7 +45,7 @@
 ## Ba quy tắc xuyên suốt
 
 - Mọi thao tác ghi đều tạo `AuditLog` **trong cùng transaction** với thay đổi dữ liệu (xem [04-nhat-ky-he-thong.md](04-nhat-ky-he-thong.md)).
-- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`108` (Auth), `201`–`211` (Core), `301`–`335` (Construction), `601`–`635` (DigitalSignature) hoặc `701`–`703` (Packaging).
+- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`108` (Auth), `201`–`211` (Core), `301`–`335` (Construction), `601`–`635` (DigitalSignature), `701`–`703` (Packaging) hoặc `801`–`823` (Operation, bỏ `814`).
 - Thời gian thao tác lấy theo giờ Việt Nam, người thao tác lấy từ token đăng nhập.
 
 Route trong các file nghiệp vụ viết rút gọn `api/<module>/...`; route thật có version: `api/v1/<module>/...` (từ 2026-10-20,

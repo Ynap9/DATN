@@ -1283,6 +1283,8 @@ namespace sh.be.infrastructure.data.Migrations
 
                     b.HasIndex(new[] { "FileName" }, "IX_Submission_FileName");
 
+                    b.HasIndex(new[] { "ProjectId", "DocumentTypeId", "Box", "ProfileRange" }, "IX_Submission_ProjectId_DocumentTypeId_Box_ProfileRange");
+
                     b.HasIndex(new[] { "ProjectId", "DocumentTypeId", "FileName", "ProfileRange", "Box" }, "IX_Submission_ProjectId_DocumentTypeId_FileName_ProfileRange_Box")
                         .IsUnique()
                         .HasFilter("[Deleted] = 0");
@@ -2006,6 +2008,346 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("TemplatePosition", "digitalsignature");
                 });
 
+            modelBuilder.Entity("sh.be.domain.Module.Operation.Assignments.Entities.AssignmentTicket", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AssigneeUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<int>("DocumentCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DocumentTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DoneAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Mode")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int?>("SourceTicketId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentTypeId");
+
+                    b.HasIndex(new[] { "ProjectId", "DocumentTypeId", "AssigneeUserId", "Status" }, "IX_AssignmentTicket_ProjectId_DocumentTypeId_AssigneeUserId_Status");
+
+                    b.HasIndex(new[] { "Status", "DoneAt" }, "IX_AssignmentTicket_Status_DoneAt");
+
+                    b.ToTable("AssignmentTicket", "operation");
+                });
+
+            modelBuilder.Entity("sh.be.domain.Module.Operation.Assignments.Entities.AssignmentTicketItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AssignmentTicketId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Box")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ProfileRange")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "AssignmentTicketId" }, "IX_AssignmentTicketItem_AssignmentTicketId");
+
+                    b.ToTable("AssignmentTicketItem", "operation");
+                });
+
+            modelBuilder.Entity("sh.be.domain.Module.Operation.ProjectMembers.Entities.ProjectMember", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<bool>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DocumentTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ManagedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int?>("SourceStaffGroupId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentTypeId");
+
+                    b.HasIndex(new[] { "ManagedByUserId" }, "IX_ProjectMember_ManagedByUserId");
+
+                    b.HasIndex(new[] { "ProjectId", "DocumentTypeId", "Role" }, "IX_ProjectMember_ProjectId_DocumentTypeId_Role");
+
+                    b.HasIndex(new[] { "ProjectId", "DocumentTypeId", "UserId" }, "IX_ProjectMember_ProjectId_DocumentTypeId_UserId")
+                        .IsUnique()
+                        .HasFilter("[Deleted] = 0");
+
+                    b.ToTable("ProjectMember", "operation");
+                });
+
+            modelBuilder.Entity("sh.be.domain.Module.Operation.ProjectMembers.Entities.ProjectMemberPrice", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("ActualPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("CompanyPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("date");
+
+                    b.Property<int>("ProjectMemberId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "ProjectMemberId", "EffectiveFrom" }, "IX_ProjectMemberPrice_ProjectMemberId_EffectiveFrom");
+
+                    b.ToTable("ProjectMemberPrice", "operation");
+                });
+
+            modelBuilder.Entity("sh.be.domain.Module.Operation.ProjectMembers.Entities.ProjectPriceDefault", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("ActualPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("CompanyPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<int>("DocumentTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("date");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentTypeId");
+
+                    b.HasIndex(new[] { "ProjectId", "DocumentTypeId", "Role", "EffectiveFrom" }, "IX_ProjectPriceDefault_ProjectId_DocumentTypeId_Role_EffectiveFrom");
+
+                    b.ToTable("ProjectPriceDefault", "operation");
+                });
+
+            modelBuilder.Entity("sh.be.domain.Module.Operation.StaffGroups.Entities.StaffGroup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<bool>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("OwnerUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "OwnerUserId", "Name" }, "IX_StaffGroup_OwnerUserId_Name")
+                        .IsUnique()
+                        .HasFilter("[Deleted] = 0");
+
+                    b.ToTable("StaffGroup", "operation");
+                });
+
+            modelBuilder.Entity("sh.be.domain.Module.Operation.StaffGroups.Entities.StaffGroupMember", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<int>("StaffGroupId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "StaffGroupId", "UserId" }, "IX_StaffGroupMember_StaffGroupId_UserId")
+                        .IsUnique();
+
+                    b.ToTable("StaffGroupMember", "operation");
+                });
+
             modelBuilder.Entity("sh.be.domain.Module.Packaging.Entities.PackageCodeValue", b =>
                 {
                     b.Property<int>("Id")
@@ -2306,6 +2648,78 @@ namespace sh.be.infrastructure.data.Migrations
                     b.HasOne("sh.be.domain.Module.Construction.Submissions.Entities.Submission", null)
                         .WithMany()
                         .HasForeignKey("SubmissionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("sh.be.domain.Module.Operation.Assignments.Entities.AssignmentTicket", b =>
+                {
+                    b.HasOne("sh.be.domain.Module.Construction.DocumentTypes.Entities.DocumentType", null)
+                        .WithMany()
+                        .HasForeignKey("DocumentTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("sh.be.domain.Module.Construction.Projects.Entities.Project", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("sh.be.domain.Module.Operation.Assignments.Entities.AssignmentTicketItem", b =>
+                {
+                    b.HasOne("sh.be.domain.Module.Operation.Assignments.Entities.AssignmentTicket", null)
+                        .WithMany()
+                        .HasForeignKey("AssignmentTicketId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("sh.be.domain.Module.Operation.ProjectMembers.Entities.ProjectMember", b =>
+                {
+                    b.HasOne("sh.be.domain.Module.Construction.DocumentTypes.Entities.DocumentType", null)
+                        .WithMany()
+                        .HasForeignKey("DocumentTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("sh.be.domain.Module.Construction.Projects.Entities.Project", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("sh.be.domain.Module.Operation.ProjectMembers.Entities.ProjectMemberPrice", b =>
+                {
+                    b.HasOne("sh.be.domain.Module.Operation.ProjectMembers.Entities.ProjectMember", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectMemberId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("sh.be.domain.Module.Operation.ProjectMembers.Entities.ProjectPriceDefault", b =>
+                {
+                    b.HasOne("sh.be.domain.Module.Construction.DocumentTypes.Entities.DocumentType", null)
+                        .WithMany()
+                        .HasForeignKey("DocumentTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("sh.be.domain.Module.Construction.Projects.Entities.Project", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("sh.be.domain.Module.Operation.StaffGroups.Entities.StaffGroupMember", b =>
+                {
+                    b.HasOne("sh.be.domain.Module.Operation.StaffGroups.Entities.StaffGroup", null)
+                        .WithMany()
+                        .HasForeignKey("StaffGroupId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
