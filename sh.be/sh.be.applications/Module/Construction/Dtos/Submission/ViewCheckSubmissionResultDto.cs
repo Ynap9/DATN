@@ -4,6 +4,7 @@ namespace sh.be.applications.Module.Construction.Dtos.Submission
     {
         public int SubmissionId { get; set; }
         public int StatusCheck { get; set; }
+        public int StatusQa { get; set; }
         public int ChangedDataCount { get; set; }
         public int LogId { get; set; }
     }

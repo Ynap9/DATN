@@ -1,6 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using sh.be.domain.Module.Construction.QaAssignments.Models;
+using sh.be.domain.Module.Construction.Submissions.Entities;
+using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.Constants.Db;
+using sh.be.shared.HttpRequest.Error;
+using sh.be.shared.HttpRequest.Exception;
 using sh.be.shared.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -76,6 +81,85 @@ namespace sh.be.domain.Module.Construction.QaAssignments.Entities
                 CreatedBy = createdBy,
                 CreatedDate = createdDate,
             };
+        }
+
+        public static QaTicket CreateFull(int projectId, int documentTypeId, string qaUserId, int documentCount, string? createdBy, DateTime createdDate)
+        {
+            return new QaTicket
+            {
+                ProjectId = projectId,
+                DocumentTypeId = documentTypeId,
+                QaUserId = qaUserId,
+                Mode = QaAssignmentConst.MODE_FULL,
+                DocumentCount = documentCount,
+                Round = 1,
+                RoundStartedDate = createdDate,
+                Status = QaAssignmentConst.TICKET_STATUS_ACTIVE,
+                CreatedBy = createdBy,
+                CreatedDate = createdDate,
+            };
+        }
+
+        public List<SubmissionUser> AssignSubmissions(IEnumerable<QaCandidate> candidates, string? createdBy, DateTime createdDate)
+        {
+            return candidates
+                .Select(candidate => SubmissionUser.Create(candidate.SubmissionId, ProjectId, DocumentTypeId, RoleConstants.ROLE_QA, QaUserId, Id,
+                    createdBy, createdDate))
+                .ToList();
+        }
+
+        public bool IsAssignedTo(string userId)
+        {
+            return QaUserId == userId;
+        }
+
+        public bool IsOpen()
+        {
+            return Status is QaAssignmentConst.TICKET_STATUS_ACTIVE or QaAssignmentConst.TICKET_STATUS_REJECTED;
+        }
+
+        public bool IsActiveFull()
+        {
+            return Mode == QaAssignmentConst.MODE_FULL && Status == QaAssignmentConst.TICKET_STATUS_ACTIVE;
+        }
+
+        public void EnsureReviewableBy(string userId, int submissionStatusQa)
+        {
+            if (Status == QaAssignmentConst.TICKET_STATUS_CANCELLED || !IsAssignedTo(userId))
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaNotAssignee);
+            }
+            if (Status == QaAssignmentConst.TICKET_STATUS_REJECTED)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaSubmissionLocked);
+            }
+            if (Status == QaAssignmentConst.TICKET_STATUS_PASSED && submissionStatusQa != SubmissionConst.QA_NOT_REVIEWED)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaNotAssignee);
+            }
+        }
+
+        public void Pass(string? modifiedBy, DateTime concludedDate)
+        {
+            if (Status != QaAssignmentConst.TICKET_STATUS_ACTIVE)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaTicketStatusInvalid);
+            }
+            Status = QaAssignmentConst.TICKET_STATUS_PASSED;
+            ConcludedDate = concludedDate;
+            ModifiedBy = modifiedBy;
+            ModifiedDate = concludedDate;
+        }
+
+        public void Cancel(string? modifiedBy, DateTime modifiedDate)
+        {
+            if (!IsOpen())
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaTicketStatusInvalid);
+            }
+            Status = QaAssignmentConst.TICKET_STATUS_CANCELLED;
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
         }
     }
 }

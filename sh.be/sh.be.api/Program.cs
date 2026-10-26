@@ -307,6 +307,7 @@ builder.Services.AddScoped<IProjectDeadlineNotificationRepository, ProjectDeadli
 builder.Services.AddScoped<ISubmissionRepository, SubmissionRepository>();
 builder.Services.AddScoped<IQaSamplingConfigRepository, QaSamplingConfigRepository>();
 builder.Services.AddScoped<IQaReviewerModeRepository, QaReviewerModeRepository>();
+builder.Services.AddScoped<IQaTicketRepository, QaTicketRepository>();
 builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();
 builder.Services.AddScoped<ISigningBatchRepository, SigningBatchRepository>();
 builder.Services.AddScoped<IStaffGroupRepository, StaffGroupRepository>();
