@@ -1,6 +1,6 @@
 # Người dùng (Auth)
 
-> **Phần 1/19** · mục lục: [README.md](README.md)
+> **Phần 1/20** · mục lục: [README.md](README.md)
 
 Quản lý tài khoản đăng nhập. Logic nằm ở `UserService` (applications) và `UserDomainService` (domain); ghi xuống
 DB qua `UserRepository` (dùng `UserManager<AppUser>`).

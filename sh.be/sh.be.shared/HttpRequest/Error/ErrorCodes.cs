@@ -141,5 +141,13 @@ namespace sh.be.shared.HttpRequest.Error
         public const int OperationErrorPriceDefaultMissing = 822;
         public const int OperationErrorLeaderNotMember = 823;
 
+        public const int AiErrorProviderNotFound = 901;
+        public const int AiErrorProviderCodeExists = 902;
+        public const int AiErrorProviderHasModels = 903;
+        public const int AiErrorProviderProtocolLocked = 904;
+        public const int AiErrorProviderInUse = 905;
+        public const int AiErrorProviderApiKeyMissing = 906;
+        public const int AiErrorProviderApiKeyUnreadable = 907;
+
     }
 }

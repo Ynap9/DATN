@@ -3,6 +3,7 @@ using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Cors.Infrastructure;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +23,7 @@ using sh.be.applications.Base.Interfaces.External.BackgroundJob;
 using sh.be.applications.Base.Interfaces.External.Mail;
 using sh.be.applications.Base.Interfaces.External.SignalR;
 using sh.be.applications.Base.Interfaces.External.Storage;
+using sh.be.applications.Base.Interfaces.External.Ai;
 using sh.be.applications.Module.Auth.Implements;
 using sh.be.applications.Module.Auth.Interfaces.Services;
 using sh.be.applications.Module.Auth.Interfaces.Queries;
@@ -41,6 +43,9 @@ using sh.be.applications.Module.Packaging.Interfaces.Services;
 using sh.be.applications.Module.Operation.Implements;
 using sh.be.applications.Module.Operation.Interfaces.Queries;
 using sh.be.applications.Module.Operation.Interfaces.Services;
+using sh.be.applications.Module.Ai.Implements;
+using sh.be.applications.Module.Ai.Interfaces.Queries;
+using sh.be.applications.Module.Ai.Interfaces.Services;
 using sh.be.domain.Base;
 using sh.be.domain.Module.Auth.Entities;
 using sh.be.domain.Module.Auth.Repositories;
@@ -59,6 +64,8 @@ using sh.be.domain.Module.Construction.Submissions.Services;
 using sh.be.domain.Module.DigitalSignature.Repositories;
 using sh.be.domain.Module.Operation.StaffGroups.Repositories;
 using sh.be.domain.Module.Operation.StaffGroups.Services;
+using sh.be.domain.Module.Ai.Providers.Repositories;
+using sh.be.domain.Module.Ai.Providers.Services;
 using sh.be.infrastructure.data.Base;
 using sh.be.infrastructure.data.Module.Auth.Queries;
 using sh.be.infrastructure.data.Module.Auth.Repositories;
@@ -71,6 +78,8 @@ using sh.be.infrastructure.data.Module.DigitalSignature.Repositories;
 using sh.be.infrastructure.data.Module.Packaging.Queries;
 using sh.be.infrastructure.data.Module.Operation.Queries;
 using sh.be.infrastructure.data.Module.Operation.Repositories;
+using sh.be.infrastructure.data.Module.Ai.Queries;
+using sh.be.infrastructure.data.Module.Ai.Repositories;
 using sh.be.infrastructure.data.Persistence.Db;
 using sh.be.infrastructure.data.Persistence.Seeder;
 using sh.be.infrastructure.external.BackgroundJob.Base;
@@ -81,6 +90,7 @@ using sh.be.infrastructure.external.Mail.Implements;
 using sh.be.infrastructure.external.SignalR.Base;
 using sh.be.infrastructure.external.SignalR.Implements;
 using sh.be.infrastructure.external.Storage.Implements;
+using sh.be.infrastructure.external.Ai.Implements;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.BackgroundJob;
 using sh.be.shared.Constants.DigitalSignature;
@@ -165,7 +175,12 @@ builder.Services.AddCors(options =>
 #endregion
 #region identity
 // 2. Add Identity
-builder.Services.AddDataProtection();
+var dataProtectionBuilder = builder.Services.AddDataProtection();
+string? dataProtectionKeysPath = builder.Configuration.GetSection("DataProtection:KeysPath").Value;
+if (!String.IsNullOrWhiteSpace(dataProtectionKeysPath))
+{
+    dataProtectionBuilder.PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath)).SetApplicationName("sh.be");
+}
 builder.Services.AddIdentityCore<AppUser>()
 
     .AddEntityFrameworkStores<ShDbContext>()
@@ -311,6 +326,7 @@ builder.Services.AddScoped<IQaTicketRepository, QaTicketRepository>();
 builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();
 builder.Services.AddScoped<ISigningBatchRepository, SigningBatchRepository>();
 builder.Services.AddScoped<IStaffGroupRepository, StaffGroupRepository>();
+builder.Services.AddScoped<IAiProviderRepository, AiProviderRepository>();
 
 // queries
 builder.Services.AddScoped<IRoleQuery, RoleQuery>();
@@ -327,6 +343,7 @@ builder.Services.AddScoped<ITemplateQuery, TemplateQuery>();
 builder.Services.AddScoped<ISigningBatchQuery, SigningBatchQuery>();
 builder.Services.AddScoped<IPackageConfigQuery, PackageConfigQuery>();
 builder.Services.AddScoped<IStaffGroupQuery, StaffGroupQuery>();
+builder.Services.AddScoped<IAiProviderQuery, AiProviderQuery>();
 
 // domain services
 builder.Services.AddScoped<RoleDomainService>();
@@ -338,6 +355,7 @@ builder.Services.AddScoped<ProjectConfigDomainService>();
 builder.Services.AddScoped<SubmissionDomainService>();
 builder.Services.AddScoped<QaAssignmentDomainService>();
 builder.Services.AddScoped<StaffGroupDomainService>();
+builder.Services.AddScoped<AiProviderDomainService>();
 builder.Services.AddSingleton<IQaStrategyValidator, FormatOnlyQaStrategyValidator>();
 
 // application services
@@ -360,6 +378,7 @@ builder.Services.AddScoped<ISigningBatchService, SigningBatchService>();
 builder.Services.AddScoped<IPluginService, PluginService>();
 builder.Services.AddScoped<IPackageConfigService, PackageConfigService>();
 builder.Services.AddScoped<IStaffGroupService, StaffGroupService>();
+builder.Services.AddScoped<IAiProviderService, AiProviderService>();
 builder.Services.AddSingleton<ISigningRunner, SigningRunner>();
 
 // jobs
@@ -382,6 +401,7 @@ builder.Services.AddSingleton<IPdfSignerExternal, PdfSignerExternal>();
 builder.Services.AddSingleton<ITimestampExternal, TimestampExternal>();
 builder.Services.AddScoped<IBackgroundJobExternal, HangfireBackgroundJobExternal>();
 builder.Services.AddSingleton<ISignalRExternal, SignalRExternal>();
+builder.Services.AddSingleton<ISecretProtectorExternal, DataProtectionSecretProtectorExternal>();
 #endregion
 
 

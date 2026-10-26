@@ -1,6 +1,6 @@
 # Mẫu chữ ký (DigitalSignature)
 
-> **Phần 9/19** · trước: [08-cau-hinh-du-an.md](08-cau-hinh-du-an.md) · mục lục: [README.md](README.md)
+> **Phần 9/20** · trước: [08-cau-hinh-du-an.md](08-cau-hinh-du-an.md) · mục lục: [README.md](README.md)
 
 Mẫu chữ ký (`digitalsignature.Template`) là bộ cấu hình dựng sẵn cho lô ký số: lý do / nơi ký, ảnh dấu đỏ, ảnh chữ ký tay và
 toạ độ từng khối trên trang PDF (`digitalsignature.TemplatePosition`), để người ký không phải kéo thả lại mỗi lần ký.

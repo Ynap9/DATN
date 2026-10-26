@@ -15,7 +15,7 @@ repository, `IUnitOfWork`).
 | `Module/<TenModule>/Queries/` | Implement `I...Query` của applications, trả DTO |
 | `Persistence/Db/ShDbContext.cs` | `IdentityUserContext<AppUser>` + `DbSet` + cấu hình model + OpenIddict |
 | `Persistence/Seeder/` | `SeedRole`, `SeedPermission`, `SeedUser`, `SeedRolePermission`, `SeedPackaging` (+ dữ liệu `PackagingSeedData`) |
-| `Migrations/Auth/`, `Core/`, `Construction/`, `DigitalSignature/`, `Packaging/`, `Operation/` | Migration tách theo module; `ShDbContextModelSnapshot.cs` chung |
+| `Migrations/Auth/`, `Core/`, `Construction/`, `DigitalSignature/`, `Packaging/`, `Operation/`, `Ai/` | Migration tách theo module; `ShDbContextModelSnapshot.cs` chung |
 
 ## Repository vs Query
 
@@ -31,11 +31,11 @@ gọi thêm `SaveChanges` trong các luồng đó.
 
 ## Schema
 
-- Bảng Auth ở schema `auth`, Core ở `core`, Construction ở `construction`, DigitalSignature ở `digitalsignature`, Packaging ở `packaging`, Operation ở `operation` (`[Table(..., Schema = DbSchemas.X)]` trên entity).
+- Bảng Auth ở schema `auth`, Core ở `core`, Construction ở `construction`, DigitalSignature ở `digitalsignature`, Packaging ở `packaging`, Operation ở `operation`, Ai ở `ai` (`[Table(..., Schema = DbSchemas.X)]` trên entity).
 - Khoá ghép: `RolePermission (RoleId, PermissionKey)`, `UserRole (UserId, RoleId)`, `ProjectDocumentType (ProjectId, DocumentTypeId)`,
   `ProjectDocumentTypeDocumentField (ProjectId, DocumentTypeId, DocumentFieldId)`, `SubmissionQaLogField (SubmissionQaLogId, DocumentFieldId)`.
   FK thật ngoài Identity (`HasOne<T>().WithMany()`, `Restrict`, không navigation): `PackageSchemaField → PackageSchema`; từ migration `Add_QaAssignment`: `QaSamplingConfig` / `QaReviewerMode` / `QaTicket → Project`, `QaTicket → DocumentType`, `SubmissionUser → Submission` (`SubmissionUser.TicketId` cố ý không FK); từ `Add_OperationModule`: `ProjectMember` / `ProjectPriceDefault` / `AssignmentTicket → Project, DocumentType`,
-  `StaffGroupMember → StaffGroup`, `ProjectMemberPrice → ProjectMember`, `AssignmentTicketItem → AssignmentTicket` (cột `UserId` không FK tới `AspNetUsers`, như module khác).
+  `StaffGroupMember → StaffGroup`, `ProjectMemberPrice → ProjectMember`, `AssignmentTicketItem → AssignmentTicket` (cột `UserId` không FK tới `AspNetUsers`, như module khác); từ `Add_AiModule`: `AiModel → AiProvider`, `PromptTemplate → DocumentType`, `PromptFieldConfig → PromptTemplate, DocumentField`, `ProjectAiConfig → Project, DocumentType, AiModel` (chính + dự phòng), `PromptTemplate`.
 - Index khai bằng `[Index(..., Name = "IX_<Bang>_<Cot>")]` trên entity (không `HasIndex`): `AuditLog` (`CreatedDate`, `UserId`, `ActionType`),
   `Permission.Key` (unique), `UserRole.RoleId`, `DocumentType.Name`, `Submission.FileName`, `DocumentField (DocumentTypeId, Field)` và `(DocumentTypeId, OrderTableView)`, `Project.Name`, `ProjectConfig.Name`,
   `ProjectDocumentType.DocumentTypeId`, `ProjectDocumentTypeDocumentField.DocumentFieldId`, `SubmissionData (ProjectId, DocumentTypeId, DocumentFieldId)`, `TemplatePosition.TemplateId`,
@@ -43,7 +43,7 @@ gọi thêm `SaveChanges` trong các luồng đó.
   Cột chuỗi có index thành `nvarchar(450)` — giá trị dài hơn sẽ lỗi khi lưu.
 - Unique index có filter: attribute khai index + `IsUnique`, `OnModelCreating` gọi `HasIndex([...], <tên>).HasFilter("[Deleted] = 0")` theo
   **cùng tên** (hằng `Submission.UniqueKeyIndexName`, `SubmissionData.UniqueFieldIndexName`, `PackageSchema.UniqueTypeIndexName`,
-  `PackageSchemaField.UniqueElementIndexName`, `PackageCodeValue.UniqueCodeIndexName`, `QaSamplingConfig.UniqueProjectIndexName`, `QaReviewerMode.UniqueReviewerIndexName`, `StaffGroup.UniqueOwnerNameIndexName`, `ProjectMember.UniqueMemberIndexName` — filter để gỡ thành viên / xoá nhóm rồi thêm lại không vướng bản ghi đã xoá mềm; `ProjectDeadlineNotification.UniqueSentIndexName` lọc `[IsSuccess] = 1`; `SubmissionUser.UniqueRoleIndexName` **không** filter vì bảng không xoá mềm). ⚠️ Khoá index nonclustered tối đa 1700 byte:
+  `PackageSchemaField.UniqueElementIndexName`, `PackageCodeValue.UniqueCodeIndexName`, `QaSamplingConfig.UniqueProjectIndexName`, `QaReviewerMode.UniqueReviewerIndexName`, `StaffGroup.UniqueOwnerNameIndexName`, `ProjectMember.UniqueMemberIndexName`, `AiProvider` / `AiModel.UniqueCodeIndexName`, `PromptFieldConfig.UniqueFieldIndexName` / `UniqueOutputKeyIndexName`, `ProjectAiConfig.UniqueProjectDocumentTypeIndexName` — filter để gỡ thành viên / xoá nhóm rồi thêm lại không vướng bản ghi đã xoá mềm; `ProjectDeadlineNotification.UniqueSentIndexName` lọc `[IsSuccess] = 1`; `SubmissionUser.UniqueRoleIndexName` **không** filter vì bảng không xoá mềm; `PromptTemplate.UniqueVersionIndexName` **không** filter vì số phiên bản không dùng lại; `PromptTemplate.UniquePublishedIndexName` lọc `[Status] = 'PUBLISHED' AND [Deleted] = 0` — mỗi loại văn bản một bản đang dùng). ⚠️ Khoá index nonclustered tối đa 1700 byte:
   `Submission (ProjectId, DocumentTypeId, FileName 255, ProfileRange 100, Box 100)` ≈ 918 byte; đừng nới các cột này lên `nvarchar(500)`.
 - `Deleted` mặc định `0`, `CreatedDate` mặc định `getdate()` (cấu hình trong `OnModelCreating`).
 - EF map được setter/constructor `private` của entity, nên entity giàu hành vi không đổi schema.
@@ -63,7 +63,7 @@ chỉ có tác dụng **bên trong transaction** (xem [../nghiep-vu/06-truong-va
 
 `Role`, `Permission`, `UserRole`, `RolePermission`, `DocumentType`, `DocumentField`, `Project`, `ProjectConfig`, `ProjectDocumentType`, `ProjectDocumentTypeDocumentField`,
 `Submission`, `SubmissionData`, `SubmissionLog`, `SubmissionQaLog`, `SubmissionQaLogField`, `QaSamplingConfig`, `QaReviewerMode`, `QaTicket`, `Template`, `TemplatePosition`, `SigningBatch`, `SigningBatchFile`,
-`PackageSchema`, `PackageSchemaField`, `PackageCodeValue`, `StaffGroup`, `ProjectMember` có `HasQueryFilter(e => !e.Deleted)` trong `ShDbContext`.
+`PackageSchema`, `PackageSchemaField`, `PackageCodeValue`, `StaffGroup`, `ProjectMember`, `AiProvider`, `AiModel`, `PromptTemplate`, `PromptFieldConfig`, `ProjectAiConfig` có `HasQueryFilter(e => !e.Deleted)` trong `ShDbContext`.
 Mọi truy vấn LINQ (kể cả `join`, subquery, `Any`, `Count`) tự loại bản ghi đã xoá mềm.
 
 - **Không** viết tay `!x.Deleted` nữa.
