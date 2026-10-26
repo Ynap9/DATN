@@ -8,5 +8,7 @@ namespace sh.be.applications.Module.Construction.Dtos.Submission
         public string? QaReason { get; set; }
         public List<int> WrongDocumentFieldIds { get; set; } = new();
         public int QaLogId { get; set; }
+        public int? QaTicketId { get; set; }
+        public string? TicketStatus { get; set; }
     }
 }

@@ -29,6 +29,8 @@ nên `count.total` luôn bằng `paging.totalItems`, và vị trí, hồ sơ li�
 
 - Thứ tự: `Submission.Id` tăng dần (= thứ tự import).
 - `keyword`: chứa trong tên file, Hồ sơ hoặc Hộp; không phân biệt hoa thường (theo collation DB).
+- `qaTicketId` (Task 18C): chỉ văn bản có dòng `SubmissionUser` Role `QA` thuộc phiếu đó. Người gọi phải xem được phiếu (luật ở
+  [18-qa-cham-mau.md](18-qa-cham-mau.md#18c--phiếu-qa)), không thì `327`; áp cho cả paging, count, next / previous, chi tiết, tree, xuất Excel.
 - Cặp trường / giá trị: hồ sơ phải có `SubmissionData` của trường đó với `Data` **bằng đúng** giá trị đã trim. Thiếu một vế thì bỏ
   qua cặp đó. Có hai cặp thì phải thoả cả hai.
 - Trước khi lọc: kiểm dự án / loại văn bản bằng một query; chỉ khi sai mới kiểm chi tiết để trả đúng mã `303` / `301` / `312`.
@@ -66,7 +68,8 @@ Body: `{ id, projectId, documentTypeId, datas: [{ documentFieldId, data }], note
 - Hồ sơ luôn chuyển sang `CHECKED`, kể cả đã `CHECKED` (tái kiểm tra) hoặc đang `RETURNED`. Mỗi lần bấm sinh đúng **một** `SubmissionLog`
   + **một** `AuditLog`, kể cả không sửa ô nào.
 - `Description` của log: `Người dùng: {UserName} đã kiểm tra hồ sơ.`, `... đã tái kiểm tra hồ sơ.` hoặc `... đã kiểm tra lại hồ sơ bị trả lại.`.
-- Hồ sơ bị trả lại: `StatusQa` về `0`, xoá `QaReason` để QA chấm lại. Tái kiểm tra **không** đổi `StatusQa` ([13-ho-so-qa.md](13-ho-so-qa.md)).
+- Hồ sơ bị trả lại: `StatusQa` về `0`, xoá `QaReason` để QA chấm lại. Tái kiểm tra hồ sơ đã QA mà sửa ≥ 1 ô cũng về `0` (log "… sửa N
+  trường sau QA — cần QA lại.", 18C R9); không sửa ô nào thì giữ `StatusQa`. Kết quả trả thêm `statusQa` ([13-ho-so-qa.md](13-ho-so-qa.md)).
 - Dữ liệu:
   - trường đã có dữ liệu → so sau khi trim, khác thì ghi (cho phép xoá trắng); giữ nguyên `IndexGoogleSheet`, `IndexRow`;
   - trường chưa có dữ liệu → giá trị rỗng thì bỏ qua, khác rỗng thì thêm mới (`IndexRow` = `OrderFieldImport`, `IndexGoogleSheet` rỗng);

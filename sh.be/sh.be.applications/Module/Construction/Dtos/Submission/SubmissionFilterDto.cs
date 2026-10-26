@@ -30,5 +30,8 @@ namespace sh.be.applications.Module.Construction.Dtos.Submission
 
         [FromQuery(Name = "keyword")]
         public string? Keyword { get; set; }
+
+        [FromQuery(Name = "qaTicketId")]
+        public int? QaTicketId { get; set; }
     }
 }

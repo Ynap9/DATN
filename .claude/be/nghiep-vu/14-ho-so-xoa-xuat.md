@@ -26,13 +26,14 @@ Body `DeleteSubmissionDto`: `{ projectId, documentTypeId, ids: [] }`. Mọi hồ
 | Không chọn hồ sơ, hoặc trên 500 Id (Id trùng được bỏ trước khi đếm) | `400` |
 | Id không tồn tại hoặc đã xoá; liệt kê các Id thiếu | `305` |
 | Hồ sơ thuộc dự án / loại văn bản khác | `319` |
+| Hồ sơ đang sửa (`StatusCheck = 2`) hoặc đang QA (phiếu `ACTIVE` / `REJECTED`), **kể cả** SuperAdmin; liệt kê Id; kiểm trước `325` | `336` |
 | Hồ sơ đã kiểm tra (`StatusCheck = 1`), trừ SuperAdmin; liệt kê Id | `325` |
 | Import cùng loại văn bản đang giữ khoá quá 5 giây | `310` |
 
 Luật:
 
-- Hồ sơ **chưa kiểm tra** (`0`) hoặc **trả lại** (`2`) xoá được. Hồ sơ **đã kiểm tra** (`1`), kể cả đã QA Đạt, chỉ SuperAdmin xoá được.
-  QA Không đạt luôn đưa hồ sơ về `RETURNED`, nên hồ sơ bị QA trả lại vẫn xoá được.
+- Hồ sơ **chưa kiểm tra** (`0`) xoá được. Hồ sơ **đã kiểm tra** (`1`), kể cả đã QA Đạt, chỉ SuperAdmin xoá được. Từ 18C
+  ([18-qa-cham-mau.md](18-qa-cham-mau.md#18c--phiếu-qa), R8) hồ sơ **trả lại** (`2`) và hồ sơ trong phiếu QA chưa chốt không ai xoá được.
 - Một lần xoá là một transaction. Trước khi đọc hồ sơ, lệnh khoá dòng `ProjectDocumentType` như import
   ([11-ho-so-import.md](11-ho-so-import.md#ghi-dữ-liệu--một-transaction)), nên xoá và import cùng loại văn bản không chạy song song.
 - Xoá mềm hồ sơ (`Deleted`, `DeletedBy`, `DeletedDate`) và toàn bộ `SubmissionData` của chúng. `SubmissionLog` và

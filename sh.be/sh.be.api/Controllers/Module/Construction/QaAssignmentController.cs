@@ -83,5 +83,65 @@ namespace sh.be.api.Controllers.Module.Construction
                 return OkException(ex);
             }
         }
+
+        [HttpPost("ticket")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_ASSIGN_QA)]
+        public async Task<ApiResponse> CreateTicket([FromBody] CreateQaTicketDto dto)
+        {
+            try
+            {
+                var data = await _qaAssignmentService.CreateTicket(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("ticket/paging")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_ASSIGN_QA, PermissionConstants.FUNCTION_SUBMISSION_QA)]
+        public async Task<ApiResponse> FindTicketPaging([FromQuery] FindPagingQaTicketDto dto)
+        {
+            try
+            {
+                var data = await _qaAssignmentService.FindTicketPaging(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("ticket/{id:int}")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_ASSIGN_QA, PermissionConstants.FUNCTION_SUBMISSION_QA)]
+        public async Task<ApiResponse> FindTicketById([FromRoute] int id)
+        {
+            try
+            {
+                var data = await _qaAssignmentService.FindTicketById(id);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPost("ticket/{id:int}/cancel")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_ASSIGN_QA)]
+        public async Task<ApiResponse> CancelTicket([FromRoute] int id)
+        {
+            try
+            {
+                var data = await _qaAssignmentService.CancelTicket(id);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
     }
 }

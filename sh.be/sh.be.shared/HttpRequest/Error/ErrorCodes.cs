@@ -75,6 +75,8 @@ namespace sh.be.shared.HttpRequest.Error
         public const int ConstructionErrorQaSubmissionNotSample = 333;
         public const int ConstructionErrorQaNotAssignee = 334;
         public const int ConstructionErrorQaTicketStatusInvalid = 335;
+        public const int ConstructionErrorSubmissionInProgressNotDeletable = 336;
+        public const int ConstructionErrorProjectNotManaged = 337;
 
         public const int DigitalSignatureErrorTemplateNotFound = 601;
         public const int DigitalSignatureErrorInvalidTemplatePositionKind = 602;
