@@ -13,6 +13,8 @@ namespace sh.be.domain.Module.Construction.Submissions.Entities
     [Index(nameof(FileName), Name = $"IX_{nameof(Submission)}_{nameof(FileName)}")]
     [Index(nameof(ProjectId), nameof(DocumentTypeId), nameof(StatusCheck), Name = "IX_Submission_ProjectId_DocumentTypeId_StatusCheck")]
     [Index(nameof(ProjectId), nameof(DocumentTypeId), nameof(StatusQa), Name = "IX_Submission_ProjectId_DocumentTypeId_StatusQa")]
+    [Index(nameof(ProjectId), nameof(DocumentTypeId), nameof(Box), nameof(ProfileRange),
+        Name = $"IX_{nameof(Submission)}_{nameof(ProjectId)}_{nameof(DocumentTypeId)}_{nameof(Box)}_{nameof(ProfileRange)}")]
     [Index(nameof(ProjectId), nameof(DocumentTypeId), nameof(FileName), nameof(ProfileRange), nameof(Box), IsUnique = true,
         Name = UniqueKeyIndexName)]
     public class Submission : ISoftDeleted

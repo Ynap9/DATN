@@ -74,6 +74,12 @@ Menu.DigitalSignature              Menu ký số
 Menu.Packaging                     Menu đóng gói
 └── Menu.Packaging.Config          Menu cấu hình metadata đóng gói
     └── Function.Packaging.Config.View   (xem cấu hình metadata và tải Excel mẫu)
+
+Menu.Operation                     Menu vận hành (Task 9; API ở Task 10–15)
+├── Menu.Operation.StaffGroup      → Function.Operation.StaffGroup.Manage
+├── Menu.Operation.ProjectMember   → Function.Operation.ProjectMember.Manage, .Price.ManageCompany (chỉ Admin), .Price.ManageActual
+└── Menu.Operation.Assignment      → Function.Operation.Assignment.Manage (giao / thu hồi / chuyển), .Assignment.ViewOwn (phiếu của
+                                     mình), .Assignment.ViewAllSubmission (mọi văn bản, Task 15), .BonusPool.View (quỹ KPI)
 ```
 
 Quy ước đặt key: `Menu.<Module>.<Tên>` cho mục menu, `Function.<Module>.<Tên>.<Hành động>` cho thao tác.
