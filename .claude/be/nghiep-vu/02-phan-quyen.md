@@ -1,6 +1,6 @@
 # Phân quyền
 
-> **Phần 2/19** · trước: [01-nguoi-dung.md](01-nguoi-dung.md) · mục lục: [README.md](README.md)
+> **Phần 2/20** · trước: [01-nguoi-dung.md](01-nguoi-dung.md) · mục lục: [README.md](README.md)
 
 Quyền là một **cây** định danh bằng `Key`. Vai trò giữ một tập key; user có quyền = hợp quyền của các vai trò còn hoạt động.
 Hằng số key nằm ở `PermissionConstants` (shared); cây được seed bởi `SeedPermission`.

@@ -106,6 +106,15 @@ namespace sh.be.infrastructure.data.Persistence.Seeder
             Permission.Create(PermissionConstants.FUNCTION_ASSIGNMENT_VIEW_OWN, "Xem phiếu nhập liệu của mình", PermissionConstants.MENU_OPERATION_ASSIGNMENT, PermissionConstants.MODULE_OPERATION, null),
             Permission.Create(PermissionConstants.FUNCTION_ASSIGNMENT_VIEW_ALL_SUBMISSION, "Xem mọi văn bản không theo phiếu", PermissionConstants.MENU_OPERATION_ASSIGNMENT, PermissionConstants.MODULE_OPERATION, null),
             Permission.Create(PermissionConstants.FUNCTION_BONUS_POOL_VIEW, "Xem quỹ KPI", PermissionConstants.MENU_OPERATION_ASSIGNMENT, PermissionConstants.MODULE_OPERATION, null),
+
+            Permission.Create(PermissionConstants.MENU_AI, "Menu AI", null, PermissionConstants.MODULE_AI, null),
+
+            Permission.Create(PermissionConstants.MENU_AI_PROVIDER, "Menu quản lý nhà cung cấp AI", PermissionConstants.MENU_AI, PermissionConstants.MODULE_AI, null),
+            Permission.Create(PermissionConstants.FUNCTION_AI_PROVIDER_VIEW, "Xem nhà cung cấp AI", PermissionConstants.MENU_AI_PROVIDER, PermissionConstants.MODULE_AI, null),
+            Permission.Create(PermissionConstants.FUNCTION_AI_PROVIDER_CREATE, "Tạo nhà cung cấp AI", PermissionConstants.MENU_AI_PROVIDER, PermissionConstants.MODULE_AI, null),
+            Permission.Create(PermissionConstants.FUNCTION_AI_PROVIDER_UPDATE, "Cập nhật nhà cung cấp AI và API key", PermissionConstants.MENU_AI_PROVIDER, PermissionConstants.MODULE_AI, null),
+            Permission.Create(PermissionConstants.FUNCTION_AI_PROVIDER_DELETE, "Xóa nhà cung cấp AI", PermissionConstants.MENU_AI_PROVIDER, PermissionConstants.MODULE_AI, null),
+            Permission.Create(PermissionConstants.FUNCTION_AI_PROVIDER_DOWNLOAD_API_KEY, "Tải API key nhà cung cấp AI", PermissionConstants.MENU_AI_PROVIDER, PermissionConstants.MODULE_AI, null),
         ];
 
         public static async Task SeedAsync(ShDbContext dbContext)

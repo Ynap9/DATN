@@ -108,5 +108,16 @@ namespace sh.be.shared.Constants.Auth
         public const string FUNCTION_ASSIGNMENT_VIEW_OWN = "Function.Operation.Assignment.ViewOwn";
         public const string FUNCTION_ASSIGNMENT_VIEW_ALL_SUBMISSION = "Function.Operation.Assignment.ViewAllSubmission";
         public const string FUNCTION_BONUS_POOL_VIEW = "Function.Operation.BonusPool.View";
+
+        public const string MODULE_AI = "Ai";
+
+        public const string MENU_AI = "Menu.Ai";
+
+        public const string MENU_AI_PROVIDER = "Menu.Ai.Provider";
+        public const string FUNCTION_AI_PROVIDER_VIEW = "Function.Ai.Provider.View";
+        public const string FUNCTION_AI_PROVIDER_CREATE = "Function.Ai.Provider.Create";
+        public const string FUNCTION_AI_PROVIDER_UPDATE = "Function.Ai.Provider.Update";
+        public const string FUNCTION_AI_PROVIDER_DELETE = "Function.Ai.Provider.Delete";
+        public const string FUNCTION_AI_PROVIDER_DOWNLOAD_API_KEY = "Function.Ai.Provider.DownloadApiKey";
     }
 }
