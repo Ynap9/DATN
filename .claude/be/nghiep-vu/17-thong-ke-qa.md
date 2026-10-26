@@ -1,6 +1,6 @@
 # Hồ sơ — thống kê QA chi tiết
 
-> **Phần 17/18** · trước: [16-dong-goi-cau-hinh.md](16-dong-goi-cau-hinh.md) · mục lục: [README.md](README.md)
+> **Phần 17/19** · trước: [16-dong-goi-cau-hinh.md](16-dong-goi-cau-hinh.md) · mục lục: [README.md](README.md)
 
 Tổng hợp dữ liệu QA đã lưu (`SubmissionQaLog`, `SubmissionQaLogField`) của **một dự án + một loại văn bản**. Mục đích là để Leader
 biết trường nào hay sai, người nhập nào hay sai, và tỉ lệ đúng là bao nhiêu. Đây là đầu vào cho KPI và dashboard. Cả 4 API chỉ đọc:

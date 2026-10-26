@@ -26,6 +26,7 @@ namespace sh.be.shared.HttpRequest.Error
             { ErrorCodes.AuthErrorCreateRole, "Lỗi tạo role" },
             { ErrorCodes.AuthErrorUpdateUser, "Lỗi cập nhật user" },
             { ErrorCodes.AuthErrorChangePassword, "Lỗi đổi mật khẩu" },
+            { ErrorCodes.AuthErrorConflictingRoles, "Người dùng không được vừa có vai trò Data vừa có vai trò QA" },
 
             //Core
             { ErrorCodes.CoreErrorAuditLogNotFound, "Audit log không tồn tại" },

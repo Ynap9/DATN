@@ -1,6 +1,7 @@
 # Plan: module Operation — nhóm nhân viên, thành viên dự án, đơn giá, chia phiếu theo cây
 
-> **Trạng thái:** 🔶 làm dở — Task 9 xong 2026-10-26 (nền móng: schema, mã lỗi, quyền; đã `database update` + gán quyền Leader / Data trên DB dev) · người làm: TV2 · thay T2.2–T2.5 cũ.
+> **Trạng thái:** 🔶 làm dở — Task 9 xong 2026-10-26 (nền móng: schema, mã lỗi, quyền; đã `database update` + gán quyền Leader / Data trên DB dev);
+> Task 10 xong 2026-10-26 (8 API nhóm nhân viên + luật `109` Data / QA) · người làm: TV2 · thay T2.2–T2.5 cũ.
 
 Chia tự động (ngẫu nhiên, theo tiến độ) **không** nằm trong plan này — để làm thuật toán sau; phiếu chừa sẵn `Mode`.
 

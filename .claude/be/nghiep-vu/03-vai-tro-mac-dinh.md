@@ -1,6 +1,6 @@
 # Vai trò và quyền mặc định
 
-> **Phần 3/18** · trước: [02-phan-quyen.md](02-phan-quyen.md) · mục lục: [README.md](README.md)
+> **Phần 3/19** · trước: [02-phan-quyen.md](02-phan-quyen.md) · mục lục: [README.md](README.md)
 
 ## Vai trò mặc định
 
@@ -14,6 +14,9 @@ Hằng số trong `RoleConstants`; `SeedRole` tạo các vai trò còn thiếu k
 | `ROLE_DATA` | `Data` | Nhân viên nhập liệu | Chưa có |
 | `ROLE_QA` | `QA` | Nhân viên QA | Chưa có |
 | `ROLE_USER` | `User` | Người dùng | Chưa có |
+
+Một user không được giữ cùng lúc `Data` và `QA` (`RoleConstants.EXCLUSIVE_STAFF_ROLES`) — tạo / gán vai trò như vậy lỗi `109`
+(từ Task 10, 2026-10-26; DB dev lúc đó không có user nào vi phạm). Các tổ hợp khác (`Data` + `Leader`…) vẫn được.
 
 Bốn vai trò `Leader`, `Data`, `QA`, `User` chưa có quyền nào sau khi seed. Muốn dùng phải gán quyền bằng API
 `PUT api/auth/role/permission`.

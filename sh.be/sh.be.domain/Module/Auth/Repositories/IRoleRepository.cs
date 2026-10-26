@@ -8,6 +8,7 @@ namespace sh.be.domain.Module.Auth.Repositories
         Task<Role?> FindByIdAsync(int id);
         bool Exists(int id);
         Task<int> CountActiveAsync(List<int> ids);
+        Task<List<string>> GetNamesByIdsAsync(List<int> ids);
         void Add(Role role);
         void Update(Role role);
         List<string> GetPermissionKeys(int roleId);

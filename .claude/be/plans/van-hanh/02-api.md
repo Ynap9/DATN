@@ -8,14 +8,14 @@ Tiền tố `api/v1/operation`. `{p}` = `projectId`, `{dt}` = `documentTypeId`. 
 
 | # | Method | Route | Ai | Việc |
 |---|---|---|---|---|
-| 1 | GET | `/staff-group` | Admin, Leader | Phân trang, tìm kiếm; Leader chỉ thấy nhóm mình |
+| 1 | GET | `/staff-group/paging` | Admin, Leader | Phân trang, tìm kiếm, lọc `role`; Leader chỉ thấy nhóm mình |
 | 2 | GET | `/staff-group/{id}` | Admin, Leader | Chi tiết + thành viên |
 | 3 | POST | `/staff-group` | Admin, Leader | Tạo nhóm, kèm `userIds` tuỳ chọn |
 | 4 | PUT | `/staff-group/{id}` | Admin, chủ nhóm | Sửa tên, mô tả |
 | 5 | DELETE | `/staff-group/{id}` | Admin, chủ nhóm | Xoá mềm |
 | 6 | POST | `/staff-group/{id}/members` | Admin, chủ nhóm | Thêm `userIds` |
 | 7 | DELETE | `/staff-group/{id}/members` | Admin, chủ nhóm | Bỏ `userIds` |
-| 8 | GET | `/staff-group/candidates` | Admin, Leader | User role Data / QA để chọn |
+| 8 | GET | `/staff-group/candidates` | Admin, Leader | `role` bắt buộc (`Data` / `QA`): user đúng role đó để chọn (✅ Task 10) |
 
 ## Thành viên dự án (O3)
 
@@ -24,7 +24,7 @@ Tiền tố `api/v1/operation`. `{p}` = `projectId`, `{dt}` = `documentTypeId`. 
 | 9 | GET | `/project/{p}/member` | Admin, Leader | Danh sách + giá hiện hành; lọc `documentTypeId`, `role`, từ khoá |
 | 10 | GET | `/project/{p}/member/candidates` | Admin, Leader | User chưa có trong (dự án, loại văn bản), lọc role |
 | 11 | POST | `/project/{p}/leader` | Admin | `documentTypeId`, `users[{userId, companyPrice?, actualPrice?}]` |
-| 12 | POST | `/project/{p}/member` | Admin, Leader | `documentTypeId`, `users[{userId, role, prices?}]`, `groups[{groupId, role}]`, `managedByUserId`; trả `added`, `skipped[{userId, reason}]` |
+| 12 | POST | `/project/{p}/member` | Admin, Leader | `documentTypeId`, `users[{userId, role, prices?}]`, `groups[{groupId}]` (bỏ `role`: mỗi người nhận role hệ thống hiện tại; người không còn Data / QA → `skipped`), `managedByUserId`; trả `added`, `skipped[{userId, reason}]` |
 | 13 | PUT | `/project/{p}/member/{memberId}` | Admin, Leader | Đổi role, Leader quản lý, bật / tắt |
 | 14 | DELETE | `/project/{p}/member/{memberId}` | Admin, Leader | Gỡ; chặn khi còn phiếu `ACTIVE` |
 
