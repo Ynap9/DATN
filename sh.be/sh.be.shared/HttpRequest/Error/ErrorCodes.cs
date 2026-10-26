@@ -25,6 +25,7 @@ namespace sh.be.shared.HttpRequest.Error
         public const int AuthErrorUpdateUser = 106;
         public const int AuthErrorDeleteUser = 107;
         public const int AuthErrorChangePassword = 108;
+        public const int AuthErrorConflictingRoles = 109;
 
         //Core
         public const int CoreErrorAuditLogNotFound = 201;

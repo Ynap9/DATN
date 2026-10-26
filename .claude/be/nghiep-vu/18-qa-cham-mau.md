@@ -1,6 +1,6 @@
 # QA — chấm mẫu: chế độ chấm, cấu hình mẫu
 
-> **Phần 18/18** · trước: [17-thong-ke-qa.md](17-thong-ke-qa.md) · mục lục: [README.md](README.md)
+> **Phần 18/19** · trước: [17-thong-ke-qa.md](17-thong-ke-qa.md) · mục lục: [README.md](README.md)
 
 QA chấm 100% văn bản thì tốn người. Ở chế độ `SAMPLE`, mỗi phiếu QA chỉ chấm một mẫu ngẫu nhiên: mẫu đạt ngưỡng thì cả phiếu đạt,
 vượt ngưỡng thì trả cả phiếu. Chuỗi task: **18B nền tảng (file này)** → 18D thuật toán bốc mẫu → 18C giao QA + chấm mẫu. 18D, 18C viết
@@ -121,3 +121,5 @@ Gọi thật trên DB dev, dữ liệu gắn tag `ZZTEST`, xoá sạch sau khi t
 vẫn một dòng, audit cũ / mới; 11 trường hợp sai → `400`; dự án không có → `303`; đặt `SAMPLE` rồi `FULL` cho QA; user không có role
 QA, mode `X` → `400`; user không có → `103`; không quyền → `403`; không token → `401`. Chèn trùng `(SubmissionId, "QA")` thì DB
 báo lỗi unique. `QaSampleSizePolicy` đạt cả 6 trường hợp ở bảng R3. Bộ test Task 18 vẫn đạt 50/50.
+
+> **Tiếp:** [19-nhom-nhan-vien.md](19-nhom-nhan-vien.md) — nhóm nhân viên của module Operation: nhóm thuần Data hoặc QA, Leader chỉ thấy nhóm mình.

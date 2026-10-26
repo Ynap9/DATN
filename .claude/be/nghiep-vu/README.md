@@ -1,8 +1,8 @@
 # Nghiệp vụ backend sh.be
 
 > Chức năng và luật nghiệp vụ của module `Auth` (người dùng, vai trò, quyền), `Core` (nhật ký hệ thống) và
-> `Construction` (loại văn bản, dự án, hồ sơ), `DigitalSignature` (mẫu chữ ký, lô ký), `Packaging` (cấu hình đóng gói TT05) và `Operation` (vận hành — mới có nền móng
-> Task 9, plan ở [../plans/van-hanh/README.md](../plans/van-hanh/README.md)).
+> `Construction` (loại văn bản, dự án, hồ sơ), `DigitalSignature` (mẫu chữ ký, lô ký), `Packaging` (cấu hình đóng gói TT05) và `Operation` (vận hành — nền móng
+> Task 9, nhóm nhân viên Task 10, plan ở [../plans/van-hanh/README.md](../plans/van-hanh/README.md)).
 > Đối chiếu với code `sh.be` ngày 2026-10-19. Kiến trúc và quy ước code nằm ở [../architecture/README.md](../architecture/README.md).
 
 ## Mục lục
@@ -27,6 +27,7 @@
 | [16-dong-goi-cau-hinh.md](16-dong-goi-cau-hinh.md) | Đóng gói: 20 schema (5 loại gói × 4 loại metadata), trường đúng thứ tự, luật bắt buộc, 13 nhóm mã, seeder |
 | [17-thong-ke-qa.md](17-thong-ke-qa.md) | Thống kê QA: 1 văn bản = 1 lượt, người nhập theo lịch sử kiểm tra, tỉ lệ đúng theo ô tính tiền, theo trường / người nhập, dòng thời gian |
 | [18-qa-cham-mau.md](18-qa-cham-mau.md) | Chấm mẫu QA: chế độ `FULL` / `SAMPLE` theo QA và dự án, cấu hình mẫu (mặc định 20 văn bản, ngưỡng 50%), công thức cỡ mẫu, điểm móc thuật toán, bảng `SubmissionUser` |
+| [19-nhom-nhan-vien.md](19-nhom-nhan-vien.md) | Nhóm nhân viên (Operation): nhóm thuần `Data` hoặc `QA` suy từ role thành viên, Leader chỉ thấy nhóm mình (`801`), 8 API |
 
 ## Thuật ngữ
 
@@ -45,7 +46,7 @@
 ## Ba quy tắc xuyên suốt
 
 - Mọi thao tác ghi đều tạo `AuditLog` **trong cùng transaction** với thay đổi dữ liệu (xem [04-nhat-ky-he-thong.md](04-nhat-ky-he-thong.md)).
-- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`108` (Auth), `201`–`211` (Core), `301`–`335` (Construction), `601`–`635` (DigitalSignature), `701`–`703` (Packaging) hoặc `801`–`823` (Operation, bỏ `814`).
+- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`109` (Auth), `201`–`211` (Core), `301`–`335` (Construction), `601`–`635` (DigitalSignature), `701`–`703` (Packaging) hoặc `801`–`823` (Operation, bỏ `814`).
 - Thời gian thao tác lấy theo giờ Việt Nam, người thao tác lấy từ token đăng nhập.
 
 Route trong các file nghiệp vụ viết rút gọn `api/<module>/...`; route thật có version: `api/v1/<module>/...` (từ 2026-10-20,
