@@ -8,10 +8,14 @@ using sh.be.applications.Module.Construction.Interfaces.Services;
 using sh.be.domain.Base;
 using sh.be.domain.Module.Construction.Projects.Repositories;
 using sh.be.domain.Module.Construction.QaAssignments.Entities;
+using sh.be.domain.Module.Construction.QaAssignments.Models;
 using sh.be.domain.Module.Construction.QaAssignments.Repositories;
 using sh.be.domain.Module.Construction.QaAssignments.Services;
+using sh.be.domain.Module.Construction.Submissions.Services;
 using sh.be.domain.Module.Core.Repositories;
+using sh.be.shared.Constants.Construction;
 using sh.be.shared.Constants.Core;
+using sh.be.shared.HttpRequest.BaseRequest;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
 using System.Text.Json;
@@ -23,20 +27,25 @@ namespace sh.be.applications.Module.Construction.Implements
         private readonly IQaSamplingConfigRepository _qaSamplingConfigRepository;
         private readonly IQaReviewerModeRepository _qaReviewerModeRepository;
         private readonly IProjectRepository _projectRepository;
+        private readonly IQaTicketRepository _qaTicketRepository;
         private readonly IQaAssignmentQuery _qaAssignmentQuery;
         private readonly QaAssignmentDomainService _qaAssignmentDomainService;
+        private readonly SubmissionDomainService _submissionDomainService;
         private readonly IQaStrategyValidator _qaStrategyValidator;
 
         public QaAssignmentService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<QaAssignmentService> logger, IRequestContext requestContext, TimeProvider timeProvider,
             IQaSamplingConfigRepository qaSamplingConfigRepository, IQaReviewerModeRepository qaReviewerModeRepository, IProjectRepository projectRepository,
-            IQaAssignmentQuery qaAssignmentQuery, QaAssignmentDomainService qaAssignmentDomainService, IQaStrategyValidator qaStrategyValidator
+            IQaTicketRepository qaTicketRepository, IQaAssignmentQuery qaAssignmentQuery, QaAssignmentDomainService qaAssignmentDomainService,
+            SubmissionDomainService submissionDomainService, IQaStrategyValidator qaStrategyValidator
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _qaSamplingConfigRepository = qaSamplingConfigRepository;
             _qaReviewerModeRepository = qaReviewerModeRepository;
             _projectRepository = projectRepository;
+            _qaTicketRepository = qaTicketRepository;
             _qaAssignmentQuery = qaAssignmentQuery;
             _qaAssignmentDomainService = qaAssignmentDomainService;
+            _submissionDomainService = submissionDomainService;
             _qaStrategyValidator = qaStrategyValidator;
         }
 
@@ -110,6 +119,79 @@ namespace sh.be.applications.Module.Construction.Implements
                 $"Đặt chế độ {reviewerMode.Mode} cho {user.UserName} ở dự án {project.Name}", oldData,
                 new { reviewerMode.ProjectId, reviewerMode.UserId, reviewerMode.Mode });
             await _unitOfWork.SaveChangesAsync();
+        }
+
+        public async Task<FindQaTicketByIdDto> CreateTicket(CreateQaTicketDto dto)
+        {
+            _logger.LogInformation($"{nameof(CreateTicket)}, dto={JsonSerializer.Serialize(dto)}");
+            var currentUserId = getCurrentUserId();
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            var access = await _qaAssignmentDomainService.GetAccessAsync(currentUserId);
+            _qaAssignmentDomainService.EnsureManagesPair(access, dto.ProjectId, dto.DocumentTypeId);
+            var project = await _submissionDomainService.EnsureEditableProjectAsync(dto.ProjectId, access.IsAdmin);
+            var qaUser = await _qaAssignmentDomainService.EnsureQaReviewerAsync(dto.QaUserId);
+
+            var nodes = dto.Items?
+                .Select(item => new QaTicketNode(item.Box.Trim(), string.IsNullOrWhiteSpace(item.ProfileRange) ? null : item.ProfileRange.Trim()))
+                .ToList();
+            var candidates = await _qaAssignmentDomainService.SelectAssignableAsync(dto.ProjectId, dto.DocumentTypeId, qaUser.Id, nodes, dto.Count);
+            await _qaAssignmentDomainService.EnsureAssignableModeAsync(dto.ProjectId, qaUser.Id);
+
+            var now = GetVietnamTime();
+            var ticket = QaTicket.CreateFull(dto.ProjectId, dto.DocumentTypeId, qaUser.Id, candidates.Count, currentUserId, now);
+
+            await using var transaction = await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                _qaTicketRepository.Add(ticket);
+                await _unitOfWork.SaveChangesAsync();
+
+                await _qaTicketRepository.AddQaAssignmentsAsync(ticket.AssignSubmissions(candidates, currentUserId, now));
+                AddAuditLog(AuditLogConstants.ACTION_QA_TICKET_CREATE, AuditLogConstants.ACTION_TYPE_CREATE,
+                    $"Giao {candidates.Count} văn bản cho QA {qaUser.UserName}, chế độ {ticket.Mode}, phiếu #{ticket.Id} (dự án {project.Name})", null,
+                    new
+                    {
+                        ticket.Id,
+                        ticket.ProjectId,
+                        ticket.DocumentTypeId,
+                        ticket.QaUserId,
+                        ticket.Mode,
+                        ticket.DocumentCount,
+                        SubmissionIds = candidates.Select(candidate => candidate.SubmissionId),
+                    });
+                await _unitOfWork.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{nameof(CreateTicket)}, projectId={dto.ProjectId}, documentTypeId={dto.DocumentTypeId}, qaUserId={dto.QaUserId}");
+                await transaction.RollbackAsync();
+                throw;
+            }
+
+            return await _qaAssignmentQuery.FindTicketById(ticket.Id)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaTicketNotFound);
+        }
+
+        public async Task<BaseResponsePagingDto<GetListQaTicketDto>> FindTicketPaging(FindPagingQaTicketDto dto)
+        {
+            _logger.LogInformation($"{nameof(FindTicketPaging)}, dto={JsonSerializer.Serialize(dto)}");
+            if (dto.PageSize <= 0 || dto.PageSize > SubmissionConst.MAX_PAGE_SIZE)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, $"pageSize phải từ 1 đến {SubmissionConst.MAX_PAGE_SIZE}");
+            }
+            var currentUserId = getCurrentUserId();
+            var access = await _qaAssignmentDomainService.GetAccessAsync(currentUserId);
+            return await _qaAssignmentQuery.FindTicketPaging(dto, access.IsAdmin ? null : currentUserId);
+        }
+
+        public async Task<FindQaTicketByIdDto> FindTicketById(int id)
+        {
+            _logger.LogInformation($"{nameof(FindTicketById)}, id={id}");
+            await _qaAssignmentDomainService.EnsureVisibleTicketAsync(id, getCurrentUserId());
+            return await _qaAssignmentQuery.FindTicketById(id)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaTicketNotFound);
         }
 
         private static object ToAuditData(QaSamplingConfig config)

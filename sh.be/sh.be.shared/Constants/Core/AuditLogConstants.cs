@@ -54,6 +54,10 @@ namespace sh.be.shared.Constants.Core
 
         public const string ACTION_QA_SAMPLING_CONFIG_UPDATE = "Cập nhật cấu hình chấm mẫu";
         public const string ACTION_QA_REVIEWER_MODE_UPDATE = "Đặt chế độ chấm QA";
+        public const string ACTION_QA_TICKET_CREATE = "Giao phiếu QA";
+        public const string ACTION_QA_TICKET_CONCLUDE = "Chốt phiếu QA";
+        public const string ACTION_QA_TICKET_NEW_ROUND = "Bốc lại mẫu phiếu QA";
+        public const string ACTION_QA_TICKET_CANCEL = "Huỷ phiếu QA";
 
         public const string ACTION_TEMPLATE_CREATE = "Tạo mẫu chữ ký";
         public const string ACTION_TEMPLATE_UPDATE = "Cập nhật mẫu chữ ký";

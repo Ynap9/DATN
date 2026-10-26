@@ -28,5 +28,8 @@ namespace sh.be.applications.Module.Construction.Dtos.Submission
 
         [FromQuery(Name = "fieldValue2")]
         public string? FieldValue2 { get; set; }
+
+        [FromQuery(Name = "qaTicketId")]
+        public int? QaTicketId { get; set; }
     }
 }

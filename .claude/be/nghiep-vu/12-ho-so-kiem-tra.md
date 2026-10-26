@@ -29,6 +29,8 @@ nên `count.total` luôn bằng `paging.totalItems`, và vị trí, hồ sơ li�
 
 - Thứ tự: `Submission.Id` tăng dần (= thứ tự import).
 - `keyword`: chứa trong tên file, Hồ sơ hoặc Hộp; không phân biệt hoa thường (theo collation DB).
+- `qaTicketId` (Task 18C): chỉ văn bản có dòng `SubmissionUser` Role `QA` thuộc phiếu đó. Người gọi phải xem được phiếu (luật ở
+  [18-qa-cham-mau.md](18-qa-cham-mau.md#18c--phiếu-qa)), không thì `327`; áp cho cả paging, count, next / previous, chi tiết, tree, xuất Excel.
 - Cặp trường / giá trị: hồ sơ phải có `SubmissionData` của trường đó với `Data` **bằng đúng** giá trị đã trim. Thiếu một vế thì bỏ
   qua cặp đó. Có hai cặp thì phải thoả cả hai.
 - Trước khi lọc: kiểm dự án / loại văn bản bằng một query; chỉ khi sai mới kiểm chi tiết để trả đúng mã `303` / `301` / `312`.

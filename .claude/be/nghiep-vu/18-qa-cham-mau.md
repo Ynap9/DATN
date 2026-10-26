@@ -111,6 +111,8 @@ làm unique không filter chặn lần giao lại.
 | `333` | `ConstructionErrorQaSubmissionNotSample` | Văn bản không nằm trong mẫu cần chấm |
 | `334` | `ConstructionErrorQaNotAssignee` | Văn bản không được giao QA cho bạn |
 | `335` | `ConstructionErrorQaTicketStatusInvalid` | Phiếu QA không ở trạng thái cho phép thao tác này |
+| `336` | `ConstructionErrorSubmissionInProgressNotDeletable` | Không được xoá văn bản đang sửa hoặc đang QA (18C) |
+| `337` | `ConstructionErrorProjectNotManaged` | Bạn không được phân quản lý dự án / loại văn bản này (18C) |
 
 Key quyền `Function.Construction.Submission.AssignQa` ("Giao QA cho văn bản") đã seed sẵn cho 18C. Admin tự có; Admin gán thêm
 cho Leader.
@@ -121,5 +123,42 @@ Gọi thật trên DB dev, dữ liệu gắn tag `ZZTEST`, xoá sạch sau khi t
 vẫn một dòng, audit cũ / mới; 11 trường hợp sai → `400`; dự án không có → `303`; đặt `SAMPLE` rồi `FULL` cho QA; user không có role
 QA, mode `X` → `400`; user không có → `103`; không quyền → `403`; không token → `401`. Chèn trùng `(SubmissionId, "QA")` thì DB
 báo lỗi unique. `QaSampleSizePolicy` đạt cả 6 trường hợp ở bảng R3. Bộ test Task 18 vẫn đạt 50/50.
+
+## 18C — Phiếu QA
+
+Chặng 1 (2026-10-26): giao phiếu **FULL**, danh sách, chi tiết, lọc hồ sơ theo phiếu. Chấm theo phiếu, tự chốt, huỷ, chặn xoá làm ở
+chặng 2–3; phiếu `SAMPLE` chờ 18D. Mỗi lần giao = 1 `QaTicket` của **đúng 1** QA + 1 dòng `SubmissionUser` Role `QA` cho từng văn bản.
+
+| Endpoint (`api/v1/construction/qa-assignment/...`) | Quyền | Việc |
+|---|---|---|
+| `POST ticket` | `...Submission.AssignQa` | `{ projectId, documentTypeId, qaUserId, items?: [{ box, profileRange? }], count? }`, trả chi tiết phiếu |
+| `GET ticket/paging` | `AssignQa` hoặc `Qa` | Lọc `projectId`, `documentTypeId`, `qaUserId`, `mode`, `status`; mới nhất trước |
+| `GET ticket/{id:int}` | `AssignQa` hoặc `Qa` | Tham số chụp, vòng, số đếm, `passedCount`, `samples` (rỗng với phiếu FULL; trường mẫu `null`) |
+
+**Giao (R1).** Gửi **đúng một** trong `items` / `count`, sai → `400`. `items`: `box` bắt buộc, `profileRange` bỏ trống = cả hộp, có thì
+chỉ hồ sơ đó trong hộp đó. `count` `1`–`5000`: lấy N văn bản đầu theo `Box`, `ProfileRange`, `Id`.
+- Văn bản phù hợp: chưa xoá, `StatusCheck = 1`, `StatusQa = 0`, chưa có dòng `SubmissionUser` Role `QA`. Không có → `328`, > 5000 → `329`.
+- QA phải có role `QA` (`400`, không tồn tại `103`). Có văn bản mà người nhập (log kiểm tra mới nhất, luật Task 18) là chính QA → `331`.
+- Dự án `DONE` / `EXPIRED`: người thường `316` / `323`; Admin, SuperAdmin giao được (`EnsureEditableProjectAsync`).
+- Trước 18D: QA đang chế độ `SAMPLE` → `400` "Chưa hỗ trợ giao phiếu chế độ SAMPLE".
+- Một transaction: thêm phiếu → `SaveChanges` lấy `Id` → bulk insert dòng giao → audit `Giao phiếu QA` (dữ liệu mới có danh sách
+  `SubmissionIds`). Bảng `Submission` **không** đổi.
+- Hai người giao trùng văn bản cùng lúc: unique `(SubmissionId, Role)` chặn, lỗi SQL `2601` / `2627` → `330`, rollback cả phiếu.
+  Request đến sau khi phiếu kia đã commit thì không còn văn bản phù hợp → `328`.
+
+⚠️ Sắp `Box`, `ProfileRange` theo **chuỗi** (collation DB, như 5sdb): `"10"` đứng trước `"2"`. Đừng ép kiểu số — thứ tự phải khớp cây
+Hộp → Hồ sơ đang hiển thị.
+
+**Phạm vi (R10).** Admin = role `Admin` hoặc `SuperAdmin`: mọi dự án. Người khác chỉ thao tác trên cặp (dự án, loại văn bản) mình là
+`operation.ProjectMember` Role `Leader`, `IsActive`, chưa gỡ (Construction đọc thẳng bảng này trong `QaTicketRepository`):
+giao ngoài cặp → `337`; danh sách chỉ gồm phiếu của cặp được phân **cộng** phiếu mà mình là QA; xem phiếu không được thấy → `327`
+(không lộ là có phiếu). QA xem phiếu của mình không cần là `ProjectMember`.
+
+**Lọc hồ sơ theo phiếu.** Bộ lọc chung có `qaTicketId` ([12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md#bộ-lọc-chung)); kiểm quyền xem
+phiếu như trên, không thêm key quyền. Đây là cửa vào màn chấm của phiếu FULL.
+
+Kiểm thử chặng 1 (DB dev, `ZZTEST`, xoá sạch sau test): **63/63 đạt** — giao theo hộp / hồ sơ / số lượng, các lỗi `400` / `103` / `328` /
+`331`, `SAMPLE` → `400`, giao trùng đồng thời (một lần ra `330`, một lần `328`), quyền xem, phạm vi Leader (`337`, `327`, `316`,
+`IsActive = 0`, đã gỡ), lọc paging / count / next / previous / qa-paging / tree theo phiếu.
 
 > **Tiếp:** [19-nhom-nhan-vien.md](19-nhom-nhan-vien.md) — nhóm nhân viên của module Operation: nhóm thuần Data hoặc QA, Leader chỉ thấy nhóm mình.

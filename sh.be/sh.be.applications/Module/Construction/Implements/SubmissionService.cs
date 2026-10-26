@@ -15,6 +15,7 @@ using sh.be.domain.Base.Models;
 using sh.be.domain.Module.Auth.Repositories;
 using sh.be.domain.Module.Auth.Services;
 using sh.be.domain.Module.Construction.Projects.Entities;
+using sh.be.domain.Module.Construction.QaAssignments.Services;
 using sh.be.domain.Module.Construction.Submissions.Repositories;
 using sh.be.domain.Module.Construction.Submissions.Services;
 using sh.be.domain.Module.Construction.Submissions.Services.Check;
@@ -39,6 +40,7 @@ namespace sh.be.applications.Module.Construction.Implements
         private readonly IRoleRepository _roleRepository;
         private readonly IUserRepository _userRepository;
         private readonly SubmissionDomainService _submissionDomainService;
+        private readonly QaAssignmentDomainService _qaAssignmentDomainService;
         private readonly IDataReaderExternal _dataReaderExternal;
         private readonly IExcelExternal _excelExternal;
         private readonly IBackgroundJobExternal _backgroundJobExternal;
@@ -46,7 +48,7 @@ namespace sh.be.applications.Module.Construction.Implements
 
         public SubmissionService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<SubmissionService> logger, IRequestContext requestContext, TimeProvider timeProvider,
             ISubmissionQuery submissionQuery, ISubmissionRepository submissionRepository, IRoleRepository roleRepository, IUserRepository userRepository,
-            SubmissionDomainService submissionDomainService, IDataReaderExternal dataReaderExternal, IExcelExternal excelExternal,
+            SubmissionDomainService submissionDomainService, QaAssignmentDomainService qaAssignmentDomainService, IDataReaderExternal dataReaderExternal, IExcelExternal excelExternal,
             IBackgroundJobExternal backgroundJobExternal, IFileStorageExternal fileStorageExternal
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
@@ -55,6 +57,7 @@ namespace sh.be.applications.Module.Construction.Implements
             _roleRepository = roleRepository;
             _userRepository = userRepository;
             _submissionDomainService = submissionDomainService;
+            _qaAssignmentDomainService = qaAssignmentDomainService;
             _dataReaderExternal = dataReaderExternal;
             _excelExternal = excelExternal;
             _backgroundJobExternal = backgroundJobExternal;
@@ -224,6 +227,7 @@ namespace sh.be.applications.Module.Construction.Implements
                 throw new UserFriendlyException(ErrorCodes.BadRequest, $"pageSize phải từ 1 đến {SubmissionConst.MAX_PAGE_SIZE}");
             }
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            await EnsureQaTicketFilterVisibleAsync(dto);
             return await _submissionQuery.FindPaging(dto);
         }
 
@@ -231,6 +235,7 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             _logger.LogInformation($"{nameof(FindById)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            await EnsureQaTicketFilterVisibleAsync(dto);
             var detail = await _submissionQuery.FindById(id, dto, dto.IncludePosition)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionNotFound);
             if (detail.ProjectId != dto.ProjectId || detail.DocumentTypeId != dto.DocumentTypeId)
@@ -244,6 +249,7 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             _logger.LogInformation($"{nameof(FindNext)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            await EnsureQaTicketFilterVisibleAsync(dto);
             var nextId = await _submissionQuery.FindNextId(id, dto)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionPositionOutOfRange);
             return await _submissionQuery.FindById(nextId, dto, false)
@@ -254,6 +260,7 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             _logger.LogInformation($"{nameof(FindPrevious)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            await EnsureQaTicketFilterVisibleAsync(dto);
             var previousId = await _submissionQuery.FindPreviousId(id, dto)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionPositionOutOfRange);
             return await _submissionQuery.FindById(previousId, dto, false)
@@ -264,6 +271,7 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             _logger.LogInformation($"{nameof(Count)}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            await EnsureQaTicketFilterVisibleAsync(dto);
             return await _submissionQuery.Count(dto);
         }
 
@@ -326,6 +334,7 @@ namespace sh.be.applications.Module.Construction.Implements
                 throw new UserFriendlyException(ErrorCodes.BadRequest, $"pageSize phải từ 1 đến {SubmissionConst.MAX_PAGE_SIZE}");
             }
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            await EnsureQaTicketFilterVisibleAsync(dto);
             return await _submissionQuery.FindQaPaging(dto);
         }
 
@@ -333,6 +342,7 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             _logger.LogInformation($"{nameof(FindQaById)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            await EnsureQaTicketFilterVisibleAsync(dto);
             var detail = await _submissionQuery.FindQaById(id, dto, dto.IncludePosition)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionNotFound);
             if (detail.ProjectId != dto.ProjectId || detail.DocumentTypeId != dto.DocumentTypeId)
@@ -403,6 +413,7 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             _logger.LogInformation($"{nameof(FindFieldValues)}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            await EnsureQaTicketFilterVisibleAsync(dto);
             await _submissionDomainService.EnsureDocumentFieldInProjectAsync(dto.ProjectId, dto.DocumentTypeId, dto.DocumentFieldId);
             return await _submissionQuery.FindFieldValues(dto);
         }
@@ -411,6 +422,7 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             _logger.LogInformation($"{nameof(FindTree)}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            await EnsureQaTicketFilterVisibleAsync(dto);
             return await _submissionQuery.FindTree(dto);
         }
 
@@ -520,6 +532,7 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             _logger.LogInformation($"{nameof(ExportExcel)}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            await EnsureQaTicketFilterVisibleAsync(dto);
             var table = await _submissionQuery.FindExportTable(dto);
             return _excelExternal.CreateTable($"{table.ProjectName}_{table.DocumentTypeName}_{GetVietnamTime():yyyyMMddHHmm}", table.DocumentTypeName,
                 table.Headers, table.Rows);
@@ -529,6 +542,7 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             _logger.LogInformation($"{nameof(CreateExportJob)}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            await EnsureQaTicketFilterVisibleAsync(dto);
             var names = await _submissionQuery.FindExportName(dto.ProjectId, dto.DocumentTypeId)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
             if (!_backgroundJobExternal.HasServerForQueue(BackgroundJobConst.QUEUE_EXPORT))
@@ -580,6 +594,14 @@ namespace sh.be.applications.Module.Construction.Implements
                     : null,
                 ErrorMessage = job.Status == BackgroundJobConst.STATUS_FAILED ? job.ErrorMessage ?? SubmissionConst.EXPORT_FAILED_MESSAGE : null,
             });
+        }
+
+        private async Task EnsureQaTicketFilterVisibleAsync(ISubmissionFilter filter)
+        {
+            if (filter.QaTicketId is int qaTicketId)
+            {
+                await _qaAssignmentDomainService.EnsureVisibleTicketAsync(qaTicketId, getCurrentUserId());
+            }
         }
 
         private async Task<ProjectSheetSource> LoadAppendSheetAsync(ImportSubmissionDto dto)

@@ -75,6 +75,8 @@ namespace sh.be.shared.HttpRequest.Error
             { ErrorCodes.ConstructionErrorQaSubmissionNotSample, "Văn bản không nằm trong mẫu cần chấm" },
             { ErrorCodes.ConstructionErrorQaNotAssignee, "Văn bản không được giao QA cho bạn" },
             { ErrorCodes.ConstructionErrorQaTicketStatusInvalid, "Phiếu QA không ở trạng thái cho phép thao tác này" },
+            { ErrorCodes.ConstructionErrorSubmissionInProgressNotDeletable, "Không được xoá văn bản đang sửa hoặc đang QA" },
+            { ErrorCodes.ConstructionErrorProjectNotManaged, "Bạn không được phân quản lý dự án / loại văn bản này" },
             { ErrorCodes.DigitalSignatureErrorTemplateNotFound, "Mẫu chữ ký không tồn tại" },
             { ErrorCodes.DigitalSignatureErrorInvalidTemplatePositionKind, "Loại khối chữ ký không hợp lệ" },
             { ErrorCodes.DigitalSignatureErrorTemplatePositionOutOfPage, "Tọa độ khối chữ ký nằm ngoài trang hoặc có kích thước bằng 0" },

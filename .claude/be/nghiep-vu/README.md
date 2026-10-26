@@ -46,7 +46,7 @@
 ## Ba quy tắc xuyên suốt
 
 - Mọi thao tác ghi đều tạo `AuditLog` **trong cùng transaction** với thay đổi dữ liệu (xem [04-nhat-ky-he-thong.md](04-nhat-ky-he-thong.md)).
-- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`109` (Auth), `201`–`211` (Core), `301`–`335` (Construction), `601`–`635` (DigitalSignature), `701`–`703` (Packaging) hoặc `801`–`823` (Operation, bỏ `814`).
+- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`109` (Auth), `201`–`211` (Core), `301`–`337` (Construction), `601`–`635` (DigitalSignature), `701`–`703` (Packaging) hoặc `801`–`823` (Operation, bỏ `814`).
 - Thời gian thao tác lấy theo giờ Việt Nam, người thao tác lấy từ token đăng nhập.
 
 Route trong các file nghiệp vụ viết rút gọn `api/<module>/...`; route thật có version: `api/v1/<module>/...` (từ 2026-10-20,
