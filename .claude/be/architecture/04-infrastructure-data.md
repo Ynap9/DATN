@@ -34,7 +34,7 @@ gọi thêm `SaveChanges` trong các luồng đó.
 - Bảng Auth ở schema `auth`, Core ở `core`, Construction ở `construction`, DigitalSignature ở `digitalsignature`, Packaging ở `packaging` (`[Table(..., Schema = DbSchemas.X)]` trên entity).
 - Khoá ghép: `RolePermission (RoleId, PermissionKey)`, `UserRole (UserId, RoleId)`, `ProjectDocumentType (ProjectId, DocumentTypeId)`,
   `ProjectDocumentTypeDocumentField (ProjectId, DocumentTypeId, DocumentFieldId)`, `SubmissionQaLogField (SubmissionQaLogId, DocumentFieldId)`.
-  FK thật duy nhất ngoài Identity: `PackageSchemaField.PackageSchemaId → PackageSchema` (`HasOne<PackageSchema>().WithMany()`, `Restrict`, không navigation).
+  FK thật ngoài Identity (`HasOne<T>().WithMany()`, `Restrict`, không navigation): `PackageSchemaField → PackageSchema`; từ migration `Add_QaAssignment`: `QaSamplingConfig` / `QaReviewerMode` / `QaTicket → Project`, `QaTicket → DocumentType`, `SubmissionUser → Submission` (`SubmissionUser.TicketId` cố ý không FK).
 - Index khai bằng `[Index(..., Name = "IX_<Bang>_<Cot>")]` trên entity (không `HasIndex`): `AuditLog` (`CreatedDate`, `UserId`, `ActionType`),
   `Permission.Key` (unique), `UserRole.RoleId`, `DocumentType.Name`, `Submission.FileName`, `DocumentField (DocumentTypeId, Field)` và `(DocumentTypeId, OrderTableView)`, `Project.Name`, `ProjectConfig.Name`,
   `ProjectDocumentType.DocumentTypeId`, `ProjectDocumentTypeDocumentField.DocumentFieldId`, `SubmissionData (ProjectId, DocumentTypeId, DocumentFieldId)`, `TemplatePosition.TemplateId`,
@@ -42,7 +42,7 @@ gọi thêm `SaveChanges` trong các luồng đó.
   Cột chuỗi có index thành `nvarchar(450)` — giá trị dài hơn sẽ lỗi khi lưu.
 - Unique index có filter: attribute khai index + `IsUnique`, `OnModelCreating` gọi `HasIndex([...], <tên>).HasFilter("[Deleted] = 0")` theo
   **cùng tên** (hằng `Submission.UniqueKeyIndexName`, `SubmissionData.UniqueFieldIndexName`, `PackageSchema.UniqueTypeIndexName`,
-  `PackageSchemaField.UniqueElementIndexName`, `PackageCodeValue.UniqueCodeIndexName`; `ProjectDeadlineNotification.UniqueSentIndexName` lọc `[IsSuccess] = 1`). ⚠️ Khoá index nonclustered tối đa 1700 byte:
+  `PackageSchemaField.UniqueElementIndexName`, `PackageCodeValue.UniqueCodeIndexName`, `QaSamplingConfig.UniqueProjectIndexName`, `QaReviewerMode.UniqueReviewerIndexName`; `ProjectDeadlineNotification.UniqueSentIndexName` lọc `[IsSuccess] = 1`; `SubmissionUser.UniqueRoleIndexName` **không** filter vì bảng không xoá mềm). ⚠️ Khoá index nonclustered tối đa 1700 byte:
   `Submission (ProjectId, DocumentTypeId, FileName 255, ProfileRange 100, Box 100)` ≈ 918 byte; đừng nới các cột này lên `nvarchar(500)`.
 - `Deleted` mặc định `0`, `CreatedDate` mặc định `getdate()` (cấu hình trong `OnModelCreating`).
 - EF map được setter/constructor `private` của entity, nên entity giàu hành vi không đổi schema.
@@ -61,7 +61,7 @@ chỉ có tác dụng **bên trong transaction** (xem [../nghiep-vu/06-truong-va
 ## Xoá mềm — global query filter
 
 `Role`, `Permission`, `UserRole`, `RolePermission`, `DocumentType`, `DocumentField`, `Project`, `ProjectConfig`, `ProjectDocumentType`, `ProjectDocumentTypeDocumentField`,
-`Submission`, `SubmissionData`, `SubmissionLog`, `SubmissionQaLog`, `SubmissionQaLogField`, `Template`, `TemplatePosition`, `SigningBatch`, `SigningBatchFile`,
+`Submission`, `SubmissionData`, `SubmissionLog`, `SubmissionQaLog`, `SubmissionQaLogField`, `QaSamplingConfig`, `QaReviewerMode`, `QaTicket`, `Template`, `TemplatePosition`, `SigningBatch`, `SigningBatchFile`,
 `PackageSchema`, `PackageSchemaField`, `PackageCodeValue` có `HasQueryFilter(e => !e.Deleted)` trong `ShDbContext`.
 Mọi truy vấn LINQ (kể cả `join`, subquery, `Any`, `Count`) tự loại bản ghi đã xoá mềm.
 
