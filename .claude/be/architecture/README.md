@@ -1,7 +1,7 @@
 # Kiến trúc Backend sh.be
 
 > Clean Architecture + DDD, tổ chức modular monolith (module `Auth`, `Core`, `Construction`, `DigitalSignature`, `Packaging`,
-> `Operation`). Cập nhật 2026-10-26.
+> `Operation`, `Ai` — người phụ trách: thành viên Thi công). Cập nhật 2026-10-27.
 
 .NET 9, ASP.NET Core Web API, EF Core + SQL Server, ASP.NET Identity, OpenIddict, AutoMapper, NLog.
 
@@ -12,7 +12,7 @@ sh.be.api                      Controller, PermissionAttribute, HttpRequestConte
 sh.be.applications             Use case: Interfaces/{Services,Queries}, Implements, Dtos, BaseService
 sh.be.domain                   Lõi nghiệp vụ: Entities, Services (domain service, policy), Repositories (interface)
 sh.be.infrastructure.data      EF Core: ShDbContext, Repositories, Queries, UnitOfWork, Migrations, Seeder
-sh.be.infrastructure.external  Dịch vụ ngoài theo mục: BackgroundJob (Hangfire), DataReader, DigitalSignature, Mail, SignalR, Storage
+sh.be.infrastructure.external  Dịch vụ ngoài theo mục: Ai (mã hoá khoá), BackgroundJob (Hangfire), DataReader, DigitalSignature, Mail, SignalR, Storage
 sh.be.shared                   Shared kernel: ApiResponse, ErrorCodes, exception, hằng số, settings, utils
 ```
 
@@ -34,7 +34,7 @@ Mọi mũi tên hướng **vào trong**. Tầng ngoài implement interface do t�
 | `domain/.../Repositories/IRoleRepository`… | `infrastructure.data/.../Repositories/RoleRepository`… |
 | `domain/Base/IUnitOfWork` | `infrastructure.data/Base/UnitOfWork` |
 | `applications/.../Interfaces/Queries/IRoleQuery`… | `infrastructure.data/.../Queries/RoleQuery`… |
-| `applications/Base/Interfaces/External/<Muc>/I<Ten>External` | `infrastructure.external/<Muc>/Implements/<NhaCungCap><Ten>External` — 6 mục `BackgroundJob`, `DataReader`, `DigitalSignature`, `Mail`, `SignalR`, `Storage` (bảng đủ ở [05](05-infrastructure-external.md)) |
+| `applications/Base/Interfaces/External/<Muc>/I<Ten>External` | `infrastructure.external/<Muc>/Implements/<NhaCungCap><Ten>External` — 7 mục `Ai`, `BackgroundJob`, `DataReader`, `DigitalSignature`, `Mail`, `SignalR`, `Storage` (bảng đủ ở [05](05-infrastructure-external.md)) |
 | `applications/Base/Interfaces/Api/IRequestContext`, `IAuthorizationStateProtector` | `api/Services/HttpRequestContext`, `AuthorizationStateProtector` |
 | `applications/.../DigitalSignature/Interfaces/Services/ISigningRunner` | `applications/.../DigitalSignature/Implements/SigningRunner` (singleton, chạy nền) |
 | `applications/.../Interfaces/Services/IRoleService`… | `applications/.../Implements/RoleService`… |

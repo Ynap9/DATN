@@ -9,6 +9,7 @@ Service và external chỉ nối qua interface: đổi nhà cung cấp không ch
 
 | Mục | Cổng ra (`applications/Base/Interfaces/External/<Muc>/`) → implement (`external/<Muc>/Implements/`) |
 |---|---|
+| `Ai` | `ISecretProtectorExternal` → `DataProtectionSecretProtectorExternal` (singleton): `Protect` / `TryUnprotect` theo `purpose` bằng ASP.NET DataProtection; giải mã lỗi (`CryptographicException`, `FormatException` khi chuỗi rác) → `null`. Giữ API key nhà cung cấp AI ([../nghiep-vu/20-ai-nha-cung-cap.md](../nghiep-vu/20-ai-nha-cung-cap.md)) |
 | `BackgroundJob` | `IBackgroundJobExternal` → `HangfireBackgroundJobExternal`; cấu hình Hangfire ở `Base/HangfireExtensions` |
 | `DataReader` | `IDataReaderExternal` → `GoogleSheetReaderExternal` (qua `Base/DataReaderExternalBase`); `IExcelExternal` → `ExcelExternal`; `IGoogleSheetExternal` → `GoogleSheetExternal` |
 | `DigitalSignature` | `IPdfSignerExternal`, `ISigningQueueExternal`, `ITimestampExternal`, `ICertificateValidatorExternal` → `...External` cùng tên (singleton). Xem [09-chu-ky-so.md](09-chu-ky-so.md) |
@@ -19,6 +20,8 @@ Service và external chỉ nối qua interface: đổi nhà cung cấp không ch
 - Mỗi mục: `Implements/` (lớp implement cổng ra), `Base/` (lớp nền, helper, cấu hình), `Models/` (model nội bộ, không lộ ra applications).
   DTO ở `applications/Base/Dtos/<Muc>/`. Tên: `I<Ten>External` → `<NhaCungCap><Ten>External`, field trong service `_<ten>External`.
 - `IRequestContext`, `IAuthorizationStateProtector` do **api** implement → `Base/Interfaces/Api/`, không hậu tố. `DataReader/` gom đọc / ghi mọi bên thứ ba.
+
+⚠️ Khoá DataProtection mặc định nằm trong hồ sơ user / container: build lại container là sinh khoá mới, mọi API key AI đã lưu thành rác (`907`) và link xác thực Google đang dở hỏng. Production phải đặt `DataProtection:KeysPath` (appsettings, mặc định rỗng = giữ hành vi cũ) **và mount volume Docker** tới đường dẫn đó; có giá trị thì `Program.cs` gọi `PersistKeysToFileSystem` + `SetApplicationName("sh.be")`. Đừng "sửa" bằng cách lưu key chữ thường.
 
 ## BackgroundJob — Hangfire
 
@@ -38,8 +41,7 @@ Service và external chỉ nối qua interface: đổi nhà cung cấp không ch
 xoá job cũ trên dashboard. Tham số job serialize JSON vào DB: chỉ truyền DTO nhỏ và chuỗi, không entity / `byte[]`. `JobParameter` lưu JSON (`"abc"` có ngoặc
 kép) nên đọc phải qua `SerializationHelper.Deserialize`. ⚠️ Múi giờ lịch là `BaseService.VietnamTimeZone` (tên Windows); chạy Linux phải đổi.
 ⚠️ Mọi app trỏ cùng DB đều là server Hangfire: máy đồng đội chạy code cũ vẫn nhận job queue `default` mà không có kiểu job mới → Failed.
-⚠️ Namespace `...external.BackgroundJob` trùng lớp tĩnh `Hangfire.BackgroundJob` (CS0234): inject client, đừng gọi lớp tĩnh, đừng đổi tên mục.
-⚠️ Dashboard và API kết nối **không cần đăng nhập** theo yêu cầu (`AnonymousDashboardAuthorizationFilter`); muốn khoá thì thay filter, đừng thêm `[Authorize]`.
+⚠️ Namespace `...external.BackgroundJob` trùng lớp tĩnh `Hangfire.BackgroundJob` (CS0234): inject client, đừng gọi lớp tĩnh, đừng đổi tên mục. ⚠️ Dashboard và API kết nối **không cần đăng nhập** theo yêu cầu (`AnonymousDashboardAuthorizationFilter`); muốn khoá thì thay filter, đừng thêm `[Authorize]`.
 
 ## SignalR — đẩy tin realtime
 
@@ -58,8 +60,7 @@ khởi động**. Giữ `SetIsOriginAllowed` (có `*` → mọi origin, không t
 `headerRowIndex >= 1` → `400`; `ReadTableAsync` trim mọi ô, **giữ** ô trống để đúng cột, dòng `1` là header, `SheetRowNumber` = số dòng thật),
 lớp con chỉ override `ReadHeaderRowsAsync`, `ReadHeaderCellsAsync`, `ReadRowsAsync`. `GoogleSheetReaderExternal` dùng **service account**
 (`CredentialsPath`, `sh.be.api/Credentials/` trong `.gitignore`): link sai `202`, `GoogleApiException` `203`, không có sheet `204`; chia sẻ cho `client_email`.
-⚠️ Thêm nguồn đọc thứ hai thì DI trả implement đăng ký sau cùng: cần keyed service hoặc factory theo loại nguồn, đừng `AddScoped` thêm rồi để vậy.
-⚠️ Dùng `CredentialFactory.FromFile<ServiceAccountCredential | UserCredential>(...)`, **không** `GoogleCredential.FromFile` (CS0618).
+⚠️ Thêm nguồn đọc thứ hai thì DI trả implement đăng ký sau cùng: cần keyed service hoặc factory theo loại nguồn, đừng `AddScoped` thêm rồi để vậy. ⚠️ Dùng `CredentialFactory.FromFile<ServiceAccountCredential | UserCredential>(...)`, **không** `GoogleCredential.FromFile` (CS0618).
 
 `IGoogleSheetExternal` ghi bằng **Gmail** (OAuth), nhận `SpreadsheetAccountDto` từ `ProjectConfig` ([08](../nghiep-vu/08-cau-hinh-du-an.md)):
 
@@ -94,7 +95,6 @@ Refresh token hết hạn / bị thu hồi → `207`, phải xác thực lại. 
 2. `I<Ten>External` ở `applications/Base/Interfaces/External/<Muc>/` (DTO ở `Base/Dtos/<Muc>/`); implement ở `external/<Muc>/Implements/`.
 3. DI ở nhóm `// third-party services`. External **không** tham chiếu `domain` / `infrastructure.data`; application không tham chiếu external.
 
-⚠️ Gửi mail đang chạy trong transaction của `UserService.Create` ([02-applications.md](02-applications.md)). Dịch vụ ngoài mới đừng
-gọi trong transaction DB nếu tránh được (`TemplateService.UpdateConfig` đẩy ảnh trước, xoá ảnh cũ sau commit).
+⚠️ Gửi mail đang chạy trong transaction của `UserService.Create` ([02-applications.md](02-applications.md)). Dịch vụ ngoài mới đừng gọi trong transaction DB nếu tránh được (`TemplateService.UpdateConfig` đẩy ảnh trước, xoá ảnh cũ sau commit).
 
 > **Tiếp:** [06-shared.md](06-shared.md) — shared kernel dùng chung.

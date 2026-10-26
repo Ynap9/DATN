@@ -102,6 +102,15 @@ namespace sh.be.domain.Module.Ai.Providers.Entities
             ModifiedDate = modifiedDate;
         }
 
+        public string GetApiKeyEncrypted()
+        {
+            if (!HasApiKey || ApiKeyEncrypted == null)
+            {
+                throw new UserFriendlyException(ErrorCodes.AiErrorProviderApiKeyMissing);
+            }
+            return ApiKeyEncrypted;
+        }
+
         public void Delete(string? deletedBy, DateTime deletedDate)
         {
             ClearApiKey(deletedBy, deletedDate);

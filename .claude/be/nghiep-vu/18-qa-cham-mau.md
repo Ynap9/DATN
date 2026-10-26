@@ -1,6 +1,6 @@
 # QA — chấm mẫu: chế độ chấm, cấu hình mẫu
 
-> **Phần 18/19** · trước: [17-thong-ke-qa.md](17-thong-ke-qa.md) · mục lục: [README.md](README.md)
+> **Phần 18/20** · trước: [17-thong-ke-qa.md](17-thong-ke-qa.md) · mục lục: [README.md](README.md)
 
 QA chấm 100% văn bản thì tốn người. Ở chế độ `SAMPLE`, mỗi phiếu QA chỉ chấm một mẫu ngẫu nhiên: mẫu đạt ngưỡng thì cả phiếu đạt,
 vượt ngưỡng thì trả cả phiếu. Chuỗi task: **18B nền tảng (file này)** → 18D thuật toán bốc mẫu → 18C giao QA + chấm mẫu. 18D, 18C viết
