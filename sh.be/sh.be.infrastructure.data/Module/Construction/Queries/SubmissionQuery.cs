@@ -7,6 +7,7 @@ using sh.be.applications.Module.Construction.Interfaces.Queries;
 using sh.be.domain.Module.Construction.Submissions.Entities;
 using sh.be.infrastructure.data.Base;
 using sh.be.infrastructure.data.Persistence.Db;
+using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.HttpRequest.BaseRequest;
 using sh.be.shared.HttpRequest.Error;
@@ -993,6 +994,12 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             if (includeKeyword && !string.IsNullOrEmpty(keyword))
             {
                 query = query.Where(s => s.FileName.Contains(keyword) || s.ProfileRange.Contains(keyword) || s.Box.Contains(keyword));
+            }
+
+            if (filter.QaTicketId is int qaTicketId)
+            {
+                query = query.Where(s => _shDbContext.SubmissionUsers.Any(u => u.SubmissionId == s.Id && u.Role == RoleConstants.ROLE_QA
+                    && u.TicketId == qaTicketId));
             }
 
             query = ApplyFieldFilter(query, filter.DocumentFieldId1, filter.FieldValue1, excludedDocumentFieldId);

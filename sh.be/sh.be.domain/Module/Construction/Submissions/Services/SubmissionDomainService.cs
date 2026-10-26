@@ -43,7 +43,7 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionNotFound);
         }
 
-        public async Task<List<Submission>> EnsureSubmissionsDeletableAsync(int projectId, int documentTypeId, IReadOnlyCollection<int> ids, bool isSuperAdmin)
+        public async Task<List<Submission>> GetSubmissionsToDeleteAsync(int projectId, int documentTypeId, IReadOnlyCollection<int> ids)
         {
             var distinctIds = ids.Distinct().ToList();
             if (distinctIds.Count == 0)
@@ -65,14 +65,17 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
             {
                 submission.EnsureBelongsTo(projectId, documentTypeId);
             }
+            return submissions;
+        }
 
+        public void EnsureCheckedDeletable(IReadOnlyCollection<Submission> submissions, bool isSuperAdmin)
+        {
             var checkedIds = submissions.Where(submission => submission.IsChecked()).Select(submission => submission.Id).ToList();
             if (!isSuperAdmin && checkedIds.Count > 0)
             {
                 throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionCheckedNotDeletable,
                     $"Không được xoá hồ sơ đã kiểm tra: Id = {string.Join(", ", checkedIds)}");
             }
-            return submissions;
         }
 
         public async Task<Project> EnsureEditableProjectAsync(int projectId, bool isSuperAdmin)

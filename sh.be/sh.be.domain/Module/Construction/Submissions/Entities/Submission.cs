@@ -103,14 +103,16 @@ namespace sh.be.domain.Module.Construction.Submissions.Entities
             }
 
             var oldStatus = StatusCheck;
+            var needsQaAgain = oldStatus == SubmissionConst.CHECKED && StatusQa != SubmissionConst.QA_NOT_REVIEWED && changedDataCount > 0;
             var description = oldStatus switch
             {
+                SubmissionConst.CHECKED when needsQaAgain => $"Người dùng: {userName} đã tái kiểm tra hồ sơ, sửa {changedDataCount} trường sau QA — cần QA lại.",
                 SubmissionConst.CHECKED => $"Người dùng: {userName} đã tái kiểm tra hồ sơ.",
                 SubmissionConst.RETURNED => $"Người dùng: {userName} đã kiểm tra lại hồ sơ bị trả lại.",
                 _ => $"Người dùng: {userName} đã kiểm tra hồ sơ.",
             };
 
-            if (oldStatus == SubmissionConst.RETURNED)
+            if (oldStatus == SubmissionConst.RETURNED || needsQaAgain)
             {
                 StatusQa = SubmissionConst.QA_NOT_REVIEWED;
                 QaReason = null;

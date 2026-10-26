@@ -83,7 +83,7 @@ MaxFailed = floor(n × ThresholdPercent / 100)
 |---|---|
 | `QaSamplingConfig` | Cấu hình R2, FK `Project`, xoá mềm |
 | `QaReviewerMode` | Chế độ R1, FK `Project`, xoá mềm |
-| `QaTicket` | Phiếu QA, tạo sẵn cho 18C (chỉ có cột và `Create`): chụp `Mode`, `SampleSize`, `MaxFailed`, `ThresholdPercent`, `StrategyCode` / `Params`, `Seed`, `StopEarlyOnReject` lúc giao; `Round` từ 1, `Status` `ACTIVE` / `PASSED` / `REJECTED` / `CANCELLED`, các bộ đếm. FK `Project`, `DocumentType`, xoá mềm |
+| `QaTicket` | Phiếu QA (18C): chụp `Mode`, `SampleSize`, `MaxFailed`, `ThresholdPercent`, `StrategyCode` / `Params`, `Seed`, `StopEarlyOnReject` lúc giao; `Round` từ 1, `Status` `ACTIVE` / `PASSED` / `REJECTED` / `CANCELLED`, các bộ đếm. FK `Project`, `DocumentType`, xoá mềm |
 | `SubmissionUser` | Người được giao của văn bản, dùng chung cho QA (18C) và người nhập (Operation Task 9) |
 
 `SubmissionUser`: một dòng cho mỗi `(văn bản, vai trò)`. `Role` lấy từ `RoleConstants` (`Data` hoặc `QA`, ngoài hai giá trị thì `400`).
@@ -111,6 +111,8 @@ làm unique không filter chặn lần giao lại.
 | `333` | `ConstructionErrorQaSubmissionNotSample` | Văn bản không nằm trong mẫu cần chấm |
 | `334` | `ConstructionErrorQaNotAssignee` | Văn bản không được giao QA cho bạn |
 | `335` | `ConstructionErrorQaTicketStatusInvalid` | Phiếu QA không ở trạng thái cho phép thao tác này |
+| `336` | `ConstructionErrorSubmissionInProgressNotDeletable` | Không được xoá văn bản đang sửa hoặc đang QA (18C) |
+| `337` | `ConstructionErrorProjectNotManaged` | Bạn không được phân quản lý dự án / loại văn bản này (18C) |
 
 Key quyền `Function.Construction.Submission.AssignQa` ("Giao QA cho văn bản") đã seed sẵn cho 18C. Admin tự có; Admin gán thêm
 cho Leader.
@@ -121,5 +123,58 @@ Gọi thật trên DB dev, dữ liệu gắn tag `ZZTEST`, xoá sạch sau khi t
 vẫn một dòng, audit cũ / mới; 11 trường hợp sai → `400`; dự án không có → `303`; đặt `SAMPLE` rồi `FULL` cho QA; user không có role
 QA, mode `X` → `400`; user không có → `103`; không quyền → `403`; không token → `401`. Chèn trùng `(SubmissionId, "QA")` thì DB
 báo lỗi unique. `QaSampleSizePolicy` đạt cả 6 trường hợp ở bảng R3. Bộ test Task 18 vẫn đạt 50/50.
+
+## 18C — Phiếu QA
+
+Chặng 1–3 (2026-10-26) xong phần **FULL**; phiếu `SAMPLE` chờ 18D. Mỗi lần giao = 1 `QaTicket` của **đúng 1** QA + 1 dòng `SubmissionUser` Role `QA` / văn bản.
+
+| Endpoint (`api/v1/construction/qa-assignment/...`) | Quyền | Việc |
+|---|---|---|
+| `POST ticket` | `...Submission.AssignQa` | `{ projectId, documentTypeId, qaUserId, items?: [{ box, profileRange? }], count? }`, trả chi tiết phiếu |
+| `GET ticket/paging` | `AssignQa` hoặc `Qa` | Lọc `projectId`, `documentTypeId`, `qaUserId`, `mode`, `status`; mới nhất trước |
+| `GET ticket/{id:int}` | `AssignQa` hoặc `Qa` | Tham số chụp, vòng, số đếm, `passedCount`, `samples` (rỗng với phiếu FULL; trường mẫu `null`) |
+| `POST ticket/{id:int}/cancel` | `AssignQa` | Huỷ phiếu (R7), trả chi tiết phiếu; không thấy phiếu → `327` |
+
+**Giao (R1).** Gửi **đúng một** trong `items` / `count`, sai → `400`. `items`: `box` bắt buộc, `profileRange` bỏ trống = cả hộp, có thì
+chỉ hồ sơ đó trong hộp đó. `count` `1`–`5000`: lấy N văn bản đầu theo `Box`, `ProfileRange`, `Id`.
+- Văn bản phù hợp: chưa xoá, `StatusCheck = 1`, `StatusQa = 0`, chưa có dòng `SubmissionUser` Role `QA`. Không có → `328`, > 5000 → `329`.
+- QA phải có role `QA` (`400`, không tồn tại `103`). Có văn bản mà người nhập (log kiểm tra mới nhất, luật Task 18) là chính QA → `331`.
+- Dự án `DONE` / `EXPIRED`: người thường `316` / `323`; Admin, SuperAdmin giao được (`EnsureEditableProjectAsync`).
+- Trước 18D: QA đang chế độ `SAMPLE` → `400` "Chưa hỗ trợ giao phiếu chế độ SAMPLE".
+- Một transaction: thêm phiếu → `SaveChanges` lấy `Id` → bulk insert dòng giao → audit `Giao phiếu QA` (dữ liệu mới có danh sách
+  `SubmissionIds`). Bảng `Submission` **không** đổi.
+- Hai người giao trùng văn bản cùng lúc: unique `(SubmissionId, Role)` chặn, lỗi SQL `2601` / `2627` → `330`, rollback cả phiếu.
+  Request đến sau khi phiếu kia đã commit thì không còn văn bản phù hợp → `328`.
+
+⚠️ Sắp `Box`, `ProfileRange` theo **chuỗi** (như 5sdb): `"10"` trước `"2"`. Đừng ép kiểu số — thứ tự phải khớp cây Hộp → Hồ sơ.
+
+**Phạm vi (R10).** Admin = role `Admin` hoặc `SuperAdmin`: mọi dự án. Người khác chỉ thao tác trên cặp (dự án, loại văn bản) mình là
+`operation.ProjectMember` Role `Leader`, `IsActive`, chưa gỡ (Construction đọc thẳng bảng này trong `QaTicketRepository`):
+giao ngoài cặp → `337`; danh sách chỉ gồm phiếu của cặp được phân **cộng** phiếu mà mình là QA; xem phiếu không được thấy → `327`
+(không lộ là có phiếu). QA xem phiếu của mình không cần là `ProjectMember`.
+
+**Lọc theo phiếu.** `qaTicketId` ([bộ lọc chung](12-ho-so-kiem-tra.md#bộ-lọc-chung)) kiểm quyền xem phiếu như trên — cửa vào màn chấm.
+
+**Chấm theo phiếu (R2).** `PUT submission/qa` gọi `QaAssignmentDomainService.EnsureReviewableAsync` trước khi chấm. Admin / SuperAdmin
+(`QaAccessPolicy.IsAdmin`) chấm mọi văn bản. Người khác: văn bản không thuộc phiếu nào, phiếu `CANCELLED` hoặc phiếu của QA khác → `334`;
+phiếu `REJECTED` → `332`; phiếu `PASSED` chỉ chấm lại được văn bản `StatusQa = 0` (cần QA lại), còn lại → `334`. Kết quả trả thêm
+`qaTicketId`, `ticketStatus` (`null` khi văn bản không thuộc phiếu).
+
+**Phiếu FULL tự chốt (R5).** Cùng transaction chấm: phiếu `ACTIVE` chế độ FULL không còn văn bản (chưa xoá) `StatusQa ≠ 1` → `PASSED`,
+`ConcludedDate`, audit `Chốt phiếu QA`. Ai chấm Đạt văn bản cuối (cả Admin) cũng chốt. Đổi trạng thái bằng `UPDATE ... WHERE Status =
+'ACTIVE'` nên hai request cùng chốt chỉ một lần thắng. Phiếu đã `PASSED` không mở lại khi văn bản sau đó bị chấm Không đạt hay sửa.
+
+**Sửa sau QA (R9).** Tái kiểm tra văn bản đã QA mà đổi ≥ 1 trường → `StatusQa = 0`, `QaReason = null` (giữ `QaBy` / `QaDate`), log "… cần
+QA lại.", `check` trả thêm `statusQa`; không đổi trường thì giữ nguyên. Import overwrite **không** đổi trạng thái QA (đã bỏ phần import).
+
+**Huỷ (R7).** Dự án `DONE` / `EXPIRED`: người thường `316` / `323`, Admin huỷ được (như giao). Chỉ `ACTIVE` / `REJECTED` → `CANCELLED`
+bằng `UPDATE ... WHERE Status IN (ACTIVE, REJECTED)` (không ghi đè phiếu vừa tự chốt), còn lại `335`. Cùng transaction xoá cứng dòng `QA` của văn bản `StatusQa ≠ 1`
+(`ReleaseNotPassedAsync`, văn bản về "chưa giao", đang bị trả vẫn bị trả) + audit `Huỷ phiếu QA`. Văn bản Đạt **giữ** dòng trỏ phiếu đã
+huỷ: không giao lại được, chấm lại chỉ Admin / SuperAdmin. Lịch sử QA giữ nguyên.
+
+**Chặn xoá (R8).** `DELETE submission`: văn bản `StatusCheck = 2` hoặc thuộc phiếu `ACTIVE` / `REJECTED` → `336` (liệt kê Id) với **mọi**
+người, kể cả SuperAdmin; kiểm sau khi nạp hồ sơ, **trước** `325` (`QaAssignmentDomainService.EnsureDeletableAsync`).
+
+Kiểm thử (DB dev, `ZZTEST`, xoá sạch): chặng 1 **63/63**, chặng 2 **28/28**, chặng 3 **32/32** (huỷ `335` / `316` / `323`, `336` trước `325`).
 
 > **Tiếp:** [19-nhom-nhan-vien.md](19-nhom-nhan-vien.md) — nhóm nhân viên của module Operation: nhóm thuần Data hoặc QA, Leader chỉ thấy nhóm mình.
