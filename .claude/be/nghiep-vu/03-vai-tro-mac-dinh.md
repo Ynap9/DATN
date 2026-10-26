@@ -18,6 +18,24 @@ Hằng số trong `RoleConstants`; `SeedRole` tạo các vai trò còn thiếu k
 Bốn vai trò `Leader`, `Data`, `QA`, `User` chưa có quyền nào sau khi seed. Muốn dùng phải gán quyền bằng API
 `PUT api/auth/role/permission`.
 
+### Quyền Operation gán mặc định (bằng API, không qua seeder)
+
+| Key | Admin | Leader | Data | QA |
+|---|:-:|:-:|:-:|:-:|
+| `Menu.Operation.StaffGroup` + `StaffGroup.Manage` | x | x | | |
+| `ProjectMember.Manage`, `Price.ManageActual` | x | x | | |
+| `Price.ManageCompany`, `BonusPool.View`, các menu `Menu.Operation`, `.ProjectMember`, `.Assignment` | x | | | |
+| `Assignment.Manage`, `Assignment.ViewAllSubmission` | x | x | | |
+| `Assignment.ViewOwn` | x | | x | |
+
+Đã gán trên DB dev ngày 2026-10-26 (Leader id 2, Data id 3, trước đó chưa có quyền nào). Admin tự có **mọi** key qua `SeedRolePermission`, kể cả `ViewOwn` — vô hại vì Admin không giữ phiếu.
+
+⚠️ Bẫy: tick một menu là `SyncChecked` cấp **mọi** con của nó. Tick `Menu.Operation.ProjectMember` cho Leader là Leader có luôn
+`Price.ManageCompany`; tick `Menu.Operation.Assignment` là có `BonusPool.View`. Chỉ tick key `Function` (menu tự bật khi đủ mọi con).
+Leader vì vậy không có key hai menu này — FE phải hiện menu khi có **bất kỳ** key con, đừng đòi key `Menu.*`. QA xem phiếu QA ở API
+`qa-assignment` của Construction (Task 18C), không dùng `ViewOwn`. Leader vẫn bị chặn ở service nếu không phải `ProjectMember`
+vai trò `Leader` của đúng (dự án, loại văn bản) — quyền chỉ mở cửa API.
+
 ## Tài khoản khởi tạo
 
 `SeedUser` tạo khi chưa có:

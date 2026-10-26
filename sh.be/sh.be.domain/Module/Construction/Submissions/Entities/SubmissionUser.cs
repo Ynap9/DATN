@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.Constants.Db;
+using sh.be.shared.Constants.Operation;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
 using System.ComponentModel.DataAnnotations;
@@ -58,6 +60,31 @@ namespace sh.be.domain.Module.Construction.Submissions.Entities
                 CreatedBy = createdBy,
                 CreatedDate = createdDate,
             };
+        }
+
+        public static SubmissionUser CreateEntry(int submissionId, int projectId, int documentTypeId, string userId, int ticketId,
+            string? createdBy, DateTime createdDate)
+        {
+            return Create(submissionId, projectId, documentTypeId, RoleConstants.ROLE_DATA, userId, ticketId, createdBy, createdDate);
+        }
+
+        public bool IncreaseReturnAndShouldRelease(string? modifiedBy, DateTime modifiedDate)
+        {
+            if (Role != RoleConstants.ROLE_DATA)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, $"Chỉ đếm lần bị trả cho vai trò {RoleConstants.ROLE_DATA}");
+            }
+            ReturnCount++;
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
+            return ReturnCount > AssignmentConst.ENTRY_RETURNS_BEFORE_POOL;
+        }
+
+        public void ChangeTicket(int ticketId, string? modifiedBy, DateTime modifiedDate)
+        {
+            TicketId = ticketId;
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
         }
     }
 }
