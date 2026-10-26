@@ -1,9 +1,9 @@
 using sh.be.domain.Module.Auth.Entities;
 using sh.be.domain.Module.Auth.Repositories;
-using sh.be.domain.Module.Auth.Services;
 using sh.be.domain.Module.Construction.QaAssignments.Entities;
 using sh.be.domain.Module.Construction.QaAssignments.Models;
 using sh.be.domain.Module.Construction.QaAssignments.Repositories;
+using sh.be.domain.Module.Construction.Submissions.Entities;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.HttpRequest.Error;
@@ -62,8 +62,7 @@ namespace sh.be.domain.Module.Construction.QaAssignments.Services
 
         public async Task<QaAccess> GetAccessAsync(string userId)
         {
-            var roleNames = await _roleRepository.GetRoleNamesByUserIdAsync(userId);
-            var isAdmin = PermissionGrantPolicy.IsSuperAdmin(roleNames) || roleNames.Contains(RoleConstants.ROLE_ADMIN);
+            var isAdmin = QaAccessPolicy.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(userId));
             List<(int ProjectId, int DocumentTypeId)> managedPairs = isAdmin ? [] : await _qaTicketRepository.GetLeaderPairsAsync(userId);
             return new QaAccess(isAdmin, managedPairs.ToHashSet());
         }
@@ -90,6 +89,35 @@ namespace sh.be.domain.Module.Construction.QaAssignments.Services
                 throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaTicketNotFound);
             }
             return ticket;
+        }
+
+        public async Task<QaTicket?> EnsureReviewableAsync(Submission submission, string userId, bool isAdmin)
+        {
+            var ticket = await _qaTicketRepository.FindBySubmissionAsync(submission.Id);
+            if (isAdmin)
+            {
+                return ticket;
+            }
+            if (ticket == null)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaNotAssignee);
+            }
+            ticket.EnsureReviewableBy(userId, submission.StatusQa);
+            return ticket;
+        }
+
+        public async Task<bool> TryPassFullTicketAsync(QaTicket ticket, string? passedBy, DateTime passedDate)
+        {
+            if (!ticket.IsActiveFull() || await _qaTicketRepository.CountNotPassedAsync(ticket.Id) > 0)
+            {
+                return false;
+            }
+            if (await _qaTicketRepository.TryConcludeAsync(ticket.Id, QaAssignmentConst.TICKET_STATUS_PASSED) == 0)
+            {
+                return false;
+            }
+            ticket.Pass(passedBy, passedDate);
+            return true;
         }
 
         public async Task<List<QaCandidate>> SelectAssignableAsync(int projectId, int documentTypeId, string qaUserId,

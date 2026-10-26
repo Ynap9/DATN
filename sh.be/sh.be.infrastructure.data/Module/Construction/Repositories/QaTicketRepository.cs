@@ -30,9 +30,30 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
             return _shDbContext.QaTickets.FirstOrDefaultAsync(t => t.Id == id);
         }
 
+        public Task<QaTicket?> FindBySubmissionAsync(int submissionId)
+        {
+            return _shDbContext.QaTickets
+                .FirstOrDefaultAsync(t => _shDbContext.SubmissionUsers.Any(u => u.SubmissionId == submissionId && u.Role == RoleConstants.ROLE_QA
+                    && u.TicketId == t.Id));
+        }
+
         public void Add(QaTicket ticket)
         {
             _shDbContext.QaTickets.Add(ticket);
+        }
+
+        public Task<int> CountNotPassedAsync(int ticketId)
+        {
+            return _shDbContext.Submissions
+                .CountAsync(s => s.StatusQa != SubmissionConst.QA_PASSED
+                    && _shDbContext.SubmissionUsers.Any(u => u.SubmissionId == s.Id && u.Role == RoleConstants.ROLE_QA && u.TicketId == ticketId));
+        }
+
+        public Task<int> TryConcludeAsync(int ticketId, string newStatus)
+        {
+            return _shDbContext.QaTickets
+                .Where(t => t.Id == ticketId && t.Status == QaAssignmentConst.TICKET_STATUS_ACTIVE)
+                .ExecuteUpdateAsync(s => s.SetProperty(t => t.Status, newStatus));
         }
 
         public Task AddQaAssignmentsAsync(IList<SubmissionUser> qaAssignments)

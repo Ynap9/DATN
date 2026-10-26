@@ -7,7 +7,10 @@ namespace sh.be.domain.Module.Construction.QaAssignments.Repositories
     public interface IQaTicketRepository
     {
         Task<QaTicket?> FindByIdAsync(int id);
+        Task<QaTicket?> FindBySubmissionAsync(int submissionId);
         void Add(QaTicket ticket);
+        Task<int> CountNotPassedAsync(int ticketId);
+        Task<int> TryConcludeAsync(int ticketId, string newStatus);
         Task AddQaAssignmentsAsync(IList<SubmissionUser> qaAssignments);
         Task<List<QaCandidate>> GetCandidatesAsync(int projectId, int documentTypeId);
         Task<bool> AnyEnteredByAsync(IReadOnlyCollection<int> submissionIds, string userId);

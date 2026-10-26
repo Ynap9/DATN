@@ -314,6 +314,7 @@ namespace sh.be.applications.Module.Construction.Implements
             {
                 SubmissionId = dto.Id,
                 StatusCheck = submission.StatusCheck,
+                StatusQa = submission.StatusQa,
                 ChangedDataCount = plan.ChangedDataCount,
                 LogId = log.Id,
             };
@@ -359,8 +360,9 @@ namespace sh.be.applications.Module.Construction.Implements
             submission.EnsureBelongsTo(dto.ProjectId, dto.DocumentTypeId);
 
             var currentUserId = getCurrentUserId();
-            var isSuperAdmin = PermissionGrantPolicy.IsSuperAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
-            var project = await _submissionDomainService.EnsureEditableProjectAsync(dto.ProjectId, isSuperAdmin);
+            var roleNames = await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId);
+            var project = await _submissionDomainService.EnsureEditableProjectAsync(dto.ProjectId, PermissionGrantPolicy.IsSuperAdmin(roleNames));
+            var qaTicket = await _qaAssignmentDomainService.EnsureReviewableAsync(submission, currentUserId, QaAccessPolicy.IsAdmin(roleNames));
             var mappings = await _submissionDomainService.GetImportMappingsAsync(dto.ProjectId, dto.DocumentTypeId);
             var userName = (await _userRepository.FindByIdAsync(currentUserId))?.UserName ?? currentUserId;
 
@@ -382,6 +384,14 @@ namespace sh.be.applications.Module.Construction.Implements
                     new { qaLog.NewStatusCheck, qaLog.NewStatusQa, qaLog.Reason, WrongDocumentFieldIds = wrongFields.Select(field => field.DocumentFieldId) });
                 await _unitOfWork.SaveChangesAsync();
 
+                if (qaTicket != null && await _qaAssignmentDomainService.TryPassFullTicketAsync(qaTicket, currentUserId, now))
+                {
+                    AddAuditLog(AuditLogConstants.ACTION_QA_TICKET_CONCLUDE, AuditLogConstants.ACTION_TYPE_UPDATE,
+                        $"Phiếu #{qaTicket.Id} FULL ĐẠT ({qaTicket.DocumentCount} văn bản) của dự án {project.Name}",
+                        new { qaTicket.Id, Status = QaAssignmentConst.TICKET_STATUS_ACTIVE }, new { qaTicket.Id, qaTicket.Status, qaTicket.ConcludedDate });
+                    await _unitOfWork.SaveChangesAsync();
+                }
+
                 await transaction.CommitAsync();
 
                 return new ViewQaResultDto
@@ -392,6 +402,8 @@ namespace sh.be.applications.Module.Construction.Implements
                     QaReason = submission.QaReason,
                     WrongDocumentFieldIds = wrongFields.Select(field => field.DocumentFieldId).ToList(),
                     QaLogId = qaLog.Id,
+                    QaTicketId = qaTicket?.Id,
+                    TicketStatus = qaTicket?.Status,
                 };
             }
             catch (Exception ex)

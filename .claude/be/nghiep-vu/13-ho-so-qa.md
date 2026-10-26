@@ -22,7 +22,8 @@ thêm cột `int NOT NULL` default `0` nên hồ sơ có từ trước là "Chư
 |---|---|---|---|
 | Import thêm mới | – | 0 / 0 | |
 | Kiểm tra | 0 / 0 | 1 / 0 | |
-| Tái kiểm tra | 1 / x | 1 / x | **Không** đổi QA, kể cả có sửa ô |
+| Tái kiểm tra không đổi ô nào | 1 / x | 1 / x | |
+| Tái kiểm tra có sửa ô, đã QA | 1 / 1 | 1 / 0 | Cần QA lại (18C R9): xoá `QaReason`, giữ `QaBy` / `QaDate` |
 | QA Đạt | 1 / 0, 1 | 1 / 1 | Xoá `QaReason`; lý do gửi kèm bị bỏ qua |
 | QA Không đạt | 1 / 0, 1 | 2 / 2 | Lưu `QaReason` đã trim |
 | Kiểm tra lại hồ sơ bị trả lại | 2 / 2 | 1 / 0 | Xoá `QaReason` (còn trong lịch sử QA), giữ `QaBy` / `QaDate` |
@@ -42,7 +43,7 @@ Thống kê QA theo trường, theo người nhập và dòng thời gian một 
 |---|---|---|
 | `GET qa/paging` | `Function.Construction.Submission.View` | Danh sách cho QA + `customData` `{ totalNotReviewed, totalPassed, totalFailed }` |
 | `GET {id:int}/qa` | `...Submission.View` | Chi tiết cho QA: thông tin file, `fields`, QA, người kiểm gần nhất, vị trí |
-| `PUT qa` | `Function.Construction.Submission.Qa` | Chấm QA: `{ id, projectId, documentTypeId, result, reason, wrongDocumentFieldIds }` |
+| `PUT qa` | `Function.Construction.Submission.Qa` | Chấm QA: `{ id, projectId, documentTypeId, result, reason, wrongDocumentFieldIds }`. Chỉ QA của phiếu chứa văn bản, hoặc Admin / SuperAdmin (`334` / `332`, [18C](18-qa-cham-mau.md#18c--phiếu-qa)) |
 | `GET {id:int}/qa-logs` | `...Submission.View` | Lịch sử QA, mới nhất trước |
 
 Đi Sau / Trước giữa các hồ sơ chờ QA: dùng `{id}/next`, `{id}/previous` với `statusCheck=1&statusQa=0`; hai API này trả chi tiết thường
@@ -85,7 +86,8 @@ Ngày 2026-10-21, gọi API thật trên dữ liệu `.claude/be/db/test-data-ho
 - Không token `401`; `qa/paging` chờ QA đúng 4 hồ sơ `CHECKED`, `customData` đúng trước và sau khi chấm; `pageSize = 0` → `400`.
 - `320` (chưa kiểm tra, đang trả lại); `result` 0 / 3 → `400`; thiếu lý do / toàn khoảng trắng → `321`; lý do 1001 ký tự → `400`; các lỗi không ghi gì.
 - Đạt → 1/1, `QaReason` null, 1 QaLog + 1 AuditLog; Không đạt → 2/2, lý do đã trim; Đạt → Không đạt được, log `OldStatusQa = 1`.
-- `check` hồ sơ trả lại → 1/0, mô tả "kiểm tra lại hồ sơ bị trả lại", `QaBy` giữ; tái kiểm tra hồ sơ đã Đạt → `StatusQa` vẫn 1.
+- `check` hồ sơ trả lại → 1/0, mô tả "kiểm tra lại hồ sơ bị trả lại", `QaBy` giữ; tái kiểm tra hồ sơ đã Đạt → `StatusQa` vẫn 1 (luật cũ;
+  từ 18C chặng 2 chỉ giữ khi không đổi ô nào).
 - `319`, `305`; lọc `statusQa` 0 / 1 / 2 khớp `count.total`; `count` có `totalReturned`; `next` / `previous` với `statusQa=0`, hết → `317`.
 - `{id}/qa` có người kiểm, người QA, 4 trường, `position` / `totalItems`; `qa-logs` mới nhất trước, `totalItems` thật.
 - Thiếu quyền `Qa` → `403` khi `PUT`, quyền `View` vẫn đọc được; dự án `DONE`: người thường `316`, SuperAdmin chấm được.

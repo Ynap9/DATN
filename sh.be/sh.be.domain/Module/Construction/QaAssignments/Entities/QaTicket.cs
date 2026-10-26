@@ -118,6 +118,27 @@ namespace sh.be.domain.Module.Construction.QaAssignments.Entities
             return Status is QaAssignmentConst.TICKET_STATUS_ACTIVE or QaAssignmentConst.TICKET_STATUS_REJECTED;
         }
 
+        public bool IsActiveFull()
+        {
+            return Mode == QaAssignmentConst.MODE_FULL && Status == QaAssignmentConst.TICKET_STATUS_ACTIVE;
+        }
+
+        public void EnsureReviewableBy(string userId, int submissionStatusQa)
+        {
+            if (Status == QaAssignmentConst.TICKET_STATUS_CANCELLED || !IsAssignedTo(userId))
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaNotAssignee);
+            }
+            if (Status == QaAssignmentConst.TICKET_STATUS_REJECTED)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaSubmissionLocked);
+            }
+            if (Status == QaAssignmentConst.TICKET_STATUS_PASSED && submissionStatusQa != SubmissionConst.QA_NOT_REVIEWED)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaNotAssignee);
+            }
+        }
+
         public void Pass(string? modifiedBy, DateTime concludedDate)
         {
             if (Status != QaAssignmentConst.TICKET_STATUS_ACTIVE)

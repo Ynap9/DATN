@@ -83,7 +83,7 @@ MaxFailed = floor(n × ThresholdPercent / 100)
 |---|---|
 | `QaSamplingConfig` | Cấu hình R2, FK `Project`, xoá mềm |
 | `QaReviewerMode` | Chế độ R1, FK `Project`, xoá mềm |
-| `QaTicket` | Phiếu QA, tạo sẵn cho 18C (chỉ có cột và `Create`): chụp `Mode`, `SampleSize`, `MaxFailed`, `ThresholdPercent`, `StrategyCode` / `Params`, `Seed`, `StopEarlyOnReject` lúc giao; `Round` từ 1, `Status` `ACTIVE` / `PASSED` / `REJECTED` / `CANCELLED`, các bộ đếm. FK `Project`, `DocumentType`, xoá mềm |
+| `QaTicket` | Phiếu QA (18C): chụp `Mode`, `SampleSize`, `MaxFailed`, `ThresholdPercent`, `StrategyCode` / `Params`, `Seed`, `StopEarlyOnReject` lúc giao; `Round` từ 1, `Status` `ACTIVE` / `PASSED` / `REJECTED` / `CANCELLED`, các bộ đếm. FK `Project`, `DocumentType`, xoá mềm |
 | `SubmissionUser` | Người được giao của văn bản, dùng chung cho QA (18C) và người nhập (Operation Task 9) |
 
 `SubmissionUser`: một dòng cho mỗi `(văn bản, vai trò)`. `Role` lấy từ `RoleConstants` (`Data` hoặc `QA`, ngoài hai giá trị thì `400`).
@@ -126,8 +126,8 @@ báo lỗi unique. `QaSampleSizePolicy` đạt cả 6 trường hợp ở bảng
 
 ## 18C — Phiếu QA
 
-Chặng 1 (2026-10-26): giao phiếu **FULL**, danh sách, chi tiết, lọc hồ sơ theo phiếu. Chấm theo phiếu, tự chốt, huỷ, chặn xoá làm ở
-chặng 2–3; phiếu `SAMPLE` chờ 18D. Mỗi lần giao = 1 `QaTicket` của **đúng 1** QA + 1 dòng `SubmissionUser` Role `QA` cho từng văn bản.
+Chặng 1 (2026-10-26): giao phiếu **FULL**, danh sách, chi tiết, lọc theo phiếu. Chặng 2: chấm theo phiếu, tự chốt, sửa sau QA.
+Huỷ, chặn xoá ở chặng 3; phiếu `SAMPLE` chờ 18D. Mỗi lần giao = 1 `QaTicket` của **đúng 1** QA + 1 dòng `SubmissionUser` Role `QA` cho từng văn bản.
 
 | Endpoint (`api/v1/construction/qa-assignment/...`) | Quyền | Việc |
 |---|---|---|
@@ -157,8 +157,20 @@ giao ngoài cặp → `337`; danh sách chỉ gồm phiếu của cặp được
 **Lọc hồ sơ theo phiếu.** Bộ lọc chung có `qaTicketId` ([12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md#bộ-lọc-chung)); kiểm quyền xem
 phiếu như trên, không thêm key quyền. Đây là cửa vào màn chấm của phiếu FULL.
 
-Kiểm thử chặng 1 (DB dev, `ZZTEST`, xoá sạch sau test): **63/63 đạt** — giao theo hộp / hồ sơ / số lượng, các lỗi `400` / `103` / `328` /
-`331`, `SAMPLE` → `400`, giao trùng đồng thời (một lần ra `330`, một lần `328`), quyền xem, phạm vi Leader (`337`, `327`, `316`,
-`IsActive = 0`, đã gỡ), lọc paging / count / next / previous / qa-paging / tree theo phiếu.
+**Chấm theo phiếu (R2).** `PUT submission/qa` gọi `QaAssignmentDomainService.EnsureReviewableAsync` trước khi chấm. Admin / SuperAdmin
+(`QaAccessPolicy.IsAdmin`) chấm mọi văn bản. Người khác: văn bản không thuộc phiếu nào, phiếu `CANCELLED` hoặc phiếu của QA khác → `334`;
+phiếu `REJECTED` → `332`; phiếu `PASSED` chỉ chấm lại được văn bản `StatusQa = 0` (cần QA lại), còn lại → `334`. Kết quả trả thêm
+`qaTicketId`, `ticketStatus` (`null` khi văn bản không thuộc phiếu).
+
+**Phiếu FULL tự chốt (R5).** Cùng transaction chấm: phiếu `ACTIVE` chế độ FULL không còn văn bản (chưa xoá) `StatusQa ≠ 1` → `PASSED`,
+`ConcludedDate`, audit `Chốt phiếu QA`. Ai chấm Đạt văn bản cuối (cả Admin) cũng chốt. Đổi trạng thái bằng `UPDATE ... WHERE Status =
+'ACTIVE'` nên hai request cùng chốt chỉ một lần thắng. Phiếu đã `PASSED` không mở lại khi văn bản sau đó bị chấm Không đạt hay sửa.
+
+**Sửa sau QA (R9).** Tái kiểm tra văn bản đã QA (`StatusQa ≠ 0`) mà đổi ≥ 1 trường → `StatusQa = 0`, `QaReason = null` (giữ `QaBy` /
+`QaDate`), log "… sửa N trường sau QA — cần QA lại.", kết quả `check` trả thêm `statusQa`. Không đổi trường thì giữ nguyên. Văn bản chưa
+thuộc phiếu quay về `StatusQa = 0` nên giao phiếu mới được. Import overwrite **không** đổi trạng thái QA (đã chốt bỏ phần import của R9).
+
+Kiểm thử (DB dev, `ZZTEST`, xoá sạch sau test): chặng 1 **63/63** — giao hộp / hồ sơ / số lượng, lỗi `400` / `103` / `328` / `331`,
+giao trùng đồng thời (`330` / `328`), phạm vi Leader, lọc theo phiếu. Chặng 2 **28/28** — `334` các nhánh, Admin miễn, tự chốt, R9.
 
 > **Tiếp:** [19-nhom-nhan-vien.md](19-nhom-nhan-vien.md) — nhóm nhân viên của module Operation: nhóm thuần Data hoặc QA, Leader chỉ thấy nhóm mình.
