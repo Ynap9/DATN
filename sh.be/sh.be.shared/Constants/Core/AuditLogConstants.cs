@@ -52,6 +52,9 @@ namespace sh.be.shared.Constants.Core
         public const string ACTION_SUBMISSION_QA = "QA hồ sơ";
         public const string ACTION_SUBMISSION_DELETE = "Xóa hồ sơ";
 
+        public const string ACTION_QA_SAMPLING_CONFIG_UPDATE = "Cập nhật cấu hình chấm mẫu";
+        public const string ACTION_QA_REVIEWER_MODE_UPDATE = "Đặt chế độ chấm QA";
+
         public const string ACTION_TEMPLATE_CREATE = "Tạo mẫu chữ ký";
         public const string ACTION_TEMPLATE_UPDATE = "Cập nhật mẫu chữ ký";
         public const string ACTION_TEMPLATE_UPDATE_CONFIG = "Cập nhật cấu hình mẫu chữ ký";

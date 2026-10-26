@@ -70,6 +70,7 @@ namespace sh.be.infrastructure.data.Persistence.Seeder
             Permission.Create(PermissionConstants.FUNCTION_SUBMISSION_QA_STATS, "Xem thống kê QA", PermissionConstants.MENU_SUBMISSION, PermissionConstants.MODULE_CONSTRUCTION, null),
             Permission.Create(PermissionConstants.FUNCTION_SUBMISSION_DELETE, "Xoá hồ sơ", PermissionConstants.MENU_SUBMISSION, PermissionConstants.MODULE_CONSTRUCTION, null),
             Permission.Create(PermissionConstants.FUNCTION_SUBMISSION_EXPORT, "Xuất Excel hồ sơ", PermissionConstants.MENU_SUBMISSION, PermissionConstants.MODULE_CONSTRUCTION, null),
+            Permission.Create(PermissionConstants.FUNCTION_SUBMISSION_ASSIGN_QA, "Giao QA cho văn bản", PermissionConstants.MENU_SUBMISSION, PermissionConstants.MODULE_CONSTRUCTION, null),
 
             Permission.Create(PermissionConstants.MENU_DIGITAL_SIGNATURE, "Menu ký số", null, PermissionConstants.MODULE_DIGITAL_SIGNATURE, null),
 

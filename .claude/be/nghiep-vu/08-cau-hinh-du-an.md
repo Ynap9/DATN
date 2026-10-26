@@ -1,6 +1,6 @@
 # Cấu hình dự án (Construction)
 
-> **Phần 8/17** · trước: [07-du-an.md](07-du-an.md) · mục lục: [README.md](README.md)
+> **Phần 8/18** · trước: [07-du-an.md](07-du-an.md) · mục lục: [README.md](README.md)
 
 Bảng key-value `construction.ProjectConfig` (`Name`, `Value`, `Description`, cột tạo / sửa / xoá mềm). Hiện dùng để lưu tài khoản
 Google mà hệ thống dùng tạo, đổi tên, xoá Google Sheet của dự án ([07-du-an.md](07-du-an.md)).
