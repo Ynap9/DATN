@@ -137,6 +137,13 @@ namespace sh.be.shared.HttpRequest.Error
             { ErrorCodes.OperationErrorLeaderForbiddenTarget, "Leader chỉ thao tác trên nhân viên mình quản lý" },
             { ErrorCodes.OperationErrorPriceDefaultMissing, "Dự án chưa có đơn giá mặc định cho vai trò này, liên hệ Admin" },
             { ErrorCodes.OperationErrorLeaderNotMember, "Leader quản lý phải là Leader của cùng dự án / loại văn bản" },
+            { ErrorCodes.AiErrorProviderNotFound, "Nhà cung cấp AI không tồn tại" },
+            { ErrorCodes.AiErrorProviderCodeExists, "Mã nhà cung cấp AI đã tồn tại" },
+            { ErrorCodes.AiErrorProviderHasModels, "Nhà cung cấp AI còn model, hãy xoá model trước" },
+            { ErrorCodes.AiErrorProviderProtocolLocked, "Không đổi được giao thức khi nhà cung cấp AI đã có model" },
+            { ErrorCodes.AiErrorProviderInUse, "Nhà cung cấp AI đang được dự án sử dụng, không tắt được" },
+            { ErrorCodes.AiErrorProviderApiKeyMissing, "Nhà cung cấp AI chưa có API key" },
+            { ErrorCodes.AiErrorProviderApiKeyUnreadable, "API key không giải mã được, hãy nhập lại key" },
         };
         public static string GetMessage(int code)
         {

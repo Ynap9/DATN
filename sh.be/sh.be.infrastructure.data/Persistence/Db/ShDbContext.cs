@@ -1,6 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.Identity.Client;
+using sh.be.domain.Module.Ai.Models.Entities;
+using sh.be.domain.Module.Ai.ProjectConfigs.Entities;
+using sh.be.domain.Module.Ai.Prompts.Entities;
+using sh.be.domain.Module.Ai.Providers.Entities;
 using sh.be.domain.Module.Auth.Entities;
 using sh.be.domain.Module.Core.Entities;
 using sh.be.domain.Module.Construction.DocumentFields.Entities;
@@ -13,6 +17,7 @@ using sh.be.domain.Module.Operation.Assignments.Entities;
 using sh.be.domain.Module.Operation.ProjectMembers.Entities;
 using sh.be.domain.Module.Operation.StaffGroups.Entities;
 using sh.be.domain.Module.Packaging.Entities;
+using sh.be.shared.Constants.Ai;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.Constants.DigitalSignature;
 using System;
@@ -63,6 +68,11 @@ namespace sh.be.infrastructure.data.Persistence.Db
         public DbSet<ProjectMemberPrice> ProjectMemberPrices { get; set; }
         public DbSet<AssignmentTicket> AssignmentTickets { get; set; }
         public DbSet<AssignmentTicketItem> AssignmentTicketItems { get; set; }
+        public DbSet<AiProvider> AiProviders { get; set; }
+        public DbSet<AiModel> AiModels { get; set; }
+        public DbSet<PromptTemplate> PromptTemplates { get; set; }
+        public DbSet<PromptFieldConfig> PromptFieldConfigs { get; set; }
+        public DbSet<ProjectAiConfig> ProjectAiConfigs { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.UseOpenIddict();
@@ -352,6 +362,84 @@ namespace sh.be.infrastructure.data.Persistence.Db
                 entity.HasOne<AssignmentTicket>()
                     .WithMany()
                     .HasForeignKey(e => e.AssignmentTicketId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<AiProvider>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.HasIndex([nameof(AiProvider.Code)], AiProvider.UniqueCodeIndexName)
+                    .HasFilter("[Deleted] = 0");
+            });
+            modelBuilder.Entity<AiModel>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.HasIndex([nameof(AiModel.Code)], AiModel.UniqueCodeIndexName)
+                    .HasFilter("[Deleted] = 0");
+                entity.HasOne<AiProvider>()
+                    .WithMany()
+                    .HasForeignKey(e => e.ProviderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<PromptTemplate>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.HasIndex([nameof(PromptTemplate.DocumentTypeId)], PromptTemplate.UniquePublishedIndexName)
+                    .HasFilter($"[Status] = '{PromptTemplateConst.STATUS_PUBLISHED}' AND [Deleted] = 0");
+                entity.HasOne<DocumentType>()
+                    .WithMany()
+                    .HasForeignKey(e => e.DocumentTypeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<PromptFieldConfig>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.HasIndex([nameof(PromptFieldConfig.PromptTemplateId), nameof(PromptFieldConfig.DocumentFieldId)], PromptFieldConfig.UniqueFieldIndexName)
+                    .HasFilter("[Deleted] = 0");
+                entity.HasIndex([nameof(PromptFieldConfig.PromptTemplateId), nameof(PromptFieldConfig.OutputKey)], PromptFieldConfig.UniqueOutputKeyIndexName)
+                    .HasFilter("[Deleted] = 0");
+                entity.HasOne<PromptTemplate>()
+                    .WithMany()
+                    .HasForeignKey(e => e.PromptTemplateId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<DocumentField>()
+                    .WithMany()
+                    .HasForeignKey(e => e.DocumentFieldId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<ProjectAiConfig>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.HasIndex([nameof(ProjectAiConfig.ProjectId), nameof(ProjectAiConfig.DocumentTypeId)], ProjectAiConfig.UniqueProjectDocumentTypeIndexName)
+                    .HasFilter("[Deleted] = 0");
+                entity.HasOne<Project>()
+                    .WithMany()
+                    .HasForeignKey(e => e.ProjectId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<DocumentType>()
+                    .WithMany()
+                    .HasForeignKey(e => e.DocumentTypeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<AiModel>()
+                    .WithMany()
+                    .HasForeignKey(e => e.PrimaryModelId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<AiModel>()
+                    .WithMany()
+                    .HasForeignKey(e => e.FallbackModelId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<PromptTemplate>()
+                    .WithMany()
+                    .HasForeignKey(e => e.PromptTemplateId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<RolePermission>()
