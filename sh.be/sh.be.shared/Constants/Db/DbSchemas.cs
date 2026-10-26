@@ -17,6 +17,7 @@ namespace sh.be.shared.Constants.Db
         public const string DigitalSignature = "digitalsignature";
         public const string Packaging = "packaging";
         public const string Operation = "operation";
+        public const string Ai = "ai";
         public const string Hangfire = "hangfire";
     }
 }

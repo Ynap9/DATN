@@ -1,6 +1,6 @@
 # Nhóm nhân viên (Operation)
 
-> **Phần 19/19** · trước: [18-qa-cham-mau.md](18-qa-cham-mau.md) · mục lục: [README.md](README.md)
+> **Phần 19/20** · trước: [18-qa-cham-mau.md](18-qa-cham-mau.md) · mục lục: [README.md](README.md)
 
 Leader hay thêm cả tổ 5–20 người vào dự án mới. Nhóm (`StaffGroup` + `StaffGroupMember`) là công cụ chọn nhanh cho Task 11;
 nhóm **không** dùng để tính tiền hay giao phiếu. Task 10, 2026-10-26. Plan: [../plans/van-hanh/README.md](../plans/van-hanh/README.md).
@@ -76,3 +76,5 @@ SMTP), xoá sạch sau khi test: **50/50 đạt** — đủ các ca ở mục 10
 DB dev trước khi merge không có user nào giữ cả `Data` và `QA`.
 
 ⚠️ Bẫy khi viết script kiểm thử PowerShell: biến không phân biệt hoa thường — `$LA` (userId) đè `$la` (token) làm mọi lời gọi thành 401.
+
+> **Tiếp:** [20-ai-nha-cung-cap.md](20-ai-nha-cung-cap.md) — module Ai: nhà cung cấp AI và bảo mật API key.

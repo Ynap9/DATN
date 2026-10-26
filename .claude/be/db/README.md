@@ -28,3 +28,4 @@ sqlcmd -C -I -f 65001 -S 127.0.0.1,14330 -U sa -P <mật khẩu> -d SO_HOA_DB -i
 ```
 
 ⚠️ Thiếu `-f 65001` thì `sqlcmd` đọc file theo bảng mã ANSI, tiếng Việt lưu vào DB bị lỗi font.
+⚠️ Vừa `migrations add` xong mà chạy `database update` / `has-pending-model-changes` với `--no-build` thì DLL chưa có migration mới, EF báo "pending changes" sai. Build lại trước rồi mới dùng `--no-build`.

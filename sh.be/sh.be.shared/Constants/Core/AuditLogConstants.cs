@@ -6,6 +6,7 @@ namespace sh.be.shared.Constants.Core
         public const string ACTION_TYPE_UPDATE = "Update";
         public const string ACTION_TYPE_DELETE = "Delete";
         public const string ACTION_TYPE_LOGIN = "Login";
+        public const string ACTION_TYPE_EXPORT = "Export";
 
         public const string ACTION_LOGIN = "Đăng nhập";
         public const string ACTION_LOGIN_FAILED = "Đăng nhập thất bại";
@@ -89,6 +90,12 @@ namespace sh.be.shared.Constants.Core
         public const string ACTION_ASSIGNMENT_REVOKE = "Thu hồi phiếu";
         public const string ACTION_ASSIGNMENT_TRANSFER = "Chuyển phiếu";
         public const string ACTION_ASSIGNMENT_RELEASE_TO_POOL = "Trả văn bản về pool";
+
+        public const string ACTION_AI_PROVIDER_CREATE = "Tạo nhà cung cấp AI";
+        public const string ACTION_AI_PROVIDER_UPDATE = "Cập nhật nhà cung cấp AI";
+        public const string ACTION_AI_PROVIDER_DELETE = "Xóa nhà cung cấp AI";
+        public const string ACTION_AI_PROVIDER_API_KEY = "Cập nhật API key nhà cung cấp AI";
+        public const string ACTION_AI_PROVIDER_API_KEY_DOWNLOAD = "Tải API key nhà cung cấp AI";
 
         public const string ACTION_SEED_ROLE ="Khởi tạo vai trò mặc định";
         public const string ACTION_SEED_PERMISSION = "Đồng bộ danh sách quyền";
