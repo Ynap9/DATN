@@ -194,6 +194,38 @@ namespace sh.be.applications.Module.Construction.Implements
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaTicketNotFound);
         }
 
+        public async Task<FindQaTicketByIdDto> CancelTicket(int id)
+        {
+            _logger.LogInformation($"{nameof(CancelTicket)}, id={id}");
+            var currentUserId = getCurrentUserId();
+            var access = await _qaAssignmentDomainService.GetAccessAsync(currentUserId);
+            var ticket = await _qaAssignmentDomainService.EnsureVisibleTicketAsync(id, currentUserId, access);
+            var project = await _submissionDomainService.EnsureEditableProjectAsync(ticket.ProjectId, access.IsAdmin);
+            var oldStatus = ticket.Status;
+
+            await using var transaction = await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                await _qaAssignmentDomainService.CancelTicketAsync(ticket, currentUserId, GetVietnamTime());
+                var releasedCount = await _qaTicketRepository.ReleaseNotPassedAsync(ticket.Id);
+                AddAuditLog(AuditLogConstants.ACTION_QA_TICKET_CANCEL, AuditLogConstants.ACTION_TYPE_UPDATE,
+                    $"Huỷ phiếu #{ticket.Id} (dự án {project.Name}), trả {releasedCount} văn bản chưa QA Đạt về chưa giao",
+                    new { ticket.Id, Status = oldStatus }, new { ticket.Id, ticket.Status, ReleasedCount = releasedCount });
+                await _unitOfWork.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{nameof(CancelTicket)}, id={id}");
+                await transaction.RollbackAsync();
+                throw;
+            }
+
+            return await _qaAssignmentQuery.FindTicketById(ticket.Id)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaTicketNotFound);
+        }
+
         private static object ToAuditData(QaSamplingConfig config)
         {
             return new

@@ -512,7 +512,9 @@ namespace sh.be.applications.Module.Construction.Implements
             try
             {
                 await _submissionDomainService.LockImportAsync(dto.ProjectId, dto.DocumentTypeId);
-                var submissions = await _submissionDomainService.EnsureSubmissionsDeletableAsync(dto.ProjectId, dto.DocumentTypeId, dto.Ids, isSuperAdmin);
+                var submissions = await _submissionDomainService.GetSubmissionsToDeleteAsync(dto.ProjectId, dto.DocumentTypeId, dto.Ids);
+                await _qaAssignmentDomainService.EnsureDeletableAsync(submissions);
+                _submissionDomainService.EnsureCheckedDeletable(submissions, isSuperAdmin);
                 foreach (var submission in submissions)
                 {
                     submission.Delete(currentUserId, now);

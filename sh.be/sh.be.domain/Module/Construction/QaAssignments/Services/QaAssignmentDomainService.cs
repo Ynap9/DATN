@@ -82,9 +82,14 @@ namespace sh.be.domain.Module.Construction.QaAssignments.Services
 
         public async Task<QaTicket> EnsureVisibleTicketAsync(int ticketId, string userId)
         {
+            return await EnsureVisibleTicketAsync(ticketId, userId, await GetAccessAsync(userId));
+        }
+
+        public async Task<QaTicket> EnsureVisibleTicketAsync(int ticketId, string userId, QaAccess access)
+        {
             var ticket = await _qaTicketRepository.FindByIdAsync(ticketId)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaTicketNotFound);
-            if (!CanSeeTicket(await GetAccessAsync(userId), ticket, userId))
+            if (!CanSeeTicket(access, ticket, userId))
             {
                 throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaTicketNotFound);
             }
@@ -118,6 +123,31 @@ namespace sh.be.domain.Module.Construction.QaAssignments.Services
             }
             ticket.Pass(passedBy, passedDate);
             return true;
+        }
+
+        public async Task CancelTicketAsync(QaTicket ticket, string? cancelledBy, DateTime cancelledDate)
+        {
+            ticket.Cancel(cancelledBy, cancelledDate);
+            if (await _qaTicketRepository.TryCancelAsync(ticket.Id) == 0)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaTicketStatusInvalid);
+            }
+        }
+
+        public async Task EnsureDeletableAsync(IReadOnlyCollection<Submission> submissions)
+        {
+            var inQaIds = await _qaTicketRepository.GetIdsInOpenTicketAsync(submissions.Select(submission => submission.Id).ToList());
+            var inProgressIds = submissions
+                .Where(submission => submission.StatusCheck == SubmissionConst.RETURNED)
+                .Select(submission => submission.Id)
+                .Union(inQaIds)
+                .Order()
+                .ToList();
+            if (inProgressIds.Count > 0)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionInProgressNotDeletable,
+                    $"Không được xoá văn bản đang sửa hoặc đang QA: Id = {string.Join(", ", inProgressIds)}");
+            }
         }
 
         public async Task<List<QaCandidate>> SelectAssignableAsync(int projectId, int documentTypeId, string qaUserId,

@@ -128,5 +128,20 @@ namespace sh.be.api.Controllers.Module.Construction
                 return OkException(ex);
             }
         }
+
+        [HttpPost("ticket/{id:int}/cancel")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_ASSIGN_QA)]
+        public async Task<ApiResponse> CancelTicket([FromRoute] int id)
+        {
+            try
+            {
+                var data = await _qaAssignmentService.CancelTicket(id);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
     }
 }

@@ -12,5 +12,6 @@ namespace sh.be.applications.Module.Construction.Interfaces.Services
         Task<FindQaTicketByIdDto> CreateTicket(CreateQaTicketDto dto);
         Task<BaseResponsePagingDto<GetListQaTicketDto>> FindTicketPaging(FindPagingQaTicketDto dto);
         Task<FindQaTicketByIdDto> FindTicketById(int id);
+        Task<FindQaTicketByIdDto> CancelTicket(int id);
     }
 }

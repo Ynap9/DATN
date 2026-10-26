@@ -11,6 +11,9 @@ namespace sh.be.domain.Module.Construction.QaAssignments.Repositories
         void Add(QaTicket ticket);
         Task<int> CountNotPassedAsync(int ticketId);
         Task<int> TryConcludeAsync(int ticketId, string newStatus);
+        Task<int> TryCancelAsync(int ticketId);
+        Task<int> ReleaseNotPassedAsync(int ticketId);
+        Task<List<int>> GetIdsInOpenTicketAsync(IReadOnlyCollection<int> submissionIds);
         Task AddQaAssignmentsAsync(IList<SubmissionUser> qaAssignments);
         Task<List<QaCandidate>> GetCandidatesAsync(int projectId, int documentTypeId);
         Task<bool> AnyEnteredByAsync(IReadOnlyCollection<int> submissionIds, string userId);

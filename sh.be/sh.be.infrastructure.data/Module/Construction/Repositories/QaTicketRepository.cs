@@ -56,6 +56,33 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
                 .ExecuteUpdateAsync(s => s.SetProperty(t => t.Status, newStatus));
         }
 
+        public Task<int> TryCancelAsync(int ticketId)
+        {
+            return _shDbContext.QaTickets
+                .Where(t => t.Id == ticketId
+                    && (t.Status == QaAssignmentConst.TICKET_STATUS_ACTIVE || t.Status == QaAssignmentConst.TICKET_STATUS_REJECTED))
+                .ExecuteUpdateAsync(s => s.SetProperty(t => t.Status, QaAssignmentConst.TICKET_STATUS_CANCELLED));
+        }
+
+        public Task<int> ReleaseNotPassedAsync(int ticketId)
+        {
+            return _shDbContext.SubmissionUsers
+                .Where(u => u.TicketId == ticketId && u.Role == RoleConstants.ROLE_QA
+                    && _shDbContext.Submissions.Any(s => s.Id == u.SubmissionId && s.StatusQa != SubmissionConst.QA_PASSED))
+                .ExecuteDeleteAsync();
+        }
+
+        public Task<List<int>> GetIdsInOpenTicketAsync(IReadOnlyCollection<int> submissionIds)
+        {
+            return _shDbContext.SubmissionUsers
+                .AsNoTracking()
+                .Where(u => submissionIds.Contains(u.SubmissionId) && u.Role == RoleConstants.ROLE_QA
+                    && _shDbContext.QaTickets.Any(t => t.Id == u.TicketId
+                        && (t.Status == QaAssignmentConst.TICKET_STATUS_ACTIVE || t.Status == QaAssignmentConst.TICKET_STATUS_REJECTED)))
+                .Select(u => u.SubmissionId)
+                .ToListAsync();
+        }
+
         public Task AddQaAssignmentsAsync(IList<SubmissionUser> qaAssignments)
         {
             try
