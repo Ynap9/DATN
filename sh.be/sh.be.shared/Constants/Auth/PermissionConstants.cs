@@ -66,6 +66,7 @@ namespace sh.be.shared.Constants.Auth
         public const string FUNCTION_SUBMISSION_QA_STATS = "Function.Construction.Submission.QaStats";
         public const string FUNCTION_SUBMISSION_DELETE = "Function.Construction.Submission.Delete";
         public const string FUNCTION_SUBMISSION_EXPORT = "Function.Construction.Submission.Export";
+        public const string FUNCTION_SUBMISSION_ASSIGN_QA = "Function.Construction.Submission.AssignQa";
 
         public const string MODULE_DIGITAL_SIGNATURE = "DigitalSignature";
 
