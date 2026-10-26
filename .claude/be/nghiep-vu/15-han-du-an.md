@@ -1,6 +1,6 @@
 # Hạn dự án — job kiểm tra hạn, chuyển hết hạn, gửi mail (Construction)
 
-> **Phần 15/18** · trước: [14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md) · mục lục: [README.md](README.md)
+> **Phần 15/19** · trước: [14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md) · mục lục: [README.md](README.md)
 
 Mỗi ngày job nền `ProjectDeadlineJob` (Hangfire, [../architecture/05-infrastructure-external.md](../architecture/05-infrastructure-external.md#backgroundjob--hangfire))
 xét các dự án có `EndedAt`: dự án đã quá ngày kết thúc chuyển sang **hết hạn** (`EXPIRED = 5`), dự án sắp tới hạn được báo mail

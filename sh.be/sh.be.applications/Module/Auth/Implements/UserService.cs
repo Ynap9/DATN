@@ -74,6 +74,7 @@ namespace sh.be.applications.Module.Auth.Implements
 
             var roleIds = dto.RoleId.Distinct().ToList();
             await _roleDomainService.EnsureAllExistAsync(roleIds);
+            await _roleDomainService.EnsureCompatibleAsync(roleIds);
 
             var user = AppUser.Create(dto.UserName, dto.FullName, dto.Email, dto.PhoneNumber);
 
@@ -176,6 +177,7 @@ namespace sh.be.applications.Module.Auth.Implements
 
             var roleIds = dto.RoleId.Distinct().ToList();
             await _roleDomainService.EnsureAllExistAsync(roleIds);
+            await _roleDomainService.EnsureCompatibleAsync(roleIds);
 
             await using var transaction = await _unitOfWork.BeginTransactionAsync();
             try

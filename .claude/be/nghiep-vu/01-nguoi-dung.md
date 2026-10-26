@@ -1,6 +1,6 @@
 # Người dùng (Auth)
 
-> **Phần 1/18** · mục lục: [README.md](README.md)
+> **Phần 1/19** · mục lục: [README.md](README.md)
 
 Quản lý tài khoản đăng nhập. Logic nằm ở `UserService` (applications) và `UserDomainService` (domain); ghi xuống
 DB qua `UserRepository` (dùng `UserManager<AppUser>`).
@@ -22,6 +22,7 @@ DB qua `UserRepository` (dùng `UserManager<AppUser>`).
 1. Mật khẩu: nếu `IsRandomPassword` thì sinh chuỗi 8 ký tự bằng `CryptoUtils`; nếu không thì kiểm mật khẩu và xác nhận khớp nhau.
 2. Tên đăng nhập và email phải chưa tồn tại → nếu trùng thì lỗi `409`.
 3. Danh sách vai trò được khử trùng lặp. **Phải có ít nhất một vai trò**, và mọi Id phải là vai trò còn hoạt động; thiếu thì lỗi `105`.
+   Không được vừa `Data` vừa `QA` (`RoleConstants.EXCLUSIVE_STAFF_ROLES`, `RoleDomainService.EnsureCompatibleAsync`) → lỗi `109`; `Data` + `Leader` vẫn được.
 4. Trong transaction: tạo user → gán vai trò → ghi audit → gửi mail → commit. Lỗi ở bất kỳ bước nào thì rollback.
 
 ## Sửa hồ sơ
@@ -40,6 +41,8 @@ DB qua `UserRepository` (dùng `UserManager<AppUser>`).
 ## Gán vai trò
 
 - Xoá toàn bộ `UserRole` cũ của user rồi thêm danh sách mới (đã khử trùng lặp) trong một transaction.
+- Cùng hai kiểm tra như lúc tạo: vai trò phải tồn tại (`105`), không vừa `Data` vừa `QA` (`109`). Nhóm nhân viên dựa vào luật này
+  để suy vai trò nhóm ([19-nhom-nhan-vien.md](19-nhom-nhan-vien.md)).
 - Audit ghi `RoleIds` trước và sau khi đổi.
 - Quy trình này không làm gì với quyền trực tiếp; quyền của user luôn suy ra từ vai trò (xem [02-phan-quyen.md](02-phan-quyen.md)).
 

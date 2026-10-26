@@ -38,6 +38,9 @@ using sh.be.applications.Module.DigitalSignature.Interfaces.Services;
 using sh.be.applications.Module.Packaging.Implements;
 using sh.be.applications.Module.Packaging.Interfaces.Queries;
 using sh.be.applications.Module.Packaging.Interfaces.Services;
+using sh.be.applications.Module.Operation.Implements;
+using sh.be.applications.Module.Operation.Interfaces.Queries;
+using sh.be.applications.Module.Operation.Interfaces.Services;
 using sh.be.domain.Base;
 using sh.be.domain.Module.Auth.Entities;
 using sh.be.domain.Module.Auth.Repositories;
@@ -54,6 +57,8 @@ using sh.be.domain.Module.Construction.QaAssignments.Services;
 using sh.be.domain.Module.Construction.Submissions.Repositories;
 using sh.be.domain.Module.Construction.Submissions.Services;
 using sh.be.domain.Module.DigitalSignature.Repositories;
+using sh.be.domain.Module.Operation.StaffGroups.Repositories;
+using sh.be.domain.Module.Operation.StaffGroups.Services;
 using sh.be.infrastructure.data.Base;
 using sh.be.infrastructure.data.Module.Auth.Queries;
 using sh.be.infrastructure.data.Module.Auth.Repositories;
@@ -64,6 +69,8 @@ using sh.be.infrastructure.data.Module.Construction.Repositories;
 using sh.be.infrastructure.data.Module.DigitalSignature.Queries;
 using sh.be.infrastructure.data.Module.DigitalSignature.Repositories;
 using sh.be.infrastructure.data.Module.Packaging.Queries;
+using sh.be.infrastructure.data.Module.Operation.Queries;
+using sh.be.infrastructure.data.Module.Operation.Repositories;
 using sh.be.infrastructure.data.Persistence.Db;
 using sh.be.infrastructure.data.Persistence.Seeder;
 using sh.be.infrastructure.external.BackgroundJob.Base;
@@ -302,6 +309,7 @@ builder.Services.AddScoped<IQaSamplingConfigRepository, QaSamplingConfigReposito
 builder.Services.AddScoped<IQaReviewerModeRepository, QaReviewerModeRepository>();
 builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();
 builder.Services.AddScoped<ISigningBatchRepository, SigningBatchRepository>();
+builder.Services.AddScoped<IStaffGroupRepository, StaffGroupRepository>();
 
 // queries
 builder.Services.AddScoped<IRoleQuery, RoleQuery>();
@@ -317,6 +325,7 @@ builder.Services.AddScoped<IQaAssignmentQuery, QaAssignmentQuery>();
 builder.Services.AddScoped<ITemplateQuery, TemplateQuery>();
 builder.Services.AddScoped<ISigningBatchQuery, SigningBatchQuery>();
 builder.Services.AddScoped<IPackageConfigQuery, PackageConfigQuery>();
+builder.Services.AddScoped<IStaffGroupQuery, StaffGroupQuery>();
 
 // domain services
 builder.Services.AddScoped<RoleDomainService>();
@@ -327,6 +336,7 @@ builder.Services.AddScoped<ProjectDomainService>();
 builder.Services.AddScoped<ProjectConfigDomainService>();
 builder.Services.AddScoped<SubmissionDomainService>();
 builder.Services.AddScoped<QaAssignmentDomainService>();
+builder.Services.AddScoped<StaffGroupDomainService>();
 builder.Services.AddSingleton<IQaStrategyValidator, FormatOnlyQaStrategyValidator>();
 
 // application services
@@ -348,6 +358,7 @@ builder.Services.AddScoped<ITemplateService, TemplateService>();
 builder.Services.AddScoped<ISigningBatchService, SigningBatchService>();
 builder.Services.AddScoped<IPluginService, PluginService>();
 builder.Services.AddScoped<IPackageConfigService, PackageConfigService>();
+builder.Services.AddScoped<IStaffGroupService, StaffGroupService>();
 builder.Services.AddSingleton<ISigningRunner, SigningRunner>();
 
 // jobs

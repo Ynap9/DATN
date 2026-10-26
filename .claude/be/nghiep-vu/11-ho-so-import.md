@@ -1,6 +1,6 @@
 # Hồ sơ — import Google Sheet và xem file (Construction)
 
-> **Phần 11/18** · trước: [10-lo-ky.md](10-lo-ky.md) · mục lục: [README.md](README.md)
+> **Phần 11/19** · trước: [10-lo-ky.md](10-lo-ky.md) · mục lục: [README.md](README.md)
 
 Hồ sơ (`construction.Submission`) = một file tài liệu số hoá = một dòng trên Google Sheet, thuộc một dự án và một loại văn bản.
 Giá trị từng trường của hồ sơ nằm ở `construction.SubmissionData` (một dòng cho mỗi cặp hồ sơ – trường). Nghiệp vụ lấy từ
