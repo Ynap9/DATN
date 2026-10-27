@@ -10,8 +10,10 @@
 | Leader | Thêm nhân viên Data / QA (từng người hoặc cả nhóm) vào dự án mình là Leader; đặt giá thực nhận cho người mình quản lý | Thêm Leader khác; đặt giá công ty; đụng dự án khác |
 
 - Một người chỉ một vai trò trong một (dự án, loại văn bản). Thêm trùng → bỏ qua, trả về trong danh sách `skipped` kèm lý do.
-- Thêm theo nhóm thì bung thành từng người tại lúc thêm, lưu `SourceGroupId` để tra lại.
-- Gỡ người khỏi dự án bị chặn khi còn phiếu `ACTIVE` — phải thu hồi hoặc chuyển phiếu trước.
+- Thêm theo nhóm thì bung thành từng người tại lúc thêm, lưu `SourceStaffGroupId` để tra lại.
+- (2026-10-27) Nhân viên không có Leader quản lý (`ManagedByUserId = null`) thì **Admin quản lý trực tiếp**; không bắt buộc chọn Leader.
+- (2026-10-27) Gỡ người = **tự thu hồi** văn bản chưa làm (Data + QA) cùng transaction, không chặn `807`. ✅ Task 11 —
+  [../../nghiep-vu/21-thanh-vien-du-an.md](../../nghiep-vu/21-thanh-vien-du-an.md).
 
 ## Nhóm nhân viên
 
@@ -21,6 +23,8 @@
   ✅ Task 10 — chi tiết ở [../../nghiep-vu/19-nhom-nhan-vien.md](../../nghiep-vu/19-nhom-nhan-vien.md).
 
 ## Đơn giá
+
+> 🔬 **Tạm lùi** (2026-10-27) chờ chốt công thức lương; Task 11 không ghi `ProjectMemberPrice`.
 
 | Vai trò | Tính trên |
 |---|---|

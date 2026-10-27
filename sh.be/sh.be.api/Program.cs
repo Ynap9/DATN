@@ -62,6 +62,8 @@ using sh.be.domain.Module.Construction.QaAssignments.Services;
 using sh.be.domain.Module.Construction.Submissions.Repositories;
 using sh.be.domain.Module.Construction.Submissions.Services;
 using sh.be.domain.Module.DigitalSignature.Repositories;
+using sh.be.domain.Module.Operation.ProjectMembers.Repositories;
+using sh.be.domain.Module.Operation.ProjectMembers.Services;
 using sh.be.domain.Module.Operation.StaffGroups.Repositories;
 using sh.be.domain.Module.Operation.StaffGroups.Services;
 using sh.be.domain.Module.Ai.Providers.Repositories;
@@ -326,6 +328,7 @@ builder.Services.AddScoped<IQaTicketRepository, QaTicketRepository>();
 builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();
 builder.Services.AddScoped<ISigningBatchRepository, SigningBatchRepository>();
 builder.Services.AddScoped<IStaffGroupRepository, StaffGroupRepository>();
+builder.Services.AddScoped<IProjectMemberRepository, ProjectMemberRepository>();
 builder.Services.AddScoped<IAiProviderRepository, AiProviderRepository>();
 
 // queries
@@ -343,6 +346,7 @@ builder.Services.AddScoped<ITemplateQuery, TemplateQuery>();
 builder.Services.AddScoped<ISigningBatchQuery, SigningBatchQuery>();
 builder.Services.AddScoped<IPackageConfigQuery, PackageConfigQuery>();
 builder.Services.AddScoped<IStaffGroupQuery, StaffGroupQuery>();
+builder.Services.AddScoped<IProjectMemberQuery, ProjectMemberQuery>();
 builder.Services.AddScoped<IAiProviderQuery, AiProviderQuery>();
 
 // domain services
@@ -355,6 +359,8 @@ builder.Services.AddScoped<ProjectConfigDomainService>();
 builder.Services.AddScoped<SubmissionDomainService>();
 builder.Services.AddScoped<QaAssignmentDomainService>();
 builder.Services.AddScoped<StaffGroupDomainService>();
+builder.Services.AddScoped<OperationAccessDomainService>();
+builder.Services.AddScoped<ProjectMemberDomainService>();
 builder.Services.AddScoped<AiProviderDomainService>();
 builder.Services.AddSingleton<IQaStrategyValidator, FormatOnlyQaStrategyValidator>();
 
@@ -378,6 +384,7 @@ builder.Services.AddScoped<ISigningBatchService, SigningBatchService>();
 builder.Services.AddScoped<IPluginService, PluginService>();
 builder.Services.AddScoped<IPackageConfigService, PackageConfigService>();
 builder.Services.AddScoped<IStaffGroupService, StaffGroupService>();
+builder.Services.AddScoped<IProjectMemberService, ProjectMemberService>();
 builder.Services.AddScoped<IAiProviderService, AiProviderService>();
 builder.Services.AddSingleton<ISigningRunner, SigningRunner>();
 

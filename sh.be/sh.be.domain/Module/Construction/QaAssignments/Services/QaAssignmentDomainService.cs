@@ -60,6 +60,16 @@ namespace sh.be.domain.Module.Construction.QaAssignments.Services
             return user;
         }
 
+        public async Task EnsureQaMemberAsync(QaAccess access, string currentUserId, int projectId, int documentTypeId, string qaUserId)
+        {
+            var member = await _qaTicketRepository.FindActiveQaMemberAsync(projectId, documentTypeId, qaUserId)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaReviewerNotMember);
+            if (!access.IsAdmin && !member.IsManagedBy(currentUserId))
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaReviewerNotManaged);
+            }
+        }
+
         public async Task<QaAccess> GetAccessAsync(string userId)
         {
             var isAdmin = QaAccessPolicy.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(userId));

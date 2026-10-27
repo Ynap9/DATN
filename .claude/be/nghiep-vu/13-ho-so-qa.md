@@ -1,6 +1,6 @@
 # Hồ sơ — QA, trả lại, lịch sử QA
 
-> **Phần 13/20** · trước: [12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md) · mục lục: [README.md](README.md)
+> **Phần 13/21** · trước: [12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md) · mục lục: [README.md](README.md)
 
 Sau khi người nhập liệu kiểm tra hồ sơ ([12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md)), người QA mở hồ sơ, đối chiếu PDF với dữ liệu
 rồi chấm **Đạt** hoặc **Không đạt (kèm lý do)**. Không đạt thì hồ sơ bị **trả lại** cho người nhập liệu sửa. Bản gốc `nhaplieu.be`
