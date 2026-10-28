@@ -130,6 +130,7 @@ namespace sh.be.applications.Module.Construction.Implements
             _qaAssignmentDomainService.EnsureManagesPair(access, dto.ProjectId, dto.DocumentTypeId);
             var project = await _submissionDomainService.EnsureEditableProjectAsync(dto.ProjectId, access.IsAdmin);
             var qaUser = await _qaAssignmentDomainService.EnsureQaReviewerAsync(dto.QaUserId);
+            await _qaAssignmentDomainService.EnsureQaMemberAsync(access, currentUserId, dto.ProjectId, dto.DocumentTypeId, qaUser.Id);
 
             var nodes = dto.Items?
                 .Select(item => new QaTicketNode(item.Box.Trim(), string.IsNullOrWhiteSpace(item.ProfileRange) ? null : item.ProfileRange.Trim()))

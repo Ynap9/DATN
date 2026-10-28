@@ -1,6 +1,6 @@
 # Nhà cung cấp AI (module Ai)
 
-> **Phần 20/20** · trước: [19-nhom-nhan-vien.md](19-nhom-nhan-vien.md) · mục lục: [README.md](README.md)
+> **Phần 20/21** · trước: [19-nhom-nhan-vien.md](19-nhom-nhan-vien.md) · mục lục: [README.md](README.md)
 
 Mọi lời gọi AI đi qua **một cửa**: model, prompt, cách chọn model là **dữ liệu** trong DB, Admin thêm model / đổi prompt không sửa code;
 code chỉ biết vài giao thức gọi; dữ liệu cơ quan không gửi ra API public. Module `Ai` tách riêng (schema `ai`, route `api/v1/ai`, lỗi
@@ -110,3 +110,5 @@ restart app cùng `KeysPath` vẫn giải mã đúng; Data → `403`, không tok
 Chưa kiểm: xác thực lại Google sau khi bật `KeysPath` (cần đăng nhập Google tay).
 
 ⚠️ `IDataProtector.Unprotect` gặp chuỗi không phải Base64Url ném `FormatException`, **không** phải `CryptographicException` — `TryUnprotect` bắt cả hai.
+
+> **Tiếp:** [21-thanh-vien-du-an.md](21-thanh-vien-du-an.md) — thành viên dự án: Admin / Leader phân người vào (dự án, loại văn bản), gỡ tự thu hồi văn bản.

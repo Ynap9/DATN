@@ -1,6 +1,6 @@
 # QA — chấm mẫu: chế độ chấm, cấu hình mẫu
 
-> **Phần 18/20** · trước: [17-thong-ke-qa.md](17-thong-ke-qa.md) · mục lục: [README.md](README.md)
+> **Phần 18/21** · trước: [17-thong-ke-qa.md](17-thong-ke-qa.md) · mục lục: [README.md](README.md)
 
 QA chấm 100% văn bản thì tốn người. Ở chế độ `SAMPLE`, mỗi phiếu QA chỉ chấm một mẫu ngẫu nhiên: mẫu đạt ngưỡng thì cả phiếu đạt,
 vượt ngưỡng thì trả cả phiếu. Chuỗi task: **18B nền tảng (file này)** → 18D thuật toán bốc mẫu → 18C giao QA + chấm mẫu. 18D, 18C viết
@@ -28,8 +28,7 @@ hiện chỉ Admin có `ProjectConfig.Update`; gán quyền này cho Leader thì
   nội dung "Đặt chế độ {mode} cho {userName} ở dự án {project}".
 - `GET reviewer-mode` sắp theo `userName`; `modifiedDate` = lần đặt gần nhất (chưa sửa lần nào thì là ngày tạo). User đã mất role QA
   vẫn hiện, không lọc lại.
-- Đổi chế độ chỉ áp cho phiếu giao **sau** đó: phiếu chụp chế độ lúc giao (18C).
-- Task 11 của Operation (API thêm QA vào dự án) gọi lại `UpdateReviewerMode` để chọn chế độ khi thêm QA.
+- Đổi chế độ chỉ áp cho phiếu giao **sau** đó: phiếu chụp chế độ lúc giao (18C). Task 11 thêm QA vào dự án **không** đặt chế độ.
 
 ## R2. Cấu hình mẫu theo dự án (không bắt buộc)
 
@@ -93,8 +92,7 @@ dùng cho Data. Unique `(SubmissionId, Role)` **không** filter, nên DB tự ch
 
 ⚠️ `TicketId` không có FK vì trỏ sang hai bảng tuỳ `Role`, nên luôn lọc kèm `Role`. **Đừng** "sửa" bằng cách thêm FK.
 
-⚠️ `SubmissionUser` không xoá mềm: thu hồi hoặc huỷ phiếu là **xoá cứng** dòng; lịch sử nằm ở phiếu và audit. Thêm xoá mềm sẽ
-làm unique không filter chặn lần giao lại.
+⚠️ `SubmissionUser` không xoá mềm: thu hồi hoặc huỷ phiếu là **xoá cứng** dòng; lịch sử nằm ở phiếu và audit. Thêm xoá mềm sẽ làm unique không filter chặn lần giao lại.
 
 ⚠️ Operation Task 9 dùng `SubmissionUser` với role `Data` và không thêm cột vào `Submission`, nên phải merge task này **trước** Task 9.
 
@@ -113,16 +111,16 @@ làm unique không filter chặn lần giao lại.
 | `335` | `ConstructionErrorQaTicketStatusInvalid` | Phiếu QA không ở trạng thái cho phép thao tác này |
 | `336` | `ConstructionErrorSubmissionInProgressNotDeletable` | Không được xoá văn bản đang sửa hoặc đang QA (18C) |
 | `337` | `ConstructionErrorProjectNotManaged` | Bạn không được phân quản lý dự án / loại văn bản này (18C) |
+| `338` | `ConstructionErrorQaReviewerNotMember` | Người QA không phải thành viên QA đang hoạt động của dự án / loại văn bản (Task 11) |
+| `339` | `ConstructionErrorQaReviewerNotManaged` | Leader chỉ giao phiếu QA cho QA mình quản lý (Task 11) |
 
-Key quyền `Function.Construction.Submission.AssignQa` ("Giao QA cho văn bản") đã seed sẵn cho 18C. Admin tự có; Admin gán thêm
-cho Leader.
+Key quyền `Function.Construction.Submission.AssignQa` ("Giao QA cho văn bản") đã seed sẵn cho 18C. Admin tự có; Admin gán thêm cho Leader.
 
 ## Kiểm thử (2026-10-26)
 
 Gọi thật trên DB dev, dữ liệu gắn tag `ZZTEST`, xoá sạch sau khi test: **37/37 đạt**. Gồm: mặc định khi chưa cấu hình; tạo rồi sửa
 vẫn một dòng, audit cũ / mới; 11 trường hợp sai → `400`; dự án không có → `303`; đặt `SAMPLE` rồi `FULL` cho QA; user không có role
-QA, mode `X` → `400`; user không có → `103`; không quyền → `403`; không token → `401`. Chèn trùng `(SubmissionId, "QA")` thì DB
-báo lỗi unique. `QaSampleSizePolicy` đạt cả 6 trường hợp ở bảng R3. Bộ test Task 18 vẫn đạt 50/50.
+QA, mode `X` → `400`; user không có → `103`; không quyền → `403`; không token → `401`. Chèn trùng `(SubmissionId, "QA")` thì DB báo lỗi unique. `QaSampleSizePolicy` đạt cả 6 trường hợp ở bảng R3. Bộ test Task 18 vẫn đạt 50/50.
 
 ## 18C — Phiếu QA
 
@@ -139,19 +137,20 @@ Chặng 1–3 (2026-10-26) xong phần **FULL**; phiếu `SAMPLE` chờ 18D. M�
 chỉ hồ sơ đó trong hộp đó. `count` `1`–`5000`: lấy N văn bản đầu theo `Box`, `ProfileRange`, `Id`.
 - Văn bản phù hợp: chưa xoá, `StatusCheck = 1`, `StatusQa = 0`, chưa có dòng `SubmissionUser` Role `QA`. Không có → `328`, > 5000 → `329`.
 - QA phải có role `QA` (`400`, không tồn tại `103`). Có văn bản mà người nhập (log kiểm tra mới nhất, luật Task 18) là chính QA → `331`.
+- Task 11: QA phải là `ProjectMember` Role `QA`, `IsActive`, chưa gỡ của **đúng** cặp → `338`; Leader chỉ giao cho QA có `ManagedByUserId`
+  = mình → `339` (Admin giao cả QA không có Leader). Kiểm ngay sau role QA, trước chọn văn bản. Phiếu giao trước luật giữ nguyên, vẫn chấm
+  được; QA bị tắt vẫn chấm phiếu đang giữ; QA bị gỡ thì phiếu mở đã bị huỷ lúc gỡ ([21](21-thanh-vien-du-an.md#gỡ--thu-hồi)).
 - Dự án `DONE` / `EXPIRED`: người thường `316` / `323`; Admin, SuperAdmin giao được (`EnsureEditableProjectAsync`).
 - Trước 18D: QA đang chế độ `SAMPLE` → `400` "Chưa hỗ trợ giao phiếu chế độ SAMPLE".
 - Một transaction: thêm phiếu → `SaveChanges` lấy `Id` → bulk insert dòng giao → audit `Giao phiếu QA` (dữ liệu mới có danh sách
   `SubmissionIds`). Bảng `Submission` **không** đổi.
-- Hai người giao trùng văn bản cùng lúc: unique `(SubmissionId, Role)` chặn, lỗi SQL `2601` / `2627` → `330`, rollback cả phiếu.
-  Request đến sau khi phiếu kia đã commit thì không còn văn bản phù hợp → `328`.
+- Hai người giao trùng văn bản cùng lúc: unique `(SubmissionId, Role)` chặn, lỗi SQL `2601` / `2627` → `330`, rollback cả phiếu. Request đến sau khi phiếu kia đã commit thì không còn văn bản phù hợp → `328`.
 
 ⚠️ Sắp `Box`, `ProfileRange` theo **chuỗi** (như 5sdb): `"10"` trước `"2"`. Đừng ép kiểu số — thứ tự phải khớp cây Hộp → Hồ sơ.
 
 **Phạm vi (R10).** Admin = role `Admin` hoặc `SuperAdmin`: mọi dự án. Người khác chỉ thao tác trên cặp (dự án, loại văn bản) mình là
 `operation.ProjectMember` Role `Leader`, `IsActive`, chưa gỡ (Construction đọc thẳng bảng này trong `QaTicketRepository`):
-giao ngoài cặp → `337`; danh sách chỉ gồm phiếu của cặp được phân **cộng** phiếu mà mình là QA; xem phiếu không được thấy → `327`
-(không lộ là có phiếu). QA xem phiếu của mình không cần là `ProjectMember`.
+giao ngoài cặp → `337`; danh sách chỉ gồm phiếu của cặp được phân **cộng** phiếu mà mình là QA; xem phiếu không được thấy → `327` (không lộ là có phiếu). QA xem phiếu của mình không cần là `ProjectMember`.
 
 **Lọc theo phiếu.** `qaTicketId` ([bộ lọc chung](12-ho-so-kiem-tra.md#bộ-lọc-chung)) kiểm quyền xem phiếu như trên — cửa vào màn chấm.
 
@@ -164,17 +163,18 @@ phiếu `REJECTED` → `332`; phiếu `PASSED` chỉ chấm lại được văn 
 `ConcludedDate`, audit `Chốt phiếu QA`. Ai chấm Đạt văn bản cuối (cả Admin) cũng chốt. Đổi trạng thái bằng `UPDATE ... WHERE Status =
 'ACTIVE'` nên hai request cùng chốt chỉ một lần thắng. Phiếu đã `PASSED` không mở lại khi văn bản sau đó bị chấm Không đạt hay sửa.
 
-**Sửa sau QA (R9).** Tái kiểm tra văn bản đã QA mà đổi ≥ 1 trường → `StatusQa = 0`, `QaReason = null` (giữ `QaBy` / `QaDate`), log "… cần
-QA lại.", `check` trả thêm `statusQa`; không đổi trường thì giữ nguyên. Import overwrite **không** đổi trạng thái QA (đã bỏ phần import).
+**Sửa sau QA (R9).** Tái kiểm tra văn bản đã QA mà đổi ≥ 1 trường → `StatusQa = 0`, `QaReason = null` (giữ `QaBy` / `QaDate`), log "… cần QA lại.", `check` trả thêm `statusQa`; không đổi trường thì giữ nguyên. Import overwrite **không** đổi trạng thái QA (đã bỏ phần import).
 
 **Huỷ (R7).** Dự án `DONE` / `EXPIRED`: người thường `316` / `323`, Admin huỷ được (như giao). Chỉ `ACTIVE` / `REJECTED` → `CANCELLED`
 bằng `UPDATE ... WHERE Status IN (ACTIVE, REJECTED)` (không ghi đè phiếu vừa tự chốt), còn lại `335`. Cùng transaction xoá cứng dòng `QA` của văn bản `StatusQa ≠ 1`
 (`ReleaseNotPassedAsync`, văn bản về "chưa giao", đang bị trả vẫn bị trả) + audit `Huỷ phiếu QA`. Văn bản Đạt **giữ** dòng trỏ phiếu đã
-huỷ: không giao lại được, chấm lại chỉ Admin / SuperAdmin. Lịch sử QA giữ nguyên.
+huỷ: không giao lại được, chấm lại chỉ Admin / SuperAdmin. Lịch sử QA giữ nguyên. ⚠️ Gỡ QA khỏi dự án (Task 11,
+`ProjectMemberDomainService.RevokeHeldDocumentsAsync`) **lặp lại** đúng luật huỷ này — đổi luật huỷ ở đây thì sửa cả chỗ đó.
 
 **Chặn xoá (R8).** `DELETE submission`: văn bản `StatusCheck = 2` hoặc thuộc phiếu `ACTIVE` / `REJECTED` → `336` (liệt kê Id) với **mọi**
 người, kể cả SuperAdmin; kiểm sau khi nạp hồ sơ, **trước** `325` (`QaAssignmentDomainService.EnsureDeletableAsync`).
 
 Kiểm thử (DB dev, `ZZTEST`, xoá sạch): chặng 1 **63/63**, chặng 2 **28/28**, chặng 3 **32/32** (huỷ `335` / `316` / `323`, `336` trước `325`).
+Luật Task 11 (`338` / `339`, phiếu cũ vẫn chấm) kiểm trong bộ test Task 11; bộ test 18C cũ **chưa** chạy lại (cần thêm thành viên QA cho dữ liệu cũ).
 
 > **Tiếp:** [19-nhom-nhan-vien.md](19-nhom-nhan-vien.md) — nhóm nhân viên của module Operation: nhóm thuần Data hoặc QA, Leader chỉ thấy nhóm mình.

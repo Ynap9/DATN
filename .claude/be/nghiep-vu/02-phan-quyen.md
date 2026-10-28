@@ -1,6 +1,6 @@
 # Phân quyền
 
-> **Phần 2/20** · trước: [01-nguoi-dung.md](01-nguoi-dung.md) · mục lục: [README.md](README.md)
+> **Phần 2/21** · trước: [01-nguoi-dung.md](01-nguoi-dung.md) · mục lục: [README.md](README.md)
 
 Quyền là một **cây** định danh bằng `Key`. Vai trò giữ một tập key; user có quyền = hợp quyền của các vai trò còn hoạt động.
 Hằng số key nằm ở `PermissionConstants` (shared); cây được seed bởi `SeedPermission`.
@@ -159,6 +159,7 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `GET api/packaging/config/dropdown`, `GET .../paging`, `GET .../excel-template` | `Function.Packaging.Config.View` |
 | `GET api/digital-signature/plugin/version`, `.../setup`, `.../setup/content` | — (chỉ cần đăng nhập) |
 | `api/operation/staff-group`: `GET paging`, `GET candidates`, `GET` / `PUT` / `DELETE {id}`, `POST`, `POST` / `DELETE {id}/members` | `Function.Operation.StaffGroup.Manage` (Leader còn bị lọc theo chủ nhóm ở service, [19](19-nhom-nhan-vien.md)) |
+| `api/operation/project/{projectId}`: `GET member/paging`, `GET member/candidates`, `POST leader`, `POST member`, `PUT` / `DELETE member/{memberId}` | `Function.Operation.ProjectMember.Manage` (Leader chỉ trong cặp mình là Leader đang hoạt động, chỉ người mình quản lý; `POST leader` chỉ Admin — kiểm ở service, [21](21-thanh-vien-du-an.md)) |
 
 ## Quyền người dùng: đang lệch so với cây
 
