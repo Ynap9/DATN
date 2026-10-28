@@ -1,8 +1,8 @@
 # Nhóm nhân viên (Operation)
 
-> **Phần 19/20** · trước: [18-qa-cham-mau.md](18-qa-cham-mau.md) · mục lục: [README.md](README.md)
+> **Phần 19/21** · trước: [18-qa-cham-mau.md](18-qa-cham-mau.md) · mục lục: [README.md](README.md)
 
-Leader hay thêm cả tổ 5–20 người vào dự án mới. Nhóm (`StaffGroup` + `StaffGroupMember`) là công cụ chọn nhanh cho Task 11;
+Leader hay thêm cả tổ 5–20 người vào dự án mới. Nhóm (`StaffGroup` + `StaffGroupMember`) là công cụ chọn nhanh cho Task 11 ([21](21-thanh-vien-du-an.md));
 nhóm **không** dùng để tính tiền hay giao phiếu. Task 10, 2026-10-26. Plan: [../plans/van-hanh/README.md](../plans/van-hanh/README.md).
 
 ## Ai làm được gì
