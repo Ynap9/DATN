@@ -5,6 +5,7 @@ using sh.be.domain.Module.Construction.QaAssignments.Entities;
 using sh.be.domain.Module.Construction.QaAssignments.Models;
 using sh.be.domain.Module.Construction.QaAssignments.Repositories;
 using sh.be.domain.Module.Construction.Submissions.Entities;
+using sh.be.domain.Module.Operation.ProjectMembers.Entities;
 using sh.be.infrastructure.data.Persistence.Db;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Construction;
@@ -143,6 +144,14 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
                 .Select(m => new { m.ProjectId, m.DocumentTypeId })
                 .ToListAsync();
             return pairs.Select(pair => (pair.ProjectId, pair.DocumentTypeId)).ToList();
+        }
+
+        public Task<ProjectMember?> FindActiveQaMemberAsync(int projectId, int documentTypeId, string userId)
+        {
+            return _shDbContext.ProjectMembers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.ProjectId == projectId && m.DocumentTypeId == documentTypeId && m.UserId == userId
+                    && m.Role == RoleConstants.ROLE_QA && m.IsActive);
         }
     }
 }

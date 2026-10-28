@@ -21,12 +21,12 @@ Tiền tố `api/v1/operation`. `{p}` = `projectId`, `{dt}` = `documentTypeId`. 
 
 | # | Method | Route | Ai | Việc |
 |---|---|---|---|---|
-| 9 | GET | `/project/{p}/member` | Admin, Leader | Danh sách + giá hiện hành; lọc `documentTypeId`, `role`, từ khoá |
+| 9 | GET | `/project/{p}/member/paging` | Admin, Leader | Danh sách; lọc `documentTypeId`, `role`, từ khoá, `managedByUserId`, `isActive` (✅ Task 11) |
 | 10 | GET | `/project/{p}/member/candidates` | Admin, Leader | User chưa có trong (dự án, loại văn bản), lọc role |
-| 11 | POST | `/project/{p}/leader` | Admin | `documentTypeId`, `users[{userId, companyPrice?, actualPrice?}]` |
-| 12 | POST | `/project/{p}/member` | Admin, Leader | `documentTypeId`, `users[{userId, role, prices?}]`, `groups[{groupId}]` (bỏ `role`: mỗi người nhận role hệ thống hiện tại; người không còn Data / QA → `skipped`), `managedByUserId`; trả `added`, `skipped[{userId, reason}]` |
-| 13 | PUT | `/project/{p}/member/{memberId}` | Admin, Leader | Đổi role, Leader quản lý, bật / tắt |
-| 14 | DELETE | `/project/{p}/member/{memberId}` | Admin, Leader | Gỡ; chặn khi còn phiếu `ACTIVE` |
+| 11 | POST | `/project/{p}/leader` | Admin | `documentTypeId`, `userIds` |
+| 12 | POST | `/project/{p}/member` | Admin, Leader | `documentTypeId`, `users[{userId, role}]`, `staffGroupIds[]` (mỗi người nhận role hệ thống hiện tại; người không còn Data / QA → `skipped`), `managedByUserId`; trả `added`, `skipped[{userId, fullName, reason}]` |
+| 13 | PUT | `/project/{p}/member/{memberId}` | Admin, Leader | Đổi / bỏ Leader quản lý (chỉ Admin), bật / tắt |
+| 14 | DELETE | `/project/{p}/member/{memberId}` | Admin, Leader | Gỡ + tự thu hồi văn bản chưa làm |
 
 ## Đơn giá và quỹ KPI (O4, O7)
 
@@ -66,4 +66,5 @@ Tiền tố `api/v1/operation`. `{p}` = `projectId`, `{dt}` = `documentTypeId`. 
 
 Bảng gán đầy đủ ở [../../nghiep-vu/03-vai-tro-mac-dinh.md](../../nghiep-vu/03-vai-tro-mac-dinh.md).
 
-Leader chỉ thao tác trên (dự án, loại văn bản) mà mình là `ProjectMember` vai trò `LEADER` — kiểm ở service, không chỉ dựa vào quyền.
+Leader chỉ thao tác trên (dự án, loại văn bản) mà mình là `ProjectMember` vai trò `Leader` đang hoạt động, và chỉ trên người mình quản lý —
+kiểm ở service (`OperationAccessDomainService`), không chỉ dựa vào quyền.
