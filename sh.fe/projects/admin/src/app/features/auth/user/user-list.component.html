@@ -1,0 +1,12 @@
+<app-page-header title="Người dùng" [breadcrumbs]="breadcrumbs" />
+
+<div class="flex flex-wrap items-center gap-3 mb-4">
+    <input pInputText class="w-full sm:w-80" placeholder="Tìm theo họ tên, tên đăng nhập, email" [formControl]="keyword" />
+    <sh-select class="w-full sm:w-56" placeholder="Mọi vai trò" [formControl]="roleId" [options]="roles" optionLabel="name" optionValue="id"
+        [showClear]="true" (onChange)="search()" />
+    <span class="text-sm text-muted-color">{{ totalRecords }} mục</span>
+    <p-button class="ml-auto" icon="pi pi-plus" label="Thêm người dùng" (onClick)="openCreateForm()" />
+</div>
+
+<app-data-table [columns]="columns" [data]="users" [loading]="loading" [pageNumber]="pageNumber" [pageSize]="pageSize"
+    [total]="totalRecords" (pageChange)="onPageChange($event)" (action)="onAction($event)" />

@@ -158,10 +158,10 @@ builder.Services.AddCors(options =>
         builder =>
         {
             builder
-                .WithOrigins(origins)
+                .SetIsOriginAllowed(origin => origins.Contains(CorsConstants.AnyOrigin) || origins.Contains(origin, StringComparer.OrdinalIgnoreCase))
                 .AllowAnyMethod()
                 .AllowAnyHeader()
-                //.AllowCredentials()
+                .AllowCredentials()
                 .WithExposedHeaders("Content-Disposition");
         }
     );
@@ -249,6 +249,7 @@ builder.Services.AddOpenIddict()
                .EnableTokenEndpointPassthrough()
                .DisableTransportSecurityRequirement();
 
+        options.AddWebSessionCookies();
     });
 
 builder.Services.AddAuthentication(options =>
@@ -286,6 +287,10 @@ builder.Services.AddAuthentication(options =>
                     if (!string.IsNullOrEmpty(accessToken) && context.Request.Path.StartsWithSegments(SignalRConst.HUB_PATH))
                     {
                         context.Token = accessToken;
+                    }
+                    else if (!context.Request.Headers.ContainsKey("Authorization"))
+                    {
+                        context.Token = context.Request.Cookies[WebSessionConstants.ACCESS_TOKEN_COOKIE];
                     }
                     return Task.CompletedTask;
                 }

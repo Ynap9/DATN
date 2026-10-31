@@ -1,0 +1,62 @@
+<div class="permission-toolbar">
+    <input pInputText class="w-full sm:w-72" placeholder="Tìm quyền" [(ngModel)]="keyword" />
+    <span class="permission-total">Đã chọn {{ checkedCount }}/{{ totalCount }} quyền</span>
+    @if (!isSuperAdmin) {
+        <div class="flex gap-2 sm:ml-auto">
+            <p-button label="Hoàn tác" severity="secondary" [outlined]="true" [disabled]="!isDirty" (onClick)="reset()" />
+            <p-button icon="pi pi-check" label="Lưu thay đổi" [loading]="submitting" [disabled]="!isDirty" (onClick)="onSubmit()" />
+        </div>
+    }
+</div>
+
+@if (isSuperAdmin) {
+    <p class="permission-note"><i class="pi pi-info-circle"></i> SuperAdmin luôn có toàn quyền, không cần phân quyền riêng.</p>
+}
+
+<div class="permission-body">
+    @if (loading) {
+        <span class="sk-line h-lg"></span>
+        <span class="sk-line w-80"></span>
+        <span class="sk-line h-lg"></span>
+        <span class="sk-line w-60"></span>
+    }
+
+    @for (section of visibleSections; track section.key) {
+        <section class="permission-section">
+            <header class="permission-section-header">
+                <button type="button" class="permission-collapse" [attr.aria-label]="'Thu gọn ' + getLabel(section)" (click)="toggleCollapse(section.key)">
+                    <i class="pi" [class.pi-angle-right]="collapsedKeys.has(section.key)" [class.pi-angle-down]="!collapsedKeys.has(section.key)"></i>
+                </button>
+                <p-checkbox [inputId]="section.key" [binary]="true" [disabled]="isSuperAdmin" [indeterminate]="isPartial(section)"
+                    [ngModel]="isChecked(section)" (ngModelChange)="toggle(section, $event)" />
+                <label [for]="section.key">{{ getLabel(section) }}</label>
+                <span class="permission-badge">{{ getCheckedCount(section) }}/{{ getLeafCount(section) }}</span>
+            </header>
+
+            @if (!collapsedKeys.has(section.key) || keyword) {
+                @for (group of getVisibleGroups(section); track group.key) {
+                    <div class="permission-group">
+                        <div class="permission-group-title">
+                            <p-checkbox [inputId]="group.key" [binary]="true" [disabled]="isSuperAdmin" [indeterminate]="isPartial(group)"
+                                [ngModel]="isChecked(group)" (ngModelChange)="toggle(group, $event)" />
+                            <label [for]="group.key">{{ getLabel(group) }}</label>
+                        </div>
+                        <div class="permission-leaves">
+                            @for (leaf of getVisibleLeaves(group); track leaf.key) {
+                                <div class="permission-leaf">
+                                    <p-checkbox [inputId]="leaf.key" [binary]="true" [disabled]="isSuperAdmin" [ngModel]="isChecked(leaf)"
+                                        (ngModelChange)="toggle(leaf, $event)" />
+                                    <label [for]="leaf.key">{{ getLabel(leaf) }}</label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        </section>
+    } @empty {
+        @if (!loading) {
+            <p class="permission-empty">Không tìm thấy quyền phù hợp</p>
+        }
+    }
+</div>

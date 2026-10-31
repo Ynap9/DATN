@@ -1,13 +1,16 @@
 import { Component, computed, effect, ElementRef, HostListener, inject } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, Subject, takeUntil } from 'rxjs';
-import { LayoutService } from '../../services/layout.service';
-import { BaseConsts, IUser, Utils } from '../../../../../../lib-components/src/public-api';
-import { AppAuthService } from '../../../../../../lib-components/src/my-lib-components/shared/services/auth/app-auth.service';
+import { LayoutService } from '../service/layout.service';
+import { CommonModule } from '@angular/common';
+import { RouterLink, RouterLinkActive } from '@angular/router';
+import { AppMenu } from '../app-menu/app-menu';
+import { AuthService } from '@/core/auth/service/auth.service';
+import { SharedService } from '@/services/shared.service';
 
 @Component({
   selector: 'app-sidebar',
-  standalone: false,
+  imports: [CommonModule, RouterLink, RouterLinkActive, AppMenu],
   templateUrl: './app-sidebar.html',
   styleUrl: './app-sidebar.scss',
 })
@@ -18,9 +21,9 @@ export class AppSidebar {
 
     el = inject(ElementRef);
 
-    authService = inject(AppAuthService);
+    private readonly _authService = inject(AuthService);
 
-    user: IUser;
+    private readonly _sharedService = inject(SharedService);
 
     userMenuOpen = false;
 
@@ -53,8 +56,6 @@ export class AppSidebar {
     }
 
     ngOnInit() {
-        this.getUser();
-
         this.router.events
             .pipe(
                 filter((event) => event instanceof NavigationEnd),
@@ -74,23 +75,13 @@ export class AppSidebar {
         this.unbindOutsideClickListener();
     }
 
-    private getUser() {
-        const userInfo = Utils.getLocalStorage(BaseConsts.localStorageUser);
-        this.user = {
-            role: userInfo?.role,
-            email: userInfo?.email,
-            username: userInfo?.username,
-            id: userInfo?.id,
-        };
-    }
-
     get displayName(): string {
-        return this.user?.username || this.user?.email || 'Người dùng';
+        const user = this._sharedService.currentUser;
+        return user?.fullName || user?.userName || '';
     }
 
     get userInitial(): string {
-        const source = (this.user?.username || this.user?.email || 'U').trim();
-        return source.charAt(0).toUpperCase();
+        return this.displayName.trim().charAt(0).toUpperCase();
     }
 
     toggleMenu() {
@@ -109,7 +100,7 @@ export class AppSidebar {
 
     logout() {
         this.userMenuOpen = false;
-        this.authService.connectAuthorize();
+        this._authService.logout();
     }
 
     private onRouteChange(path: string) {

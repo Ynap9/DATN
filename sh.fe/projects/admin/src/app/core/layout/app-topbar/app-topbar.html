@@ -1,11 +1,11 @@
 <div class="layout-topbar">
 
     <div class="app-topbar-title" *ngIf="!layoutService.breadcrumbInTopbar()">
-        <h2>{{ pageTitle }}</h2>
+        <h2>Xin chào, {{ displayName }}</h2>
         <p>{{ today }}</p>
     </div>
     <div class="app-topbar-breadcrumb" *ngIf="layoutService.breadcrumbInTopbar()">
-        <h-breadcrumb-component></h-breadcrumb-component>
+        <sh-breadcrumb></sh-breadcrumb>
     </div>
 
 

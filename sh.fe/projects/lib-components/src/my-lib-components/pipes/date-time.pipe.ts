@@ -3,9 +3,7 @@ import moment from 'moment';
 
 
 @Pipe({
-    name: 'libDateTime',
-    standalone: false,
-})
+    name: 'libDateTime',})
 export class DateTimePipe implements PipeTransform {
 
     constructor() { }

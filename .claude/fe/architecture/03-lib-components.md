@@ -1,77 +1,73 @@
-# Thư viện lib-components
+# UI kit @sh/ui (lib-components)
 
 > **Phần 3/6** · trước: [02-app-admin.md](02-app-admin.md) · mục lục: [README.md](README.md)
 
-`projects/lib-components/src/my-lib-components`. Một NgModule `MyLibComponentsModule` khai báo và export mọi
-component, pipe; `forRoot()` thêm `LibHelperService`. Export công khai qua `src/public-api.ts`.
+`projects/lib-components/src/my-lib-components`, cổng duy nhất là `src/public-api.ts`, import qua alias `@sh/ui`.
+Chỉ chứa thứ **hiển thị và nhập liệu**: không token, không router-guard, không gọi API, không biết module BE nào.
+
+⚠️ Đừng đưa lại vào lib: service gọi `HttpClient`, đọc localStorage token, toast (`MessageService`) hay bất cứ
+gì import từ `admin`. Những thứ đó thuộc `admin/src/app/core/`.
 
 ## Component
 
 | Nhóm | Selector |
 |---|---|
-| Nhập liệu (`components/form-inputs/`, nền `h-base.ts`) | `h-input-text`, `h-input-number`, `h-calendar`, `h-select`, `h-multi-select`, `h-password-component` |
-| Lọc (`components/filter/`) | `h-input-search`, `h-dropdown-search` |
-| Bảng (`components/h-table-component/`) | `h-table`, `h-table-filters`, `h-setting-display-column-table` |
-| Khác | `h-button`, `h-checkbox`, `h-confirm`, `h-icon-required`, `h-loading-component`, `h-breadcrumb-component`, `h-not-found-component`, `h-login-fe` |
+| Nhập liệu (`components/form-inputs/`, nền `sh-base.ts`) | `sh-input-text`, `sh-input-number`, `sh-calendar`, `sh-select`, `sh-multi-select`, `sh-password` |
+| Lọc (`components/filter/`) | `sh-input-search`, `sh-dropdown-search` |
+| Bảng (`components/sh-table/`) | `sh-table`, `sh-table-filter`, `sh-setting-display-column-table` |
+| Khác | `sh-button`, `sh-checkbox`, `sh-confirm`, `sh-icon-required`, `sh-loading`, `sh-breadcrumb`, `sh-not-found` |
 
-`h-table` nhận `rows`, `columns: IColumn[]`, `listAction: IAction[][]`, `paginator`, `serverConfig`,
-`isLoading`, `columnCacheName` (lưu cấu hình cột). Kiểu cột ở `shared/interfaces/h-table.interface.ts`, hằng ở
-`shared/const/h-table.const.ts`.
+Phần lớn bọc component PrimeNG (`sh-select` → `p-select`, `sh-table` → `p-table` + `p-paginator`…). Ô nhập liệu kế
+thừa `ShBaseControl` (cài `ControlValueAccessor`, dùng được với `formControlName` / `ngModel`) và gom nhãn, dấu `*`,
+tooltip, thông báo lỗi để form nào cũng giống nhau.
+
+`sh-table` nhận `rows`, `columns: IColumn[]`, `listAction: IAction[][]`, `paginator`, `serverConfig`,
+`isLoading`, `columnCacheName` (lưu cấu hình cột). Kiểu cột ở `shared/interfaces/sh-table.interface.ts`, hằng ở
+`shared/const/sh-table.const.ts` — cả hai đã export qua `public-api.ts`.
+
+⚠️ `sh-table` import từng directive (`NgIf`, `NgClass`…) thay vì `CommonModule`, vì pipe `currency` của lib trùng tên
+`CurrencyPipe` trong `CommonModule`. Đừng "gọn lại" bằng `CommonModule` ở component nào dùng `| currency`.
+⚠️ Directive dạng thuộc tính trơn (`pRipple`, `pTemplate`, `pButton`) thiếu import thì Angular **bỏ qua im lặng**,
+build vẫn qua; thêm vào template thì thêm module PrimeNG tương ứng vào `imports`.
+⚠️ `sh-input-text.html` dùng `pInputTextarea` (tên cũ), PrimeNG 21 là `pTextarea`, nên ô textarea chưa nhận style.
 
 ## Pipe
 
-`function`, `labelDropdown`, `truncate`, `currency`, `imageResize`, `libAcceptFile`, `libDateTime`.
-
-## HComponentBase
-
-Lớp trừu tượng cho component **trang**. Constructor nhận `Injector`, tự lấy `LibHelperService`, `TokenService`.
-
-| Thành viên | Dùng để |
+| Pipe | Tác dụng |
 |---|---|
-| `page: Page` | Trạng thái phân trang, từ khoá tìm kiếm |
-| `isLoading`, `submitted`, `onClickSubmit`, `destroyed$` | Cờ giao diện, huỷ subscription |
-| `checkInValidForm(form)`, `isInvalid`, `isInvalidMessage`, `markControls` | Kiểm form reactive |
-| `messageSuccess` / `messageError` / `messageWarn` | Toast PrimeNG |
-| `handleResponseInterceptor(res, msg?)`, `checkStatusResponse(res, msg?)` | Đọc envelope response, báo toast |
-| `confirmAction(message, icon?)` | Dialog xác nhận, trả `Promise<boolean>` |
-| `formatCalendarItemSendApi(date)` | Định dạng ngày gửi API (`YYYY-MM-DDTHH:mm:ss`) |
-| `getUser()` | Đọc `userInfo` từ localStorage |
+| `function` | Gọi hàm từ template, chỉ chạy lại khi tham số đổi: `fn \| function: [a, b]` |
+| `currency` | `1500000` → `1.500.000` (vi-VN), rỗng / sai trả `''` |
+| `truncate` | Cắt chuỗi kèm `...`: `text \| truncate: [20]` |
+| `libDateTime` | Định dạng ngày bằng `moment`: `ngay \| libDateTime: 'DD/MM/YYYY HH:mm'` |
+| `labelDropdown` | Từ danh sách option + value ra label |
+| `libAcceptFile` | `'image'` / `'video'` / `'media'` → chuỗi `accept` của `<input type="file">` |
 
-```typescript
-export class UserListComponent extends HComponentBase implements OnInit {
-    constructor(injector: Injector, private _userService: UserService) {
-        super(injector);
-    }
-}
-```
+## Validator
 
-⚠️ `handleResponseInterceptor` và `checkStatusResponse` đọc `response.statusCode`, còn BE trả `status`. Gọi
-API BE thật thì hai hàm này luôn coi là lỗi — phải sửa theo plan khớp BE trước khi dựng màn hình đầu tiên.
-
-## LibHelperService
-
-Gom service PrimeNG và Angular (`MessageService`, `DialogService`, `Router`, `HttpClient`…) cho
-`HComponentBase`. Có thêm `dialogConfirmRef`, `downloadFile`, `downloadFilePost`, `mapDTO`, `getContentHtml`.
-
-⚠️ Hai danh sách `exceptionCodeWarnings`, `exceptionErrorCodeNothingPass` là mã lỗi của dự án cũ (4104, 7120…),
-không có trong `ErrorCodes` của BE. Đừng thêm mã mới vào đây khi chưa đối chiếu BE.
+`validators/validator-common.ts`: `required`, `emailValidator`, `phoneValidator`, `passwordValidator`,
+`mustMatch`, `dateRangeValidator`, `rangeNumberValidator`… Lỗi trả dưới key `errorMessage` để ô `sh-*` hiện đúng
+thông điệp — vì vậy validator nằm cùng UI kit chứ không ở app.
 
 ## Page
 
 `shared/models/page.ts`: `pageNumber` đếm từ 0 trong FE, `getPageNumber()` trả số **từ 1** để gửi API (khớp
 `GetSkip()` của BE). `pageSize` mặc định 25, lựa chọn `[25, 50, 100, 200]`, `keyword` cho ô tìm kiếm.
 ⚠️ "Lấy tất cả" dùng `pageSizeAll = 9999999`, còn BE quy ước `pageSize = -1`.
+⚠️ `Utils.setParamGetList` gửi `page` / `limit` (dự án cũ), BE đọc `pageNumber` / `pageSize`: tự dựng `HttpParams`
+như mẫu ở [06-them-man-hinh.md](06-them-man-hinh.md) cho tới khi sửa hàm này.
 
-## Hằng số và kiểu
+## Hằng số và tiện ích
 
 | File | Chứa |
 |---|---|
-| `shared/const/base.consts.ts` | `BaseConsts` (key token, đường login, thông điệp), enum định dạng ngày, `SuccessMessage`, `ErrorMessage`, `StatusResonse` |
-| `shared/const/error-code.const.ts` | Mã HTTP và tên; thêm một lớp `ErrorMessage` trùng tên |
-| `shared/interfaces/response.interface.ts` | `IResponseList`, `IResponseItem`, `IResponseItemArray` |
-| `utils.ts` | `Utils`: localStorage, sessionStorage, tải file, định dạng tiền, `log` |
+| `shared/const/base.consts.ts` | `BaseConsts` (đuôi file, thông điệp), enum định dạng ngày, `EIconConfirm`, `DefaultImage`, `SuccessMessage`, `ErrorMessage` |
+| `shared/interfaces/base.interface.ts` | `IDialogConfirmConfig`, `IType`, `IEventSubmitForm`… |
+| `utils.ts` | `Utils` duy nhất của FE, ưu tiên bản SMS: storage, token (`getAccessToken`, `getRefreshToken`, `getDecodedJwtPayload`), PKCE, tải file, định dạng tiền / ngày, so sánh / clone dữ liệu, `mapDTO`, `setParamGetList`, `log` |
 
-⚠️ `ErrorMessage` khai hai lần (`base.consts.ts` và `error-code.const.ts`) với nội dung gần giống nhau. Import
-từ `base.consts.ts` (đã export qua `public-api.ts`).
+⚠️ `getSessionStorage` / `setSessionStorage` đọc ghi chuỗi thô, muốn lưu object thì tự `JSON.stringify` / `JSON.parse`. `getLocalStorage` trả `{}` khi chưa có key, không trả `null`.
+⚠️ Hàm token trong `Utils` là ngoại lệ của luật "lib không biết token", giữ theo khuôn SMS để cả app dùng một `Utils`.
 
-> **Tiếp:** [04-http-auth.md](04-http-auth.md) — token, interceptor và xử lý lỗi.
+⚠️ `base.consts.ts` và `utils.ts` còn nhiều hằng / hàm của dự án cũ (`LOGO_EPIC`, `StatusResonse`…); dọn theo danh
+sách được duyệt, không xoá đại trà.
+
+> **Tiếp:** [04-http-auth.md](04-http-auth.md) — xác thực, interceptor và xử lý lỗi HTTP.
