@@ -1,0 +1,82 @@
+
+<ng-container>
+    <label class="mb-2 text-black font-bold text-1xl" [pTooltip]="pTooltipLabel" *ngIf="label">
+        {{ label }}
+		<sh-icon-required *ngIf="isRequired || required" />
+    </label>
+    <p-datepicker
+        class="mt-2"
+        #calendar
+        [inputId]="inputId"
+        [style]="style"
+        [inputStyle]="inputStyle"
+        [name]="name"
+        [placeholder]="placeholder"
+        styleClass="custom-disabled custom-calendar w-full {{ isShowDatepicker ? 'open-datepicker' : '' }} {{ styleClass }} "
+        [(ngModel)]="value"
+        [dateFormat]="dateFormat"
+        [showIcon]="showIcon"
+        [appendTo]="appendTo"
+        [readonlyInput]="readonlyInput"
+        [hourFormat]="hourFormat"
+        [timeOnly]="timeOnly"
+        [stepHour]="stepHour"
+        [stepMinute]="stepMinute"
+        [stepSecond]="stepSecond"
+        [showSeconds]="showSeconds"
+        [required]="required"
+        [showTime]="showTime"
+        [showClear]="showClear"
+        [selectionMode]="selectionMode"
+        [panelStyleClass]="panelStyleClass"
+        [panelStyle]="panelStyle"
+        [minDate]="minDate"
+        [maxDate]="maxDate"
+        [disabledDates]="disabledDates"
+        [disabledDays]="disabledDays"
+        [numberOfMonths]="numberOfMonths"
+        [defaultDate]="defaultDate"
+        [showButtonBar]="showButtonBar"
+        [disabled]="isDisabled || disabled"
+        [ngClass]="{
+			'ng-invalid ng-dirty': controlDir?.control?.touched && controlDir?.control?.invalid && !isShowDatepicker
+		}"
+        (onFocus)="onFocus.emit($event)"
+        (onBlur)="onBlur.emit($event); onTouched()"
+        (onSelect)="_onSelect($event);"
+        (onClear)="_onClear($event)"
+        (onClearClick)="_onClearClick($event)"
+        (onInput)="_onInput($event);"
+        (onTodayClick)="onTodayClick.emit($event); _onTodayClick($event)"
+        (onMonthChange)="onMonthChange.emit($event)"
+        (onYearChange)="onYearChange.emit($event)"
+        (onClickOutside)="onClickOutside.emit($event);"
+        (onShow)="onShow.emit($event); _onShow($event)"
+        (onClose)="onClose.emit($event); _onClose($event)"
+    >
+        @if (headerTemplate) {
+            <ng-template pTemplate="header" let-header>
+                <ng-container
+                *ngTemplateOutlet="headerTemplate; context: {$implicit: header}">
+                </ng-container>
+            </ng-template>
+        }
+        @if (footerTemplate) {
+            <ng-template pTemplate="footer" let-footer>
+                <ng-container
+                *ngTemplateOutlet="footerTemplate; context: {$implicit: footer}">
+                </ng-container>
+            </ng-template>
+        }
+        @if (dateTemplate) {
+            <ng-template pTemplate="date" let-date>
+                <ng-container
+                *ngTemplateOutlet="dateTemplate; context: {$implicit: date}">
+                </ng-container>
+            </ng-template>
+        }
+    </p-datepicker>
+    <small *ngIf="controlDir?.control?.touched && controlDir?.control?.invalid && (controlDir?.control?.hasError('errorMessage') || this.control.errors) && !isShowDatepicker && isShowMessageInvalid" class="p-error">
+        {{ this.control.errors['required'] ? 'Trường bắt buộc nhập' : controlDir?.control?.getError('errorMessage') }}
+    </small>
+</ng-container>

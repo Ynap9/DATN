@@ -1,63 +1,62 @@
-# HTTP, xác thực và xử lý lỗi
+# Xác thực, HTTP và xử lý lỗi
 
 > **Phần 4/6** · trước: [03-lib-components.md](03-lib-components.md) · mục lục: [README.md](README.md)
 
-Các lớp nằm ở `lib-components/src/my-lib-components/shared/services/auth/` và `shared/guard/`.
+Nằm ở `admin/src/app/core/auth/` và `core/http/`. Lib `@sh/ui` không có phần nào ở đây.
 
-## Token
+## core/auth
 
-`TokenService` lưu trong **localStorage**:
-
-| Key | Giá trị |
+| File | Làm gì |
 |---|---|
-| `access_token` | JWT từ `POST /connect/token` của BE |
-| `refresh_token` | Refresh token (OpenIddict chỉ cấp khi request có scope `offline_access`) |
+| `service/auth.service.ts` | `login`, `refreshAccessToken`, `logout` (xoá storage, `SharedService.clearAll()`, về login) |
+| `guard/auth.guard.ts` | Gắn ở route `admin`: `getMe` lỗi ⇒ về login kèm `redirect_uri`; thành công ⇒ nạp vai trò, quyền vào `SharedService` |
+| `guard/permission.guard.ts` | Gắn ở route con với `data: { permissions: [...] }`: SuperAdmin hoặc có ít nhất một key thì qua, không thì về `auth/access` |
 
-`AppAuthService.connectAuthorize()` xoá token rồi `window.location.href = '/auth/login'`.
+⚠️ `core/auth` đang import `@/services/shared.service`, `@/services/user.service`, lệch luật tầng trong [README.md](README.md).
 
-## HandleInterceptorService
+## core/http — interceptor dạng hàm
 
-Mọi request đi qua, theo thứ tự:
+Đăng ký theo thứ tự trong `app.config.ts`:
 
-1. **Chống bấm đúp**: request `POST`/`PUT`/`PATCH` trùng URL với request ghi đang chạy ⇒ trả `EMPTY` (bị nuốt).
-   Muốn gửi song song cùng URL ⇒ thêm param `enableMultileRequest`.
-2. **Gắn token**: có token ⇒ header `Authorization: Bearer <token>`, trừ khi param `unAuthorize=true`.
-3. **Dọn param điều khiển**: bỏ `unAuthorize`, `enableMultileRequest`, `skipErrorToast` khỏi query trước khi gửi.
-4. **Bắt lỗi HTTP**: `401` khi đang có token ⇒ `connectAuthorize()` (về trang login); mã khác ⇒ toast lỗi
-   (`404` "Đường dẫn không tồn tại", `403` message từ body, còn lại thông điệp chung), trừ khi `skipErrorToast=true`.
+| Interceptor | Làm gì |
+|---|---|
+| `baseUrlInterceptor` | URL bắt đầu bằng `/api/` hoặc `/connect/` được ghép `environment.api`; service chỉ ghi đường dẫn |
+| `httpErrorInterceptor` | Lỗi HTTP ⇒ toast (`401`, `403`, `404` có câu riêng, còn lại câu chung), trừ khi đặt `SKIP_ERROR_TOAST` |
+| `authInterceptor` | Bật `withCredentials` cho request `/api/`, trừ khi đặt `SKIP_AUTH`; `401` ⇒ refresh một lần qua `AuthService.refreshAccessToken` rồi gửi lại, không refresh được ⇒ `logout()` |
+
+Token nằm trong cookie `HttpOnly` do BE đặt, JS không đọc được. FE dùng client `client-web2`, không có secret.
+
+⚠️ `authInterceptor` phải đứng sau `httpErrorInterceptor` trong mảng để `401` được thử refresh trước khi hiện toast.
+
+Cờ điều khiển là `HttpContextToken` trong `http-context.ts`, **không** đi kèm query string:
 
 ```typescript
-const params = new HttpParams().set('skipErrorToast', true).set('unAuthorize', true);
-this.http.get(url, { params });
+const context = new HttpContext().set(SKIP_ERROR_TOAST, true).set(SKIP_AUTH, true);
+this._http.get(url, { context });
 ```
 
-⚠️ Chỉ có **lỗi HTTP** mới qua nhánh bắt lỗi. BE trả lỗi nghiệp vụ bằng **HTTP 200** + `status = 0`, nên lỗi
-nghiệp vụ phải được service/component đọc qua `checkStatusResponse`, interceptor không thấy.
+`DownloadService.get(url)` / `post(url, body)` trả `HttpResponse<Blob>`; lưu file bằng `Utils.makeDownload`.
 
-⚠️ Chưa có refresh token: hết hạn là `401` rồi về login, dù BE hỗ trợ grant `refresh_token`.
-
-## Hợp đồng với BE
-
-| Mặt | BE trả | FE đang đọc |
-|---|---|---|
-| Envelope | `{ status, data, code, message }` | `statusCode`, `message` |
-| Thành công | `status = 1`, `code = 200` | `statusCode === 1` |
-| Lỗi nghiệp vụ | HTTP 200, `status = 0`, `code` = mã BE (`103`, `105`…) | toast `message` |
-| Danh sách phân trang | `data: { items, totalItems }` | `data: { results, totalResults, page, limit }` |
-| Thiếu token / hết hạn | HTTP 401 | về login |
-| Thiếu quyền | HTTP 403, body rỗng | toast `err.error.message` (rỗng) |
-
-Mọi dòng lệch đã ghi trong [../plans/khop-voi-be.plan.md](../plans/khop-voi-be.plan.md); BE là nguồn chân lý,
-FE sửa theo BE.
-
-## AuthGuard
-
-`projects/shared/guard/auth.guard.ts`, `canActivate` + `canActivateChild`. Chỉ kiểm có `access_token` trong
-localStorage. Không kiểm hạn token, không kiểm quyền theo route.
+⚠️ Chỉ **lỗi HTTP** mới qua `httpErrorInterceptor`. BE trả lỗi nghiệp vụ bằng **HTTP 200** + `status = 0`, nên lỗi
+nghiệp vụ phải được đọc ở tầng data-access của tính năng (sẽ có `unwrapApiResponse` theo plan khớp BE).
+⚠️ Đăng nhập sai BE trả HTTP **400** `{ error: 'invalid_grant', error_description }`; lời gọi `/connect/token` phải
+đặt `SKIP_ERROR_TOAST` và tự hiện `error_description`, nếu không sẽ ra toast câu chung.
 
 ## GlobalErrorHandler
 
-Bắt lỗi JavaScript toàn cục; lỗi `Loading chunk N failed` (deploy bản mới khi tab cũ còn mở) ⇒ reload trang.
-Lỗi khác chỉ `console.log`.
+`core/error/global-error-handler.ts`: `console.error` mọi lỗi; lỗi tải chunk (`Loading chunk N failed` hoặc
+`Failed to fetch dynamically imported module` của builder esbuild) ⇒ reload trang.
+
+## Hợp đồng với BE
+
+| Mặt | BE trả | FE hiện tại |
+|---|---|---|
+| Envelope | `{ status, data, code, message }` | Chưa có kiểu, chưa có hàm đọc |
+| Lỗi nghiệp vụ | HTTP 200, `status = 0`, `code` = mã BE (`103`, `105`…) | Chưa đọc |
+| Danh sách phân trang | `data: { items, totalItems }` | Chưa có kiểu |
+| Thiếu token / hết hạn | HTTP 401 | `logout()` |
+| Thiếu quyền | HTTP 403, body rỗng | Toast "Bạn không có quyền thực hiện thao tác này" |
+
+Phần còn thiếu ghi trong [../plans/khop-voi-be.plan.md](../plans/khop-voi-be.plan.md); BE là nguồn chân lý.
 
 > **Tiếp:** [05-conventions.md](05-conventions.md) — quy ước code bắt buộc.

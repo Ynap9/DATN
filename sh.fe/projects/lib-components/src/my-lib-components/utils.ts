@@ -3,15 +3,14 @@ import { HttpParams } from "@angular/common/http";
 import { Page } from "./shared/models/page";
 import moment from 'moment';
 import { BaseConsts } from "./shared/const/base.consts";
-import { IResponseItem } from "./shared/interfaces/response.interface";
 export class Utils {
 
     public static getSessionStorage(key: string) {
-        return JSON.parse(sessionStorage.getItem(key))
+        return sessionStorage.getItem(key);
     }
 
-    public static setSessionStorage(key: string, data: any,) {
-        sessionStorage.setItem(key, JSON.stringify(data));
+    public static setSessionStorage(key: string, data: any) {
+        sessionStorage.setItem(key, data);
     }
 
     public static removeSessionStorage(key: string) {
@@ -23,7 +22,11 @@ export class Utils {
     }
 
     public static getLocalStorage(key: string) {
-        return JSON.parse(localStorage.getItem(key))
+        try {
+            return JSON.parse(localStorage.getItem(key) || '');
+        } catch (error) {
+            return {};
+        }
     }
 
     public static setLocalStorage(key: string, data: any) {
@@ -38,8 +41,69 @@ export class Utils {
         localStorage.clear();
     }
 
+    public static refreshData(data: any) {
+        return JSON.parse(JSON.stringify(data));
+    }
+
     public static cloneData(data) {
         return JSON.parse(JSON.stringify(data));
+    }
+
+    public static reverseDateString(date: string) {
+        return date.split(/[-,/]/).reverse().join('-');
+    }
+
+    static formatDateCallApi(date: string | Date | null | undefined, format = 'YYYY-MM-DDTHH:mm:ss') {
+        if (moment(date).isValid()) {
+            return moment(date).format(format);
+        }
+        return '';
+    }
+
+    static formatDateView(date: string | Date | null | undefined, format = 'DD/MM/YYYY') {
+        if (moment(date).isValid()) {
+            return moment(date).format(format);
+        }
+        return '';
+    }
+
+    static convertVietnameseToEng(str: string, isKeepCase = false) {
+        str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, 'a');
+        str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, 'e');
+        str = str.replace(/ì|í|ị|ỉ|ĩ/g, 'i');
+        str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, 'o');
+        str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, 'u');
+        str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, 'y');
+        str = str.replace(/đ/g, 'd');
+
+        str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, 'A');
+        str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, 'E');
+        str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, 'I');
+        str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, 'O');
+        str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, 'U');
+        str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, 'Y');
+        str = str.replace(/Đ/g, 'D');
+
+        return str;
+    }
+
+    static base64UrlEncode(arrayBuffer: ArrayBuffer) {
+        let str = String.fromCharCode(...new Uint8Array(arrayBuffer));
+        return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    static async generatePKCECodes() {
+        const array = new Uint8Array(32);
+        crypto.getRandomValues(array);
+
+        const codeVerifier = this.base64UrlEncode(array.buffer);
+
+        const encoder = new TextEncoder();
+        const data = encoder.encode(codeVerifier);
+        const digest = await crypto.subtle.digest('SHA-256', data);
+        const codeChallenge = this.base64UrlEncode(digest);
+
+        return { codeVerifier, codeChallenge };
     }
 
     public static formatDateMonth(value) {
@@ -162,7 +226,7 @@ export class Utils {
     }
 
     public static log(titleError: string, error?: any) {
-        console.log(`%c ${titleError} `, 'background:black; color: red; height: 20', error);
+        console.log(`%c ${titleError} `, 'background:black; color: red', error);
     }
 
     public static isExtensionImage(path: string) {
@@ -418,8 +482,15 @@ export class Utils {
         }
     }
 
-    public static checkPermissionExist(params: IResponseItem<Record<string, boolean>>, checkPermissionTableContract: string) {
-        return params?.data?.[checkPermissionTableContract]
+    public static mapDTO(data: object, model: object, options?: { idName?: string, isCheckNull?: boolean }) {
+        const idName = options?.idName || 'id';
+        const isCheckNull = !!options?.isCheckNull;
+        const result: any = {};
+        for (const key of Object.keys(model)) {
+            if ((key === idName || isCheckNull) && !data[key]) continue;
+            result[key] = data[key];
+        }
+        return result;
     }
 
     public static setParamGetList(page?: Page, dataFilter: any = {}, excludeFields?: string[]): HttpParams {

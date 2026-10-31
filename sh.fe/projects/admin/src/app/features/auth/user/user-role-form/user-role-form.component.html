@@ -1,0 +1,8 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <sh-multi-select label="Vai trò" formControlName="roleId" [options]="roles" optionLabel="name" optionValue="id" [required]="true" />
+
+    <div class="flex justify-end gap-2 mt-6">
+        <p-button label="Hủy" severity="secondary" [outlined]="true" (onClick)="close()" />
+        <p-button type="submit" label="Lưu" [loading]="submitting" />
+    </div>
+</form>

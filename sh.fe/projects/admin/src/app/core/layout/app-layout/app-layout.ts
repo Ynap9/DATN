@@ -1,9 +1,16 @@
 import { Component, computed, effect, inject } from '@angular/core';
-import { LayoutService } from '../../services/layout.service';
+import { LayoutService } from '../service/layout.service';
+import { CommonModule } from '@angular/common';
+import { RouterOutlet } from '@angular/router';
+import { ConfirmDialog } from 'primeng/confirmdialog';
+import { ToastModule } from 'primeng/toast';
+import { ShBreadcrumbComponent } from '@sh/ui';
+import { AppTopbar } from '../app-topbar/app-topbar';
+import { AppSidebar } from '../app-sidebar/app-sidebar';
 
 @Component({
     selector: 'app-layout',
-    standalone: false,
+    imports: [CommonModule, RouterOutlet, ToastModule, ConfirmDialog, ShBreadcrumbComponent, AppTopbar, AppSidebar],
     templateUrl: './app-layout.html',
     styleUrl: './app-layout.scss',
 })

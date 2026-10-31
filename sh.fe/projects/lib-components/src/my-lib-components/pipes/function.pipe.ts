@@ -1,9 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-    name: 'function',
-    standalone: false
-})
+    name: 'function',})
 export class FunctionPipe implements PipeTransform {
 
     transform(callBackFunc: Function, params: any[]): any {

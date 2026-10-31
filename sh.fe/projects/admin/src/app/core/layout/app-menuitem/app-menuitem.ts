@@ -1,11 +1,14 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
-import { LayoutService } from '../../services/layout.service';
+import { LayoutService } from '../service/layout.service';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
+import { CommonModule } from '@angular/common';
+import { RouterLink, RouterLinkActive } from '@angular/router';
+import { RippleModule } from 'primeng/ripple';
 
 @Component({
     selector: '[app-menuitem]',
-    standalone: false,
+    imports: [CommonModule, RouterLink, RouterLinkActive, RippleModule],
     templateUrl: './app-menuitem.html',
     styleUrl: './app-menuitem.scss',
     host: {

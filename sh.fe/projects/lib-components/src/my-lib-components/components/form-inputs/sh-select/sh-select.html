@@ -1,0 +1,71 @@
+<ng-container>
+	<label class="mb-2 label" [pTooltip]="pTooltipLabel" *ngIf="label">
+		{{ label }}
+		<sh-icon-required *ngIf="isRequired || required" />
+	</label>
+	<div class="center-placeholder" [pTooltip]="(showTooltip && (value || value === 0)) ? tooltip : ''" tooltipPosition="top">
+		<p-select
+			#dropdown
+			class="custom-disabled"
+			[style]="style"
+			styleClass="w-full {{ styleClass }}"
+			[panelStyle]="panelStyle"
+			[panelStyleClass]="panelStyleClass"
+			[inputId]="inputId"
+			[options]="options" [optionLabel]="optionLabel" [optionValue]="optionValue"
+			selectedValue="null"
+			[(ngModel)]="value"
+			[disabled]="isDisabled || disabled"
+			[editable]="editable"
+			[appendTo]="appendTo"
+			[placeholder]="placeholder"
+			[optionDisabled]="optionDisabled"
+			[scrollHeight]="scrollHeight"
+			[filter]="filter"
+			[virtualScroll]="virtualScroll"
+			[virtualScrollItemSize]="virtualScrollItemSize"
+			[resetFilterOnHide]="resetFilterOnHide"
+			[readonly]="readonly"
+			[filterValue]="filterValue"
+			[required]="required"
+			[editable]="editable"
+			[filterPlaceholder]="filterPlaceholder"
+			[filterLocale]="filterLocale"
+			[dataKey]="dataKey"
+			[group]="groupConfig.group"
+			[optionGroupLabel]="groupConfig.optionGroupLabel"
+			[optionGroupChildren]="groupConfig.optionGroupChildren"
+			[showClear]="showClear"
+			[emptyFilterMessage]="emptyFilterMessage"
+			[emptyMessage]="emptyMessage"
+			[filterMatchMode]="filterMatchMode"
+			[ngClass]="{
+				'ng-invalid ng-dirty': controlDir?.control?.touched && controlDir?.control?.invalid && !isShowDropdown
+			}"
+			(onBlur)="onTouched(); onBlur.emit($event)"
+			(onChange)="_onChange($event.value); _handleOnChange($event.value)"
+			(onFilter)="onFilter.emit($event)"
+			(onFocus)="onFocus.emit($event)"
+			(onClick)="onClick.emit($event)"
+			(onShow)="onShow.emit($event); _onShow($event)"
+			(onHide)="onHide.emit($event); _onHide($event)"
+			(onClear)="_onClear()"
+			(onLazyLoad)="onLazyLoad.emit($event)"
+		>
+			<ng-template pTemplate="selectedItem" *ngIf="selectedItemTemplate" let-selectedItem>
+				<ng-container *ngTemplateOutlet="selectedItemTemplate; context: {$implicit: selectedItem}"></ng-container>
+			</ng-template>
+			<ng-template let-item pTemplate="item" *ngIf="itemTemplate">
+				<ng-container *ngTemplateOutlet="itemTemplate; context: { $implicit: item }"></ng-container>
+			</ng-template>
+			<ng-template let-item pTemplate="item" *ngIf="truncateLength">
+				<span [pTooltip]="item?.[optionLabel]?.length > truncateLength ? item?.[optionLabel] : ''">
+					{{ item?.[optionLabel] | truncate: [truncateLength] }}
+				</span>
+			</ng-template>
+		</p-select>
+	</div>
+	<small *ngIf="controlDir?.control?.touched && controlDir?.control?.invalid && (controlDir?.control?.hasError('errorMessage') || this.control.errors) && !isShowDropdown && isShowMessageInvalid" class="p-error">
+		{{ this.control.errors['required'] ? 'Trường bắt buộc nhập' : controlDir?.control?.getError('errorMessage') }}
+	</small>
+</ng-container>

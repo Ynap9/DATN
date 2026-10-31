@@ -82,6 +82,7 @@ Vòng đời: **(1)** thêm `V2` vào `ApiVersionConstants` + controller / actio
 | Grant type | password, refresh_token, client_credentials, authorization_code (+PKCE) |
 | Ký token | Khoá đối xứng `AuthServer:SecretKey` trong appsettings |
 | Claim vai trò | Lấy qua `IUserService.GetRoleNames` — đã loại vai trò xoá mềm |
+| Phiên web | `client-web2`: token trả qua cookie `HttpOnly`, không nằm trong body (`Services/WebSessionCookies.cs`); `POST /connect/logout` xoá cookie |
 
 ⚠️ `AuthorizationController` còn nhận trực tiếp `UserManager<AppUser>` (`[FromServices]`) để kiểm mật khẩu
 khi cấp token. Đây là chỗ còn dính Identity ở tầng api, đã biết; đừng nhân bản kiểu này sang controller khác.

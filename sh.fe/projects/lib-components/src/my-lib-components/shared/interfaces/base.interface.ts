@@ -30,11 +30,6 @@ export interface ILabelButton {
     cancel: string;
 }
 
-export interface IDropdown{
-    labelName: string,
-    value: number | string
-}
-
 export interface IDialogConfirmConfig {
     header?: string,
     message?: string,
