@@ -5,12 +5,12 @@
 }
 
 .card {
-    background: var(--h-bg-surface);
+    background: var(--sh-bg-surface);
     padding: 1.5rem;
     margin-bottom: 1.5rem;
     border-radius: 8px;
-    border: 1px solid var(--h-border-color);
-    box-shadow: var(--h-shadow-sm);
+    border: 1px solid var(--sh-border-color);
+    box-shadow: var(--sh-shadow-sm);
 
     &:last-child {
         margin-bottom: 0;

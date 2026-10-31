@@ -1,0 +1,126 @@
+.permission-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--app-line);
+}
+
+.permission-total {
+    font-size: 13px;
+    color: var(--app-muted);
+}
+
+.permission-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 16px 20px 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--app-accent-soft);
+    font-size: 14px;
+    color: var(--app-ink);
+}
+
+.permission-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 20px 20px;
+}
+
+.permission-section {
+    border: 1px solid var(--app-line);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.permission-section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--app-bg);
+
+    label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--app-ink);
+        cursor: pointer;
+    }
+}
+
+.permission-collapse {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--app-muted);
+    cursor: pointer;
+
+    &:hover {
+        background: var(--app-line);
+    }
+}
+
+.permission-badge {
+    margin-left: auto;
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--app-muted);
+}
+
+.permission-group {
+    padding: 12px 14px 12px 48px;
+    border-top: 1px solid var(--app-line);
+}
+
+.permission-group-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    label {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--app-ink);
+        cursor: pointer;
+    }
+}
+
+.permission-leaves {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 8px 16px;
+    padding-left: 30px;
+
+    &:not(:empty) {
+        margin-top: 10px;
+    }
+}
+
+.permission-leaf {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+
+    label {
+        font-size: 13.5px;
+        line-height: 1.4;
+        color: var(--app-muted);
+        cursor: pointer;
+    }
+}
+
+.permission-empty {
+    padding: 32px 0;
+    margin: 0;
+    text-align: center;
+    font-size: 14px;
+    color: var(--app-muted);
+}

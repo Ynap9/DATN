@@ -1,0 +1,40 @@
+<app-page-header title="Vai trò và phân quyền" [breadcrumbs]="breadcrumbs" />
+
+<div class="flex justify-end mb-4">
+    <p-button icon="pi pi-plus" label="Thêm vai trò" (onClick)="openForm()" />
+</div>
+
+<div class="role-layout">
+    <aside class="role-panel role-sidebar">
+        <input pInputText class="w-full" placeholder="Tìm vai trò" [(ngModel)]="keyword" />
+        <span class="role-count">{{ filteredRoles.length }} vai trò</span>
+        <ul class="role-items">
+            @for (role of filteredRoles; track role.id) {
+                <li>
+                    <button type="button" class="role-item" [class.active]="role.id === selectedRole?.id" (click)="selectRole(role)">
+                        <b>{{ role.name }}</b>
+                        <span>{{ role.description }}</span>
+                    </button>
+                </li>
+            } @empty {
+                <li class="role-empty">{{ loading ? 'Đang tải...' : 'Không có vai trò' }}</li>
+            }
+        </ul>
+    </aside>
+
+    <section class="role-panel role-detail">
+        @if (selectedRole; as role) {
+            <header class="role-detail-header">
+                <div class="min-w-0">
+                    <h2>{{ role.name }}</h2>
+                    <p>{{ role.description }}</p>
+                </div>
+                <div class="flex gap-2">
+                    <p-button icon="pi pi-pencil" label="Sửa" severity="secondary" [outlined]="true" (onClick)="openForm(role)" />
+                    <p-button icon="pi pi-trash" label="Xóa" severity="danger" [outlined]="true" (onClick)="confirmDeleteRole(role)" />
+                </div>
+            </header>
+            <app-role-permission [role]="role" />
+        }
+    </section>
+</div>

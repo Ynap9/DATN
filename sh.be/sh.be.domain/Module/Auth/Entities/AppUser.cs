@@ -12,8 +12,11 @@ namespace sh.be.domain.Module.Auth.Entities
     {
         [MaxLength(250)]
         public string FullName { get; private set; } = String.Empty;
+        [MaxLength(450)]
+        public string? CreatedBy { get; private set; }
+        public DateTime? CreatedDate { get; private set; }
 
-        public static AppUser Create(string userName, string fullName, string email, string? phoneNumber)
+        public static AppUser Create(string userName, string fullName, string email, string? phoneNumber, string? createdBy = null, DateTime? createdDate = null)
         {
             return new AppUser
             {
@@ -22,6 +25,8 @@ namespace sh.be.domain.Module.Auth.Entities
                 Email = email,
                 PhoneNumber = phoneNumber,
                 EmailConfirmed = true,
+                CreatedBy = createdBy,
+                CreatedDate = createdDate,
             };
         }
 

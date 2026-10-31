@@ -4,7 +4,7 @@ $fieldMarginBottom: 5px;
 %title-page {
     padding-bottom: 0px;
     margin-bottom: 0px;
-    color: var(--h-text-primary);
+    color: var(--sh-text-primary);
 }
 
 %style-list-action {
@@ -24,16 +24,16 @@ $fieldMarginBottom: 5px;
     margin-top: 10px;
 }
 .p-card-container {
-    background-color: var(--h-bg-surface) !important;
+    background-color: var(--sh-bg-surface) !important;
 }
 
 #page-content {
     padding: 18px;
     padding-top: 5px;
     padding-bottom: 5px;
-    background: var(--h-bg-surface);
+    background: var(--sh-bg-surface);
     border-radius: 8px;
-    border: 1px solid var(--h-border-color);
+    border: 1px solid var(--sh-border-color);
     #page-header {
         .header {
             margin-bottom: 24px;
@@ -71,7 +71,7 @@ $fieldMarginBottom: 5px;
         }
     }
 }
-#page-header .header:has(h-table-filters) {
+#page-header .header:has(sh-table-filter) {
     align-items: flex-end;
 
     .action,
