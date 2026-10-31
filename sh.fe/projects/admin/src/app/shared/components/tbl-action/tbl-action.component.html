@@ -1,0 +1,4 @@
+<div class="flex justify-center">
+    <p-button icon="pi pi-ellipsis-h" severity="secondary" [text]="true" [rounded]="true" (onClick)="menu.toggle($event)" />
+    <p-menu #menu [model]="menuItems()" [popup]="true" appendTo="body" />
+</div>

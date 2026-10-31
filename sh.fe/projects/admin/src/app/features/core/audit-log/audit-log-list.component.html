@@ -1,0 +1,11 @@
+<app-page-header title="Nhật ký hệ thống" [breadcrumbs]="breadcrumbs" />
+
+<div class="flex flex-wrap items-center gap-3 mb-4">
+    <input pInputText class="w-full sm:w-80" placeholder="Tìm theo hành động, nội dung, người dùng" [formControl]="keyword" />
+    <sh-select class="w-full sm:w-56" placeholder="Mọi loại" [formControl]="actionType" [options]="actionTypes" optionLabel="label" optionValue="value"
+        [showClear]="true" (onChange)="search()" />
+    <span class="text-sm text-muted-color">{{ totalRecords }} mục</span>
+</div>
+
+<app-data-table [columns]="columns" [data]="logs" [loading]="loading" [pageNumber]="pageNumber" [pageSize]="pageSize"
+    [total]="totalRecords" (pageChange)="onPageChange($event)" (action)="onAction($event)" />

@@ -57,6 +57,28 @@
     background: var(--surface-card, #fff);
 }
 
+body .p-toast {
+    width: 22rem;
+    max-width: calc(100vw - 2rem);
+
+    .p-toast-message-content {
+        padding: 0.75rem 1rem;
+        gap: 0.625rem;
+    }
+
+    .p-toast-message-icon {
+        font-size: 1.125rem;
+        width: 1.125rem;
+        height: 1.125rem;
+    }
+
+    .p-toast-summary,
+    .p-toast-detail {
+        font-size: 0.875rem;
+        line-height: 1.4;
+    }
+}
+
 @keyframes skShimmer {
     0%   { background-position: 100% 50%; }
     100% { background-position: 0 50%; }

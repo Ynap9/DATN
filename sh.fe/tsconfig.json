@@ -14,18 +14,9 @@
         "experimentalDecorators": true,
         "sourceMap": true,
         "paths": {
-            "@lib-components/*": [
-                "./src/lib-components/*"
-            ],
-            "@shared/*": [
-                "./projects/shared/src/*"
-            ],
-            "lib-components": [
-                "./dist/lib-components"
-            ],
-            "shared": [
-                "./dist/shared"
-            ]
+            "@/*": ["./projects/admin/src/app/*"],
+            "@sh/ui": ["./projects/lib-components/src/public-api.ts"],
+            "@env/*": ["./projects/admin/src/environments/*"]
         },
         "declaration": false,
         "moduleResolution": "bundler",
@@ -49,12 +40,6 @@
         },
         {
             "path": "./projects/admin/tsconfig.spec.json"
-        },
-        {
-            "path": "./projects/shared/tsconfig.lib.json"
-        },
-        {
-            "path": "./projects/shared/tsconfig.spec.json"
         },
         {
             "path": "./projects/lib-components/tsconfig.lib.json"

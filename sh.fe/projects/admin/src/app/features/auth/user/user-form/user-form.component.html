@@ -1,0 +1,25 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <sh-input-text label="Tên đăng nhập" formControlName="userName" [required]="true" />
+        <sh-input-text label="Họ tên" formControlName="fullName" [required]="true" />
+        <sh-input-text label="Email" formControlName="email" [required]="true" />
+        <sh-input-text label="Số điện thoại" formControlName="phoneNumber" />
+        <sh-multi-select class="sm:col-span-2" label="Vai trò" formControlName="roleId" [options]="roles" optionLabel="name"
+            optionValue="id" [required]="true" />
+
+        <div class="sm:col-span-2 flex items-center gap-2">
+            <p-checkbox inputId="isRandomPassword" formControlName="isRandomPassword" [binary]="true" />
+            <label for="isRandomPassword">Tạo mật khẩu ngẫu nhiên và gửi qua email</label>
+        </div>
+
+        @if (!form.controls.isRandomPassword.value) {
+            <sh-input-text label="Mật khẩu" type="password" formControlName="password" [required]="true" />
+            <sh-input-text label="Nhập lại mật khẩu" type="password" formControlName="passwordConfirm" [required]="true" />
+        }
+    </div>
+
+    <div class="flex justify-end gap-2 mt-6">
+        <p-button label="Hủy" severity="secondary" [outlined]="true" (onClick)="close()" />
+        <p-button type="submit" label="Lưu" [loading]="submitting" />
+    </div>
+</form>

@@ -8,13 +8,7 @@
             "schematics": {
                 "@schematics/angular:component": {
                     "style": "scss",
-                    "standalone": false
-                },
-                "@schematics/angular:directive": {
-                    "standalone": false
-                },
-                "@schematics/angular:pipe": {
-                    "standalone": false
+                    "skipTests": true
                 }
             },
             "root": "projects/admin",
@@ -25,6 +19,7 @@
                     "builder": "@angular/build:application",
                     "options": {
                         "browser": "projects/admin/src/main.ts",
+                        "polyfills": ["zone.js"],
                         "tsConfig": "projects/admin/tsconfig.app.json",
                         "inlineStyleLanguage": "scss",
                         "assets": [
@@ -61,8 +56,17 @@
                             ],
                             "fileReplacements": [
                                 {
-                                    "replace": "projects/shared/environments/environment.ts",
-                                    "with": "projects/shared/environments/environment.prod.ts"
+                                    "replace": "projects/admin/src/environments/environment.ts",
+                                    "with": "projects/admin/src/environments/environment.prod.ts"
+                                }
+                            ],
+                            "outputHashing": "all"
+                        },
+                        "staging": {
+                            "fileReplacements": [
+                                {
+                                    "replace": "projects/admin/src/environments/environment.ts",
+                                    "with": "projects/admin/src/environments/environment.staging.ts"
                                 }
                             ],
                             "outputHashing": "all"
@@ -85,6 +89,9 @@
                         "production": {
                             "buildTarget": "admin:build:production"
                         },
+                        "staging": {
+                            "buildTarget": "admin:build:staging"
+                        },
                         "development": {
                             "buildTarget": "admin:build:development"
                         }
@@ -97,6 +104,7 @@
                 "test": {
                     "builder": "@angular/build:karma",
                     "options": {
+                        "polyfills": ["zone.js", "zone.js/testing"],
                         "tsConfig": "projects/admin/tsconfig.spec.json",
                         "inlineStyleLanguage": "scss",
                         "assets": [
@@ -113,35 +121,8 @@
                         },
                         "styles": [
                             "projects/admin/src/tailwind.css",
-                            "projects/admin/src/styles.scss",
-                            "./node_modules/leaflet/dist/leaflet.css"
+                            "projects/admin/src/styles.scss"
                         ]
-                    }
-                }
-            }
-        },
-        "shared": {
-            "projectType": "library",
-            "root": "projects/shared",
-            "sourceRoot": "projects/shared/src",
-            "prefix": "lib",
-            "architect": {
-                "build": {
-                    "builder": "@angular/build:ng-packagr",
-                    "configurations": {
-                        "production": {
-                            "tsConfig": "projects/shared/tsconfig.lib.prod.json"
-                        },
-                        "development": {
-                            "tsConfig": "projects/shared/tsconfig.lib.json"
-                        }
-                    },
-                    "defaultConfiguration": "production"
-                },
-                "test": {
-                    "builder": "@angular/build:karma",
-                    "options": {
-                        "tsConfig": "projects/shared/tsconfig.spec.json"
                     }
                 }
             }

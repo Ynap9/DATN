@@ -76,14 +76,14 @@ namespace sh.be.applications.Module.Auth.Implements
             await _roleDomainService.EnsureAllExistAsync(roleIds);
             await _roleDomainService.EnsureCompatibleAsync(roleIds);
 
-            var user = AppUser.Create(dto.UserName, dto.FullName, dto.Email, dto.PhoneNumber);
+            var currentUserId = getCurrentUserId();
+            var user = AppUser.Create(dto.UserName, dto.FullName, dto.Email, dto.PhoneNumber, currentUserId, GetVietnamTime());
 
             await using var transaction = await _unitOfWork.BeginTransactionAsync();
             try
             {
                 await _userRepository.CreateAsync(user, password);
 
-                var currentUserId = getCurrentUserId();
                 _userRepository.AddUserRoles(user.AssignRoles(roleIds, currentUserId, null));
                 AddAuditLog(AuditLogConstants.ACTION_USER_CREATE, AuditLogConstants.ACTION_TYPE_CREATE, $"Tạo người dùng {user.UserName}",
                     null, new { user.Id, user.UserName, user.FullName, user.Email, user.PhoneNumber, RoleIds = roleIds });

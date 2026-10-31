@@ -96,19 +96,12 @@ export class BaseConsts {
     static readonly fileExtensionStrings = '.pdf, .xlsx, .xls, .doc, .docx, .repx';
     static readonly videoExtensionStrings = '.mp4, .avi, .mkv, .wmv, .vob, .flv, .wmv9, .mpeg, .3gp, .webm, .hevc, .mov, .mpg, .3gpp, .mpeg1, .mpeg2, .mpeg4, .mpegps';
     static readonly pageContentId = "page-content";
-    static readonly localStorageUser = 'userInfo';
     static readonly separatorHistory = 'rowSeparator';
 
     static readonly backLinkParam = 'backLink';
-    static readonly redirectLoginPath = '/auth/login';
     static readonly methodApiPost = ['POST', 'PUT', 'PATCH'];
 
     static readonly messageError = "Có lỗi xảy ra. Vui lòng thử lại sau ít phút!";
-
-    static readonly authorization = {
-        accessToken: 'access_token',
-        refreshToken: 'refresh_token',
-    };
 
     static readonly maxSizeUpdate = 10485760;
     static readonly PAGINATOR_MIN_LENGTH_SHOW = 25;

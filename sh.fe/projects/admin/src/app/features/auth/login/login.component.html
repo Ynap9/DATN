@@ -1,0 +1,103 @@
+<p-toast></p-toast>
+<div class="login-wrapper">
+
+    <div class="login-left">
+        <div class="login-brand">
+            <span class="login-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 7V5a1 1 0 0 1 1-1h2M20 7V5a1 1 0 0 0-1-1h-2M4 17v2a1 1 0 0 0 1 1h2M20 17v2a1 1 0 0 1-1 1h-2" />
+                    <path d="M8 12h8" />
+                </svg>
+            </span>
+            <span class="login-brand__name">Thi công số hoá</span>
+        </div>
+
+        <div class="login-card">
+            <h1 class="login-title">Đăng nhập</h1>
+            <p class="login-subtitle">Truy cập hệ thống số hoá hồ sơ thi công.</p>
+
+            <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form">
+
+                <div class="login-field">
+                    <label for="username">Tên đăng nhập</label>
+                    <sh-input-text
+                        inputId="username"
+                        class="w-full"
+                        placeholder="Nhập tên đăng nhập"
+                        autocomplete="on"
+                        formControlName="username"
+                        [isShowMessageInvalid]="false"
+                        (keydown.enter)="focusPassword()">
+                    </sh-input-text>
+                    <small *ngIf="getError('username')" class="text-red-600">{{ getError('username') }}</small>
+                </div>
+
+                <div class="login-field">
+                    <label for="password">Mật khẩu</label>
+                    <p-password
+                        inputId="password"
+                        [toggleMask]="true"
+                        styleClass="w-full"
+                        inputStyleClass="w-full login-password-input"
+                        placeholder="Nhập mật khẩu"
+                        autocomplete="current-password"
+                        formControlName="password"
+                        [feedback]="false"
+                        (keydown.enter)="focusLogin()">
+                    </p-password>
+                    <small *ngIf="getError('password')" class="text-red-600">{{ getError('password') }}</small>
+                </div>
+
+                <button
+                    id="login"
+                    pButton
+                    type="submit"
+                    class="login-btn"
+                    [icon]="loading ? 'pi pi-spin pi-spinner' : ''"
+                    [label]="loading ? 'Đang đăng nhập...' : 'Đăng nhập'"
+                    [disabled]="loading">
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="login-right">
+        <div class="login-right__inner">
+            <h2 class="login-right__title">Số hoá hồ sơ thi công, từ nhập liệu đến đóng gói</h2>
+            <p class="login-right__desc">Mỗi văn bản đi qua một quy trình rõ ràng, có phân công và lịch sử ở từng bước.</p>
+
+            <ol class="login-flow">
+                <li>
+                    <span class="login-flow__icon"><i class="pi pi-pencil"></i></span>
+                    <div>
+                        <b>Nhập liệu và kiểm tra</b>
+                        <p>Phân công theo dự án và loại văn bản, kiểm tra dữ liệu từng văn bản.</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="login-flow__icon"><i class="pi pi-search"></i></span>
+                    <div>
+                        <b>Kiểm soát chất lượng</b>
+                        <p>QA đánh giá Đạt hoặc Không đạt, duyệt toàn bộ hoặc chấm mẫu.</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="login-flow__icon"><i class="pi pi-verified"></i></span>
+                    <div>
+                        <b>Ký số theo lô</b>
+                        <p>Ký nhiều văn bản trong một lô theo mẫu chữ ký đã cấu hình.</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="login-flow__icon"><i class="pi pi-box"></i></span>
+                    <div>
+                        <b>Đóng gói TT05</b>
+                        <p>Đóng gói hồ sơ theo cấu hình TT05.</p>
+                    </div>
+                </li>
+            </ol>
+        </div>
+    </div>
+
+</div>

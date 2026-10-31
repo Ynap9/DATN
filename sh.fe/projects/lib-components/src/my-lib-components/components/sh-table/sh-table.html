@@ -1,0 +1,286 @@
+<div class="table-filter" [ngClass]="{ 'opacity-70 pointer-events-none': isLoading }">
+    <ng-content></ng-content>
+</div>
+
+<div class="wrapper-lib-table {{ resetBorder ? 'reset-border': '' }} {{ disabled ? 'disable-click' : ''}}"
+    *ngIf="showTable">
+    <div #eTable [@animationRefresh] *ngIf="isShowTable" [style.position]="'relative'">
+        <div #wrapperETable (scroll)="onScroll($event)" [style]="wrapperTableStyle"
+            class="lib-table" [id]="id" [style.overflow]="'auto'">
+            <ngx-spinner type="ball-clip-rotate" size="medium" color="#0e7c66" bdColor="rgba(255,255,255,0.6)" [fullScreen]="false">
+            </ngx-spinner>
+            <p-table [resizableColumns]="true" columnResizeMode="expand"
+                styleClass="custom-table {{ class }} {{ isRowOdds && 'row-odds' }}" [value]="rows"
+                [rowTrackBy]="trackByRow"
+                [(selection)]="selectedItems" [reorderableColumns]="reorderableColumns"
+                (onRowReorder)="_onRowReorder($event)" [rowHover]="rowHover" [responsiveLayout]="responsiveLayout"
+                [dataKey]="dataKey" [showCurrentPageReport]="showCurrentPageReport" [paginator]="paginator"
+                [scrollable]="scrollable" [scrollHeight]="'auto'" (onRowSelect)="onSelectedChange()"
+                (onRowUnselect)="onSelectedChange()" (onHeaderCheckboxToggle)="onSelectedChange();
+                onCheckboxClick($event)" [sortMode]="'multiple'" (onSort)="onSort($event)" [customSort]="true">
+                <ng-template pTemplate="header">
+                    <tr id="thead">
+                        <ng-container *ngFor="let col of columnShows; last as lastItem; index as index">
+                            <th [pSortableColumn]="col?.fieldSort || col.field"
+                                [pSortableColumnDisabled]="!col?.isSort || onResize" pFrozenColumn
+                                [alignFrozen]="col?.alignFrozen" [frozen]="col?.isFrozen"
+                                [ngStyle]="getStyleColumn | function : col" [ngClass]="[col?.class]"
+                                [title]="col?.title || ''"
+                                class="{{ col?.otherType === ETableColumnType.LINK && ['ID', '#ID'].includes(col?.header) ? 'id-link' : '' }}"
+                                columnResizeMode="expand" (_onResize)="onResize=$event">
+                                <ng-container>
+                                    <div #checkbox
+                                        *ngIf="[ETableColumnType.CHECKBOX_ACTION, ETableColumnType.CHECKBOX_SHOW, ETableColumnType.CHECKBOX_CHANGE].includes(col?.type) && !col?.header">
+                                        <ng-container
+                                            *ngIf="[ETableColumnType.CHECKBOX_ACTION, ETableColumnType.CHECKBOX_SHOW, ETableColumnType.CHECKBOX_CHANGE].includes(col?.type) && !col?.header">
+                                            <p-tableHeaderCheckbox
+                                                [disabled]="col.type === ETableColumnType.CHECKBOX_SHOW || col.type === ETableColumnType.CHECKBOX_CHANGE">
+                                            </p-tableHeaderCheckbox>
+                                        </ng-container>
+                                        <div class="popup" [style.top.px]="top" [style.left.px]="left"
+                                            *ngIf="isShowOptionPagePopup && !col?.isHideOptionCheckbox">
+                                            <div class="flex flex-col mt-3 ml-3">
+                                                <div *ngFor="let option of optionPage" class="field-checkbox">
+                                                    <p-checkbox [value]="option?.code" [(ngModel)]="selectedOption"
+                                                        [inputId]="option?.name" (onChange)="onChange($event)">
+                                                    </p-checkbox>
+                                                    <label [for]="option.code">{{ option.name }}</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 4px;">
+                                        <ng-container *ngIf="col?.type === ETableColumnType.TEXT || col?.header">
+                                            <span
+                                                style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{col.header}}</span>
+                                            <p-sortIcon field="{{ col.field }}" *ngIf="col.isSort"></p-sortIcon>
+                                            <ng-container *ngIf="col?.isFilter !== false && col?.header">
+                                                <p-popover #colFilterPopover styleClass="col-filter-popover">
+                                                    <div class="col-filter-popover-panel">
+                                                        <div class="col-filter-popover-header">
+                                                            <i class="pi pi-filter"></i>
+                                                            <span>{{ activeFilterCol?.header }}</span>
+                                                        </div>
+
+                                                        <div class="col-filter-popover-body">
+                                                            <ng-container *ngIf="activeFilterType === 'select'">
+                                                                <p-select
+                                                                    appendTo="body"
+                                                                    styleClass="col-filter-select"
+                                                                    [options]="activeFilterOptions"
+                                                                    optionLabel="label"
+                                                                    optionValue="value"
+                                                                    [(ngModel)]="activeFilterValue"
+                                                                    placeholder="Chọn..."
+                                                                    (onChange)="onSelectFilterChange(colFilterPopover)"
+                                                                    (click)="$event.stopPropagation()">
+                                                                </p-select>
+                                                            </ng-container>
+
+                                                            <div class="col-filter-input" *ngIf="activeFilterType !== 'select'">
+                                                                <i class="pi pi-search"></i>
+                                                                <input
+                                                                    type="text"
+                                                                    [(ngModel)]="activeFilterValue"
+                                                                    placeholder="Nhập từ khóa..."
+                                                                    (keyup.enter)="applyColumnFilter(colFilterPopover)"
+                                                                    (click)="$event.stopPropagation()" />
+                                                                <i *ngIf="activeFilterValue"
+                                                                    class="pi pi-times col-filter-clear"
+                                                                    (click)="activeFilterValue=''; $event.stopPropagation()">
+                                                                </i>
+                                                            </div>
+
+                                                            <p class="col-filter-hint" *ngIf="activeFilterType !== 'select'">Nhấn Enter hoặc bấm Áp dụng để tìm kiếm</p>
+
+                                                            <div class="col-filter-actions" *ngIf="activeFilterType !== 'select'">
+                                                                <button type="button" class="col-filter-btn col-filter-btn-secondary"
+                                                                    (click)="clearColumnFilter(colFilterPopover)">
+                                                                    <i class="pi pi-times"></i>
+                                                                    <span>Xóa</span>
+                                                                </button>
+                                                                <button type="button" class="col-filter-btn col-filter-btn-primary"
+                                                                    (click)="applyColumnFilter(colFilterPopover)">
+                                                                    <i class="pi pi-check"></i>
+                                                                    <span>Áp dụng</span>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </p-popover>
+
+                                                <i
+                                                    class="pi cursor-pointer col-filter-icon"
+                                                    [class.pi-filter-fill]="hasActiveFilter(col.field)"
+                                                    [class.pi-filter]="!hasActiveFilter(col.field)"
+                                                    [title]="hasActiveFilter(col.field) ? 'Đang lọc: ' + col.header : 'Lọc theo: ' + col.header"
+                                                    (click)="openColumnFilter($event, col, colFilterPopover)">
+                                                </i>
+                                            </ng-container>
+                                        </ng-container>
+
+                                        <ng-container *ngIf="col?.type == ETableColumnType.ACTION_DROPDOWN">
+                                            <i class="pi pi-cog cursor-pointer" style="flex-shrink: 0;"
+                                                (click)="setColumn(); $event.stopPropagation()"></i>
+                                        </ng-container>
+                                    </div>
+                                </ng-container>
+                            </th>
+                        </ng-container>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
+                    <tr [pReorderableRow]="rowIndex"
+                        [class.sh-clickable-row]="clickableRow"
+                        (click)="onBodyRowClick(row, $event)"
+                        [ngClass]="{'row-separator-history': row?.operationType === BaseConsts.separatorHistory}">
+                        <ng-container *ngFor="let col of columnShows; index as index">
+                            <ng-container
+                                *ngFor="let colValue of [(row?.[col?.field+'_customValue'] || row?.[col?.field])]">
+                                <td [ngSwitch]="col?.type" [ngStyle]="getStyleColumn | function: [col]"
+                                    [ngClass]="col?.class + ' column-'+index" pFrozenColumn
+                                    [alignFrozen]="col?.alignFrozen" [frozen]="col?.isFrozen">
+                                    <ng-container *ngSwitchCase="ETableColumnType.REORDER" #REORDER>
+                                        <span class="pi pi-bars" pReorderableRowHandle></span>
+                                    </ng-container>
+                                    <ng-container *ngSwitchCase="ETableColumnType.ACTION_ICON" #ICON>
+                                        <i [class]="col?.icon + ' b-icon hover-pointer' + ' p-0'"
+                                            (click)="columnOriginals[col.position].action(row, rowIndex)"></i>
+                                    </ng-container>
+                                    <ng-container *ngSwitchCase="ETableColumnType.ACTION_BUTTON" #BUTTON>
+                                        <ng-container
+                                            *ngIf="!columnOriginals[col.position]?.isShowFunction || columnOriginals[col.position]?.isShowFunction(row)">
+                                            <sh-button [icon]="col.icon"
+                                                [disabled]="colValue?.isDisableButton ? true : false"
+                                                [loading]="colValue?.isLoadingButton ? true : false"
+                                                [label]="columnOriginals[col.position]?.labelFunction ? columnOriginals[col.position]?.labelFunction(row) : col?.label"
+                                                [styleClass]="'hover-pointer ' + col?.classButton"
+                                                (onClick)="columnOriginals[col.position].action(row, index)">
+                                            </sh-button>
+                                        </ng-container>
+                                    </ng-container>
+                                    <ng-container *ngSwitchCase="ETableColumnType.ACTION_DROPDOWN" #DROPDOWN>
+                                        <div class="flex hover-pointer {{ col?.class }}"
+                                            *ngIf="listAction[rowIndex]?.length > 0">
+                                            <i class="pi pi-ellipsis-h cursor-pointer"
+                                                (click)="isDisabledActionDropdown && menu.toggle($event); showActions()"></i>
+                                            <p-menu #menu [popup]="true" class="button-actions cursor-pointer"
+                                                [model]="listAction[rowIndex]" appendTo="body">
+                                            </p-menu>
+                                        </div>
+                                    </ng-container>
+
+                                    <ng-container *ngSwitchDefault>
+                                        <div *ngFor="let action of [columnOriginals[col?.position]?.action]"
+                                            [ngClass]="{'hover-pointer': !!action}" [class]="col?.cutText"
+                                            (click)="action && action(row, index)" [title]="colValue">
+                                            <span [ngClass]="{'link': col?.otherType === ETableColumnType.LINK}">
+                                                <ng-container
+                                                    *ngIf="fieldContentHtmls?.includes(col?.field); else plainText">
+                                                    <span [innerHTML]="colValue"></span>
+                                                </ng-container>
+                                                <ng-template #plainText>
+                                                    <ng-container *ngIf="!typeDates.includes(col?.type)">
+                                                        {{ colValue }}
+                                                    </ng-container>
+                                                    <ng-container *ngIf="typeDates.includes(col?.type)">
+                                                        <span>{{ colValue }}</span>
+                                                    </ng-container>
+                                                </ng-template>
+                                            </span>
+                                        </div>
+                                    </ng-container>
+
+                                    <ng-container #CHEKBOX>
+                                        <ng-container *ngSwitchCase="ETableColumnType.CHECKBOX_ACTION">
+                                            <p-tableCheckbox [value]="row" (onChange)="onRowSelect(row)"
+                                                [disabled]="row?.isDisabled">
+                                            </p-tableCheckbox>
+                                        </ng-container>
+                                        <ng-container *ngSwitchCase="ETableColumnType.CHECKBOX_SHOW">
+                                            <sh-checkbox [isCheckboxIcon]="col?.isCheckboxIcon"
+                                                [styleClass]="'check-box-default-cursor'" [value]="colValue"
+                                                [readonly]="true" [disabled]="row?.isDisabled">
+                                            </sh-checkbox>
+                                        </ng-container>
+                                        <ng-container *ngSwitchCase="ETableColumnType.CHECKBOX_CHANGE">
+                                            <div (click)="columnOriginals[col?.position]?.action(row, index)">
+                                                <sh-checkbox [isCheckboxIcon]="col?.isCheckboxIcon"
+                                                    [disabled]="colValue?.isDisableCheckbox ? true : false"
+                                                    [value]="colValue?.value" [readonly]="true">
+                                                </sh-checkbox>
+                                            </div>
+                                        </ng-container>
+                                    </ng-container>
+
+                                    <ng-container *ngSwitchCase="ETableColumnType.CURRENCY" #CURRENCY>
+                                        <span>
+                                            {{ colValue >= 0 ? ((colValue | currency) + (col?.unit || '')) : (colValue
+                                            || null) }}
+                                        </span>
+                                    </ng-container>
+                                    <ng-container *ngSwitchCase="ETableColumnType.STATUS" #STATUS>
+                                        <p-tag [value]="colValue?.name" [styleClass]="colValue?.class"></p-tag>
+                                    </ng-container>
+
+                                </td>
+                            </ng-container>
+                        </ng-container>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                    <ng-container *ngIf="isLoading">
+                        <tr [style.height.px]="38" *ngFor="let i of counter(skeletonRowCount)" class="pending-data">
+                            <td *ngFor="let col of columnShows" class="b-empty-data">
+                                <span class="sh-skeleton"></span>
+                            </td>
+                        </tr>
+                    </ng-container>
+                    <ng-container *ngIf="!isLoading">
+                        <td [colSpan]="columnShows?.length" class="b-empty-data">
+                            <ng-container *ngIf="emptyDataMessage">
+                                <div class="text-center mt-5"> {{ emptyDataMessage }} </div>
+                            </ng-container>
+                        </td>
+                    </ng-container>
+                </ng-template>
+                <ng-template pTemplate="loading-data">
+                    <tr class="loading-data">
+                        <td [colSpan]="columnShows?.length"> Đang tải dữ liệu ... </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+        <div class="empty-data"
+            *ngIf="!emptyDataMessage && !rows?.length && !isLoading && showImageEmpty">
+            <i [class]="emptyIcon"></i>
+            <p>{{ emptyText }}</p>
+        </div>
+    </div>
+    <ng-container *ngIf="isShowPaginator && (!tableInTab || rows?.length > page.perPageShowPaginatorInTab)"
+        [ngTemplateOutlet]="paginatorCustom"></ng-container>
+</div>
+
+
+
+<ng-template #paginatorCustom>
+    <div #wrapperPaginator class="paginator">
+        <p-paginator #paginatorEl [appendTo]="'body'" [rows]="page.pageSize" [totalRecords]="page.totalItems"
+            [first]="(page.pageNumber || 0) * page.pageSize"
+            [rowsPerPageOptions]="page.perPageOptions" currentPageReportTemplate="Tất cả {{ page.totalItems }} dòng"
+            [showCurrentPageReport]="true" [styleClass]="styleClassPaginator" (onPageChange)="paginatorChange($event)">
+        </p-paginator>
+    </div>
+</ng-template>
+
+
+<ng-template #sizeCustom let-col="col" let-row="row" let-colValue="colValue">
+    <div class="flex flex-col">
+        <span>{{colValue?.size}}</span>
+        <span class="mt-2" *ngIf=" colValue?.length && colValue?.width" [ngStyle]="{'color': 'red'}">{{
+            colValue?.length}}x{{colValue?.width}} in</span>
+    </div>
+</ng-template>

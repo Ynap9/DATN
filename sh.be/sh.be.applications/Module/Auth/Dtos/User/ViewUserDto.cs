@@ -13,6 +13,9 @@ namespace sh.be.applications.Module.Auth.Dtos.User
         public string FullName { get; set; } = String.Empty;
         public string Email { get; set; } = String.Empty;
         public List<UserRolePaging> Roles { get; set; } = new List<UserRolePaging>();
+        public bool IsLocked { get; set; }
+        public string? CreatedBy { get; set; }
+        public DateTime? CreatedDate { get; set; }
     }
 
     public class UserRolePaging

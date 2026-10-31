@@ -2,9 +2,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { BaseConsts } from '../shared/const/base.consts';
 
 @Pipe({
-    name: 'libAcceptFile',
-    standalone: false,
-})
+    name: 'libAcceptFile',})
 export class AcceptFilePipe implements PipeTransform {
 
     transform(type: string): unknown {

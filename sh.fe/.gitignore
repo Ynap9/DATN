@@ -8,11 +8,18 @@
 
 # Node
 /node_modules
-npm-debug.log
-yarn-error.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment
+.env
+.env.*
+!.env.example
 
 # IDEs and editors
 .idea/
+.vs/
 .project
 .classpath
 .c9/
@@ -29,7 +36,7 @@ yarn-error.log
 .history/*
 
 # Miscellaneous
-/.angular/cache
+/.angular
 .sass-cache/
 /connect.lock
 /coverage
@@ -37,6 +44,7 @@ yarn-error.log
 testem.log
 /typings
 __screenshots__/
+*.log
 
 # System files
 .DS_Store

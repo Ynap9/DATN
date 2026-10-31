@@ -71,6 +71,10 @@ namespace sh.be.infrastructure.data.Module.Auth.Queries
                                     && _shDbContext.Roles.Any(r => r.Id == ur.RoleId && r.Name!.Contains(dto.Keyword)))
                 );
             }
+            if (dto.RoleId != null)
+            {
+                query = query.Where(u => _shDbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == dto.RoleId));
+            }
 
             var totalCount = await query.CountAsync();
 
@@ -85,6 +89,12 @@ namespace sh.be.infrastructure.data.Module.Auth.Queries
                 .Join(_shDbContext.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => new { ur.UserId, r.Id, r.Name })
                 .ToListAsync();
             var roleByUser = roles.ToLookup( x=> x.UserId );
+            var creatorIds = user.Where(u => u.CreatedBy != null).Select(u => u.CreatedBy).Distinct().ToList();
+            var creators = await _shDbContext.Users
+                .AsNoTracking()
+                .Where(u => creatorIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => u.UserName);
+            var now = DateTimeOffset.UtcNow;
             var items = user.Select( u => new ViewUserDto
             {
                 Id = u.Id,
@@ -97,6 +107,9 @@ namespace sh.be.infrastructure.data.Module.Auth.Queries
                             Id = r.Id,
                             Name = r.Name,
                         }).ToList(),
+                IsLocked = u.LockoutEnd != null && u.LockoutEnd > now,
+                CreatedBy = u.CreatedBy != null ? creators.GetValueOrDefault(u.CreatedBy) : null,
+                CreatedDate = u.CreatedDate,
             }).ToList();
             return new BaseResponsePagingDto<ViewUserDto>
             {

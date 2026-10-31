@@ -1,0 +1,16 @@
+export const PermissionConstants = {
+    MENU_AUTH: 'Menu.Auth',
+    FUNCTION_AUDIT_LOG_VIEW: 'Function.Core.AuditLog.View',
+    MENU_DOCUMENT_TYPE: 'Menu.Construction.DocumentType',
+    MENU_DOCUMENT_FIELD: 'Menu.Construction.DocumentField',
+    MENU_PROJECT: 'Menu.Construction.Project',
+    MENU_PROJECT_CONFIG: 'Menu.Construction.ProjectConfig',
+    MENU_SUBMISSION: 'Menu.Construction.Submission',
+    MENU_TEMPLATE: 'Menu.DigitalSignature.Template',
+    MENU_SIGNING_BATCH: 'Menu.DigitalSignature.SigningBatch',
+    MENU_PACKAGE_CONFIG: 'Menu.Packaging.Config',
+    MENU_OPERATION_STAFF_GROUP: 'Menu.Operation.StaffGroup',
+    MENU_OPERATION_PROJECT_MEMBER: 'Menu.Operation.ProjectMember',
+    MENU_OPERATION_ASSIGNMENT: 'Menu.Operation.Assignment',
+    MENU_AI_PROVIDER: 'Menu.Ai.Provider',
+} as const;

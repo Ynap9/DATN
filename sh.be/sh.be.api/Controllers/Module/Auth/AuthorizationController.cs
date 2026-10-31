@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
+using sh.be.api.Services;
 using sh.be.applications.Module.Auth.Interfaces.Services;
 using sh.be.applications.Module.Core.Dtos.AuditLog;
 using sh.be.applications.Module.Core.Interfaces.Services;
@@ -330,6 +331,13 @@ namespace sh.be.api.Controllers.Module.Auth
                        ErrorDescription = "The specified grant type is not supported."
                    }
                );
+        }
+
+        [HttpPost("~/connect/logout")]
+        public IActionResult Logout()
+        {
+            WebSessionCookies.Clear(HttpContext);
+            return Ok();
         }
 
         [HttpGet("~/connect/authorize")]

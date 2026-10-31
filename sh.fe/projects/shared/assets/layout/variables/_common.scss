@@ -3,22 +3,22 @@
     --primary-color: var(--p-primary-color);
     --primary-contrast-color: var(--p-primary-contrast-color);
 
-    --text-color: var(--h-text-primary);
-    --text-color-secondary: var(--h-text-secondary);
-    --text-secondary-color: var(--h-text-tertiary);
+    --text-color: var(--sh-text-primary);
+    --text-color-secondary: var(--sh-text-secondary);
+    --text-secondary-color: var(--sh-text-tertiary);
 
-    --surface-border: var(--h-border-color);
-    --surface-card: var(--h-bg-surface);
-    --surface-hover: var(--h-bg-surface-hover);
-    --surface-overlay: var(--h-bg-surface);
-    --surface-ground: var(--h-bg-body);
+    --surface-border: var(--sh-border-color);
+    --surface-card: var(--sh-bg-surface);
+    --surface-hover: var(--sh-bg-surface-hover);
+    --surface-overlay: var(--sh-bg-surface);
+    --surface-ground: var(--sh-bg-body);
 
     --transition-duration: var(--p-transition-duration);
     --maskbg: var(--p-mask-background);
     --content-border-radius: var(--p-content-border-radius);
     --layout-section-transition-duration: 0.2s;
     --element-transition-duration: var(--p-transition-duration);
-    --divider-color: var(--h-border-color);
+    --divider-color: var(--sh-border-color);
     --mobile-breakpoint: 991px;
 
     --focus-ring-width: var(--p-focus-ring-width);
@@ -27,25 +27,25 @@
     --focus-ring-offset: var(--p-focus-ring-offset);
     --focus-ring-shadow: var(--p-focus-ring-shadow);
 
-    --header-bg-color: var(--h-sidebar-bg);
+    --header-bg-color: var(--sh-sidebar-bg);
 
     --p-overlay-popover-background: #ffffff;
-    --p-text-color: var(--h-text-primary);
-    --p-content-hover-background: var(--h-bg-surface-hover);
+    --p-text-color: var(--sh-text-primary);
+    --p-content-hover-background: var(--sh-bg-surface-hover);
 }
 
 :root[class*='app-dark'] {
-    --text-color: var(--h-text-primary);
-    --surface-card: var(--h-bg-surface);
-    --surface-hover: var(--h-bg-surface-hover);
-    --surface-ground: var(--h-bg-body);
-    --surface-border: var(--h-border-color);
-    --header-bg-color: var(--h-sidebar-bg);
+    --text-color: var(--sh-text-primary);
+    --surface-card: var(--sh-bg-surface);
+    --surface-hover: var(--sh-bg-surface-hover);
+    --surface-ground: var(--sh-bg-body);
+    --surface-border: var(--sh-border-color);
+    --header-bg-color: var(--sh-sidebar-bg);
 
-    --p-overlay-popover-background: var(--h-bg-surface);
-    --p-text-color: var(--h-text-primary);
-    --p-content-hover-background: var(--h-bg-surface-hover);
-    --p-content-background: var(--h-bg-surface);
-    --p-content-border-color: var(--h-border-color);
-    --p-surface-100: var(--h-bg-body);
+    --p-overlay-popover-background: var(--sh-bg-surface);
+    --p-text-color: var(--sh-text-primary);
+    --p-content-hover-background: var(--sh-bg-surface-hover);
+    --p-content-background: var(--sh-bg-surface);
+    --p-content-border-color: var(--sh-border-color);
+    --p-surface-100: var(--sh-bg-body);
 }
