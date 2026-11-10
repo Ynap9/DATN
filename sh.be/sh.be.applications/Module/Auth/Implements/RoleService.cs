@@ -72,7 +72,7 @@ namespace sh.be.applications.Module.Auth.Implements
             }
 
             var permissions = _permissionRepository.GetActive();
-            var grantedKeys = PermissionGrantPolicy.ResolveGrantedKeys(permissions, _roleRepository.GetPermissionKeys(roleId));
+            var grantedKeys = PermissionDomainService.ResolveGrantedKeys(permissions, _roleRepository.GetPermissionKeys(roleId));
 
             var nodes = permissions
                 .Select(p => new GetRolePermissionTreeDto

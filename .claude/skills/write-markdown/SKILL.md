@@ -11,7 +11,7 @@ ngữ, cùng bố cục, cùng cách cập nhật.
 ## Ngôn ngữ
 
 - **Toàn bộ tài liệu viết TIẾNG VIỆT** — đồ án và nghiệp vụ là tiếng Việt.
-- Giữ nguyên tên định danh trong code: `IRoleRepository`, `PermissionGrantPolicy`, `ShDbContext`, tên route,
+- Giữ nguyên tên định danh trong code: `IRoleRepository`, `PermissionDomainService`, `ShDbContext`, tên route,
   tên hằng số, tên thư mục.
 - Thuật ngữ kiến trúc giữ tiếng Anh khi đó là tên chuẩn (aggregate, repository, dependency rule), giải thích
   bằng tiếng Việt ở lần đầu xuất hiện.

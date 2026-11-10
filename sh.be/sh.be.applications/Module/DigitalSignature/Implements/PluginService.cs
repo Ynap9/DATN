@@ -27,8 +27,8 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
         {
             _logger.LogInformation($"{nameof(CheckVersion)}, version={dto.Version}");
             var version = dto.Version?.Trim() ?? String.Empty;
-            var supportedVersions = PluginVersionPolicy.ResolveSupportedVersions(_pluginSetupExternal.GetSupportedVersions());
-            var reason = PluginVersionPolicy.ResolveUnsupportedReason(version, supportedVersions);
+            var supportedVersions = SigningBatchDomainService.ResolveSupportedPluginVersions(_pluginSetupExternal.GetSupportedVersions());
+            var reason = SigningBatchDomainService.ResolveUnsupportedPluginReason(version, supportedVersions);
 
             return new PluginVersionDto
             {

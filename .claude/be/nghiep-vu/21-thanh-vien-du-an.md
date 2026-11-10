@@ -8,7 +8,7 @@ Phần tính tiền (đơn giá lúc thêm người, `ProjectMemberPrice`) **t�
 
 ## Ai quản lý ai
 
-- Admin / SuperAdmin (`OperationAccessPolicy.IsAdmin`) quản lý **mọi** thành viên của mọi cặp.
+- Admin / SuperAdmin (`PermissionDomainService.IsAdmin`) quản lý **mọi** thành viên của mọi cặp.
 - Leader = `ProjectMember` Role `Leader`, `IsActive`, chưa gỡ, của đúng cặp. Leader quản lý người có `ManagedByUserId` = mình.
 - `ManagedByUserId = null` → **Admin quản lý trực tiếp**; Leader không thấy, không thao tác. Không bắt buộc chọn Leader khi thêm.
 - Một cặp có nhiều Leader; mỗi nhân viên tối đa 1 Leader. Một người 1 vai trò / cặp (unique lọc `[Deleted] = 0`), khác cặp thì khác vai trò được.
@@ -27,7 +27,7 @@ Người gọi không phải Admin, cũng không là Leader đang hoạt động
 
 ## Phạm vi
 
-`OperationAccessDomainService.EnsureCanManageAsync` (Task 13–15 dùng lại), theo thứ tự: dự án không có `303` → loại văn bản không có
+`ProjectMemberDomainService.EnsureCanManageAsync` (Task 13–15 dùng lại), theo thứ tự: dự án không có `303` → loại văn bản không có
 `301` → chưa gắn vào dự án `312` (mã Construction) → dự án `DONE` / `EXPIRED` khi thêm / sửa / gỡ → `818`, **cả SuperAdmin** (xem vẫn
 được; `DEPLOYING` / `DOING` / `ACCEPTING` được) → Admin hay Leader (`805`). Trả `OperationAccess(Project, DocumentType, IsAdmin,
 LeaderUserId)` để service khỏi đọc lại tên dự án / loại văn bản cho audit. `memberId` không có, đã gỡ, khác `projectId` trên route → `806`.
@@ -66,7 +66,7 @@ Gỡ (API 14) = xoá mềm + **tự thu hồi** văn bản chưa làm của ngư
 
 - Data: xoá dòng `SubmissionUser` Role `Data`; dữ liệu đã nhập và `StatusCheck = RETURNED` giữ nguyên. Mỗi phiếu
   `DecreaseDocuments(số dòng xoá thật)` → về 0 thì `CANCELLED`, còn văn bản `CHECKED` thì phiếu vẫn `ACTIVE`.
-- QA: làm **đúng** "Huỷ phiếu" 18C — `Cancel` → `UPDATE` có điều kiện (0 dòng → `400` "Phiếu QA vừa thay đổi, hãy tải lại") → xoá dòng QA
+- QA: gọi thẳng `QaAssignmentDomainService.CancelTicketAsync` của 18C — `Cancel` → `UPDATE` có điều kiện (0 dòng → `335`) → xoá dòng QA
   của văn bản chưa Đạt; `SubmissionQaLog`, `StatusQa` giữ nguyên. QA đã gỡ chấm phiếu cũ → `334`.
 - Chống đua: lệnh xoá có điều kiện trạng thái văn bản **ngay trong câu SQL** (`ExecuteDelete` + `Any` trên `Submissions`), không đọc trước
   rồi xoá sau — văn bản người đó vừa bấm Kiểm tra / vừa chấm Đạt ở lại người đó.
@@ -74,8 +74,9 @@ Gỡ (API 14) = xoá mềm + **tự thu hồi** văn bản chưa làm của ngư
   `cancelledQaTicketIds`, `unmanagedMemberCount`. FE hỏi xác nhận trước dựa vào `heldTicketCount` của API 9.
 - Gỡ rồi thêm lại cùng người được; văn bản đã thu hồi **không** tự quay lại.
 
-⚠️ Phần QA lặp lại luật huỷ phiếu của Construction (Operation không được gọi `QaAssignmentDomainService`). Đổi luật huỷ ở
-[18C](18-qa-cham-mau.md#18c--phiếu-qa) thì sửa cả `ProjectMemberDomainService.RevokeHeldDocumentsAsync`.
+Phụ thuộc giữa module chỉ một chiều Operation → Construction (2026-11-10): luật huỷ phiếu QA chỉ có một bản ở
+[18C](18-qa-cham-mau.md#18c--phiếu-qa). ⚠️ Construction không được `using` gì của Operation — cần dữ liệu `ProjectMember` thì
+repository Construction chiếu ra record riêng (`QaMember`), đừng trả entity Operation.
 
 ## API — `api/v1/operation/project/{projectId:int}`, quyền `Function.Operation.ProjectMember.Manage`
 
@@ -96,7 +97,7 @@ IsActive}`), `_REMOVE` (một dòng cho cả lần gỡ, mới = số thu hồi 
 
 | Tầng | File |
 |---|---|
-| Domain | `ProjectMembers/Repositories/IProjectMemberRepository`, `Models/OperationAccess`, `Models/RevokeOnRemoveResult`, `Services/OperationAccessDomainService` (`EnsureCanManageAsync`, `EnsureCanTouchMember`), `Services/ProjectMemberDomainService` (`EnsureManagerAsync`, `ResolveSkipReason`, `ResolveGroupMemberRole`, `RevokeHeldDocumentsAsync`) |
+| Domain | `ProjectMembers/Repositories/IProjectMemberRepository`, `Services/ProjectMemberDomainService` (`EnsureCanManageAsync`, `EnsureCanTouchMember`, `EnsureManagerAsync`, `ResolveSkipReason`, `ResolveGroupMemberRole`, `RevokeHeldDocumentsAsync`, `EnsureValidPrice`; record `OperationAccess`, `RevokeOnRemoveResult` cùng file) |
 | Applications | `Dtos/ProjectMember/*`, `IProjectMemberQuery`, `IProjectMemberService` / `ProjectMemberService` |
 | Data | `Module/Operation/Repositories/ProjectMemberRepository` (đọc thẳng bảng Construction cùng `ShDbContext`), `Queries/ProjectMemberQuery` |
 | Api | `Controllers/Module/Operation/ProjectMemberController` |

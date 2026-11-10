@@ -68,7 +68,7 @@ Chỉ đổi `Name` và `Description`. Quyền của vai trò đổi qua API ri�
 `PUT api/auth/role/permission` nhận cây `UpdateRolePermissionDto`:
 
 1. Lấy các node có `IsChecked`, khử trùng lặp.
-2. Lấy toàn bộ quyền đang hoạt động, chạy `Role.AssignPermissions` (qua `PermissionGrantPolicy`) để ra tập key cuối.
+2. Lấy toàn bộ quyền đang hoạt động, chạy `Role.AssignPermissions` (qua `PermissionDomainService`) để ra tập key cuối.
 3. Trong transaction: xoá hết `RolePermission` cũ của vai trò, thêm tập mới, ghi audit với danh sách key cũ và mới.
 
 Xem luật chọn key tại [02-phan-quyen.md](02-phan-quyen.md#luật-chọn-quyền-cho-vai-trò).

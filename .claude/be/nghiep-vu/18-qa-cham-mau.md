@@ -45,14 +45,14 @@ thì dùng mặc định (`QaSamplingConfig.Default`, không lưu DB):
 
 - Ngưỡng mặc định 50% (chốt 2026-10-26): mẫu 20 cho sai tối đa 10.
 - Kiểm cỡ mẫu và ngưỡng nằm trong entity (`QaSamplingConfig.Create` / `Update`). Kiểm mã và tham số thuật toán nằm ở
-  `IQaStrategyValidator` (R4). Sai → `400` kèm thông điệp cụ thể. Dự án không có → `303`.
+  `QaAssignmentDomainService.ValidateStrategy` (R4). Sai → `400` kèm thông điệp cụ thể. Dự án không có → `303`.
 - Unique `(ProjectId)` lọc `[Deleted] = 0`: sửa lần hai vẫn một dòng. Audit `Cập nhật cấu hình chấm mẫu`: lần đầu `Create`, sau đó
   `Update` có dữ liệu cũ / mới.
 - Đổi cấu hình **không** ảnh hưởng phiếu đã giao: phiếu chụp tham số lúc giao (18C).
 
 ## R3. Cỡ mẫu và số sai cho phép
 
-`QaSampleSizePolicy.Calculate(documentCount, sampleSize, thresholdPercent)` là hàm thuần; 18C gọi lúc giao phiếu và lúc bốc lại.
+`QaAssignmentDomainService.CalculateSampleSize(documentCount, sampleSize, thresholdPercent)` là hàm thuần; 18C gọi lúc giao phiếu và lúc bốc lại.
 
 ```text
 n         = min(SampleSize, số văn bản của phiếu)
@@ -67,13 +67,13 @@ MaxFailed = floor(n × ThresholdPercent / 100)
 | 12 văn bản | 20 | 5% | `(12, 0)` |
 | 200 văn bản | 20 | 10% / 0% | `(20, 2)` / `(20, 0)` |
 
-## R4. Điểm móc cho thuật toán bốc mẫu
+## R4. Kiểm thuật toán bốc mẫu
 
-- `IQaStrategyValidator.Validate(strategyCode, paramsJson)` khai ở domain. Bản mặc định `FormatOnlyQaStrategyValidator`
-  (đăng ký `AddSingleton`) chỉ kiểm hình thức như bảng R2.
-- `QaAssignmentService.UpdateConfig` gọi `Validate` **trước** khi lưu. Task 18D chỉ đổi đăng ký DI sang bản kiểm theo danh sách
+- `QaAssignmentDomainService.ValidateStrategy(strategyCode, paramsJson)` (static, hàm thuần) hiện chỉ kiểm hình thức như bảng R2.
+  Không còn interface / DI riêng (gộp 2026-11-10 theo luật một tên `<Aggregate>DomainService`).
+- `QaAssignmentService.UpdateConfig` gọi `ValidateStrategy` **trước** khi lưu. Task 18D sửa thẳng hàm này để kiểm theo danh sách
   thuật toán thật, **không** sửa service.
-- ⚠️ Bản thay thế ở 18D phải tự kiểm độ dài `StrategyCode` (30) và `StrategyParamsJson` (1000). Entity không kiểm lại hai cột này;
+- ⚠️ Khi 18D sửa hàm phải giữ kiểm độ dài `StrategyCode` (30) và `StrategyParamsJson` (1000). Entity không kiểm lại hai cột này;
   giá trị dài hơn sẽ lỗi khi lưu DB.
 
 ## Schema (migration `Add_QaAssignment`)
@@ -120,7 +120,7 @@ Key quyền `Function.Construction.Submission.AssignQa` ("Giao QA cho văn bản
 
 Gọi thật trên DB dev, dữ liệu gắn tag `ZZTEST`, xoá sạch sau khi test: **37/37 đạt**. Gồm: mặc định khi chưa cấu hình; tạo rồi sửa
 vẫn một dòng, audit cũ / mới; 11 trường hợp sai → `400`; dự án không có → `303`; đặt `SAMPLE` rồi `FULL` cho QA; user không có role
-QA, mode `X` → `400`; user không có → `103`; không quyền → `403`; không token → `401`. Chèn trùng `(SubmissionId, "QA")` thì DB báo lỗi unique. `QaSampleSizePolicy` đạt cả 6 trường hợp ở bảng R3. Bộ test Task 18 vẫn đạt 50/50.
+QA, mode `X` → `400`; user không có → `103`; không quyền → `403`; không token → `401`. Chèn trùng `(SubmissionId, "QA")` thì DB báo lỗi unique. `QaAssignmentDomainService.CalculateSampleSize` đạt cả 6 trường hợp ở bảng R3. Bộ test Task 18 vẫn đạt 50/50.
 
 ## 18C — Phiếu QA
 
@@ -155,7 +155,7 @@ giao ngoài cặp → `337`; danh sách chỉ gồm phiếu của cặp được
 **Lọc theo phiếu.** `qaTicketId` ([bộ lọc chung](12-ho-so-kiem-tra.md#bộ-lọc-chung)) kiểm quyền xem phiếu như trên — cửa vào màn chấm.
 
 **Chấm theo phiếu (R2).** `PUT submission/qa` gọi `QaAssignmentDomainService.EnsureReviewableAsync` trước khi chấm. Admin / SuperAdmin
-(`QaAccessPolicy.IsAdmin`) chấm mọi văn bản. Người khác: văn bản không thuộc phiếu nào, phiếu `CANCELLED` hoặc phiếu của QA khác → `334`;
+(`PermissionDomainService.IsAdmin`) chấm mọi văn bản. Người khác: văn bản không thuộc phiếu nào, phiếu `CANCELLED` hoặc phiếu của QA khác → `334`;
 phiếu `REJECTED` → `332`; phiếu `PASSED` chỉ chấm lại được văn bản `StatusQa = 0` (cần QA lại), còn lại → `334`. Kết quả trả thêm
 `qaTicketId`, `ticketStatus` (`null` khi văn bản không thuộc phiếu).
 
@@ -168,8 +168,8 @@ phiếu `REJECTED` → `332`; phiếu `PASSED` chỉ chấm lại được văn 
 **Huỷ (R7).** Dự án `DONE` / `EXPIRED`: người thường `316` / `323`, Admin huỷ được (như giao). Chỉ `ACTIVE` / `REJECTED` → `CANCELLED`
 bằng `UPDATE ... WHERE Status IN (ACTIVE, REJECTED)` (không ghi đè phiếu vừa tự chốt), còn lại `335`. Cùng transaction xoá cứng dòng `QA` của văn bản `StatusQa ≠ 1`
 (`ReleaseNotPassedAsync`, văn bản về "chưa giao", đang bị trả vẫn bị trả) + audit `Huỷ phiếu QA`. Văn bản Đạt **giữ** dòng trỏ phiếu đã
-huỷ: không giao lại được, chấm lại chỉ Admin / SuperAdmin. Lịch sử QA giữ nguyên. ⚠️ Gỡ QA khỏi dự án (Task 11,
-`ProjectMemberDomainService.RevokeHeldDocumentsAsync`) **lặp lại** đúng luật huỷ này — đổi luật huỷ ở đây thì sửa cả chỗ đó.
+huỷ: không giao lại được, chấm lại chỉ Admin / SuperAdmin. Lịch sử QA giữ nguyên. Cả hai bước nằm trong
+`QaAssignmentDomainService.CancelTicketAsync` (trả số văn bản đã trả về); gỡ QA khỏi dự án (Task 11) gọi lại đúng hàm này.
 
 **Chặn xoá (R8).** `DELETE submission`: văn bản `StatusCheck = 2` hoặc thuộc phiếu `ACTIVE` / `REJECTED` → `336` (liệt kê Id) với **mọi**
 người, kể cả SuperAdmin; kiểm sau khi nạp hồ sơ, **trước** `325` (`QaAssignmentDomainService.EnsureDeletableAsync`).

@@ -18,10 +18,6 @@ using sh.be.domain.Module.Construction.Projects.Entities;
 using sh.be.domain.Module.Construction.QaAssignments.Services;
 using sh.be.domain.Module.Construction.Submissions.Repositories;
 using sh.be.domain.Module.Construction.Submissions.Services;
-using sh.be.domain.Module.Construction.Submissions.Services.Check;
-using sh.be.domain.Module.Construction.Submissions.Services.Check.Models;
-using sh.be.domain.Module.Construction.Submissions.Services.Import;
-using sh.be.domain.Module.Construction.Submissions.Services.Import.Models;
 using sh.be.domain.Module.Core.Repositories;
 using sh.be.shared.Constants.BackgroundJob;
 using sh.be.shared.Constants.Construction;
@@ -282,7 +278,7 @@ namespace sh.be.applications.Module.Construction.Implements
             submission.EnsureBelongsTo(dto.ProjectId, dto.DocumentTypeId);
 
             var currentUserId = getCurrentUserId();
-            var isSuperAdmin = PermissionGrantPolicy.IsSuperAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            var isSuperAdmin = PermissionDomainService.IsSuperAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
             var project = await _submissionDomainService.EnsureEditableProjectAsync(dto.ProjectId, isSuperAdmin);
             var mappings = await _submissionDomainService.GetImportMappingsAsync(dto.ProjectId, dto.DocumentTypeId);
             var existingDatas = await _submissionRepository.GetDatasBySubmissionIdAsync(dto.Id);
@@ -290,7 +286,7 @@ namespace sh.be.applications.Module.Construction.Implements
 
             var now = GetVietnamTime();
             var inputs = dto.Datas.Select(data => new SubmissionDataInput(data.DocumentFieldId, data.Data)).ToList();
-            var plan = SubmissionCheckPolicy.BuildPlan(submission, inputs, mappings, existingDatas, currentUserId, now);
+            var plan = SubmissionDomainService.BuildCheckPlan(submission, inputs, mappings, existingDatas, currentUserId, now);
             var log = submission.Check(currentUserId, userName, dto.Note, plan.ChangedDataCount, now);
 
             _submissionRepository.AddDatas(plan.DatasToInsert);
@@ -361,8 +357,8 @@ namespace sh.be.applications.Module.Construction.Implements
 
             var currentUserId = getCurrentUserId();
             var roleNames = await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId);
-            var project = await _submissionDomainService.EnsureEditableProjectAsync(dto.ProjectId, PermissionGrantPolicy.IsSuperAdmin(roleNames));
-            var qaTicket = await _qaAssignmentDomainService.EnsureReviewableAsync(submission, currentUserId, QaAccessPolicy.IsAdmin(roleNames));
+            var project = await _submissionDomainService.EnsureEditableProjectAsync(dto.ProjectId, PermissionDomainService.IsSuperAdmin(roleNames));
+            var qaTicket = await _qaAssignmentDomainService.EnsureReviewableAsync(submission, currentUserId, PermissionDomainService.IsAdmin(roleNames));
             var mappings = await _submissionDomainService.GetImportMappingsAsync(dto.ProjectId, dto.DocumentTypeId);
             var userName = (await _userRepository.FindByIdAsync(currentUserId))?.UserName ?? currentUserId;
 
@@ -504,7 +500,7 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             _logger.LogInformation($"{nameof(Delete)}, dto={JsonSerializer.Serialize(dto)}");
             var currentUserId = getCurrentUserId();
-            var isSuperAdmin = PermissionGrantPolicy.IsSuperAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            var isSuperAdmin = PermissionDomainService.IsSuperAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
             var project = await _submissionDomainService.EnsureEditableProjectAsync(dto.ProjectId, isSuperAdmin);
             var now = GetVietnamTime();
 
@@ -621,7 +617,7 @@ namespace sh.be.applications.Module.Construction.Implements
         private async Task<ProjectSheetSource> LoadAppendSheetAsync(ImportSubmissionDto dto)
         {
             var source = await LoadProjectSheetAsync(dto, dto.LinkColumnImport);
-            SubmissionImportPolicy.EnsureFileUrlsPresent(source.Table, source.Columns);
+            SubmissionImportDomainService.EnsureFileUrlsPresent(source.Table, source.Columns);
             return source;
         }
 
@@ -634,7 +630,7 @@ namespace sh.be.applications.Module.Construction.Implements
             var table = await tableTask;
 
             var columns = ResolveSheetColumns(table, dto, fileUrlColumn);
-            var mappedColumns = SubmissionImportColumnPolicy.ResolveMappedColumns(table.Headers, mappings);
+            var mappedColumns = SubmissionImportDomainService.ResolveMappedColumns(table.Headers, mappings);
             return new ProjectSheetSource(project, table, columns, mappedColumns);
         }
 
@@ -647,22 +643,22 @@ namespace sh.be.applications.Module.Construction.Implements
             var table = await tableTask;
 
             var columns = ResolveSheetColumns(table, dto, null);
-            var columnImportIndex = SubmissionImportColumnPolicy.ResolveSingleColumn(table.Headers, dto.ColumnImport);
+            var columnImportIndex = SubmissionImportDomainService.ResolveSingleColumn(table.Headers, dto.ColumnImport);
             return new OverwriteSheetSource(project, table, columns, mapping, columnImportIndex);
         }
 
         private static SubmissionImportColumns ResolveSheetColumns(SheetTable table, ImportSubmissionDto dto, string? fileUrlColumn)
         {
-            SubmissionImportPolicy.EnsureHasData(table);
-            var columns = SubmissionImportColumnPolicy.ResolveColumns(table.Headers, dto.FileColumnImport, dto.ProfileRange, dto.Box, fileUrlColumn);
-            SubmissionImportPolicy.EnsureNoDuplicateKeys(table, columns);
+            SubmissionImportDomainService.EnsureHasData(table);
+            var columns = SubmissionImportDomainService.ResolveColumns(table.Headers, dto.FileColumnImport, dto.ProfileRange, dto.Box, fileUrlColumn);
+            SubmissionImportDomainService.EnsureNoDuplicateKeys(table, columns);
             return columns;
         }
 
         private async Task<AppendImportPlan> BuildAppendPlanAsync(ImportSubmissionDto dto, ProjectSheetSource source, string? importedBy, DateTime importedDate)
         {
             var snapshots = await _submissionRepository.GetSnapshotsAsync(dto.ProjectId, dto.DocumentTypeId);
-            return SubmissionImportPolicy.BuildAppendPlan(source.Table, source.Columns, source.MappedColumns, snapshots,
+            return SubmissionImportDomainService.BuildAppendPlan(source.Table, source.Columns, source.MappedColumns, snapshots,
                 dto.ProjectId, dto.DocumentTypeId, importedBy, importedDate);
         }
 
@@ -671,7 +667,7 @@ namespace sh.be.applications.Module.Construction.Implements
             var snapshots = await _submissionRepository.GetSnapshotsAsync(dto.ProjectId, dto.DocumentTypeId);
             var documentFieldIds = source.MappedColumns.Select(column => column.DocumentFieldId).ToList();
             var existingDatas = await _submissionRepository.GetDatasAsync(dto.ProjectId, dto.DocumentTypeId, documentFieldIds);
-            return SubmissionImportPolicy.BuildBlankPlan(source.Table, source.Columns, source.MappedColumns, snapshots, existingDatas,
+            return SubmissionImportDomainService.BuildBlankPlan(source.Table, source.Columns, source.MappedColumns, snapshots, existingDatas,
                 dto.ProjectId, dto.DocumentTypeId, importedBy, importedDate);
         }
 
@@ -680,7 +676,7 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             var snapshots = await _submissionRepository.GetSnapshotsAsync(dto.ProjectId, dto.DocumentTypeId);
             var existingDatas = await _submissionRepository.GetDatasAsync(dto.ProjectId, dto.DocumentTypeId, [dto.DocumentFieldId]);
-            return SubmissionImportPolicy.BuildOverwritePlan(source.Table, source.Columns, source.ColumnImportIndex, source.Mapping, snapshots,
+            return SubmissionImportDomainService.BuildOverwritePlan(source.Table, source.Columns, source.ColumnImportIndex, source.Mapping, snapshots,
                 existingDatas, dto.OverwriteChecked, importedBy, importedDate);
         }
 

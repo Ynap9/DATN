@@ -86,7 +86,7 @@ Quy ước đặt key: `Menu.<Module>.<Tên>` cho mục menu, `Function.<Module>
 
 ## Luật chọn quyền cho vai trò
 
-`PermissionGrantPolicy.ResolveGrantedKeys` nhận danh sách key được tick và trả về tập key thực sự được cấp:
+`PermissionDomainService.ResolveGrantedKeys` nhận danh sách key được tick và trả về tập key thực sự được cấp:
 
 - Trạng thái tick được đồng bộ qua cây bằng `TreeUtils.SyncChecked`, nên chọn cha và con theo cùng một quy tắc lan truyền.
 - Kết quả là tập key đã chọn; `Role.AssignPermissions` chỉ tạo `RolePermission` cho các key trong tập này.
@@ -97,7 +97,7 @@ Quy ước đặt key: `Menu.<Module>.<Tên>` cho mục menu, `Function.<Module>
 `[Permission(key1, key2, ...)]` trên action:
 
 1. Chưa đăng nhập → `401`.
-2. Vai trò có `SuperAdmin` → qua, không xét quyền (`PermissionGrantPolicy.IsSuperAdmin`).
+2. Vai trò có `SuperAdmin` → qua, không xét quyền (`PermissionDomainService.IsSuperAdmin`).
 3. Còn lại: user có **ít nhất một** key trong danh sách → qua (`HasAnyPermission`); không có → `403`.
 
 Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-api.md](../architecture/01-api.md).

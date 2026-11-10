@@ -109,22 +109,6 @@ namespace sh.be.infrastructure.data.Module.Operation.Repositories
                 .ToListAsync();
         }
 
-        public Task<int> TryCancelQaTicketAsync(int qaTicketId)
-        {
-            return _shDbContext.QaTickets
-                .Where(t => t.Id == qaTicketId
-                    && (t.Status == QaAssignmentConst.TICKET_STATUS_ACTIVE || t.Status == QaAssignmentConst.TICKET_STATUS_REJECTED))
-                .ExecuteUpdateAsync(s => s.SetProperty(t => t.Status, QaAssignmentConst.TICKET_STATUS_CANCELLED));
-        }
-
-        public Task<int> ReleaseQaNotPassedAsync(int qaTicketId)
-        {
-            return _shDbContext.SubmissionUsers
-                .Where(u => u.TicketId == qaTicketId && u.Role == RoleConstants.ROLE_QA
-                    && _shDbContext.Submissions.Any(s => s.Id == u.SubmissionId && s.StatusQa != SubmissionConst.QA_PASSED))
-                .ExecuteDeleteAsync();
-        }
-
         public Task<int> CountKeptDocumentsAsync(string role, IReadOnlyCollection<int> ticketIds)
         {
             return _shDbContext.SubmissionUsers.CountAsync(u => u.Role == role && ticketIds.Contains(u.TicketId));

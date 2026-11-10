@@ -1,7 +1,6 @@
 using sh.be.applications.Base.Dtos.DataReader;
 using sh.be.applications.Base.Interfaces.External.DataReader;
 using sh.be.domain.Base.Models;
-using sh.be.infrastructure.external.DataReader.Models;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
 
@@ -64,5 +63,11 @@ namespace sh.be.infrastructure.external.DataReader.Base
                 .Select(cell => cell!.Trim())
                 .ToList();
         }
+    }
+
+    public class SheetHeaderRow
+    {
+        public string SheetName { get; set; } = String.Empty;
+        public List<string?> Cells { get; set; } = new();
     }
 }

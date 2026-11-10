@@ -64,7 +64,7 @@ namespace sh.be.domain.Module.Auth.Entities
         public List<RolePermission> AssignPermissions(IEnumerable<Permission> permissions, IEnumerable<string> checkedKeys, string? assignedBy, DateTime assignedDate)
         {
             var permissionList = permissions.ToList();
-            var grantedKeys = PermissionGrantPolicy.ResolveGrantedKeys(permissionList, checkedKeys);
+            var grantedKeys = PermissionDomainService.ResolveGrantedKeys(permissionList, checkedKeys);
             return permissionList
                 .Where(p => grantedKeys.Contains(p.Key))
                 .Select(p => RolePermission.Create(Id, p.Key, p.ParentKey ?? String.Empty, assignedBy, assignedDate))

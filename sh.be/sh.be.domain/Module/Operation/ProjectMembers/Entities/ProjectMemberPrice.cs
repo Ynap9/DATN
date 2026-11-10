@@ -30,7 +30,7 @@ namespace sh.be.domain.Module.Operation.ProjectMembers.Entities
         public static ProjectMemberPrice Create(int projectMemberId, decimal companyPrice, decimal actualPrice, DateTime effectiveFrom,
             string? createdBy, DateTime createdDate)
         {
-            PricePolicy.EnsureValid(companyPrice, actualPrice);
+            ProjectMemberDomainService.EnsureValidPrice(companyPrice, actualPrice);
             return new ProjectMemberPrice
             {
                 ProjectMemberId = projectMemberId,

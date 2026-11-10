@@ -3,7 +3,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using sh.be.domain.Module.Construction.Submissions.Entities;
 using sh.be.domain.Module.Construction.Submissions.Repositories;
-using sh.be.domain.Module.Construction.Submissions.Services.Import.Models;
+using sh.be.domain.Module.Construction.Submissions.Services;
 using sh.be.infrastructure.data.Persistence.Db;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.HttpRequest.Error;

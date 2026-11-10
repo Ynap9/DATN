@@ -136,7 +136,7 @@ Cả ba cần `Function.Packaging.Config.View` (một key cho xem và tải Exce
 | `metadataType` / một phần tử `metadataTypes` ngoài `1`–`4` | `702` |
 | `excel-template`: các schema đã chọn không còn trường nào | `703` |
 
-- Kiểm `701` / `702` ở `PackageSchemaPolicy` (domain). Loại gói hợp lệ mà không có trường thì `paging` trả rỗng, **không** báo lỗi.
+- Kiểm `701` / `702` ở `PackageSchemaDomainService` (domain). Loại gói hợp lệ mà không có trường thì `paging` trả rỗng, **không** báo lỗi.
 - `paging` chạy 3 câu: đếm, lấy trang, rồi **một** câu lấy mã cho mọi `CodeGroup` trong trang (không truy vấn theo từng dòng).
 - Schema không có trường bị bỏ khỏi file Excel; tiêu đề cột là tên tiếng Việt, tên thẻ xem ở `paging`. Chưa đánh dấu cột bắt buộc
   (để tới khi chốt bước kiểm tra metadata).

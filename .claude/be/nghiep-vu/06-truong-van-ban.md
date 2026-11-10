@@ -74,7 +74,7 @@ Body: `{ "isShow": true, "isChargeable": false, "isFieldOcr": true, "fieldNameOc
 - `map-field-import?documentTypeId=&url=&sheetName=&headerStartIndex=` → **mọi** trường chưa xoá của loại văn bản (theo
   `OrderTableView`, `Id`) dạng `{ fieldImport, headers }`; `headers` là các header ở dòng `headerStartIndex`
   (đếm từ `1`, mặc định `1`) của sheet `sheetName` khớp **đủ từng từ** với `fieldImport`, không khớp thì `[]`.
-  `FieldImportMatchPolicy`: tách theo khoảng trắng, chuẩn hoá NFC, không phân biệt hoa thường, đúng số từ và thứ tự —
+  `DocumentFieldDomainService.IsFieldImportMatch`: tách theo khoảng trắng, chuẩn hoá NFC, không phân biệt hoa thường, đúng số từ và thứ tự —
   `"  ngày   BAN hành "` khớp `"Ngày ban hành"`, `"Người"` không khớp `"Người ký"`.
 - Chỉ đọc, không audit. `301` loại văn bản không tồn tại, `400` `headerStartIndex < 1`, `202` link sai, `204` không có sheet
   đúng tên (phân biệt hoa thường), `203` chưa chia sẻ cho service account. Cơ chế đọc: [../architecture/05-infrastructure-external.md](../architecture/05-infrastructure-external.md).
