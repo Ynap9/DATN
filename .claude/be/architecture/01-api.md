@@ -50,7 +50,7 @@ public ApiResponse FindById([FromRoute] int id)
 
 - `[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]` ở class: bắt buộc có token.
 - `[Permission(key1, key2…)]` ở action: có **ít nhất một** key là qua. Luật tính nằm ở
-  `PermissionGrantPolicy` (domain): SuperAdmin luôn qua; quyền cha được chọn ⇒ quyền con cũng được.
+  `PermissionDomainService` (domain): SuperAdmin luôn qua; quyền cha được chọn ⇒ quyền con cũng được.
 - Thiếu token ⇒ `401`; có token nhưng thiếu quyền ⇒ `403` (`ForbidResult`).
 
 ⚠️ Attribute truy vấn DB mỗi request (vai trò + quyền + danh sách permission), chưa cache. Đừng gắn

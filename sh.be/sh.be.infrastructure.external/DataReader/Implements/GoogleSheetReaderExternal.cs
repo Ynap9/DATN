@@ -7,7 +7,6 @@ using Google.Apis.Util;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using sh.be.infrastructure.external.DataReader.Base;
-using sh.be.infrastructure.external.DataReader.Models;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
 using sh.be.shared.Settings;

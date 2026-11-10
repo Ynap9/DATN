@@ -43,7 +43,7 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionNotFound);
         }
 
-        public async Task<List<Submission>> GetSubmissionsToDeleteAsync(int projectId, int documentTypeId, IReadOnlyCollection<int> ids)
+        public async Task<List<Submission>> GetSubmissionsToDeleteAsync(int projectId, int documentTypeId, List<int> ids)
         {
             var distinctIds = ids.Distinct().ToList();
             if (distinctIds.Count == 0)
@@ -68,7 +68,7 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
             return submissions;
         }
 
-        public void EnsureCheckedDeletable(IReadOnlyCollection<Submission> submissions, bool isSuperAdmin)
+        public void EnsureCheckedDeletable(List<Submission> submissions, bool isSuperAdmin)
         {
             var checkedIds = submissions.Where(submission => submission.IsChecked()).Select(submission => submission.Id).ToList();
             if (!isSuperAdmin && checkedIds.Count > 0)
@@ -131,5 +131,65 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
         {
             return _submissionRepository.LockImportAsync(projectId, documentTypeId);
         }
+
+        public static SubmissionCheckPlan BuildCheckPlan(Submission submission, List<SubmissionDataInput> inputs,
+            List<ProjectDocumentTypeDocumentField> mappings, List<SubmissionData> existingDatas,
+            string modifiedBy, DateTime modifiedDate)
+        {
+            if (inputs.GroupBy(input => input.DocumentFieldId).Any(group => group.Count() > 1))
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionDataDuplicateField);
+            }
+
+            var mappingByFieldId = mappings.ToDictionary(mapping => mapping.DocumentFieldId);
+            if (inputs.Any(input => !mappingByFieldId.ContainsKey(input.DocumentFieldId)))
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentFieldNotInProject);
+            }
+
+            var datasByFieldId = existingDatas
+                .GroupBy(data => data.DocumentFieldId)
+                .ToDictionary(group => group.Key, group => group.OrderBy(data => data.Id).First());
+
+            var datasToUpdate = new List<SubmissionData>();
+            var datasToInsert = new List<SubmissionData>();
+            var changes = new List<SubmissionDataChange>();
+
+            foreach (var input in inputs)
+            {
+                if (datasByFieldId.TryGetValue(input.DocumentFieldId, out var data))
+                {
+                    var oldData = data.Data;
+                    if (data.ChangeData(input.Data, modifiedBy, modifiedDate))
+                    {
+                        datasToUpdate.Add(data);
+                        changes.Add(new SubmissionDataChange(input.DocumentFieldId, oldData, data.Data));
+                    }
+                    continue;
+                }
+
+                var newData = input.Data.Trim();
+                if (newData.Length == 0)
+                {
+                    continue;
+                }
+
+                var mapping = mappingByFieldId[input.DocumentFieldId];
+                datasToInsert.Add(submission.CreateData(input.DocumentFieldId, newData, mapping.OrderFieldImport, String.Empty, modifiedBy, modifiedDate));
+                changes.Add(new SubmissionDataChange(input.DocumentFieldId, String.Empty, newData));
+            }
+
+            return new SubmissionCheckPlan(datasToUpdate, datasToInsert, changes);
+        }
+    }
+
+    public record SubmissionDataInput(int DocumentFieldId, string Data);
+
+    public record SubmissionDataChange(int DocumentFieldId, string OldData, string NewData);
+
+    public record SubmissionCheckPlan(List<SubmissionData> DatasToUpdate, List<SubmissionData> DatasToInsert,
+        List<SubmissionDataChange> Changes)
+    {
+        public int ChangedDataCount => DatasToUpdate.Count + DatasToInsert.Count;
     }
 }

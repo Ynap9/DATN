@@ -1,4 +1,3 @@
-using sh.be.infrastructure.external.DigitalSignature.Models;
 using sh.be.shared.Constants.DigitalSignature;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
@@ -127,5 +126,16 @@ namespace sh.be.infrastructure.external.DigitalSignature.Base
 
             return result.PixelWidth > 0 && result.PixelHeight > 0 ? result : null;
         }
+    }
+
+    public class ImageSize
+    {
+        public int PixelWidth { get; set; }
+        public int PixelHeight { get; set; }
+        public double DpiX { get; set; }
+        public double DpiY { get; set; }
+        public bool HasDpiMetadata { get; set; }
+        public double WidthPoints { get; set; }
+        public double HeightPoints { get; set; }
     }
 }

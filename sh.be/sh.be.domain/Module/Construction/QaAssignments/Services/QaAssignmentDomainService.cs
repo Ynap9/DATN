@@ -1,13 +1,15 @@
 using sh.be.domain.Module.Auth.Entities;
 using sh.be.domain.Module.Auth.Repositories;
+using sh.be.domain.Module.Auth.Services;
 using sh.be.domain.Module.Construction.QaAssignments.Entities;
-using sh.be.domain.Module.Construction.QaAssignments.Models;
 using sh.be.domain.Module.Construction.QaAssignments.Repositories;
 using sh.be.domain.Module.Construction.Submissions.Entities;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace sh.be.domain.Module.Construction.QaAssignments.Services
 {
@@ -27,6 +29,45 @@ namespace sh.be.domain.Module.Construction.QaAssignments.Services
             _qaTicketRepository = qaTicketRepository;
             _userRepository = userRepository;
             _roleRepository = roleRepository;
+        }
+
+        public static (int SampleSize, int MaxFailed) CalculateSampleSize(int documentCount, int sampleSize, decimal thresholdPercent)
+        {
+            var actualSampleSize = Math.Min(sampleSize, documentCount);
+            return (actualSampleSize, (int)Math.Floor(actualSampleSize * thresholdPercent / 100));
+        }
+
+        public static void ValidateStrategy(string strategyCode, string? paramsJson)
+        {
+            if (!Regex.IsMatch(strategyCode, QaAssignmentConst.STRATEGY_CODE_PATTERN))
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest,
+                    $"Mã thuật toán chỉ gồm chữ in hoa, số, dấu \"_\" và tối đa {QaAssignmentConst.STRATEGY_CODE_MAX_LENGTH} ký tự");
+            }
+            if (paramsJson == null)
+            {
+                return;
+            }
+            if (paramsJson.Length > QaAssignmentConst.STRATEGY_PARAMS_MAX_LENGTH)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest,
+                    $"Tham số thuật toán tối đa {QaAssignmentConst.STRATEGY_PARAMS_MAX_LENGTH} ký tự");
+            }
+
+            bool isObject;
+            try
+            {
+                using var document = JsonDocument.Parse(paramsJson);
+                isObject = document.RootElement.ValueKind == JsonValueKind.Object;
+            }
+            catch (JsonException)
+            {
+                isObject = false;
+            }
+            if (!isObject)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Tham số thuật toán phải là một JSON object");
+            }
         }
 
         public async Task<QaSamplingConfig> GetConfigOrDefaultAsync(int projectId)
@@ -64,7 +105,7 @@ namespace sh.be.domain.Module.Construction.QaAssignments.Services
         {
             var member = await _qaTicketRepository.FindActiveQaMemberAsync(projectId, documentTypeId, qaUserId)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaReviewerNotMember);
-            if (!access.IsAdmin && !member.IsManagedBy(currentUserId))
+            if (!access.IsAdmin && member.ManagedByUserId != currentUserId)
             {
                 throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaReviewerNotManaged);
             }
@@ -72,7 +113,7 @@ namespace sh.be.domain.Module.Construction.QaAssignments.Services
 
         public async Task<QaAccess> GetAccessAsync(string userId)
         {
-            var isAdmin = QaAccessPolicy.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(userId));
+            var isAdmin = PermissionDomainService.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(userId));
             List<(int ProjectId, int DocumentTypeId)> managedPairs = isAdmin ? [] : await _qaTicketRepository.GetLeaderPairsAsync(userId);
             return new QaAccess(isAdmin, managedPairs.ToHashSet());
         }
@@ -135,16 +176,17 @@ namespace sh.be.domain.Module.Construction.QaAssignments.Services
             return true;
         }
 
-        public async Task CancelTicketAsync(QaTicket ticket, string? cancelledBy, DateTime cancelledDate)
+        public async Task<int> CancelTicketAsync(QaTicket ticket, string? cancelledBy, DateTime cancelledDate)
         {
             ticket.Cancel(cancelledBy, cancelledDate);
             if (await _qaTicketRepository.TryCancelAsync(ticket.Id) == 0)
             {
                 throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaTicketStatusInvalid);
             }
+            return await _qaTicketRepository.ReleaseNotPassedAsync(ticket.Id);
         }
 
-        public async Task EnsureDeletableAsync(IReadOnlyCollection<Submission> submissions)
+        public async Task EnsureDeletableAsync(List<Submission> submissions)
         {
             var inQaIds = await _qaTicketRepository.GetIdsInOpenTicketAsync(submissions.Select(submission => submission.Id).ToList());
             var inProgressIds = submissions
@@ -161,7 +203,7 @@ namespace sh.be.domain.Module.Construction.QaAssignments.Services
         }
 
         public async Task<List<QaCandidate>> SelectAssignableAsync(int projectId, int documentTypeId, string qaUserId,
-            IReadOnlyCollection<QaTicketNode>? nodes, int? count)
+            List<QaTicketNode>? nodes, int? count)
         {
             var isByNodes = nodes is { Count: > 0 };
             if (isByNodes == count.HasValue)
@@ -194,6 +236,20 @@ namespace sh.be.domain.Module.Construction.QaAssignments.Services
                 throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaSameAsEntry);
             }
             return selected;
+        }
+    }
+
+    public record QaAccess(bool IsAdmin, HashSet<(int ProjectId, int DocumentTypeId)> ManagedPairs);
+
+    public record QaCandidate(int SubmissionId, string Box, string ProfileRange);
+
+    public record QaMember(string? ManagedByUserId);
+
+    public record QaTicketNode(string Box, string? ProfileRange)
+    {
+        public bool Contains(QaCandidate candidate)
+        {
+            return candidate.Box == Box && (ProfileRange == null || candidate.ProfileRange == ProfileRange);
         }
     }
 }

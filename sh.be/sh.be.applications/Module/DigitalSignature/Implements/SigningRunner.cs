@@ -260,7 +260,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
                     await _prepareSlots.WaitAsync(token);
                     try
                     {
-                        SigningBatchFilePolicy.EnsureSignable(_pdfSignerExternal.HasSignature(pdf), running.AllowSigningSignedPdf);
+                        SigningBatchDomainService.EnsureSignable(_pdfSignerExternal.HasSignature(pdf), running.AllowSigningSignedPdf);
                         var now = _timeProvider.GetUtcNow();
                         preparedSignature = _pdfSignerExternal.Prepare(pdf, context, TimeZoneInfo.ConvertTime(now, BaseService.VietnamTimeZone).DateTime, now.UtcDateTime);
                     }
@@ -356,7 +356,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
         private async Task SaveSignedFileAsync(RunningBatch running, PdfSigningContextDto context, IFileStorageExternal fileStorageExternal, SignedFile item, byte[] timestampToken)
         {
             var signedPdf = _pdfSignerExternal.Complete(item.Prepared, item.Signature, timestampToken, context);
-            var signedObjectKey = SigningBatchFilePolicy.BuildSignedObjectKey(running.Id, item.File.Order);
+            var signedObjectKey = SigningBatchDomainService.BuildSignedObjectKey(running.Id, item.File.Order);
             using (var content = new MemoryStream(signedPdf))
             {
                 await fileStorageExternal.UploadPrivateAsync(content, signedObjectKey, SigningBatchConst.PDF_CONTENT_TYPE);
@@ -378,7 +378,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
             _logger.LogWarning(exception, $"{nameof(MarkFailedAsync)}, id={running.Id}, fileId={file.Id}");
             using var scope = _serviceScopeFactory.CreateScope();
             await scope.ServiceProvider.GetRequiredService<ISigningBatchRepository>()
-                .MarkFileFailedAsync(file, SigningBatchFilePolicy.ToErrorMessage(exception), running.CreatedBy, GetVietnamTime());
+                .MarkFileFailedAsync(file, SigningBatchDomainService.ToErrorMessage(exception), running.CreatedBy, GetVietnamTime());
             running.CountFailed();
         }
 
@@ -418,7 +418,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
                 signingBatch.Pause(SigningBatchConst.PAUSED_BY_SESSION_REASON, running.CreatedBy, GetVietnamTime());
                 return;
             }
-            signingBatch.Fail(SigningBatchFilePolicy.ToErrorMessage(exception), running.CreatedBy, GetVietnamTime());
+            signingBatch.Fail(SigningBatchDomainService.ToErrorMessage(exception), running.CreatedBy, GetVietnamTime());
         }
 
         private static List<Task> StartWorkers(int count, Func<Task> work, RunningBatch running)

@@ -1,5 +1,5 @@
 using sh.be.domain.Module.Construction.Submissions.Entities;
-using sh.be.domain.Module.Construction.Submissions.Services.Import.Models;
+using sh.be.domain.Module.Construction.Submissions.Services;
 
 namespace sh.be.domain.Module.Construction.Submissions.Repositories
 {

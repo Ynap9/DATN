@@ -24,7 +24,7 @@ Gốc `api/v1/construction/project`, mọi API cần `Function.Construction.Proj
 
 ## Luật phân loại
 
-`daysLeft = EndedAt.Date − hôm nay` (giờ VN), tính trong `ProjectDeadlinePolicy`. Job xét dự án `DEPLOYING` / `DOING` /
+`daysLeft = EndedAt.Date − hôm nay` (giờ VN), tính trong `ProjectDomainService.CalculateDeadlineDaysLeft`. Job xét dự án `DEPLOYING` / `DOING` /
 `ACCEPTING` / `EXPIRED` có `EndedAt` (`ProjectConst.DEADLINE_STATUSES`); `DONE` không bao giờ bị đụng.
 
 | Điều kiện | Việc | Loại mail |

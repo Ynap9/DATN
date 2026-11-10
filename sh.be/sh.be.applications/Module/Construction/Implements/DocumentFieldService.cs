@@ -75,7 +75,7 @@ namespace sh.be.applications.Module.Construction.Implements
             foreach (var fieldImport in fieldImports)
             {
                 fieldImport.Headers = headers
-                    .Where(header => FieldImportMatchPolicy.IsMatch(fieldImport.FieldImport, header))
+                    .Where(header => DocumentFieldDomainService.IsFieldImportMatch(fieldImport.FieldImport, header))
                     .ToList();
             }
             return fieldImports;

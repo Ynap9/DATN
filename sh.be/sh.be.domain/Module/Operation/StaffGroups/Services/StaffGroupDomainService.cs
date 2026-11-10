@@ -35,7 +35,7 @@ namespace sh.be.domain.Module.Operation.StaffGroups.Services
             }
         }
 
-        public async Task EnsureSameStaffRoleAsync(IReadOnlyCollection<string> newUserIds, IReadOnlyCollection<string> existingUserIds)
+        public async Task EnsureSameStaffRoleAsync(List<string> newUserIds, List<string> existingUserIds)
         {
             var memberUserIds = existingUserIds.Concat(newUserIds).ToList();
             var staffRoleNames = await _staffGroupRepository.GetStaffRoleNamesAsync(memberUserIds);

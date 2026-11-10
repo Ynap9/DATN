@@ -12,7 +12,7 @@ nhóm **không** dùng để tính tiền hay giao phiếu. Task 10, 2026-10-26.
 | `SuperAdmin`, `Admin` | Mọi nhóm | Có | Mọi nhóm |
 | `Leader` | Chỉ nhóm mình tạo | Có | Chỉ nhóm mình tạo |
 
-- "Admin" = `OperationAccessPolicy.IsAdmin(roleNames)` (role `SuperAdmin` hoặc `Admin`). Chủ nhóm = người tạo, kể cả khi Admin tạo.
+- "Admin" = `PermissionDomainService.IsAdmin(roleNames)` (role `SuperAdmin` hoặc `Admin`). Chủ nhóm = người tạo, kể cả khi Admin tạo.
 - Leader đụng nhóm người khác (xem, sửa, xoá, thêm / bỏ người) → `801` "không tìm thấy", **không** báo `803`, để không dò được
   nhóm nào tồn tại. `803` để dành cho API đổi chủ nhóm (chưa làm).
 - Leader gửi `ownerUserId` khi phân trang thì bị ép về chính mình; Admin lọc theo `ownerUserId` được.
@@ -60,7 +60,7 @@ Lỗi định dạng DTO (thiếu `name`, tên > 200, > 500 `userIds`, `userIds`
 
 | Tầng | File |
 |---|---|
-| Domain | `StaffGroups/Repositories/IStaffGroupRepository`, `StaffGroups/Services/StaffGroupDomainService` (`EnsureAccessibleAsync`, `EnsureUniqueNameAsync`, `EnsureSameStaffRoleAsync`), `ProjectMembers/Services/OperationAccessPolicy` (Task 11 dùng lại) |
+| Domain | `StaffGroups/Repositories/IStaffGroupRepository`, `StaffGroups/Services/StaffGroupDomainService` (`EnsureAccessibleAsync`, `EnsureUniqueNameAsync`, `EnsureSameStaffRoleAsync`), `Auth/Services/PermissionDomainService.IsAdmin` (dùng chung mọi module) |
 | Applications | `Dtos/StaffGroup/*`, `IStaffGroupQuery`, `IStaffGroupService` / `StaffGroupService` |
 | Data | `Module/Operation/Repositories/StaffGroupRepository` (`GetStaffRoleNamesAsync` đọc thẳng `UserRoles` / `Roles`), `Queries/StaffGroupQuery` |
 | Api | `Controllers/Module/Operation/StaffGroupController` |

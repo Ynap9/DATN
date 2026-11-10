@@ -1,4 +1,3 @@
-using sh.be.infrastructure.external.DigitalSignature.Models;
 using sh.be.shared.Constants.DigitalSignature;
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -22,5 +21,12 @@ namespace sh.be.infrastructure.external.DigitalSignature.Base
                 Blue = int.Parse(value.Substring(5, 2), NumberStyles.HexNumber) / 255d,
             };
         }
+    }
+
+    public class RgbColor
+    {
+        public double Red { get; set; }
+        public double Green { get; set; }
+        public double Blue { get; set; }
     }
 }

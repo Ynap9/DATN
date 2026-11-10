@@ -364,10 +364,8 @@ builder.Services.AddScoped<ProjectConfigDomainService>();
 builder.Services.AddScoped<SubmissionDomainService>();
 builder.Services.AddScoped<QaAssignmentDomainService>();
 builder.Services.AddScoped<StaffGroupDomainService>();
-builder.Services.AddScoped<OperationAccessDomainService>();
 builder.Services.AddScoped<ProjectMemberDomainService>();
 builder.Services.AddScoped<AiProviderDomainService>();
-builder.Services.AddSingleton<IQaStrategyValidator, FormatOnlyQaStrategyValidator>();
 
 // application services
 builder.Services.AddScoped<IUserService, UserService>();

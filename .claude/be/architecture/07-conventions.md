@@ -16,8 +16,8 @@
 | Muốn viết | Đặt ở |
 |---|---|
 | Quy tắc chỉ cần dữ liệu một entity | Method trong `domain/.../Entities/` |
-| Quy tắc cần tra dữ liệu khác | Domain service trong `domain/.../Services/` |
-| Phép tính thuần (cây quyền, so khớp) | Policy tĩnh trong `domain/.../Services/` |
+| Quy tắc cần tra dữ liệu khác | Method của `<Aggregate>DomainService` trong `domain/.../Services/` |
+| Phép tính thuần (cây quyền, so khớp) | Method `static` của **cùng** `<Aggregate>DomainService` — không tạo `*Policy` |
 | Lưu / nạp aggregate | Interface `domain/.../Repositories/` + implement `infrastructure.data/.../Repositories/` |
 | Màn hình danh sách, chi tiết, dropdown | Interface `applications/.../Interfaces/Queries/` + implement `infrastructure.data/.../Queries/` |
 | Luồng use case, transaction, audit | `applications/.../Implements/` |
@@ -42,13 +42,17 @@
 - Không viết tắt khó đoán (`usrRl`, `pmsKey`); chỉ giữ viết tắt phổ biến (`id`, `dto`, `ex`).
 - **Hạn chế hàm private**: logic chỉ dùng một chỗ viết thẳng trong hàm public. Chỉ tách hàm private khi được gọi
   từ **≥ 2 nơi** (tránh lặp code). Đang áp dụng cho module Submission; code cũ sửa dần khi đụng tới.
+- **Kiểu tập hợp dùng thẳng kiểu cụ thể** nơi gọi đang truyền (`List<string>`, `List<Permission>`, `Dictionary<,>`, `string[]`), không
+  bọc `IEnumerable` / `IReadOnlyCollection` / `IReadOnlyList`. Chỉ dùng kiểu trừu tượng khi các nơi gọi truyền kiểu **không nhất quán**
+  hoặc nguồn vốn đã là kiểu đó (`SheetTable.Rows`, `PluginConst.DEFAULT_SUPPORTED_VERSIONS`). Đã áp cho mọi `*DomainService`; code cũ sửa dần.
 
 ## Tên và namespace
 
 - Namespace **khớp đường dẫn thư mục**: `sh.be.domain.Module.Auth.Entities`,
   `sh.be.applications.Module.Auth.Interfaces.Queries`…
 - Interface tiền tố `I`; implement cùng tên bỏ `I` (`IRoleQuery` → `RoleQuery`).
-- Repository: `I<Aggregate>Repository`. Query: `I<Aggregate>Query`. Domain service: `<Aggregate>DomainService`.
+- Repository: `I<Aggregate>Repository`. Query: `I<Aggregate>Query`. Domain service: `<Aggregate>DomainService` — tên **duy nhất** trong
+  `domain/.../Services/` ([03](03-domain.md#entity-hay-domain-service)).
   Cổng ra bên thứ ba: `I<Ten>External` → `<NhaCungCap><Ten>External`, field `_<ten>External` (không dùng `Service`, `Client`, `Writer`…).
 - Factory entity: `static Create(...)`. Đổi trạng thái: động từ nghiệp vụ (`Delete`, `AssignRoles`).
 - Field private dạng `_camelCase`. Method async có hậu tố `Async` ở repository / domain service.

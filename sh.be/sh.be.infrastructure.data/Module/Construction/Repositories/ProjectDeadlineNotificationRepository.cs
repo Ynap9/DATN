@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using sh.be.domain.Module.Construction.Projects.Entities;
 using sh.be.domain.Module.Construction.Projects.Repositories;
-using sh.be.domain.Module.Construction.Projects.Services.Deadline;
+using sh.be.domain.Module.Construction.Projects.Services;
 using sh.be.infrastructure.data.Persistence.Db;
 
 namespace sh.be.infrastructure.data.Module.Construction.Repositories
@@ -23,7 +23,7 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
                 .Select(n => new { n.ProjectId, n.NotificationType, n.EndedAt, n.ToAddress })
                 .ToListAsync();
             return sentNotifications
-                .Select(n => ProjectDeadlinePolicy.BuildSentKey(n.ProjectId, n.NotificationType, n.EndedAt, n.ToAddress))
+                .Select(n => ProjectDomainService.BuildDeadlineSentKey(n.ProjectId, n.NotificationType, n.EndedAt, n.ToAddress))
                 .ToHashSet();
         }
 
