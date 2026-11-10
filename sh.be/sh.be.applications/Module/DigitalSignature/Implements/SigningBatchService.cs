@@ -84,15 +84,15 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
 
             var signingBatch = await FindOwnedSigningBatchAsync(id);
             signingBatch.EnsureAcceptUpload();
-            SigningBatchFilePolicy.EnsureUploadCount(dto.Files.Count);
+            SigningBatchDomainService.EnsureUploadCount(dto.Files.Count);
 
             var fileNames = (await _signingBatchRepository.GetFileNamesAsync(id)).ToHashSet(StringComparer.OrdinalIgnoreCase);
             var order = await _signingBatchRepository.GetLastFileOrderAsync(id);
             var uploads = new List<(IFormFile FormFile, SigningBatchFile File)>();
-            foreach (var formFile in dto.Files.Where(f => SigningBatchFilePolicy.IsAcceptedFile(f.FileName, f.Length) && fileNames.Add(f.FileName)))
+            foreach (var formFile in dto.Files.Where(f => SigningBatchDomainService.IsAcceptedFile(f.FileName, f.Length) && fileNames.Add(f.FileName)))
             {
                 order++;
-                var sourceObjectKey = SigningBatchFilePolicy.BuildSourceObjectKey(id, order);
+                var sourceObjectKey = SigningBatchDomainService.BuildSourceObjectKey(id, order);
                 uploads.Add((formFile, signingBatch.CreateFile(order, formFile.FileName, sourceObjectKey, null, currentUserId, now)));
             }
 

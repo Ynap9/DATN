@@ -17,7 +17,7 @@ Service và external chỉ nối qua interface: đổi nhà cung cấp không ch
 | `SignalR` | `ISignalRExternal` → `SignalRExternal` (singleton); hub, tracker, cấu hình ở `Base/` |
 | `Storage` | `IFileStorageExternal` → `S3FileStorageExternal` (MinIO); `IFileDownloadExternal` → `HttpFileDownloadExternal`; `ISampleFileExternal` → `SampleFileExternal` (PDF nhúng `Storage/Files/*.pdf`); `IPluginSetupExternal` → `PluginSetupExternal` |
 
-- Mỗi mục: `Implements/` (lớp implement cổng ra), `Base/` (lớp nền, helper, cấu hình), `Models/` (model nội bộ, không lộ ra applications).
+- Mỗi mục: `Implements/` (lớp implement cổng ra), `Base/` (lớp nền, helper, cấu hình). Không có `Models/`: class dữ liệu nội bộ đặt cuối file sinh ra / dùng nó (vd `PdfRect` trong `PdfPreparer.cs`).
   DTO ở `applications/Base/Dtos/<Muc>/`. Tên: `I<Ten>External` → `<NhaCungCap><Ten>External`, field trong service `_<ten>External`.
 - `IRequestContext`, `IAuthorizationStateProtector` do **api** implement → `Base/Interfaces/Api/`, không hậu tố. `DataReader/` gom đọc / ghi mọi bên thứ ba.
 

@@ -146,7 +146,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
                 new { template.Id, template.Name }, null);
             await _unitOfWork.SaveChangesAsync();
 
-            await _fileStorageExternal.DeleteByPrefixAsync(TemplateImagePolicy.BuildObjectKeyPrefix(id));
+            await _fileStorageExternal.DeleteByPrefixAsync(TemplateDomainService.BuildObjectKeyPrefix(id));
         }
 
         private async Task ChangeImagesAsync(Template template, UpdateConfigTemplateDto dto)
@@ -156,7 +156,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
 
             if (dto.StampImage != null)
             {
-                var objectKey = TemplateImagePolicy.BuildObjectKey(template.Id, TemplateConst.STAMP_IMAGE_NAME, dto.StampImage.FileName);
+                var objectKey = TemplateDomainService.BuildObjectKey(template.Id, TemplateConst.STAMP_IMAGE_NAME, dto.StampImage.FileName);
                 template.ChangeStampImage(await UploadImageAsync(dto.StampImage, objectKey), objectKey);
             }
             else if (dto.IsRemoveStampImage)
@@ -166,7 +166,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
 
             if (dto.WetSignatureImage != null)
             {
-                var objectKey = TemplateImagePolicy.BuildObjectKey(template.Id, TemplateConst.WET_SIGNATURE_IMAGE_NAME, dto.WetSignatureImage.FileName);
+                var objectKey = TemplateDomainService.BuildObjectKey(template.Id, TemplateConst.WET_SIGNATURE_IMAGE_NAME, dto.WetSignatureImage.FileName);
                 template.ChangeWetSignatureImage(await UploadImageAsync(dto.WetSignatureImage, objectKey), objectKey);
             }
             else if (dto.IsRemoveWetSignatureImage)
@@ -179,7 +179,7 @@ namespace sh.be.applications.Module.DigitalSignature.Implements
         {
             if (image != null)
             {
-                TemplateImagePolicy.EnsureValidImage(image.FileName, image.Length);
+                TemplateDomainService.EnsureValidImage(image.FileName, image.Length);
             }
         }
 

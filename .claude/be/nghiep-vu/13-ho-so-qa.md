@@ -106,7 +106,7 @@ Cùng ngày, sau khi đưa `id` vào body (`PUT qa`, `PUT check`) và thêm trư
 ⚠️ Hai người QA cùng một hồ sơ: người lưu sau ghi đè (last write wins), giống `check`.
 
 ⚠️ Tái kiểm tra có sửa ô vẫn giữ kết quả Đạt; import blank / overwrite cũng không reset QA. Muốn bắt QA chấm lại khi dữ liệu đổi
-thì sửa `Submission.Check` / policy import — đổi nghiệp vụ, hỏi trước.
+thì sửa `Submission.Check` / `SubmissionImportDomainService` — đổi nghiệp vụ, hỏi trước.
 
 ⚠️ User bị xoá là xoá **cứng** (`UserManager.DeleteAsync`), nên `qaUserName` / `checkedUserName` / `userName` của người đã xoá là `null`.
 

@@ -1,4 +1,3 @@
-using sh.be.infrastructure.external.DigitalSignature.Models;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
 using System.Collections;
@@ -163,4 +162,21 @@ namespace sh.be.infrastructure.external.DigitalSignature.Base
             return q >= dictRaw.Length ? null : dictRaw[..q] + " " + objectNumber + " 0 R" + dictRaw[q..];
         }
     }
+
+    public class PdfDict
+    {
+        public List<KeyValuePair<string, object?>> Items { get; } = new();
+
+        public PdfDict Add(string key, object? value)
+        {
+            Items.Add(new KeyValuePair<string, object?>(key, value));
+            return this;
+        }
+    }
+
+    public record PdfName(string Value);
+
+    public record PdfRef(int Number);
+
+    public record PdfString(string Value);
 }

@@ -43,14 +43,14 @@ rảnh) bằng `isSessionLost = true` → server đóng phiên, lô tự `PAUSED
 |---|---|
 | **Chỉ người tạo lô** xem / sửa được lô, người khác → `616` (kssm không kiểm) | `SigningBatch.EnsureOwnedBy` |
 | Mẫu chữ ký phải còn → `601`; tên đợt ký bỏ `/`, `\`, ký tự điều khiển rồi trim, rỗng → `605` | `SigningBatchService.Create`, `NameSignedFolder` |
-| Chỉ thêm file khi lô `NEW` → `607`; lô dự án → `606`; tối đa **200 file / lượt** → `617`, thân request ≤ 512 MB | `CreateFile`, `EnsureAcceptUpload`, `SigningBatchFilePolicy` |
-| File rỗng, không đuôi `.pdf`, **trùng tên trong lô** (không phân biệt hoa thường) bị **bỏ qua lặng lẽ** | `SigningBatchFilePolicy.IsAcceptedFile` |
+| Chỉ thêm file khi lô `NEW` → `607`; lô dự án → `606`; tối đa **200 file / lượt** → `617`, thân request ≤ 512 MB | `CreateFile`, `EnsureAcceptUpload`, `SigningBatchDomainService` |
+| File rỗng, không đuôi `.pdf`, **trùng tên trong lô** (không phân biệt hoa thường) bị **bỏ qua lặng lẽ** | `SigningBatchDomainService.IsAcceptedFile` |
 | Xoá file: lô `SIGNING` → `608`; không thuộc lô → `610`; chỉ file `PENDING` / `FAILED` → `611`. Xoá file cuối **không** xoá lô | `RemoveFile`, `SigningBatchFile.Delete` |
 | Mở phiên: chứng thư hỏng → `614`, không chuỗi về CA Ban Cơ yếu đã ghim hoặc hết hạn → `615`; lô phải `NEW` / `PAUSED` / `FAILED` → `618`; lưu thumbprint | `ICertificateValidatorExternal.LoadTrusted`, `ChangeCertificate` |
 | Bắt đầu: đúng trạng thái trên → `618`; chưa chọn chứng thư → `609`; không có phiên → `619`; phiên khác chứng thư đã lưu → `620`; không còn file chờ → `621`; runner còn đang chạy lô → `608`. File `FAILED` được đưa lại `PENDING` | `SigningBatch.Start`, `ISigningRunner.EnsureNotRunning` |
 | Tạm dừng chỉ khi `SIGNING` → `622`; huỷ khi chưa `DONE` / `CANCELLED` → `623` (huỷ đóng luôn phiên) | `Pause`, `Cancel` |
 | Hết file: còn file lỗi → `FAILED` kèm lý do (ký tiếp để ký lại), không thì `DONE`; đóng phiên | `SigningBatch.Complete` |
-| File đã có chữ ký mà mẫu tắt "cho phép ký đè" → `628` | `SigningBatchFilePolicy.EnsureSignable` |
+| File đã có chữ ký mà mẫu tắt "cho phép ký đè" → `628` | `SigningBatchDomainService.EnsureSignable` |
 | Link bản ký chỉ cho file `DONE` → `624` | `SigningBatchFile.GetSignedObjectKey` |
 
 ## Runner — một file đi qua 3 chặng

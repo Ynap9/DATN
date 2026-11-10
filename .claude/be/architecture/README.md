@@ -10,7 +10,7 @@
 ```text
 sh.be.api                      Controller, PermissionAttribute, HttpRequestContext, Program.cs (composition root)
 sh.be.applications             Use case: Interfaces/{Services,Queries}, Implements, Dtos, BaseService
-sh.be.domain                   Lõi nghiệp vụ: Entities, Services (domain service, policy), Repositories (interface)
+sh.be.domain                   Lõi nghiệp vụ: Entities, Services (chỉ <Aggregate>DomainService), Repositories (interface)
 sh.be.infrastructure.data      EF Core: ShDbContext, Repositories, Queries, UnitOfWork, Migrations, Seeder
 sh.be.infrastructure.external  Dịch vụ ngoài theo mục: Ai (mã hoá khoá), BackgroundJob (Hangfire), DataReader, DigitalSignature, Mail, SignalR, Storage
 sh.be.shared                   Shared kernel: ApiResponse, ErrorCodes, exception, hằng số, settings, utils
@@ -47,7 +47,7 @@ Chiều này do `.csproj` cưỡng chế: domain gọi `ShDbContext` là build l
 |---|---|
 | [01-api.md](01-api.md) | Controller mỏng, `ApiResponse`, `[Permission]`, OpenIddict, composition root |
 | [02-applications.md](02-applications.md) | Service điều phối, `BaseService`, Services vs Queries, DTO |
-| [03-domain.md](03-domain.md) | Entity giàu hành vi, domain service, policy, repository interface |
+| [03-domain.md](03-domain.md) | Entity giàu hành vi, `<Aggregate>DomainService` (tên duy nhất trong `Services/`), repository interface |
 | [04-infrastructure-data.md](04-infrastructure-data.md) | `ShDbContext`, repository, query, UnitOfWork, soft delete, migration, seeder |
 | [05-infrastructure-external.md](05-infrastructure-external.md) | Dịch vụ ngoài theo mục, quy ước tên `External`, Hangfire, SignalR, Google Sheet, Excel, MinIO, mail |
 | [06-shared.md](06-shared.md) | Mã lỗi, exception, hằng số, settings, utils |

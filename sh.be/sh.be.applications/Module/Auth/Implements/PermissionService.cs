@@ -44,14 +44,14 @@ namespace sh.be.applications.Module.Auth.Implements
         public async Task<bool> HasAnyPermission(string userId, string[] permissionKeys)
         {
             var roleNames = await _roleRepository.GetRoleNamesByUserIdAsync(userId);
-            if (PermissionGrantPolicy.IsSuperAdmin(roleNames))
+            if (PermissionDomainService.IsSuperAdmin(roleNames))
             {
                 return true;
             }
 
             var grantedKeys = await _roleRepository.GetPermissionKeysByUserIdAsync(userId);
             var permissions = await _permissionRepository.GetActiveAsync();
-            return PermissionGrantPolicy.HasAnyPermission(permissions, grantedKeys, permissionKeys);
+            return PermissionDomainService.HasAnyPermission(permissions, grantedKeys, permissionKeys);
         }
     }
 }

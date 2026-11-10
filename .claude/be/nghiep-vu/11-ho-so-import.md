@@ -16,7 +16,7 @@ Giá trị từng trường của hồ sơ nằm ở `construction.SubmissionDat
 | Xem file PDF của hồ sơ | `GET api/construction/submission/proxy-file?url=...` | `Function.Construction.Submission.View` |
 
 FE luôn gọi `verify` → hiện số liệu → người dùng xác nhận → gọi import. Verify và import dùng **chung** hàm dựng kế hoạch
-(`SubmissionImportPolicy.Build...Plan`), nên số verify bằng đúng số import ghi (nếu sheet và DB không đổi giữa hai lần gọi).
+(`SubmissionImportDomainService.Build...Plan`), nên số verify bằng đúng số import ghi (nếu sheet và DB không đổi giữa hai lần gọi).
 
 Body chung (`ImportSubmissionDto`): `projectId`, `documentTypeId`, `fileColumnImport` (tên cột tên file, bắt buộc), `linkColumnImport`
 (tên cột link file, bắt buộc với append), `profileRange` (tên cột Hồ sơ), `box` (tên cột Hộp). Overwrite thêm `url`, `sheetName`,
@@ -24,10 +24,10 @@ Body chung (`ImportSubmissionDto`): `projectId`, `documentTypeId`, `fileColumnIm
 
 ## Khoá hồ sơ và cách đọc sheet
 
-- Khoá = `FileName + ProfileRange (Hồ sơ) + Box (Hộp)` trong cùng dự án + loại văn bản; so bằng `SubmissionKeyPolicy.Build`
+- Khoá = `FileName + ProfileRange (Hồ sơ) + Box (Hộp)` trong cùng dự án + loại văn bản; so bằng `SubmissionImportDomainService.BuildSubmissionKey`
   (trim, **không phân biệt hoa thường**) ở mọi nơi. DB lưu giá trị đã trim, giữ nguyên hoa thường; unique index có filter chặn trùng ở DB.
 - Dòng `1` là header; mọi ô đã trim. Dòng có tên file rỗng bị bỏ qua ở mọi API. `IndexGoogleSheet` (ví dụ `G5`) dùng **số dòng thật**.
-- Tên cột so bằng `FieldImportMatchPolicy` (giống API `map-field-import`): không phân biệt hoa thường, gộp khoảng trắng.
+- Tên cột so bằng `DocumentFieldDomainService.IsFieldImportMatch` (giống API `map-field-import`): không phân biệt hoa thường, gộp khoảng trắng.
 - Hồ sơ đã xoá mềm (xem [14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md)) không tính vào khoá: import lại cùng khoá sẽ tạo hồ sơ mới.
 - Cột trường lấy theo cấu hình `ProjectDocumentTypeDocumentField` của dự án + loại văn bản: bỏ `FieldImport` rỗng, xếp theo
   `OrderFieldImport` rồi `DocumentFieldId`, mỗi cấu hình lấy cột **đầu tiên** khớp mà chưa bị cấu hình khác dùng; không có cột thì bỏ qua.

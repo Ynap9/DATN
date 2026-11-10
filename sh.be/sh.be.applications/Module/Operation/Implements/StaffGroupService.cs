@@ -7,8 +7,8 @@ using sh.be.applications.Module.Operation.Interfaces.Queries;
 using sh.be.applications.Module.Operation.Interfaces.Services;
 using sh.be.domain.Base;
 using sh.be.domain.Module.Auth.Repositories;
+using sh.be.domain.Module.Auth.Services;
 using sh.be.domain.Module.Core.Repositories;
-using sh.be.domain.Module.Operation.ProjectMembers.Services;
 using sh.be.domain.Module.Operation.StaffGroups.Entities;
 using sh.be.domain.Module.Operation.StaffGroups.Repositories;
 using sh.be.domain.Module.Operation.StaffGroups.Services;
@@ -51,7 +51,7 @@ namespace sh.be.applications.Module.Operation.Implements
                 throw new UserFriendlyException(ErrorCodes.BadRequest, $"role phải là {RoleConstants.ROLE_DATA} hoặc {RoleConstants.ROLE_QA}");
             }
             var currentUserId = getCurrentUserId();
-            if (!OperationAccessPolicy.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId)))
+            if (!PermissionDomainService.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId)))
             {
                 dto.OwnerUserId = currentUserId;
             }
@@ -194,7 +194,7 @@ namespace sh.be.applications.Module.Operation.Implements
         private async Task<StaffGroup> EnsureAccessibleAsync(int id)
         {
             var currentUserId = getCurrentUserId();
-            var isAdmin = OperationAccessPolicy.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            var isAdmin = PermissionDomainService.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
             return await _staffGroupDomainService.EnsureAccessibleAsync(id, currentUserId, isAdmin);
         }
     }

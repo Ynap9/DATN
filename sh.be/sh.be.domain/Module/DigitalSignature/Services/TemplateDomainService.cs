@@ -4,7 +4,7 @@ using sh.be.shared.HttpRequest.Exception;
 
 namespace sh.be.domain.Module.DigitalSignature.Services
 {
-    public static class TemplateImagePolicy
+    public static class TemplateDomainService
     {
         public static void EnsureValidImage(string fileName, long length)
         {

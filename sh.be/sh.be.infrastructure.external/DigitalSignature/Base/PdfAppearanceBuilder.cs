@@ -1,7 +1,6 @@
 using PdfSharp.Drawing;
 using PdfSharp.Fonts;
 using PdfSharp.Pdf;
-using sh.be.infrastructure.external.DigitalSignature.Models;
 using sh.be.shared.Constants.DigitalSignature;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
@@ -326,5 +325,11 @@ namespace sh.be.infrastructure.external.DigitalSignature.Base
                 return (map.TryGetValue(number, out var target) ? target : number) + match.Groups[2].Value;
             });
         }
+    }
+
+    public class PdfAppearance
+    {
+        public int FormObjectNumber { get; set; }
+        public List<PdfIndirectObject> Objects { get; } = new();
     }
 }

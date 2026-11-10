@@ -50,16 +50,16 @@ namespace sh.be.applications.Module.Packaging.Implements
         public async Task<BaseResponsePagingDto<GetListPackageSchemaFieldDto>> FindFieldPaging(FindPagingPackageSchemaFieldDto dto)
         {
             _logger.LogInformation($"{nameof(FindFieldPaging)}, dto={JsonSerializer.Serialize(dto)}");
-            PackageSchemaPolicy.EnsureValidPackageType(dto.PackageType);
-            PackageSchemaPolicy.EnsureValidMetadataTypes(dto.MetadataType.HasValue ? [dto.MetadataType.Value] : []);
+            PackageSchemaDomainService.EnsureValidPackageType(dto.PackageType);
+            PackageSchemaDomainService.EnsureValidMetadataTypes(dto.MetadataType.HasValue ? [dto.MetadataType.Value] : []);
             return await _packageConfigQuery.FindFieldPaging(dto);
         }
 
         public async Task<ExportFileDto> ExportExcelTemplate(ExportPackageExcelTemplateDto dto)
         {
             _logger.LogInformation($"{nameof(ExportExcelTemplate)}, dto={JsonSerializer.Serialize(dto)}");
-            PackageSchemaPolicy.EnsureValidPackageType(dto.PackageType);
-            PackageSchemaPolicy.EnsureValidMetadataTypes(dto.MetadataTypes);
+            PackageSchemaDomainService.EnsureValidPackageType(dto.PackageType);
+            PackageSchemaDomainService.EnsureValidMetadataTypes(dto.MetadataTypes);
 
             var sheets = await _packageConfigQuery.GetTemplateSheets(dto.PackageType, dto.MetadataTypes.Distinct().ToList());
             if (sheets.Count == 0)
