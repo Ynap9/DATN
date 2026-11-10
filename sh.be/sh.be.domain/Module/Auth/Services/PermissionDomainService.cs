@@ -4,9 +4,9 @@ using sh.be.shared.Utils;
 
 namespace sh.be.domain.Module.Auth.Services
 {
-    public static class PermissionGrantPolicy
+    public static class PermissionDomainService
     {
-        public static HashSet<string> ResolveGrantedKeys(IEnumerable<Permission> permissions, IEnumerable<string> checkedKeys)
+        public static HashSet<string> ResolveGrantedKeys(List<Permission> permissions, IEnumerable<string> checkedKeys)
         {
             var checkedKeySet = checkedKeys.ToHashSet();
             var nodes = permissions
@@ -26,12 +26,17 @@ namespace sh.be.domain.Module.Auth.Services
                 .ToHashSet();
         }
 
-        public static bool IsSuperAdmin(IEnumerable<string> roleNames)
+        public static bool IsSuperAdmin(List<string> roleNames)
         {
             return roleNames.Contains(RoleConstants.ROLE_SUPER_ADMIN);
         }
 
-        public static bool HasAnyPermission(IEnumerable<Permission> permissions, IEnumerable<string> grantedKeys, IEnumerable<string> requiredKeys)
+        public static bool IsAdmin(List<string> roleNames)
+        {
+            return IsSuperAdmin(roleNames) || roleNames.Contains(RoleConstants.ROLE_ADMIN);
+        }
+
+        public static bool HasAnyPermission(List<Permission> permissions, List<string> grantedKeys, string[] requiredKeys)
         {
             var resolvedKeys = ResolveGrantedKeys(permissions, grantedKeys);
             return requiredKeys.Any(resolvedKeys.Contains);

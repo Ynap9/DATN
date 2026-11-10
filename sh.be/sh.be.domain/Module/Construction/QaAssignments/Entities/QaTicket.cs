@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using sh.be.domain.Module.Construction.QaAssignments.Models;
+using sh.be.domain.Module.Construction.QaAssignments.Services;
 using sh.be.domain.Module.Construction.Submissions.Entities;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Construction;

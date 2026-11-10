@@ -8,7 +8,6 @@ using sh.be.domain.Base;
 using sh.be.domain.Module.Construction.Projects.Entities;
 using sh.be.domain.Module.Construction.Projects.Repositories;
 using sh.be.domain.Module.Construction.Projects.Services;
-using sh.be.domain.Module.Construction.Projects.Services.Deadline;
 using sh.be.domain.Module.Core.Repositories;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.BackgroundJob;
@@ -95,7 +94,7 @@ namespace sh.be.applications.Module.Construction.Jobs
                 }
 
                 var notifiedProjects = projects
-                    .Select(project => (Project: project, NotificationType: ProjectDeadlinePolicy.Classify(project, today, settings.WarningDays)))
+                    .Select(project => (Project: project, NotificationType: ProjectDomainService.ClassifyDeadline(project, today, settings.WarningDays)))
                     .Where(notifiedProject => notifiedProject.NotificationType.HasValue)
                     .ToList();
                 if (notifiedProjects.Count == 0)
@@ -117,12 +116,12 @@ namespace sh.be.applications.Module.Construction.Jobs
                 foreach (var (project, notificationType) in notifiedProjects)
                 {
                     var endedAt = project.EndedAt!.Value.Date;
-                    var daysLeft = ProjectDeadlinePolicy.CalculateDaysLeft(endedAt, today);
+                    var daysLeft = ProjectDomainService.CalculateDeadlineDaysLeft(endedAt, today);
                     var isExpired = notificationType == ProjectDeadlineConst.NOTIFICATION_EXPIRED;
                     var subject = string.Format(isExpired ? MailTemplateConstants.SUBJECT_PROJECT_EXPIRED : MailTemplateConstants.SUBJECT_PROJECT_DEADLINE_WARNING, project.Name);
                     foreach (var recipient in recipients)
                     {
-                        if (!sentKeys.Add(ProjectDeadlinePolicy.BuildSentKey(project.Id, notificationType!.Value, endedAt, recipient)))
+                        if (!sentKeys.Add(ProjectDomainService.BuildDeadlineSentKey(project.Id, notificationType!.Value, endedAt, recipient)))
                         {
                             continue;
                         }

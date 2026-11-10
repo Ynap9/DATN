@@ -1,4 +1,3 @@
-using sh.be.infrastructure.external.DigitalSignature.Models;
 using sh.be.shared.Constants.DigitalSignature;
 using System.Formats.Asn1;
 using System.Text;
@@ -65,5 +64,12 @@ namespace sh.be.infrastructure.external.DigitalSignature.Base
                 return raw;
             }
         }
+    }
+
+    public class PdfSignature
+    {
+        public byte[] SignedContent { get; set; } = [];
+        public byte[] Cms { get; set; } = [];
+        public bool CoversWholeFile { get; set; }
     }
 }

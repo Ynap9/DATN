@@ -80,7 +80,7 @@ namespace sh.be.applications.Module.Ai.Implements
         public async Task<int> Create(CreateAiProviderDto dto)
         {
             _logger.LogInformation($"{nameof(Create)}, dto={JsonSerializer.Serialize(dto)}");
-            var extraHeadersJson = AiProviderHeaderPolicy.Normalize(dto.ExtraHeaders, dto.ApiKeyHeaderName);
+            var extraHeadersJson = AiProviderDomainService.NormalizeExtraHeaders(dto.ExtraHeaders, dto.ApiKeyHeaderName);
             var aiProvider = AiProvider.Create(dto.Code, dto.Name, dto.Protocol, dto.BaseUrl, dto.Scope, dto.ApiKeyHeaderName, dto.ApiKeyHeaderPrefix,
                 dto.TimeoutSeconds, dto.MaxConcurrency, dto.RateLimitPerMinute, extraHeadersJson, dto.IsActive, getCurrentUserId(), GetVietnamTime());
             await _aiProviderDomainService.EnsureUniqueCodeAsync(aiProvider.Code);
@@ -114,7 +114,7 @@ namespace sh.be.applications.Module.Ai.Implements
             var oldData = CreateAuditSnapshot(aiProvider);
             var oldScope = aiProvider.Scope;
 
-            var extraHeadersJson = AiProviderHeaderPolicy.Normalize(dto.ExtraHeaders, dto.ApiKeyHeaderName);
+            var extraHeadersJson = AiProviderDomainService.NormalizeExtraHeaders(dto.ExtraHeaders, dto.ApiKeyHeaderName);
             await _aiProviderDomainService.EnsureProtocolChangeAllowedAsync(aiProvider, dto.Protocol);
             await _aiProviderDomainService.EnsureCanDeactivateAsync(aiProvider, dto.IsActive);
             aiProvider.Update(dto.Name, dto.Protocol, dto.BaseUrl, dto.Scope, dto.ApiKeyHeaderName, dto.ApiKeyHeaderPrefix, dto.TimeoutSeconds,
@@ -133,12 +133,12 @@ namespace sh.be.applications.Module.Ai.Implements
             _logger.LogInformation($"{nameof(UpdateApiKey)}, id={id}, hasApiKey={hasApiKey}");
             var aiProvider = await _aiProviderRepository.FindByIdAsync(id)
                 ?? throw new UserFriendlyException(ErrorCodes.AiErrorProviderNotFound);
-            var oldData = new { aiProvider.HasApiKey, ApiKeyFingerprint = AiProviderApiKeyPolicy.Fingerprint(aiProvider.ApiKeyHash) };
+            var oldData = new { aiProvider.HasApiKey, ApiKeyFingerprint = AiProviderDomainService.GetApiKeyFingerprint(aiProvider.ApiKeyHash) };
 
             if (hasApiKey)
             {
-                var apiKey = AiProviderApiKeyPolicy.Validate(dto.ApiKey!);
-                aiProvider.SetApiKey(_secretProtectorExternal.Protect(apiKey, AiProviderConst.API_KEY_PROTECTOR_PURPOSE), AiProviderApiKeyPolicy.Hash(apiKey),
+                var apiKey = AiProviderDomainService.ValidateApiKey(dto.ApiKey!);
+                aiProvider.SetApiKey(_secretProtectorExternal.Protect(apiKey, AiProviderConst.API_KEY_PROTECTOR_PURPOSE), AiProviderDomainService.HashApiKey(apiKey),
                     getCurrentUserId(), GetVietnamTime());
             }
             else
@@ -149,7 +149,7 @@ namespace sh.be.applications.Module.Ai.Implements
             var result = new ViewAiProviderApiKeyResultDto
             {
                 HasApiKey = aiProvider.HasApiKey,
-                ApiKeyFingerprint = AiProviderApiKeyPolicy.Fingerprint(aiProvider.ApiKeyHash),
+                ApiKeyFingerprint = AiProviderDomainService.GetApiKeyFingerprint(aiProvider.ApiKeyHash),
             };
             _aiProviderRepository.Update(aiProvider);
             AddAuditLog(AuditLogConstants.ACTION_AI_PROVIDER_API_KEY, AuditLogConstants.ACTION_TYPE_UPDATE,
@@ -183,7 +183,7 @@ namespace sh.be.applications.Module.Ai.Implements
                 ?? throw new UserFriendlyException(ErrorCodes.AiErrorProviderApiKeyUnreadable);
 
             var now = GetVietnamTime();
-            var apiKeyFingerprint = AiProviderApiKeyPolicy.Fingerprint(aiProvider.ApiKeyHash);
+            var apiKeyFingerprint = AiProviderDomainService.GetApiKeyFingerprint(aiProvider.ApiKeyHash);
             var apiKeyFile = new AiProviderApiKeyFileDto
             {
                 Type = AiProviderConst.API_KEY_FILE_TYPE,

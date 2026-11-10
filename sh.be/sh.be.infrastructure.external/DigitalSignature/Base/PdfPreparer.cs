@@ -1,5 +1,4 @@
 using sh.be.applications.Base.Dtos.DigitalSignature;
-using sh.be.infrastructure.external.DigitalSignature.Models;
 using sh.be.shared.Constants.DigitalSignature;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
@@ -508,5 +507,46 @@ namespace sh.be.infrastructure.external.DigitalSignature.Base
                 i += count;
             }
         }
+    }
+
+    public class PdfPrepared
+    {
+        public byte[] Bytes { get; set; } = [];
+        public byte[] SignedContent { get; set; } = [];
+        public int ContentsHexStart { get; set; }
+        public int ContentsHexLength { get; set; }
+    }
+
+    public class PdfAnnotationPlan
+    {
+        public int NextObjectNumber { get; set; }
+        public List<PdfAnnotation> Annotations { get; } = new();
+        public List<PdfIndirectObject> AppearanceObjects { get; } = new();
+    }
+
+    public class PdfAnnotation
+    {
+        public int Number { get; set; }
+        public int PageObjectNumber { get; set; }
+        public PdfRect Rect { get; set; } = new();
+        public int? AppearanceObjectNumber { get; set; }
+        public bool IsSignature { get; set; }
+    }
+
+    public class PdfIndirectObject
+    {
+        public int Number { get; set; }
+        public string DictText { get; set; } = String.Empty;
+        public byte[]? StreamData { get; set; }
+    }
+
+    public class PdfRect
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public double Right => X + Width;
+        public double Top => Y + Height;
     }
 }

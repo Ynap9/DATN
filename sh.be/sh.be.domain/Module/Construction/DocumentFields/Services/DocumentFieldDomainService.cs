@@ -3,6 +3,7 @@ using sh.be.domain.Module.Construction.DocumentFields.Repositories;
 using sh.be.domain.Module.Construction.DocumentTypes.Repositories;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
+using System.Text;
 
 namespace sh.be.domain.Module.Construction.DocumentFields.Services
 {
@@ -17,12 +18,31 @@ namespace sh.be.domain.Module.Construction.DocumentFields.Services
             _documentTypeRepository = documentTypeRepository;
         }
 
+        public static bool IsFieldImportMatch(string? fieldImport, string header)
+        {
+            var fieldImportWords = SplitWords(fieldImport);
+            return fieldImportWords.Length > 0
+                && fieldImportWords.SequenceEqual(SplitWords(header), StringComparer.OrdinalIgnoreCase);
+        }
+
+        public static string ToFieldImportMatchKey(string? text)
+        {
+            return string.Join(' ', SplitWords(text));
+        }
+
+        private static string[] SplitWords(string? text)
+        {
+            return (text ?? String.Empty)
+                .Normalize(NormalizationForm.FormC)
+                .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+        }
+
         public Task LockOrderAsync(int documentTypeId)
         {
             return _documentTypeRepository.LockAsync(documentTypeId);
         }
 
-        public void EnsureHasIds(IReadOnlyCollection<int> ids)
+        public void EnsureHasIds(List<int> ids)
         {
             if (ids.Count == 0)
             {
@@ -30,7 +50,7 @@ namespace sh.be.domain.Module.Construction.DocumentFields.Services
             }
         }
 
-        public void EnsureAllFound(IReadOnlyCollection<int> ids, IReadOnlyCollection<DocumentField> documentFields)
+        public void EnsureAllFound(List<int> ids, List<DocumentField> documentFields)
         {
             var missingIds = ids.Except(documentFields.Select(d => d.Id)).ToList();
             if (missingIds.Count > 0)
@@ -56,7 +76,7 @@ namespace sh.be.domain.Module.Construction.DocumentFields.Services
             }
         }
 
-        public void EnsureHasFieldNames(IReadOnlyCollection<string> fieldNames)
+        public void EnsureHasFieldNames(List<string> fieldNames)
         {
             if (fieldNames.Count == 0)
             {
@@ -64,7 +84,7 @@ namespace sh.be.domain.Module.Construction.DocumentFields.Services
             }
         }
 
-        public async Task EnsureUniqueFieldsAsync(int documentTypeId, IEnumerable<string> fields)
+        public async Task EnsureUniqueFieldsAsync(int documentTypeId, List<string> fields)
         {
             foreach (var field in fields)
             {

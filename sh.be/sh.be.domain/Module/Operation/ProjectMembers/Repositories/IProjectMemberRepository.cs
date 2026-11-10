@@ -19,8 +19,6 @@ namespace sh.be.domain.Module.Operation.ProjectMembers.Repositories
         Task<List<AssignmentTicket>> GetActiveAssignmentTicketsAsync(int projectId, int documentTypeId, string userId);
         Task<int> ReleaseEntryNotCheckedAsync(int assignmentTicketId);
         Task<List<QaTicket>> GetOpenQaTicketsAsync(int projectId, int documentTypeId, string userId);
-        Task<int> TryCancelQaTicketAsync(int qaTicketId);
-        Task<int> ReleaseQaNotPassedAsync(int qaTicketId);
         Task<int> CountKeptDocumentsAsync(string role, IReadOnlyCollection<int> ticketIds);
         Task<Dictionary<string, List<string>>> GetUserRoleNamesAsync(IEnumerable<string> userIds);
     }

@@ -67,4 +67,4 @@ Tiền tố `api/v1/operation`. `{p}` = `projectId`, `{dt}` = `documentTypeId`. 
 Bảng gán đầy đủ ở [../../nghiep-vu/03-vai-tro-mac-dinh.md](../../nghiep-vu/03-vai-tro-mac-dinh.md).
 
 Leader chỉ thao tác trên (dự án, loại văn bản) mà mình là `ProjectMember` vai trò `Leader` đang hoạt động, và chỉ trên người mình quản lý —
-kiểm ở service (`OperationAccessDomainService`), không chỉ dựa vào quyền.
+kiểm ở service (`ProjectMemberDomainService`), không chỉ dựa vào quyền.

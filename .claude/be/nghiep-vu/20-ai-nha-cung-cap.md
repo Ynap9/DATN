@@ -37,7 +37,7 @@ một prompt `PUBLISHED` (filter `[Status] = 'PUBLISHED' AND [Deleted] = 0`). FK
 | R11 | Quyền chỉ Admin / SuperAdmin có sẵn: 5 key `Function.Ai.Provider.*`; Leader / Data / QA không có | `403` |
 | R12 | `OPENAI_COMPAT` → `Authorization: Bearer {key}`, `ANTHROPIC` → `x-api-key`, `GEMINI` → `x-goog-api-key`: 3 giao thức này `ApiKeyHeaderName`, `ApiKeyHeaderPrefix` phải `null`. `CUSTOM_HTTP`: tên header tuỳ chọn (được dùng tên cấm ở R7), prefix ≤ 20 chỉ khi có tên header, **không** trim (giữ `"Bearer "`); tên `null` = API không cần key | `400` |
 
-Luật R1–R6, R12 nằm trong `AiProvider.Create` / `Update`; R7 ở `AiProviderHeaderPolicy`; R8 ở `AiProviderApiKeyPolicy`; R3, R9, R10, mã trùng
+Luật R1–R6, R12 nằm trong `AiProvider.Create` / `Update`; R7 ở `AiProviderDomainService.NormalizeExtraHeaders`; R8 ở `AiProviderDomainService.ValidateApiKey` / `HashApiKey`; R3, R9, R10, mã trùng
 ở `AiProviderDomainService`. Lỗi định dạng trả `ApiResponse` mã `400` kèm thông điệp tiếng Việt cụ thể.
 
 ## Bảo mật API key
@@ -52,7 +52,7 @@ Luật R1–R6, R12 nằm trong `AiProvider.Create` / `Update`; R7 ở `AiProvid
   bí mật: trả ra API và ghi audit dạng chữ thường.
 
 **Khác spec (đã chốt 2026-10-27):** tải key chỉ kiểm quyền `Function.Ai.Provider.DownloadApiKey`, **không** kiểm thêm vai trò Admin trong service
-(người dùng: Admin hiếm khi giao quyền này cho role khác) — nên không có `PermissionGrantPolicy.IsAdmin`. BaseUrl chặn thêm `user:pass@`.
+(người dùng: Admin hiếm khi giao quyền này cho role khác) — nên service không gọi `PermissionDomainService.IsAdmin`. BaseUrl chặn thêm `user:pass@`.
 
 ⚠️ Khoá DataProtection phải lưu ra volume (`DataProtection:KeysPath`, [../architecture/05-infrastructure-external.md](../architecture/05-infrastructure-external.md)):
 mất khoá thì mọi key đã lưu thành rác, tải key báo `907`, Admin phải nhập lại. Đừng "sửa" bằng cách lưu key chữ thường.
@@ -93,7 +93,7 @@ Task 20–22 thêm tiếp từ `908`.
 | Tầng | File |
 |---|---|
 | Shared | `Constants/Ai/AiProviderConst`, `AiModelConst`, `PromptTemplateConst`, `ProjectAiConfigConst`; `DbSchemas.Ai`, `SwaggerConstants.AI` |
-| Domain | `Module/Ai/{Providers,Models,Prompts,ProjectConfigs}/Entities/*`; `Providers/Services/AiProviderHeaderPolicy`, `AiProviderApiKeyPolicy`, `AiProviderDomainService`; `Providers/Repositories/IAiProviderRepository` |
+| Domain | `Module/Ai/{Providers,Models,Prompts,ProjectConfigs}/Entities/*`; `Providers/Services/AiProviderDomainService`; `Providers/Repositories/IAiProviderRepository` |
 | Applications | `Module/Ai/Dtos/AiProvider/*`, `IAiProviderQuery`, `IAiProviderService` / `AiProviderService`; cổng ra `Base/Interfaces/External/Ai/ISecretProtectorExternal` |
 | Data | `Module/Ai/Repositories/AiProviderRepository`, `Queries/AiProviderQuery`; `Migrations/Ai/Add_AiModule` |
 | External | `Ai/Implements/DataProtectionSecretProtectorExternal` (singleton) |

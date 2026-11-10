@@ -4,7 +4,7 @@ using sh.be.shared.HttpRequest.Exception;
 
 namespace sh.be.domain.Module.Packaging.Services
 {
-    public static class PackageSchemaPolicy
+    public static class PackageSchemaDomainService
     {
         public static void EnsureValidPackageType(int packageType)
         {
@@ -14,7 +14,7 @@ namespace sh.be.domain.Module.Packaging.Services
             }
         }
 
-        public static void EnsureValidMetadataTypes(IEnumerable<int> metadataTypes)
+        public static void EnsureValidMetadataTypes(List<int> metadataTypes)
         {
             if (metadataTypes.Any(metadataType => !PackageSchemaConst.METADATA_TYPES.Contains(metadataType)))
             {

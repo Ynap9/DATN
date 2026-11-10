@@ -37,7 +37,7 @@ Form fields: `signingReason`, `signingLocation`, `isShowDigitalSignature` (mặc
 | Màu chuẩn hoá `#RRGGBB` viết hoa (thiếu `#` tự thêm); sai khuôn → màu chữ ký số về `#000000`, màu mực chữ ký tay về `null` (giữ mực ảnh gốc) | `Template.UpdateConfig` |
 | Font phải thuộc `TemplateConst.DIGITAL_SIGNATURE_FONTS` (không phân biệt hoa thường), khác → `Times New Roman` | `Template.UpdateConfig` |
 | `kind` thuộc `0` chữ ký số · `1` dấu đỏ · `2` chữ ký tay, sai → `602`; khối nằm trọn trong trang, kích thước `> 0`, `pageNumber ≥ 1`, sai → `603` | `TemplatePosition.Create` |
-| Ảnh `.png/.jpg/.jpeg`, không rỗng, ≤ 5 MB, sai → `612` (kiểm **cả hai** ảnh trước khi đẩy ảnh nào) | `TemplateImagePolicy.EnsureValidImage` |
+| Ảnh `.png/.jpg/.jpeg`, không rỗng, ≤ 5 MB, sai → `612` (kiểm **cả hai** ảnh trước khi đẩy ảnh nào) | `TemplateDomainService.EnsureValidImage` |
 
 Toạ độ là **tỉ lệ `0–1` gốc trên-trái**, độc lập khổ giấy. `allowSigningSignedPdf` = cho phép ký lên PDF đã có chữ ký số.
 

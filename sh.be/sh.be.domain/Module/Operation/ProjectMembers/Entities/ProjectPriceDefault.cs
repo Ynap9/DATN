@@ -34,7 +34,7 @@ namespace sh.be.domain.Module.Operation.ProjectMembers.Entities
         public static ProjectPriceDefault Create(int projectId, int documentTypeId, string role, decimal companyPrice, decimal actualPrice,
             DateTime effectiveFrom, string? createdBy, DateTime createdDate)
         {
-            PricePolicy.EnsureValid(companyPrice, actualPrice);
+            ProjectMemberDomainService.EnsureValidPrice(companyPrice, actualPrice);
             return new ProjectPriceDefault
             {
                 ProjectId = projectId,

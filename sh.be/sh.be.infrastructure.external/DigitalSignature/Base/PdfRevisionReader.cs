@@ -1,4 +1,3 @@
-using sh.be.infrastructure.external.DigitalSignature.Models;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
 using System.IO.Compression;
@@ -494,5 +493,25 @@ namespace sh.be.infrastructure.external.DigitalSignature.Base
             }
             return position;
         }
+    }
+
+    public class PdfRevision
+    {
+        public byte[] Bytes { get; set; } = [];
+        public string Text { get; set; } = String.Empty;
+        public long LastXrefOffset { get; set; }
+        public bool LastXrefIsStream { get; set; }
+        public int RootObjectNumber { get; set; }
+        public int Size { get; set; }
+        public string? IdRaw { get; set; }
+        public string? InfoRaw { get; set; }
+        public Dictionary<int, PdfObjectLocation> Objects { get; } = new();
+    }
+
+    public class PdfObjectLocation
+    {
+        public int Type { get; set; }
+        public long Value { get; set; }
+        public int IndexInStream { get; set; }
     }
 }

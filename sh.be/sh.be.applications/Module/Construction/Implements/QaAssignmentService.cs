@@ -8,7 +8,6 @@ using sh.be.applications.Module.Construction.Interfaces.Services;
 using sh.be.domain.Base;
 using sh.be.domain.Module.Construction.Projects.Repositories;
 using sh.be.domain.Module.Construction.QaAssignments.Entities;
-using sh.be.domain.Module.Construction.QaAssignments.Models;
 using sh.be.domain.Module.Construction.QaAssignments.Repositories;
 using sh.be.domain.Module.Construction.QaAssignments.Services;
 using sh.be.domain.Module.Construction.Submissions.Services;
@@ -31,12 +30,11 @@ namespace sh.be.applications.Module.Construction.Implements
         private readonly IQaAssignmentQuery _qaAssignmentQuery;
         private readonly QaAssignmentDomainService _qaAssignmentDomainService;
         private readonly SubmissionDomainService _submissionDomainService;
-        private readonly IQaStrategyValidator _qaStrategyValidator;
 
         public QaAssignmentService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<QaAssignmentService> logger, IRequestContext requestContext, TimeProvider timeProvider,
             IQaSamplingConfigRepository qaSamplingConfigRepository, IQaReviewerModeRepository qaReviewerModeRepository, IProjectRepository projectRepository,
             IQaTicketRepository qaTicketRepository, IQaAssignmentQuery qaAssignmentQuery, QaAssignmentDomainService qaAssignmentDomainService,
-            SubmissionDomainService submissionDomainService, IQaStrategyValidator qaStrategyValidator
+            SubmissionDomainService submissionDomainService
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _qaSamplingConfigRepository = qaSamplingConfigRepository;
@@ -46,7 +44,6 @@ namespace sh.be.applications.Module.Construction.Implements
             _qaAssignmentQuery = qaAssignmentQuery;
             _qaAssignmentDomainService = qaAssignmentDomainService;
             _submissionDomainService = submissionDomainService;
-            _qaStrategyValidator = qaStrategyValidator;
         }
 
         public async Task<ViewQaSamplingConfigDto> FindConfig(int projectId)
@@ -64,7 +61,7 @@ namespace sh.be.applications.Module.Construction.Implements
             var project = await _projectRepository.FindByIdAsync(dto.ProjectId)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
             var strategyParamsJson = string.IsNullOrWhiteSpace(dto.StrategyParamsJson) ? null : dto.StrategyParamsJson;
-            _qaStrategyValidator.Validate(dto.StrategyCode, strategyParamsJson);
+            QaAssignmentDomainService.ValidateStrategy(dto.StrategyCode, strategyParamsJson);
 
             var now = GetVietnamTime();
             var config = await _qaSamplingConfigRepository.FindByProjectAsync(dto.ProjectId);
@@ -207,8 +204,7 @@ namespace sh.be.applications.Module.Construction.Implements
             await using var transaction = await _unitOfWork.BeginTransactionAsync();
             try
             {
-                await _qaAssignmentDomainService.CancelTicketAsync(ticket, currentUserId, GetVietnamTime());
-                var releasedCount = await _qaTicketRepository.ReleaseNotPassedAsync(ticket.Id);
+                var releasedCount = await _qaAssignmentDomainService.CancelTicketAsync(ticket, currentUserId, GetVietnamTime());
                 AddAuditLog(AuditLogConstants.ACTION_QA_TICKET_CANCEL, AuditLogConstants.ACTION_TYPE_UPDATE,
                     $"Huỷ phiếu #{ticket.Id} (dự án {project.Name}), trả {releasedCount} văn bản chưa QA Đạt về chưa giao",
                     new { ticket.Id, Status = oldStatus }, new { ticket.Id, ticket.Status, ReleasedCount = releasedCount });

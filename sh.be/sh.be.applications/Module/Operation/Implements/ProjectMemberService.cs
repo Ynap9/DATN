@@ -9,7 +9,6 @@ using sh.be.domain.Base;
 using sh.be.domain.Module.Auth.Repositories;
 using sh.be.domain.Module.Core.Repositories;
 using sh.be.domain.Module.Operation.ProjectMembers.Entities;
-using sh.be.domain.Module.Operation.ProjectMembers.Models;
 using sh.be.domain.Module.Operation.ProjectMembers.Repositories;
 using sh.be.domain.Module.Operation.ProjectMembers.Services;
 using sh.be.domain.Module.Operation.StaffGroups.Repositories;
@@ -30,20 +29,18 @@ namespace sh.be.applications.Module.Operation.Implements
         private readonly IStaffGroupRepository _staffGroupRepository;
         private readonly IUserRepository _userRepository;
         private readonly IProjectMemberQuery _projectMemberQuery;
-        private readonly OperationAccessDomainService _operationAccessDomainService;
         private readonly ProjectMemberDomainService _projectMemberDomainService;
         private readonly StaffGroupDomainService _staffGroupDomainService;
 
         public ProjectMemberService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<ProjectMemberService> logger, IRequestContext requestContext, TimeProvider timeProvider,
             IProjectMemberRepository projectMemberRepository, IStaffGroupRepository staffGroupRepository, IUserRepository userRepository, IProjectMemberQuery projectMemberQuery,
-            OperationAccessDomainService operationAccessDomainService, ProjectMemberDomainService projectMemberDomainService, StaffGroupDomainService staffGroupDomainService
+            ProjectMemberDomainService projectMemberDomainService, StaffGroupDomainService staffGroupDomainService
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _projectMemberRepository = projectMemberRepository;
             _staffGroupRepository = staffGroupRepository;
             _userRepository = userRepository;
             _projectMemberQuery = projectMemberQuery;
-            _operationAccessDomainService = operationAccessDomainService;
             _projectMemberDomainService = projectMemberDomainService;
             _staffGroupDomainService = staffGroupDomainService;
         }
@@ -59,7 +56,7 @@ namespace sh.be.applications.Module.Operation.Implements
             {
                 throw new UserFriendlyException(ErrorCodes.BadRequest, $"role phải là {string.Join(", ", ProjectMemberConst.ROLES)}");
             }
-            var access = await _operationAccessDomainService.EnsureCanManageAsync(projectId, dto.DocumentTypeId, getCurrentUserId(), false);
+            var access = await _projectMemberDomainService.EnsureCanManageAsync(projectId, dto.DocumentTypeId, getCurrentUserId(), false);
             return await _projectMemberQuery.FindPaging(projectId, dto, access.LeaderUserId);
         }
 
@@ -75,7 +72,7 @@ namespace sh.be.applications.Module.Operation.Implements
                 throw new UserFriendlyException(ErrorCodes.BadRequest, $"role phải là {string.Join(", ", ProjectMemberConst.ROLES)}");
             }
             var currentUserId = getCurrentUserId();
-            var access = await _operationAccessDomainService.EnsureCanManageAsync(projectId, dto.DocumentTypeId, currentUserId, false);
+            var access = await _projectMemberDomainService.EnsureCanManageAsync(projectId, dto.DocumentTypeId, currentUserId, false);
             if (!access.IsAdmin && dto.Role == RoleConstants.ROLE_LEADER)
             {
                 throw new UserFriendlyException(ErrorCodes.OperationErrorNotProjectLeader);
@@ -91,7 +88,7 @@ namespace sh.be.applications.Module.Operation.Implements
         {
             _logger.LogInformation($"{nameof(AddLeaders)}, projectId={projectId}, dto={JsonSerializer.Serialize(dto)}");
             var currentUserId = getCurrentUserId();
-            var access = await _operationAccessDomainService.EnsureCanManageAsync(projectId, dto.DocumentTypeId, currentUserId, true);
+            var access = await _projectMemberDomainService.EnsureCanManageAsync(projectId, dto.DocumentTypeId, currentUserId, true);
             if (!access.IsAdmin)
             {
                 throw new UserFriendlyException(ErrorCodes.OperationErrorNotProjectLeader);
@@ -129,7 +126,7 @@ namespace sh.be.applications.Module.Operation.Implements
                 throw new UserFriendlyException(ErrorCodes.BadRequest, $"role phải là {RoleConstants.ROLE_DATA} hoặc {RoleConstants.ROLE_QA}");
             }
             var currentUserId = getCurrentUserId();
-            var access = await _operationAccessDomainService.EnsureCanManageAsync(projectId, dto.DocumentTypeId, currentUserId, true);
+            var access = await _projectMemberDomainService.EnsureCanManageAsync(projectId, dto.DocumentTypeId, currentUserId, true);
             var managedByUserId = access.IsAdmin ? dto.ManagedByUserId : access.LeaderUserId;
             if (access.IsAdmin)
             {
@@ -180,8 +177,8 @@ namespace sh.be.applications.Module.Operation.Implements
             _logger.LogInformation($"{nameof(Update)}, projectId={projectId}, memberId={memberId}, dto={JsonSerializer.Serialize(dto)}");
             var member = await FindMemberAsync(projectId, memberId);
             var currentUserId = getCurrentUserId();
-            var access = await _operationAccessDomainService.EnsureCanManageAsync(member.ProjectId, member.DocumentTypeId, currentUserId, true);
-            _operationAccessDomainService.EnsureCanTouchMember(access, member);
+            var access = await _projectMemberDomainService.EnsureCanManageAsync(member.ProjectId, member.DocumentTypeId, currentUserId, true);
+            _projectMemberDomainService.EnsureCanTouchMember(access, member);
 
             var changesManager = dto.ClearManager || dto.ManagedByUserId != null;
             var managedByUserId = dto.ClearManager ? null : dto.ManagedByUserId;
@@ -236,8 +233,8 @@ namespace sh.be.applications.Module.Operation.Implements
             _logger.LogInformation($"{nameof(Remove)}, projectId={projectId}, memberId={memberId}");
             var member = await FindMemberAsync(projectId, memberId);
             var currentUserId = getCurrentUserId();
-            var access = await _operationAccessDomainService.EnsureCanManageAsync(member.ProjectId, member.DocumentTypeId, currentUserId, true);
-            _operationAccessDomainService.EnsureCanTouchMember(access, member);
+            var access = await _projectMemberDomainService.EnsureCanManageAsync(member.ProjectId, member.DocumentTypeId, currentUserId, true);
+            _projectMemberDomainService.EnsureCanTouchMember(access, member);
             var user = await _userRepository.FindByIdAsync(member.UserId);
             var oldData = new { member.Id, member.UserId, member.Role, member.ManagedByUserId };
             var now = GetVietnamTime();
