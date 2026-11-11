@@ -139,6 +139,8 @@ namespace sh.be.shared.HttpRequest.Error
             { ErrorCodes.OperationErrorLeaderForbiddenTarget, "Leader chỉ thao tác trên nhân viên mình quản lý" },
             { ErrorCodes.OperationErrorPriceDefaultMissing, "Dự án chưa có đơn giá mặc định cho vai trò này, liên hệ Admin" },
             { ErrorCodes.OperationErrorLeaderNotMember, "Leader quản lý phải là Leader của cùng dự án / loại văn bản" },
+            { ErrorCodes.OperationErrorNothingToAssign, "Không có văn bản mới để giao" },
+            { ErrorCodes.OperationErrorTicketTooLarge, "Một phiếu nhập liệu tối đa 1000 văn bản, hãy tạo thêm phiếu" },
             { ErrorCodes.AiErrorProviderNotFound, "Nhà cung cấp AI không tồn tại" },
             { ErrorCodes.AiErrorProviderCodeExists, "Mã nhà cung cấp AI đã tồn tại" },
             { ErrorCodes.AiErrorProviderHasModels, "Nhà cung cấp AI còn model, hãy xoá model trước" },

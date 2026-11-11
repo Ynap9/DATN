@@ -1,6 +1,6 @@
 # Thành viên dự án (Operation)
 
-> **Phần 21/21** · trước: [20-ai-nha-cung-cap.md](20-ai-nha-cung-cap.md) · mục lục: [README.md](README.md)
+> **Phần 21/22** · trước: [20-ai-nha-cung-cap.md](20-ai-nha-cung-cap.md) · mục lục: [README.md](README.md)
 
 Xác định **ai** làm việc trong một cặp (dự án, loại văn bản) và **ai quản lý** họ (`ProjectMember`). Đầu vào của giao phiếu nhập liệu
 (Task 13), giao phiếu QA ([18C](18-qa-cham-mau.md#18c--phiếu-qa)) và phạm vi Leader ở mọi màn Operation. Task 11, 2026-10-27.
@@ -67,11 +67,12 @@ Gỡ (API 14) = xoá mềm + **tự thu hồi** văn bản chưa làm của ngư
 - Data: xoá dòng `SubmissionUser` Role `Data`; dữ liệu đã nhập và `StatusCheck = RETURNED` giữ nguyên. Mỗi phiếu
   `DecreaseDocuments(số dòng xoá thật)` → về 0 thì `CANCELLED`, còn văn bản `CHECKED` thì phiếu vẫn `ACTIVE`.
 - QA: gọi thẳng `QaAssignmentDomainService.CancelTicketAsync` của 18C — `Cancel` → `UPDATE` có điều kiện (0 dòng → `335`) → xoá dòng QA
-  của văn bản chưa Đạt; `SubmissionQaLog`, `StatusQa` giữ nguyên. QA đã gỡ chấm phiếu cũ → `334`.
+  của văn bản chưa Đạt; `SubmissionQaLog`, `StatusQa` giữ nguyên. QA đã gỡ chấm phiếu cũ → `334`. Từ Task 13 còn huỷ phiếu
+  phụ trách nút (`AssignmentTicket` Role `QA`) → trả thêm `cancelledQaOwnershipTicketIds` ([22](22-chia-phieu.md)).
 - Chống đua: lệnh xoá có điều kiện trạng thái văn bản **ngay trong câu SQL** (`ExecuteDelete` + `Any` trên `Submissions`), không đọc trước
   rồi xoá sau — văn bản người đó vừa bấm Kiểm tra / vừa chấm Đạt ở lại người đó.
 - Trả `revokedDocumentCount`, `keptDocumentCount` (dòng còn lại của **các phiếu vừa xét**), `cancelledAssignmentTicketIds`,
-  `cancelledQaTicketIds`, `unmanagedMemberCount`. FE hỏi xác nhận trước dựa vào `heldTicketCount` của API 9.
+  `cancelledQaTicketIds`, `cancelledQaOwnershipTicketIds`, `unmanagedMemberCount`. FE hỏi xác nhận trước dựa vào `heldTicketCount` của API 9.
 - Gỡ rồi thêm lại cùng người được; văn bản đã thu hồi **không** tự quay lại.
 
 Phụ thuộc giữa module chỉ một chiều Operation → Construction (2026-11-10): luật huỷ phiếu QA chỉ có một bản ở
@@ -120,4 +121,4 @@ gỡ Leader chỉ bỏ quản lý trong cặp; `338` / `339`; phiếu giao trư�
 Chưa kiểm thực tế: đua "gỡ D1 ↔ D1 bấm Kiểm tra" (cần luồng nhập liệu Task 13, an toàn nhờ điều kiện trong câu xoá); dữ liệu nhập của văn
 bản `RETURNED` (seed không có `SubmissionData`; câu thu hồi chỉ xoá `SubmissionUser`).
 
-> **Tiếp:** hết phần nghiệp vụ. Kiến trúc và quy ước code ở [../architecture/README.md](../architecture/README.md).
+> **Tiếp:** [22-chia-phieu.md](22-chia-phieu.md) — cây Hộp → Hồ sơ, giao phiếu nhập liệu, QA phụ trách nút + đợt QA, phiếu của tôi.

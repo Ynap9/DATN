@@ -1,6 +1,6 @@
 # QA — chấm mẫu: chế độ chấm, cấu hình mẫu
 
-> **Phần 18/21** · trước: [17-thong-ke-qa.md](17-thong-ke-qa.md) · mục lục: [README.md](README.md)
+> **Phần 18/22** · trước: [17-thong-ke-qa.md](17-thong-ke-qa.md) · mục lục: [README.md](README.md)
 
 QA chấm 100% văn bản thì tốn người. Ở chế độ `SAMPLE`, mỗi phiếu QA chỉ chấm một mẫu ngẫu nhiên: mẫu đạt ngưỡng thì cả phiếu đạt,
 vượt ngưỡng thì trả cả phiếu. Chuỗi task: **18B nền tảng (file này)** → 18D thuật toán bốc mẫu → 18C giao QA + chấm mẫu. 18D, 18C viết
@@ -128,7 +128,7 @@ Chặng 1–3 (2026-10-26) xong phần **FULL**; phiếu `SAMPLE` chờ 18D. M�
 
 | Endpoint (`api/v1/construction/qa-assignment/...`) | Quyền | Việc |
 |---|---|---|
-| `POST ticket` | `...Submission.AssignQa` | `{ projectId, documentTypeId, qaUserId, items?: [{ box, profileRange? }], count? }`, trả chi tiết phiếu |
+| `POST ticket` | `...Submission.AssignQa` | `{ projectId, documentTypeId, qaUserId, items?: [{ box, profileRange? }], count? }`, trả chi tiết phiếu. ⚠️ Không biết phụ trách nút của Task 13 — FE giao QA qua `operation/.../assignment` ([22](22-chia-phieu.md)) |
 | `GET ticket/paging` | `AssignQa` hoặc `Qa` | Lọc `projectId`, `documentTypeId`, `qaUserId`, `mode`, `status`; mới nhất trước |
 | `GET ticket/{id:int}` | `AssignQa` hoặc `Qa` | Tham số chụp, vòng, số đếm, `passedCount`, `samples` (rỗng với phiếu FULL; trường mẫu `null`) |
 | `POST ticket/{id:int}/cancel` | `AssignQa` | Huỷ phiếu (R7), trả chi tiết phiếu; không thấy phiếu → `327` |
