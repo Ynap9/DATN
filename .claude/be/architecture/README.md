@@ -68,6 +68,6 @@ Chiều này do `.csproj` cưỡng chế: domain gọi `ShDbContext` là build l
 - Lỗi nghiệp vụ ⇒ `throw new UserFriendlyException(ErrorCodes.X)`; controller bắt bằng `OkException(ex)`.
 - Bản ghi xoá mềm bị **global query filter** ẩn đi; không viết tay `!x.Deleted`.
 - Giờ trong service lấy qua `GetVietnamTime()` (dùng `TimeProvider`), không gọi `DateTime.Now`.
-- Code **không thêm comment**. Chi tiết ở [07-conventions.md](07-conventions.md).
+- Comment chỉ ở task từ trung bình trở lên, ngắn, đúng chỗ chủ chốt; không xé nhỏ hàm. Chi tiết ở [07-conventions.md](07-conventions.md).
 
 > **Tiếp:** [01-api.md](01-api.md) — tầng ngoài cùng nhận request.
