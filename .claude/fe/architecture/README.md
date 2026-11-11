@@ -74,6 +74,6 @@ URL FE `/admin/<module>/...` trùng tên module BE `api/v1/<module>/...` để t
 - Component không gọi `HttpClient` trực tiếp, không tự gắn token, không tự toast lỗi HTTP.
 - Hợp đồng API theo BE: envelope `{ status, data, code, message }` — xem
   [../../be/architecture/06-shared.md](../../be/architecture/06-shared.md).
-- Code **không thêm comment**.
+- Comment và tách hàm theo luật chung của BE ([../../be/architecture/07-conventions.md](../../be/architecture/07-conventions.md)): comment chỉ ở task từ trung bình trở lên, không xé nhỏ hàm.
 
 > **Tiếp:** [01-workspace.md](01-workspace.md) — cấu hình workspace và build.

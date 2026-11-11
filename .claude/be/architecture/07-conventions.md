@@ -7,7 +7,7 @@
 ## Phạm vi thay đổi
 
 - **Chỉ sửa chỗ cần thiết** cho yêu cầu. Không tiện tay đổi tên, dọn `using`, format lại, refactor ngoài lề.
-- **Không thêm comment** khi chưa được yêu cầu — xem mục [Comment](#comment).
+- Comment chỉ ở chỗ mục [Comment](#comment) cho phép; tách hàm theo mục [Đặt tên, tách hàm](#đặt-tên-tách-hàm).
 - Giữ nguyên chữ ký public của service, DTO, route mà FE đang dùng, trừ khi được duyệt đổi.
 - Không commit khi người dùng chưa yêu cầu.
 
@@ -26,12 +26,13 @@
 
 ## Comment
 
-- **Code không được có comment nếu người dùng chưa yêu cầu**: không `//`, không `/* */`, không XML `<summary>`,
-  không `TODO`. Ý nghĩa phải đọc được từ tên class, method, biến.
+- Mặc định **không comment**: ý nghĩa đọc được từ tên class, method, biến. Không `TODO`, không comment thuật lại từng dòng.
+- **Được comment** ở task độ khó trung bình trở lên, đúng chỗ code không tự nói hết: luật nghiệp vụ nhiều nhánh, thuật toán,
+  thứ tự bước có lý do, đánh đổi transaction / hiệu năng. Ngắn (1–2 dòng), bám phần chủ chốt, mô tả **chính xác** khối code
+  ngay dưới làm gì và vì sao; không lặp lại tên hàm, không kể lịch sử sửa. Sửa code thì sửa comment cùng lúc.
 - Comment **đã có sẵn** trong code cũ thì giữ nguyên, không xoá, không sửa khi không liên quan yêu cầu.
-- Được yêu cầu viết comment thì viết ngắn, nói **vì sao**, không thuật lại code.
 
-## Đặt tên biến, hàm
+## Đặt tên, tách hàm
 
 - Tên phải **dễ hiểu và sát với nghiệp vụ của yêu cầu**: đọc tên là biết nó làm gì, cho việc gì.
   `EnsureAllExistAsync(roleIds)`, `oldPermissionKeys`, `currentUserId` — không `Check(list)`, `data2`, `temp`, `x`.
@@ -40,16 +41,18 @@
 - Method bắt đầu bằng động từ (`Create`, `Assign`, `Ensure`, `Resolve`, `Find`); biến `bool` đọc như câu hỏi
   (`isRandomPassword`, `hasRole`); danh sách dùng số nhiều (`roleIds`, `userRoles`).
 - Không viết tắt khó đoán (`usrRl`, `pmsKey`); chỉ giữ viết tắt phổ biến (`id`, `dto`, `ex`).
-- **Hạn chế hàm private**: logic chỉ dùng một chỗ viết thẳng trong hàm public. Chỉ tách hàm private khi được gọi
-  từ **≥ 2 nơi** (tránh lặp code). Đang áp dụng cho module Submission; code cũ sửa dần khi đụng tới.
+- **Xét trước khi viết hàm mới**: đã có hàm làm việc này chưa, và theo bảng [Đặt đúng tầng](#đặt-đúng-tầng) nó thuộc đâu.
+- **Không xé nhỏ hàm**: một use case viết liền mạch trong một method để dev đọc một mạch; không tách bước thành hàm
+  private chỉ cho "gọn". Chỉ tách khi được gọi từ **≥ 2 nơi**, hoặc đó là luật nghiệp vụ thì đưa về entity /
+  `<Aggregate>DomainService`. Không đặt tên chung chung (`Handle`, `Process`, `Helper`, `Step1`). Áp cho **toàn bộ code**
+  BE và FE: sửa method nào thì gộp luôn hàm private chỉ một chỗ gọi mà method đó dùng — ngoại lệ của luật "chỉ sửa chỗ cần thiết".
 - **Kiểu tập hợp dùng thẳng kiểu cụ thể** nơi gọi đang truyền (`List<string>`, `List<Permission>`, `Dictionary<,>`, `string[]`), không
   bọc `IEnumerable` / `IReadOnlyCollection` / `IReadOnlyList`. Chỉ dùng kiểu trừu tượng khi các nơi gọi truyền kiểu **không nhất quán**
   hoặc nguồn vốn đã là kiểu đó (`SheetTable.Rows`, `PluginConst.DEFAULT_SUPPORTED_VERSIONS`). Đã áp cho mọi `*DomainService`; code cũ sửa dần.
 
 ## Tên và namespace
 
-- Namespace **khớp đường dẫn thư mục**: `sh.be.domain.Module.Auth.Entities`,
-  `sh.be.applications.Module.Auth.Interfaces.Queries`…
+- Namespace **khớp đường dẫn thư mục**: `sh.be.domain.Module.Auth.Entities`, `sh.be.applications.Module.Auth.Interfaces.Queries`…
 - Interface tiền tố `I`; implement cùng tên bỏ `I` (`IRoleQuery` → `RoleQuery`).
 - Repository: `I<Aggregate>Repository`. Query: `I<Aggregate>Query`. Domain service: `<Aggregate>DomainService` — tên **duy nhất** trong
   `domain/.../Services/` ([03](03-domain.md#entity-hay-domain-service)).
@@ -60,8 +63,7 @@
 
 ## Entity
 
-- Setter `private set`, constructor `private`, tạo bằng `Create`.
-- Không inject gì vào entity; thời điểm và người thao tác truyền qua tham số.
+- Setter `private set`, constructor `private`, tạo bằng `Create`. Không inject gì vào entity; thời điểm và người thao tác truyền qua tham số.
 - Không thêm navigation property hay đổi attribute EF khi chưa được duyệt đổi schema.
 
 ## Service
@@ -83,9 +85,8 @@
 
 ## Lỗi và response
 
-- Lỗi nghiệp vụ: `UserFriendlyException(ErrorCodes.X)` hoặc kèm message tiếng Việt.
+- Lỗi nghiệp vụ: `UserFriendlyException(ErrorCodes.X)` hoặc kèm message tiếng Việt; không trả HTTP code khác 200 (trừ `401`/`403` từ auth).
 - Controller: `try { return new(data); } catch (Exception ex) { return OkException(ex); }`.
-- Không trả HTTP code khác 200 cho lỗi nghiệp vụ (trừ `401`/`403` từ auth).
 
 ## Kiểm trước khi báo xong
 
