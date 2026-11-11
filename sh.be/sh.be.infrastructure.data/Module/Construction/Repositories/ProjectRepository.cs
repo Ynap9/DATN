@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using sh.be.domain.Module.Construction.Projects.Entities;
 using sh.be.domain.Module.Construction.Projects.Repositories;
+using sh.be.domain.Module.Construction.Projects.Services;
 using sh.be.infrastructure.data.Persistence.Db;
+using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Construction;
 
 namespace sh.be.infrastructure.data.Module.Construction.Repositories
@@ -57,6 +59,38 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
         {
             await _shDbContext.Database.ExecuteSqlRawAsync(ReleaseDeadlineCheckLockSql, ProjectDeadlineConst.LOCK_NAME);
             await _shDbContext.Database.CloseConnectionAsync();
+        }
+
+        public Task LockAsync(int id)
+        {
+            return _shDbContext.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT Id FROM [construction].[Project] WITH (UPDLOCK, HOLDLOCK) WHERE Id = {id}");
+        }
+
+        public Task<bool> IsActiveLeaderAsync(int projectId, string userId)
+        {
+            return _shDbContext.ProjectMembers.AnyAsync(m => m.ProjectId == projectId && m.UserId == userId
+                && m.Role == RoleConstants.ROLE_LEADER && m.IsActive);
+        }
+
+        public async Task<ProjectAcceptanceBlockers> CountAcceptanceBlockersAsync(int projectId)
+        {
+            return await _shDbContext.Submissions
+                .Where(s => s.ProjectId == projectId)
+                .GroupBy(s => s.ProjectId)
+                .Select(g => new ProjectAcceptanceBlockers(
+                    g.Count(s => s.StatusCheck != SubmissionConst.CHECKED),
+                    g.Count(s => s.StatusCheck == SubmissionConst.CHECKED && s.StatusQa != SubmissionConst.QA_PASSED),
+                    g.Count()))
+                .FirstOrDefaultAsync()
+                ?? new ProjectAcceptanceBlockers(0, 0, 0);
+        }
+
+        public Task<int> TryStartAcceptanceAsync(int projectId)
+        {
+            return _shDbContext.Projects
+                .Where(p => p.Id == projectId && ProjectConst.ACCEPTANCE_START_STATUSES.Contains(p.Status))
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.Status, ProjectConst.ACCEPTING));
         }
 
         public void Add(Project project)

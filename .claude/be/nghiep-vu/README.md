@@ -30,6 +30,7 @@
 | [19-nhom-nhan-vien.md](19-nhom-nhan-vien.md) | Nhóm nhân viên (Operation): nhóm thuần `Data` hoặc `QA` suy từ role thành viên, Leader chỉ thấy nhóm mình (`801`), 8 API |
 | [20-ai-nha-cung-cap.md](20-ai-nha-cung-cap.md) | Module Ai: 5 bảng nền móng, nhà cung cấp AI (`AiProvider`) với 12 luật R1–R12, key mã hoá + SHA-256, tải key file JSON, 8 API, lỗi `901`–`907` |
 | [21-thanh-vien-du-an.md](21-thanh-vien-du-an.md) | Thành viên dự án (Operation): ai quản lý ai, không có Leader thì Admin quản lý, thêm hàng loạt có bỏ qua, gỡ = tự thu hồi văn bản chưa làm, 6 API |
+| [22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md) | Nghiệm thu dự án: `DOING` → `ACCEPTING` → `DONE`, tự chuyển khi văn bản cuối QA đạt, Admin cho phép khi chưa đủ (bắt đầu lý do tuỳ chọn, hoàn tất bắt buộc lý do), khoá import, tổng hợp + audit, lỗi `340`–`342` |
 
 ## Thuật ngữ
 
@@ -48,7 +49,7 @@
 ## Ba quy tắc xuyên suốt
 
 - Mọi thao tác ghi đều tạo `AuditLog` **trong cùng transaction** với thay đổi dữ liệu (xem [04-nhat-ky-he-thong.md](04-nhat-ky-he-thong.md)).
-- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`109` (Auth), `201`–`211` (Core), `301`–`339` (Construction), `601`–`635` (DigitalSignature), `701`–`703` (Packaging), `801`–`823` (Operation, bỏ `814`) hoặc `901`–`907` (Ai).
+- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`109` (Auth), `201`–`211` (Core), `301`–`342` (Construction), `601`–`635` (DigitalSignature), `701`–`703` (Packaging), `801`–`823` (Operation, bỏ `814`) hoặc `901`–`907` (Ai).
 - Thời gian thao tác lấy theo giờ Việt Nam, người thao tác lấy từ token đăng nhập.
 
 Route trong các file nghiệp vụ viết rút gọn `api/<module>/...`; route thật có version: `api/v1/<module>/...` (từ 2026-10-20,

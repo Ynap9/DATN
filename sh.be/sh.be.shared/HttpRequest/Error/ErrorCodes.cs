@@ -79,6 +79,9 @@ namespace sh.be.shared.HttpRequest.Error
         public const int ConstructionErrorProjectNotManaged = 337;
         public const int ConstructionErrorQaReviewerNotMember = 338;
         public const int ConstructionErrorQaReviewerNotManaged = 339;
+        public const int ConstructionErrorProjectNotReadyForAcceptance = 340;
+        public const int ConstructionErrorProjectAccepting = 341;
+        public const int ConstructionErrorProjectStatusTransitionInvalid = 342;
 
         public const int DigitalSignatureErrorTemplateNotFound = 601;
         public const int DigitalSignatureErrorInvalidTemplatePositionKind = 602;
