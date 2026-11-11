@@ -2,7 +2,7 @@
 
 > **Phần 5/6** · trước: [04-http-auth.md](04-http-auth.md) · mục lục: [README.md](README.md)
 
-Áp dụng cho mọi thay đổi trong `sh.fe`. Luật chung (chỉ sửa chỗ cần thiết, không comment, không commit khi
+Áp dụng cho mọi thay đổi trong `sh.fe`. Luật chung (chỉ sửa chỗ cần thiết, comment, tách hàm, không commit khi
 chưa yêu cầu) giống BE — xem [../../be/architecture/07-conventions.md](../../be/architecture/07-conventions.md).
 
 ## Standalone

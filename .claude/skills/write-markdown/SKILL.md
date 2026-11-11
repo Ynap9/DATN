@@ -16,8 +16,9 @@ ngữ, cùng bố cục, cùng cách cập nhật.
 - Thuật ngữ kiến trúc giữ tiếng Anh khi đó là tên chuẩn (aggregate, repository, dependency rule), giải thích
   bằng tiếng Việt ở lần đầu xuất hiện.
 - Sửa file đã có thì **theo ngôn ngữ của file đó**, không đổi giữa dòng.
-- ⚠️ **Code trong repo không thêm comment** (luật của người dùng). Chú thích `//` bên trong khối code của tài
-  liệu là lời giảng cho người đọc nên được phép và viết tiếng Việt.
+- ⚠️ **Comment trong code repo theo mục Comment** của `be/architecture/07-conventions.md` (chỉ task từ trung bình
+  trở lên, ngắn, đúng chỗ chủ chốt). Chú thích `//` bên trong khối code của tài liệu là lời giảng cho người đọc nên
+  được phép và viết tiếng Việt.
 
 ## Độ dài — giữ file nhỏ
 
