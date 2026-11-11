@@ -34,10 +34,9 @@
 
 ## Đặt tên, tách hàm
 
-- Tên phải **dễ hiểu và sát với nghiệp vụ của yêu cầu**: đọc tên là biết nó làm gì, cho việc gì.
-  `EnsureAllExistAsync(roleIds)`, `oldPermissionKeys`, `currentUserId` — không `Check(list)`, `data2`, `temp`, `x`.
-- Dùng đúng thuật ngữ đã có trong code và tài liệu (role, permission, audit log…); một khái niệm một tên, không
-  lúc `Role` lúc `Group`.
+- Tên phải **dễ hiểu, dễ đọc, sát nghiệp vụ**: đọc tên là biết làm gì (`EnsureAllExistAsync(roleIds)`, `currentUserId` — không `Check(list)`, `data2`, `x`).
+  Tên tiếng Anh dài / khó hiểu ⇒ **được đặt tiếng Việt không dấu** (`soLanBiTraTheoNguoiGiu`, `DuaVanBanVePoolAsync`) kèm comment 1 dòng nghĩa nghiệp vụ.
+- Dùng đúng thuật ngữ đã có trong code và tài liệu; một khái niệm một tên, không lúc `Role` lúc `Group`.
 - Method bắt đầu bằng động từ (`Create`, `Assign`, `Ensure`, `Resolve`, `Find`); biến `bool` đọc như câu hỏi
   (`isRandomPassword`, `hasRole`); danh sách dùng số nhiều (`roleIds`, `userRoles`).
 - Không viết tắt khó đoán (`usrRl`, `pmsKey`); chỉ giữ viết tắt phổ biến (`id`, `dto`, `ex`).
