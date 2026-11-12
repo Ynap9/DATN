@@ -9,7 +9,6 @@ namespace sh.be.applications.Module.Construction.Interfaces.Services
         Task UpdateConfig(UpdateQaSamplingConfigDto dto);
         Task<List<GetListQaReviewerModeDto>> FindReviewerModes(int projectId);
         Task UpdateReviewerMode(UpdateQaReviewerModeDto dto);
-        Task<FindQaTicketByIdDto> CreateTicket(CreateQaTicketDto dto);
         Task<BaseResponsePagingDto<GetListQaTicketDto>> FindTicketPaging(FindPagingQaTicketDto dto);
         Task<FindQaTicketByIdDto> FindTicketById(int id);
         Task<FindQaTicketByIdDto> CancelTicket(int id);
