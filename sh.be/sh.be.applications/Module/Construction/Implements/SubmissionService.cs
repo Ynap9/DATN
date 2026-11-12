@@ -15,6 +15,7 @@ using sh.be.domain.Base.Models;
 using sh.be.domain.Module.Auth.Repositories;
 using sh.be.domain.Module.Auth.Services;
 using sh.be.domain.Module.Construction.Projects.Entities;
+using sh.be.domain.Module.Construction.Projects.Services;
 using sh.be.domain.Module.Construction.QaAssignments.Services;
 using sh.be.domain.Module.Construction.Submissions.Repositories;
 using sh.be.domain.Module.Construction.Submissions.Services;
@@ -32,28 +33,32 @@ namespace sh.be.applications.Module.Construction.Implements
     public class SubmissionService : BaseService, ISubmissionService
     {
         private readonly ISubmissionQuery _submissionQuery;
+        private readonly IProjectQuery _projectQuery;
         private readonly ISubmissionRepository _submissionRepository;
         private readonly IRoleRepository _roleRepository;
         private readonly IUserRepository _userRepository;
         private readonly SubmissionDomainService _submissionDomainService;
         private readonly QaAssignmentDomainService _qaAssignmentDomainService;
+        private readonly ProjectDomainService _projectDomainService;
         private readonly IDataReaderExternal _dataReaderExternal;
         private readonly IExcelExternal _excelExternal;
         private readonly IBackgroundJobExternal _backgroundJobExternal;
         private readonly IFileStorageExternal _fileStorageExternal;
 
         public SubmissionService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<SubmissionService> logger, IRequestContext requestContext, TimeProvider timeProvider,
-            ISubmissionQuery submissionQuery, ISubmissionRepository submissionRepository, IRoleRepository roleRepository, IUserRepository userRepository,
-            SubmissionDomainService submissionDomainService, QaAssignmentDomainService qaAssignmentDomainService, IDataReaderExternal dataReaderExternal, IExcelExternal excelExternal,
-            IBackgroundJobExternal backgroundJobExternal, IFileStorageExternal fileStorageExternal
+            ISubmissionQuery submissionQuery, IProjectQuery projectQuery, ISubmissionRepository submissionRepository, IRoleRepository roleRepository, IUserRepository userRepository,
+            SubmissionDomainService submissionDomainService, QaAssignmentDomainService qaAssignmentDomainService, ProjectDomainService projectDomainService,
+            IDataReaderExternal dataReaderExternal, IExcelExternal excelExternal, IBackgroundJobExternal backgroundJobExternal, IFileStorageExternal fileStorageExternal
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _submissionQuery = submissionQuery;
+            _projectQuery = projectQuery;
             _submissionRepository = submissionRepository;
             _roleRepository = roleRepository;
             _userRepository = userRepository;
             _submissionDomainService = submissionDomainService;
             _qaAssignmentDomainService = qaAssignmentDomainService;
+            _projectDomainService = projectDomainService;
             _dataReaderExternal = dataReaderExternal;
             _excelExternal = excelExternal;
             _backgroundJobExternal = backgroundJobExternal;
@@ -385,6 +390,17 @@ namespace sh.be.applications.Module.Construction.Implements
                     AddAuditLog(AuditLogConstants.ACTION_QA_TICKET_CONCLUDE, AuditLogConstants.ACTION_TYPE_UPDATE,
                         $"Phiếu #{qaTicket.Id} FULL ĐẠT ({qaTicket.DocumentCount} văn bản) của dự án {project.Name}",
                         new { qaTicket.Id, Status = QaAssignmentConst.TICKET_STATUS_ACTIVE }, new { qaTicket.Id, qaTicket.Status, qaTicket.ConcludedDate });
+                    await _unitOfWork.SaveChangesAsync();
+                }
+
+                // Văn bản cuối cùng QA đạt thì dự án tự vào nghiệm thu; chỉ tự chuyển ở đây, không tự sang Xong
+                var oldProjectStatus = project.Status;
+                if (qaLog.NewStatusQa == SubmissionConst.QA_PASSED && await _projectDomainService.TryStartAcceptanceAsync(project, currentUserId, now))
+                {
+                    var summary = await _projectQuery.FindAcceptanceSummary(project.Id);
+                    AddAuditLog(AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_START, AuditLogConstants.ACTION_TYPE_UPDATE, $"Tự động bắt đầu nghiệm thu dự án {project.Name}",
+                        new { ProjectId = project.Id, Status = oldProjectStatus },
+                        new { ProjectId = project.Id, project.Status, IsForced = false, IsAutomatic = true, Reason = (string?)null, Summary = summary.Total });
                     await _unitOfWork.SaveChangesAsync();
                 }
 

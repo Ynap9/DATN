@@ -1,6 +1,6 @@
 # Hồ sơ — QA, trả lại, lịch sử QA
 
-> **Phần 13/21** · trước: [12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md) · mục lục: [README.md](README.md)
+> **Phần 13/22** · trước: [12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md) · mục lục: [README.md](README.md)
 
 Sau khi người nhập liệu kiểm tra hồ sơ ([12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md)), người QA mở hồ sơ, đối chiếu PDF với dữ liệu
 rồi chấm **Đạt** hoặc **Không đạt (kèm lý do)**. Không đạt thì hồ sơ bị **trả lại** cho người nhập liệu sửa. Bản gốc `nhaplieu.be`
@@ -74,6 +74,9 @@ Thống kê QA theo trường, theo người nhập và dòng thời gian một 
   (migration `Add_SubmissionQaLogField`), **một** `AuditLog` `QA hồ sơ`, `Update` (có `WrongDocumentFieldIds`).
 - Hai lần `SaveChanges` trong **một** transaction: lưu log lấy `Id` rồi mới dựng trường sai (`SubmissionQaLog.CreateWrongFields`),
   vì entity không có navigation; lỗi ở bất kỳ bước nào → rollback cả hồ sơ, log, trường sai, audit.
+- Dự án `ACCEPTING` vẫn QA được. Chấm **Đạt** trên dự án `DEPLOYING` / `DOING` mà mọi văn bản đã `CHECKED` + `QA_PASSED` → dự án **tự**
+  sang `ACCEPTING` trong cùng transaction, sau khối chốt phiếu FULL, kèm audit `Bắt đầu nghiệm thu` `IsAutomatic = true`
+  ([22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md#tự-chuyển-trong-reviewqa)).
 - Trả `{ submissionId, statusCheck, statusQa, qaReason, wrongDocumentFieldIds, qaLogId }`.
 
 Lịch sử QA: phân trang, `CreatedDate` rồi `Id` giảm dần, có `userName`, `fullName` (join `Users` lúc đọc), `wrongDocumentFieldIds` của

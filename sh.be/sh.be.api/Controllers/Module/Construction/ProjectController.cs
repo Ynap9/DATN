@@ -147,6 +147,66 @@ namespace sh.be.api.Controllers.Module.Construction
             }
         }
 
+        [HttpGet("{id:int}/acceptance")]
+        [Permission(PermissionConstants.FUNCTION_PROJECT_VIEW)]
+        public async Task<ApiResponse> FindAcceptance([FromRoute] int id)
+        {
+            try
+            {
+                var data = await _projectService.FindAcceptance(id);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPost("{id:int}/acceptance/start")]
+        [Permission(PermissionConstants.FUNCTION_PROJECT_ACCEPT)]
+        public async Task<ApiResponse> StartAcceptance([FromRoute] int id, [FromBody] TransitionAcceptanceProjectDto dto)
+        {
+            try
+            {
+                var data = await _projectService.StartAcceptance(id, dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPost("{id:int}/acceptance/finish")]
+        [Permission(PermissionConstants.FUNCTION_PROJECT_ACCEPT)]
+        public async Task<ApiResponse> FinishAcceptance([FromRoute] int id, [FromBody] TransitionAcceptanceProjectDto dto)
+        {
+            try
+            {
+                var data = await _projectService.FinishAcceptance(id, dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPost("{id:int}/acceptance/reopen")]
+        [Permission(PermissionConstants.FUNCTION_PROJECT_ACCEPT)]
+        public async Task<ApiResponse> ReopenAcceptance([FromRoute] int id, [FromBody] ReopenAcceptanceProjectDto dto)
+        {
+            try
+            {
+                var data = await _projectService.ReopenAcceptance(id, dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
         [HttpPost("")]
         [Permission(PermissionConstants.FUNCTION_PROJECT_CREATE)]
         public async Task<ApiResponse> Create([FromBody] CreateProjectDto dto)

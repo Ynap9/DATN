@@ -9,5 +9,7 @@ namespace sh.be.applications.Module.Construction.Interfaces.Queries
         Task<List<GetListProjectDropDownDto>> GetProjectDropDown();
         Task<BaseResponsePagingDto<GetListProjectDto>> FindPaging(FindPagingProjectDto dto);
         Task<FindProjectByIdDto?> FindById(int id);
+        Task<ViewProjectAcceptanceDto> FindAcceptanceSummary(int projectId);
+        Task<ViewProjectAcceptanceTransitionDto?> FindLastAcceptanceTransition(int projectId);
     }
 }

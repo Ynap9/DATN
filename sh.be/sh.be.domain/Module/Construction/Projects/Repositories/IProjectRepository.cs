@@ -1,4 +1,5 @@
 using sh.be.domain.Module.Construction.Projects.Entities;
+using sh.be.domain.Module.Construction.Projects.Services;
 
 namespace sh.be.domain.Module.Construction.Projects.Repositories
 {
@@ -9,6 +10,10 @@ namespace sh.be.domain.Module.Construction.Projects.Repositories
         Task<List<Project>> GetWithEndedAtByStatusesAsync(IReadOnlyCollection<int> statuses);
         Task<bool> TryLockDeadlineCheckAsync();
         Task ReleaseDeadlineCheckLockAsync();
+        Task LockAsync(int id);
+        Task<bool> IsActiveLeaderAsync(int projectId, string userId);
+        Task<ProjectAcceptanceBlockers> CountAcceptanceBlockersAsync(int projectId);
+        Task<int> TryStartAcceptanceAsync(int projectId);
         void Add(Project project);
         void Update(Project project);
         Task<List<ProjectDocumentType>> GetDocumentTypesAsync(int projectId);

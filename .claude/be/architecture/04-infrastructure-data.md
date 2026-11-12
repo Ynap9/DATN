@@ -55,7 +55,7 @@ gọi thêm `SaveChanges` trong các luồng đó.
 
 `DocumentTypeRepository.LockAsync` khoá dòng loại văn bản (`UPDLOCK, HOLDLOCK`) để tuần tự hoá việc ghi thứ tự trường;
 chỉ có tác dụng **bên trong transaction** (xem [../nghiep-vu/06-truong-van-ban.md](../nghiep-vu/06-truong-van-ban.md)).
-`ProjectRepository.TryLockDeadlineCheckAsync` dùng `sp_getapplock` mức **phiên** (tự mở connection, chờ 0 ms; nhả + đóng ở `ReleaseDeadlineCheckLockAsync`) để khoá giữ qua nhiều transaction. `SubmissionRepository.LockImportAsync` khoá dòng `ProjectDocumentType` cùng cách (`SET LOCK_TIMEOUT` 5 giây, lỗi `1222` → `310`); bulk (`EFCore.BulkExtensions`) chạy trên cùng `ShDbContext` nên tự vào transaction của `UnitOfWork`.
+`ProjectRepository.TryLockDeadlineCheckAsync` dùng `sp_getapplock` mức **phiên** (tự mở connection, chờ 0 ms; nhả + đóng ở `ReleaseDeadlineCheckLockAsync`) để khoá giữ qua nhiều transaction. `SubmissionRepository.LockImportAsync` khoá dòng `ProjectDocumentType` bằng `UPDLOCK, HOLDLOCK` (`SET LOCK_TIMEOUT` 5 giây, lỗi `1222` → `310`); `ProjectRepository.LockAsync` khoá dòng `Project` cùng cách (không timeout) để tự chuyển nghiệm thu đếm sau khi request QA song song commit — DB bật `READ_COMMITTED_SNAPSHOT` nên đếm không khoá sẽ không thấy nhau; bulk (`EFCore.BulkExtensions`) chạy trên cùng `ShDbContext` nên tự vào transaction của `UnitOfWork`.
 ⚠️ Bulk và đọc cột `nvarchar(max)` số lượng lớn: dùng API **sync**, connection string **tắt MARS** — lý do và số đo ở [../nghiep-vu/11-ho-so-import.md](../nghiep-vu/11-ho-so-import.md#hiệu-năng--sheet-20000-dòng--30-trường-600000-dữ-liệu).
 ⚠️ Bảng có filtered index (`Submission`, `SubmissionData`) chỉ ghi được khi `QUOTED_IDENTIFIER ON` (EF bật sẵn); `sqlcmd` tắt → `Msg 1934`, dùng `sqlcmd -I`.
 

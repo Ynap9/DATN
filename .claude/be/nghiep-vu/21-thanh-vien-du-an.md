@@ -1,6 +1,6 @@
 # Thành viên dự án (Operation)
 
-> **Phần 21/21** · trước: [20-ai-nha-cung-cap.md](20-ai-nha-cung-cap.md) · mục lục: [README.md](README.md)
+> **Phần 21/22** · trước: [20-ai-nha-cung-cap.md](20-ai-nha-cung-cap.md) · mục lục: [README.md](README.md)
 
 Xác định **ai** làm việc trong một cặp (dự án, loại văn bản) và **ai quản lý** họ (`ProjectMember`). Đầu vào của giao phiếu nhập liệu
 (Task 13), giao phiếu QA ([18C](18-qa-cham-mau.md#18c--phiếu-qa)) và phạm vi Leader ở mọi màn Operation. Task 11, 2026-10-27.
@@ -120,4 +120,4 @@ gỡ Leader chỉ bỏ quản lý trong cặp; `338` / `339`; phiếu giao trư�
 Chưa kiểm thực tế: đua "gỡ D1 ↔ D1 bấm Kiểm tra" (cần luồng nhập liệu Task 13, an toàn nhờ điều kiện trong câu xoá); dữ liệu nhập của văn
 bản `RETURNED` (seed không có `SubmissionData`; câu thu hồi chỉ xoá `SubmissionUser`).
 
-> **Tiếp:** hết phần nghiệp vụ. Kiến trúc và quy ước code ở [../architecture/README.md](../architecture/README.md).
+> **Tiếp:** [22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md) — nghiệm thu dự án: tự chuyển khi đủ, Admin cho phép khi chưa đủ, khoá import.

@@ -1,6 +1,6 @@
 # Vai trò và quyền mặc định
 
-> **Phần 3/21** · trước: [02-phan-quyen.md](02-phan-quyen.md) · mục lục: [README.md](README.md)
+> **Phần 3/22** · trước: [02-phan-quyen.md](02-phan-quyen.md) · mục lục: [README.md](README.md)
 
 ## Vai trò mặc định
 
@@ -20,6 +20,10 @@ Một user không được giữ cùng lúc `Data` và `QA` (`RoleConstants.EXCL
 
 Bốn vai trò `Leader`, `Data`, `QA`, `User` chưa có quyền nào sau khi seed. Muốn dùng phải gán quyền bằng API
 `PUT api/auth/role/permission`.
+
+`Function.Construction.Project.Accept` (nghiệm thu dự án, Task 23) chỉ Admin có qua seeder. Gán thêm cho Leader thì Leader bắt
+đầu / hoàn tất được khi **đủ** điều kiện và chỉ ở dự án mình đang là Leader (`337`); cho vào khi chưa đủ và trả dự án về đang làm vẫn
+chỉ Admin / SuperAdmin (`400`, [22](22-nghiem-thu-du-an.md)).
 
 ### Quyền Operation gán mặc định (bằng API, không qua seeder)
 
