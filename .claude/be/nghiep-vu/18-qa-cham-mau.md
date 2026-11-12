@@ -16,7 +16,7 @@ tiếp vào cuối file này. Code nằm ở `domain/Module/Construction/QaAssig
 | `PUT reviewer-mode` | `...ProjectConfig.Update` | Đặt chế độ `{ projectId, userId, mode }` |
 
 Dùng lại quyền cấu hình dự án, không thêm key cho 4 API này. Chỉ kiểm quyền, không chặn thêm theo role Admin (chốt 2026-10-26):
-hiện chỉ Admin có `ProjectConfig.Update`; gán quyền này cho Leader thì Leader cũng đặt được.
+hiện chỉ Admin có `ProjectConfig.Update`; gán quyền này cho Leader thì Leader cũng đặt được. Dự án không QA (Task 28, [07](07-du-an.md#có--không-qa--isqaenabled)): `PUT config`, `PUT reviewer-mode`, `POST ticket/{id:int}/cancel` → `345` ngay sau nạp dự án (trước kiểm cấu hình / user QA); các API `GET` không chặn.
 
 ## R1. Chế độ chấm theo từng QA trong từng dự án
 
@@ -130,7 +130,7 @@ Chặng 1–3 (2026-10-26) xong phần **FULL**; phiếu `SAMPLE` chờ 18D. M�
 |---|---|---|
 | `GET ticket/paging` | `AssignQa` hoặc `Qa` | Lọc `projectId`, `documentTypeId`, `qaUserId`, `mode`, `status`; mới nhất trước |
 | `GET ticket/{id:int}` | `AssignQa` hoặc `Qa` | Tham số chụp, vòng, số đếm, `passedCount`, `samples` (rỗng với phiếu FULL; trường mẫu `null`) |
-| `POST ticket/{id:int}/cancel` | `AssignQa` | Huỷ phiếu (R7), trả chi tiết phiếu; không thấy phiếu → `327` |
+| `POST ticket/{id:int}/cancel` | `AssignQa` | Huỷ phiếu (R7), trả chi tiết phiếu; không thấy phiếu → `327`; dự án không QA → `345` |
 
 Giao QA qua `POST operation/.../assignment` ([23](23-chia-phieu.md)); API `POST ticket` đã xoá 2026-11-12 (Task 26).
 

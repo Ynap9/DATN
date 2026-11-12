@@ -311,7 +311,7 @@ namespace sh.be.applications.Module.Construction.Implements
             return await _submissionQuery.Count(dto, restrictedUserId);
         }
 
-        // Kiểm tra hồ sơ: lưu dữ liệu sửa + log + audit, rồi chuyển văn bản vừa kiểm cho QA phụ trách
+        // Kiểm tra hồ sơ: lưu dữ liệu sửa + log + audit, chuyển văn bản vừa kiểm cho QA phụ trách; dự án không QA thì tự vào nghiệm thu
         public async Task<ViewCheckSubmissionResultDto> Check(CheckSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(Check)}, dto={JsonSerializer.Serialize(dto)}");
@@ -344,6 +344,18 @@ namespace sh.be.applications.Module.Construction.Implements
                 await _unitOfWork.SaveChangesAsync();
                 await _submissionAssignmentService.AssignCheckedToQaAsync(submission, currentUserId, now);
                 await _unitOfWork.SaveChangesAsync();
+
+                // Dự án không QA: văn bản cuối cùng được kiểm thì dự án tự vào nghiệm thu; dự án có QA chỉ tự chuyển ở ReviewQa
+                var oldProjectStatus = project.Status;
+                if (!project.IsQaEnabled && await _projectDomainService.TryStartAcceptanceAsync(project, currentUserId, now))
+                {
+                    var summary = await _projectQuery.FindAcceptanceSummary(project.Id);
+                    AddAuditLog(AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_START, AuditLogConstants.ACTION_TYPE_UPDATE, $"Tự động bắt đầu nghiệm thu dự án {project.Name}",
+                        new { ProjectId = project.Id, Status = oldProjectStatus },
+                        new { ProjectId = project.Id, project.Status, IsForced = false, IsAutomatic = true, Reason = (string?)null, Summary = summary.Total });
+                    await _unitOfWork.SaveChangesAsync();
+                }
+
                 await transaction.CommitAsync();
             }
             catch (Exception ex)
@@ -403,7 +415,7 @@ namespace sh.be.applications.Module.Construction.Implements
             return detail;
         }
 
-        // Chấm QA Đạt / Không đạt: lưu log QA, cập nhật người giữ / phiếu, chốt phiếu FULL, tự vào nghiệm thu khi đủ
+        // Chấm QA Đạt / Không đạt (dự án không QA → 345): lưu log QA, cập nhật người giữ / phiếu, chốt phiếu FULL, tự vào nghiệm thu khi đủ
         public async Task<ViewQaResultDto> ReviewQa(ReviewQaSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(ReviewQa)}, dto={JsonSerializer.Serialize(dto)}");
@@ -413,6 +425,7 @@ namespace sh.be.applications.Module.Construction.Implements
             var currentUserId = getCurrentUserId();
             var roleNames = await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId);
             var project = await _submissionDomainService.EnsureEditableProjectAsync(dto.ProjectId, PermissionDomainService.IsSuperAdmin(roleNames));
+            project.EnsureQaEnabled();
             var qaTicket = await _qaAssignmentDomainService.EnsureReviewableAsync(submission, currentUserId, PermissionDomainService.IsAdmin(roleNames));
             var mappings = await _submissionDomainService.GetImportMappingsAsync(dto.ProjectId, dto.DocumentTypeId);
             var userName = (await _userRepository.FindByIdAsync(currentUserId))?.UserName ?? currentUserId;
@@ -446,7 +459,7 @@ namespace sh.be.applications.Module.Construction.Implements
                     await _unitOfWork.SaveChangesAsync();
                 }
 
-                // Văn bản cuối cùng QA đạt thì dự án tự vào nghiệm thu; chỉ tự chuyển ở đây, không tự sang Xong
+                // Văn bản cuối cùng QA đạt thì dự án tự vào nghiệm thu; dự án có QA chỉ tự chuyển ở đây (không QA thì ở Check), không tự sang Xong
                 var oldProjectStatus = project.Status;
                 if (qaLog.NewStatusQa == SubmissionConst.QA_PASSED && await _projectDomainService.TryStartAcceptanceAsync(project, currentUserId, now))
                 {

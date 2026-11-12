@@ -32,7 +32,7 @@ namespace sh.be.domain.Module.Construction.Projects.Services
                 return false;
             }
             await _projectRepository.LockAsync(project.Id);
-            if (!(await _projectRepository.CountAcceptanceBlockersAsync(project.Id)).IsReady)
+            if (!(await _projectRepository.CountAcceptanceBlockersAsync(project.Id, project.IsQaEnabled)).IsReady)
             {
                 return false;
             }
@@ -115,28 +115,25 @@ namespace sh.be.domain.Module.Construction.Projects.Services
             }
         }
 
-        // Dự án chưa có văn bản thì chặn hẳn, kể cả Admin; đủ điều kiện thì bỏ qua cờ isForced; chưa đủ thì chỉ Admin được cho phép,
-        // lý do bắt buộc khi isReasonRequired (hoàn tất), còn lại tuỳ chọn (bắt đầu). Trả lý do đã trim để ghi audit
-        public static string? EnsureAcceptanceAllowed(ProjectAcceptanceBlockers blockers, bool isForced, bool isAdmin, string? reason, bool isReasonRequired)
+        // Dự án chưa có văn bản thì chặn hẳn, kể cả Admin; đủ điều kiện thì bỏ qua cờ isForced; chưa đủ thì chỉ Admin được cho phép.
+        // Lý do luôn tuỳ chọn (bắt đầu và hoàn tất); trả lý do đã trim để ghi audit
+        public static string? EnsureAcceptanceAllowed(ProjectAcceptanceBlockers blockers, bool isForced, bool isAdmin, string? reason)
         {
             if (blockers.TotalCount == 0)
             {
                 throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotReadyForAcceptance, "Dự án chưa có văn bản nào");
             }
-            if (blockers.IsReady)
+            if (!blockers.IsReady && !isForced)
             {
-                return NormalizeOptionalAcceptanceReason(reason);
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotReadyForAcceptance, blockers.IsQaEnabled
+                    ? $"Còn {blockers.NotCheckedCount} văn bản chưa kiểm, {blockers.NotPassedCount} văn bản chưa QA đạt"
+                    : $"Còn {blockers.NotCheckedCount} văn bản chưa kiểm");
             }
-            if (!isForced)
-            {
-                throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotReadyForAcceptance,
-                    $"Còn {blockers.NotCheckedCount} văn bản chưa kiểm, {blockers.NotPassedCount} văn bản chưa QA đạt");
-            }
-            if (!isAdmin)
+            if (!blockers.IsReady && !isAdmin)
             {
                 throw new UserFriendlyException(ErrorCodes.BadRequest, "Chỉ Admin được cho phép khi chưa đủ điều kiện");
             }
-            return isReasonRequired ? NormalizeAcceptanceReason(reason) : NormalizeOptionalAcceptanceReason(reason);
+            return NormalizeOptionalAcceptanceReason(reason);
         }
 
         private static string? NormalizeOptionalAcceptanceReason(string? reason)
@@ -167,9 +164,10 @@ namespace sh.be.domain.Module.Construction.Projects.Services
 
     public record ProjectDeadlineSettings(int WarningDays, bool IsMailEnabled, List<string> DefaultedConfigNames);
 
-    // NotChecked = chưa CHECKED (gồm trả lại); NotPassed = đã CHECKED nhưng chưa QA đạt; tính mọi văn bản chưa xoá của dự án
-    public record ProjectAcceptanceBlockers(int NotCheckedCount, int NotPassedCount, int TotalCount)
+    // NotChecked = chưa CHECKED (gồm trả lại); NotPassed = đã CHECKED nhưng chưa QA đạt, bỏ qua khi dự án không QA;
+    // tính mọi văn bản chưa xoá của dự án
+    public record ProjectAcceptanceBlockers(int NotCheckedCount, int NotPassedCount, int TotalCount, bool IsQaEnabled)
     {
-        public bool IsReady => TotalCount > 0 && NotCheckedCount == 0 && NotPassedCount == 0;
+        public bool IsReady => TotalCount > 0 && NotCheckedCount == 0 && (!IsQaEnabled || NotPassedCount == 0);
     }
 }

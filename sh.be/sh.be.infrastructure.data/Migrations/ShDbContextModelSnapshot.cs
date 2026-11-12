@@ -1163,6 +1163,11 @@ namespace sh.be.infrastructure.data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsQaEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
                     b.Property<string>("ModifiedBy")
                         .HasColumnType("nvarchar(max)");
 

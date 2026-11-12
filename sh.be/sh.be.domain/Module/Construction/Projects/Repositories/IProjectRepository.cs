@@ -12,7 +12,7 @@ namespace sh.be.domain.Module.Construction.Projects.Repositories
         Task ReleaseDeadlineCheckLockAsync();
         Task LockAsync(int id);
         Task<bool> IsActiveLeaderAsync(int projectId, string userId);
-        Task<ProjectAcceptanceBlockers> CountAcceptanceBlockersAsync(int projectId);
+        Task<ProjectAcceptanceBlockers> CountAcceptanceBlockersAsync(int projectId, bool isQaEnabled);
         Task<int> TryStartAcceptanceAsync(int projectId);
         void Add(Project project);
         void Update(Project project);

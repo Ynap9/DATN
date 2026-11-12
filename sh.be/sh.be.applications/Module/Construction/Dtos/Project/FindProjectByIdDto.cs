@@ -9,6 +9,7 @@ namespace sh.be.applications.Module.Construction.Dtos.Project
         public int Status { get; set; }
         public string UrlGoogleSheetSync { get; set; } = String.Empty;
         public string GoogleSheetName { get; set; } = String.Empty;
+        public bool IsQaEnabled { get; set; }
         public List<int> DocumentTypeIds { get; set; } = new();
     }
 }

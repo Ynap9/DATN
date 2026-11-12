@@ -3,7 +3,7 @@
 > **Phần 7/22** · trước: [06-truong-van-ban.md](06-truong-van-ban.md) · mục lục: [README.md](README.md)
 
 Danh mục dự án, bảng `construction.Project`. Mỗi dự án có một Google Sheet riêng, hệ thống **tự tạo** lúc tạo dự án.
-Trường: `Name`, `StartedAt`, `EndedAt`, `Status`, `UrlGoogleSheetSync`, `GoogleSheetName`, cột tạo / sửa / xoá, cờ `Deleted` (`ISoftDeleted`, đổi tên từ `IsDeleted` ở migration `Rename_Project_Deleted_Add_Submission`).
+Trường: `Name`, `StartedAt`, `EndedAt`, `Status`, `UrlGoogleSheetSync`, `GoogleSheetName`, `IsQaEnabled` ([Có / không QA](#có--không-qa--isqaenabled)), cột tạo / sửa / xoá, cờ `Deleted` (`ISoftDeleted`, đổi tên từ `IsDeleted` ở migration `Rename_Project_Deleted_Add_Submission`).
 
 ## Các chức năng
 
@@ -20,15 +20,15 @@ Trường: `Name`, `StartedAt`, `EndedAt`, `Status`, `UrlGoogleSheetSync`, `Goog
 | Bắt đầu / hoàn tất nghiệm thu, trả về đang làm | `POST .../{id:int}/acceptance/start`, `.../finish`, `.../reopen` | `Function.Construction.Project.Accept` |
 | Hạn dự án: danh sách, chạy job, trạng thái job, lịch sử mail ([15-han-du-an.md](15-han-du-an.md)) | `GET deadline`, `POST deadline-check/run`, `GET deadline-check/status`, `GET deadline-notification/paging` | `Function.Construction.Project.Deadline` |
 
-Body tạo: `{ "name", "startedAt", "endedAt", "documentTypeIds": [] }`. Hệ thống tự gán `status = DEPLOYING` (đang triển khai)
+Body tạo: `{ "name", "startedAt", "endedAt", "isQaEnabled", "documentTypeIds": [] }` (`isQaEnabled` không gửi = `true`). Hệ thống tự gán `status = DEPLOYING` (đang triển khai)
 và `googleSheetName = name`; FE không gửi hai trường này. Tạo xong trả `data` cùng dạng `GET {id}` (`FindProjectByIdDto`:
-`id`, `name`, `startedAt`, `endedAt`, `status`, `urlGoogleSheetSync`, `googleSheetName`, `documentTypeIds`).
+`id`, `name`, `startedAt`, `endedAt`, `status`, `urlGoogleSheetSync`, `googleSheetName`, `isQaEnabled`, `documentTypeIds`).
 Body sửa: `{ "name", "startedAt", "endedAt", "status", "documentTypeIds": [] }` — **không** sửa được `urlGoogleSheetSync`,
-`googleSheetName`; đổi `name` thì tên file Google Sheet đổi theo.
+`googleSheetName`, `isQaEnabled` (gửi kèm thì bị bỏ qua); đổi `name` thì tên file Google Sheet đổi theo.
 
 Dropdown trả `[{ id, name }]` sắp theo `name`. Paging nhận `pageNumber`, `pageSize`, `keyword` (tìm trong `name`, tự trim),
 `status` (tuỳ chọn, lọc đúng trạng thái); trả `{ items, totalItems }`, mỗi item `id`, `name`, `startedAt`, `endedAt`, `status`,
-`urlGoogleSheetSync`; sắp mới tạo trước (`CreatedDate` giảm dần, rồi `Id` giảm dần). Danh sách không phân trang trả mọi dự án
+`urlGoogleSheetSync`, `isQaEnabled`; sắp mới tạo trước (`CreatedDate` giảm dần, rồi `Id` giảm dần). Danh sách không phân trang trả mọi dự án
 cùng dạng item và cùng thứ tự như paging (`GetListProjectDto`). Cả ba API bỏ dự án đã xoá mềm.
 
 ## Loại văn bản của dự án — `ProjectDocumentType`
@@ -68,9 +68,20 @@ khoá ngoại; chưa có API riêng — chỉ được ghi qua CRUD dự án (xe
 | `ACCEPTING` | `3` | Đang nghiệm thu: khoá import (`341`), kiểm tra / QA vẫn được |
 | `DONE` | `4` | Đã xong |
 
-Vào / ra `ACCEPTING` và sang `DONE` **chỉ** qua API nghiệm thu hoặc tự chuyển khi văn bản cuối QA đạt — bảng chuyển, luật và mã
+Vào / ra `ACCEPTING` và sang `DONE` **chỉ** qua API nghiệm thu hoặc tự chuyển khi văn bản cuối QA đạt (dự án không QA: văn bản cuối được kiểm) — bảng chuyển, luật và mã
 `340`–`342` ở [22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md).
 | `EXPIRED` | `5` | Hết hạn: job tự chuyển khi qua `EndedAt`, chặn thao tác hồ sơ như `DONE` (mã `323`); mở lại bằng `PUT` |
+
+## Có / không QA — `IsQaEnabled`
+
+Task 28 (2026-11-13): QA đi kèm khi chủ đầu tư và Admin chọn; dự án cần nhanh thì chỉ nhập liệu. Cột `bit NOT NULL` mặc định `1`,
+migration `Add_Project_IsQaEnabled`.
+
+- **Chỉ đặt lúc tạo** (`Project.Create`); không có API / trường nào đổi sau đó. Cờ theo dự án, không theo loại văn bản.
+- Dự án tạo trước Task 28 = **có QA** (default cột), giữ nguyên hành vi cũ. Audit tạo dự án ghi `IsQaEnabled` ngay sau `Status`.
+- Dự án không QA: văn bản xong khi `CHECKED`, tự vào nghiệm thu ở `PUT submission/check` ([22](22-nghiem-thu-du-an.md)); 4 API ghi QA
+  → `345` "Dự án không bật QA" (`Project.EnsureQaEnabled`, [13](13-ho-so-qa.md), [18](18-qa-cham-mau.md)); API đọc QA không chặn,
+  ra rỗng / 0 — FE dựa vào `isQaEnabled` để ẩn màn / cột QA. Phần Operation (giao QA, phiếu `DONE`, tiền QA) do Task 15 / 12 / 14.
 
 ## Luật nghiệp vụ
 
@@ -119,6 +130,10 @@ hai trường còn lại → cả hai `Deleted = 1`, có `DeletedBy`.
 
 Chưa có `GoogleRefreshToken` → tạo trả `304` "Thiếu cấu hình dự án: GoogleRefreshToken". Chưa kiểm luồng tạo thành công,
 đổi tên, xoá trên dự án thật (cần người dùng xác thực Google trước).
+
+Ngày 2026-11-13 (Task 28, DB dev, dự án tạm `ZZTEST28` đã xoá) — **10/10**: dự án cũ sau migration đều `isQaEnabled = true`; tạo
+`isQaEnabled = false` → `false`, không gửi → `true` (DB, `GET {id}`, `paging`, `GET` danh sách khớp); audit tạo có `IsQaEnabled`;
+`PUT` gửi `isQaEnabled = true` → cờ vẫn `false`. Tạo thật nên còn 2 file Google Sheet trên Drive (xoá dự án không xoá file).
 
 ## Giới hạn
 
