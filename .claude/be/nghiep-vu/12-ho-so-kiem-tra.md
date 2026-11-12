@@ -4,7 +4,7 @@
 
 Sau khi import ([11-ho-so-import.md](11-ho-so-import.md)), người kiểm tra mở màn hình hồ sơ của **một dự án + một loại văn bản**:
 xem bảng, lọc, mở từng hồ sơ (PDF bên trái qua `proxy-file`, form trường bên phải), sửa dữ liệu rồi bấm **Kiểm tra**.
-Phạm vi xem / kiểm do Vận hành quyết định ([Phạm vi và phân việc](#phạm-vi-và-phân-việc)); tới Task 15 vẫn thấy toàn bộ. Xoá hồ sơ và xuất Excel nằm ở [14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md).
+Phạm vi xem / kiểm do Vận hành quyết định ([Phạm vi và phân việc](#phạm-vi-và-phân-việc)): nhân viên chỉ thấy văn bản mình giữ. Xoá hồ sơ và xuất Excel nằm ở [14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md).
 
 ## Các chức năng
 
@@ -80,8 +80,10 @@ Body: `{ id, projectId, documentTypeId, datas: [{ documentFieldId, data }], note
 
 ## Phạm vi và phân việc
 
-Luật phân việc thuộc Operation: Thi công chỉ gọi `ISubmissionAssignmentService` (implement `SubmissionAssignmentService`, Task 25), thân rỗng
-tới Task 15 nên hành vi chưa đổi; implement không `SaveChanges` / commit. Không gọi ở `summary`, `logs` dự án, thống kê QA, xuất Excel.
+Luật phân việc thuộc Operation: Thi công chỉ gọi `ISubmissionAssignmentService` (implement `SubmissionAssignmentService`, Task 25, thân
+Task 15); implement được `SaveChanges`, không mở / commit transaction. Không gọi ở `summary`, `logs` dự án, thống kê QA, xuất Excel.
+Lỗi: `820` không giữ văn bản / đã bị gỡ khỏi cặp, `826` người nhập kiểm lại văn bản đã QA đạt, `812` chờ khoá cặp quá 5 giây. Luật đủ ở
+[23-chia-phieu.md](23-chia-phieu.md#nối-vào-luồng-kiểm-tra--qa).
 
 | Method | Gọi ở |
 |---|---|
