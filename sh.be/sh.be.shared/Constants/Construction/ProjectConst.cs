@@ -11,7 +11,11 @@ namespace sh.be.shared.Constants.Construction
         public static readonly IReadOnlyList<int> STATUSES = [DEPLOYING, DOING, ACCEPTING, DONE, EXPIRED];
         public static readonly IReadOnlyList<int> ACTIVE_STATUSES = [DEPLOYING, DOING, ACCEPTING];
         public static readonly IReadOnlyList<int> DEADLINE_STATUSES = [DEPLOYING, DOING, ACCEPTING, EXPIRED];
+        public static readonly IReadOnlyList<int> ACCEPTANCE_START_STATUSES = [DEPLOYING, DOING];
 
         public const int DEFAULT_DEADLINE_WARNING_DAYS = 3;
+
+        public const int ACCEPTANCE_REASON_MIN = 10;
+        public const int ACCEPTANCE_REASON_MAX = 1000;
     }
 }

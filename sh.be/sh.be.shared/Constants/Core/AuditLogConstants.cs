@@ -40,6 +40,9 @@ namespace sh.be.shared.Constants.Core
         public const string ACTION_PROJECT_DELETE = "Xóa dự án";
         public const string ACTION_PROJECT_EXPIRE = "Chuyển dự án sang hết hạn";
         public const string ACTION_PROJECT_DEADLINE_RUN = "Chạy kiểm tra hạn dự án";
+        public const string ACTION_PROJECT_ACCEPTANCE_START = "Bắt đầu nghiệm thu";
+        public const string ACTION_PROJECT_ACCEPTANCE_FINISH = "Hoàn tất nghiệm thu";
+        public const string ACTION_PROJECT_ACCEPTANCE_REOPEN = "Trả dự án về đang làm";
 
         public const string ACTION_PROJECT_CONFIG_CREATE = "Tạo cấu hình dự án";
         public const string ACTION_PROJECT_CONFIG_UPDATE = "Cập nhật cấu hình dự án";

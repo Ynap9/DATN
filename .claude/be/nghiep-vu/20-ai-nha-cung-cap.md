@@ -1,6 +1,6 @@
 # Nhà cung cấp AI (module Ai)
 
-> **Phần 20/21** · trước: [19-nhom-nhan-vien.md](19-nhom-nhan-vien.md) · mục lục: [README.md](README.md)
+> **Phần 20/22** · trước: [19-nhom-nhan-vien.md](19-nhom-nhan-vien.md) · mục lục: [README.md](README.md)
 
 Mọi lời gọi AI đi qua **một cửa**: model, prompt, cách chọn model là **dữ liệu** trong DB, Admin thêm model / đổi prompt không sửa code;
 code chỉ biết vài giao thức gọi; dữ liệu cơ quan không gửi ra API public. Module `Ai` tách riêng (schema `ai`, route `api/v1/ai`, lỗi

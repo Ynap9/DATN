@@ -2,7 +2,7 @@
 
 > Chức năng và luật nghiệp vụ của module `Auth` (người dùng, vai trò, quyền), `Core` (nhật ký hệ thống) và
 > `Construction` (loại văn bản, dự án, hồ sơ), `DigitalSignature` (mẫu chữ ký, lô ký), `Packaging` (cấu hình đóng gói TT05), `Operation` (vận hành — nền móng
-> Task 9, nhóm nhân viên Task 10, thành viên dự án Task 11, plan ở [../plans/van-hanh/README.md](../plans/van-hanh/README.md)) và `Ai` (cửa gọi AI — nhà cung cấp Task 19).
+> Task 9, nhóm nhân viên Task 10, thành viên dự án Task 11, chia phiếu Task 13, plan ở [../plans/van-hanh/README.md](../plans/van-hanh/README.md)) và `Ai` (cửa gọi AI — nhà cung cấp Task 19).
 > Đối chiếu với code `sh.be` ngày 2026-10-19. Kiến trúc và quy ước code nằm ở [../architecture/README.md](../architecture/README.md).
 
 ## Mục lục
@@ -19,7 +19,7 @@
 | [08-cau-hinh-du-an.md](08-cau-hinh-du-an.md) | Cấu hình dự án (`ProjectConfig`): CRUD key-value, xác thực tài khoản Google lấy refresh token |
 | [09-mau-chu-ky.md](09-mau-chu-ky.md) | Mẫu chữ ký (`Template`): tạo / đổi tên / xoá, ghi cấu hình ký kèm ảnh lên MinIO và toạ độ khối |
 | [10-lo-ky.md](10-lo-ky.md) | Lô ký (`SigningBatch`): tạo lô, tải / xoá file PDF, phiên ký, runner 3 chặng, đưa thư plugin, tạm dừng / huỷ, tiến độ, bản ký |
-| [11-ho-so-import.md](11-ho-so-import.md) | Hồ sơ (`Submission`, `SubmissionData`): import append / blank / overwrite từ Google Sheet, proxy xem file PDF |
+| [11-ho-so-import.md](11-ho-so-import.md) | Hồ sơ (`Submission`, `SubmissionData`): import append / blank / overwrite từ Google Sheet, hoặc từ file Excel (chạy thử ngay, import chạy nền Hangfire), proxy xem file PDF |
 | [12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md) | Hồ sơ: danh sách, lọc, chi tiết, hồ sơ liền kề, đếm, kiểm tra / tái kiểm tra (`SubmissionLog`), lịch sử |
 | [13-ho-so-qa.md](13-ho-so-qa.md) | Hồ sơ: QA Đạt / Không đạt, trả lại, `StatusQa` độc lập với `StatusCheck`, lịch sử QA (`SubmissionQaLog`) |
 | [14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md) | Hồ sơ: xoá mềm nhiều hồ sơ (chặn hồ sơ đã kiểm tra), xuất Excel theo bộ lọc (trả file ngay hoặc chạy nền Hangfire + link tải) |
@@ -30,6 +30,8 @@
 | [19-nhom-nhan-vien.md](19-nhom-nhan-vien.md) | Nhóm nhân viên (Operation): nhóm thuần `Data` hoặc `QA` suy từ role thành viên, Leader chỉ thấy nhóm mình (`801`), 8 API |
 | [20-ai-nha-cung-cap.md](20-ai-nha-cung-cap.md) | Module Ai: 5 bảng nền móng, nhà cung cấp AI (`AiProvider`) với 12 luật R1–R12, key mã hoá + SHA-256, tải key file JSON, 8 API, lỗi `901`–`907` |
 | [21-thanh-vien-du-an.md](21-thanh-vien-du-an.md) | Thành viên dự án (Operation): ai quản lý ai, không có Leader thì Admin quản lý, thêm hàng loạt có bỏ qua, gỡ = tự thu hồi văn bản chưa làm, 6 API |
+| [22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md) | Nghiệm thu dự án: `DOING` → `ACCEPTING` → `DONE`, tự chuyển khi văn bản cuối QA đạt, Admin cho phép khi chưa đủ (bắt đầu lý do tuỳ chọn, hoàn tất bắt buộc lý do), khoá import, tổng hợp + audit, lỗi `340`–`342` |
+| [23-chia-phieu.md](23-chia-phieu.md) | Chia phiếu (Operation): cây Hộp → Hồ sơ 2 chế độ Data / QA, giao phiếu nhập liệu, QA phụ trách nút + đợt QA, khoá chống đua, phiếu của tôi, 6 API |
 
 ## Thuật ngữ
 
@@ -48,7 +50,7 @@
 ## Ba quy tắc xuyên suốt
 
 - Mọi thao tác ghi đều tạo `AuditLog` **trong cùng transaction** với thay đổi dữ liệu (xem [04-nhat-ky-he-thong.md](04-nhat-ky-he-thong.md)).
-- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`109` (Auth), `201`–`211` (Core), `301`–`339` (Construction), `601`–`635` (DigitalSignature), `701`–`703` (Packaging), `801`–`823` (Operation, bỏ `814`) hoặc `901`–`907` (Ai).
+- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`109` (Auth), `201`–`211` (Core), `301`–`344` (Construction), `601`–`635` (DigitalSignature), `701`–`703` (Packaging), `801`–`825` (Operation, bỏ `814`) hoặc `901`–`907` (Ai).
 - Thời gian thao tác lấy theo giờ Việt Nam, người thao tác lấy từ token đăng nhập.
 
 Route trong các file nghiệp vụ viết rút gọn `api/<module>/...`; route thật có version: `api/v1/<module>/...` (từ 2026-10-20,

@@ -1,6 +1,6 @@
 # Nhật ký hệ thống (Core)
 
-> **Phần 4/21** · trước: [03-vai-tro-mac-dinh.md](03-vai-tro-mac-dinh.md) · mục lục: [README.md](README.md)
+> **Phần 4/22** · trước: [03-vai-tro-mac-dinh.md](03-vai-tro-mac-dinh.md) · mục lục: [README.md](README.md)
 
 Mọi thao tác ghi nghiệp vụ để lại một `AuditLog`. Module `Core` chỉ **đọc** nhật ký qua API; việc ghi nằm trong
 `BaseService.AddAuditLog` và được gọi từ các service nghiệp vụ.
@@ -29,6 +29,7 @@ Mọi thao tác ghi nghiệp vụ để lại một `AuditLog`. Module `Core` ch
 | Tạo / cập nhật / xoá loại văn bản | Create / Update / Delete | `DocumentTypeService` |
 | Tạo / thêm nhanh / cập nhật / xoá / xoá nhanh trường của loại văn bản | Create / Create / Update / Delete / Delete | `DocumentFieldService` |
 | Tạo / cập nhật / xoá dự án | Create / Update / Delete | `ProjectService` |
+| Bắt đầu / hoàn tất nghiệm thu, trả dự án về đang làm (`ProjectId` là trường **đầu** của `newData`, [22](22-nghiem-thu-du-an.md#audit--bằng-chứng-nghiệm-thu)) | Update | `ProjectService`, tự bắt đầu ở `SubmissionService.ReviewQa` |
 | Chuyển dự án sang hết hạn (người thao tác `system`) | Update | `ProjectDeadlineJob` |
 | Chạy kiểm tra hạn dự án thủ công (`newData` có `JobId`) | Update | `ProjectDeadlineService` |
 | Tạo / cập nhật / xoá cấu hình dự án, xác thực tài khoản Google (giá trị bí mật ghi `******`) | Create / Update / Delete / Update | `ProjectConfigService` |

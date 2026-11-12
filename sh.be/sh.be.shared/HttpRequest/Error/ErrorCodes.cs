@@ -79,6 +79,11 @@ namespace sh.be.shared.HttpRequest.Error
         public const int ConstructionErrorProjectNotManaged = 337;
         public const int ConstructionErrorQaReviewerNotMember = 338;
         public const int ConstructionErrorQaReviewerNotManaged = 339;
+        public const int ConstructionErrorProjectNotReadyForAcceptance = 340;
+        public const int ConstructionErrorProjectAccepting = 341;
+        public const int ConstructionErrorProjectStatusTransitionInvalid = 342;
+        public const int ConstructionErrorImportFileInvalid = 343;
+        public const int ConstructionErrorImportJobNotFound = 344;
 
         public const int DigitalSignatureErrorTemplateNotFound = 601;
         public const int DigitalSignatureErrorInvalidTemplatePositionKind = 602;
@@ -142,6 +147,8 @@ namespace sh.be.shared.HttpRequest.Error
         public const int OperationErrorLeaderForbiddenTarget = 821;
         public const int OperationErrorPriceDefaultMissing = 822;
         public const int OperationErrorLeaderNotMember = 823;
+        public const int OperationErrorNothingToAssign = 824;
+        public const int OperationErrorTicketTooLarge = 825;
 
         public const int AiErrorProviderNotFound = 901;
         public const int AiErrorProviderCodeExists = 902;

@@ -1,6 +1,6 @@
-# Hồ sơ — import Google Sheet và xem file (Construction)
+# Hồ sơ — import Google Sheet / Excel và xem file (Construction)
 
-> **Phần 11/21** · trước: [10-lo-ky.md](10-lo-ky.md) · mục lục: [README.md](README.md)
+> **Phần 11/22** · trước: [10-lo-ky.md](10-lo-ky.md) · mục lục: [README.md](README.md)
 
 Hồ sơ (`construction.Submission`) = một file tài liệu số hoá = một dòng trên Google Sheet, thuộc một dự án và một loại văn bản.
 Giá trị từng trường của hồ sơ nằm ở `construction.SubmissionData` (một dòng cho mỗi cặp hồ sơ – trường). Nghiệp vụ lấy từ
@@ -13,6 +13,7 @@ Giá trị từng trường của hồ sơ nằm ở `construction.SubmissionDat
 | Chạy thử / import thêm mới | `POST api/construction/submission/import/append/verify`, `.../import/append` | `Function.Construction.Submission.Import` |
 | Chạy thử / import bổ sung ô trống | `POST api/construction/submission/import/blank/verify`, `.../import/blank` | `Function.Construction.Submission.Import` |
 | Chạy thử / import ghi đè một trường | `POST api/construction/submission/import/overwrite/verify`, `.../import/overwrite` | `Function.Construction.Submission.Import` |
+| Import từ file Excel: tải file, chạy thử, import chạy nền, trạng thái job | 8 API `.../import/excel/...` ([mục dưới](#import-từ-file-excel-chạy-nền)) | `Function.Construction.Submission.Import` |
 | Xem file PDF của hồ sơ | `GET api/construction/submission/proxy-file?url=...` | `Function.Construction.Submission.View` |
 
 FE luôn gọi `verify` → hiện số liệu → người dùng xác nhận → gọi import. Verify và import dùng **chung** hàm dựng kế hoạch
@@ -38,6 +39,7 @@ Body chung (`ImportSubmissionDto`): `projectId`, `documentTypeId`, `fileColumnIm
 | Lỗi | Mã |
 |---|---|
 | Dự án không tồn tại / đã xoá | `303` |
+| Dự án đang nghiệm thu `Status = ACCEPTING` (`Project.EnsureImportable`, kiểm đầu tiên — [22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md)) | `341` |
 | Dự án `Status = DONE` (`Project.EnsureImportable`) | `313` |
 | Dự án hết hạn `Status = EXPIRED` ([15-han-du-an.md](15-han-du-an.md)) | `323` |
 | Loại văn bản không tồn tại / chưa gắn vào dự án | `301` / `312` |
@@ -94,6 +96,49 @@ transaction phía SQL Server vẫn mở và giữ khoá → mọi import sau c�
 
 ⚠️ Lô bulk 4.000 → 100.000: mỗi lô tốn vài lượt đi – về (~150 ms mỗi lượt ở môi trường Docker này), 150 lô chiếm gần hết thời gian
 (insert 600.000 dữ liệu 88 s → ~35 s). Cả import trong một transaction nên lô lớn không đổi khả năng rollback.
+
+## Import từ file Excel chạy nền
+
+Task 24 (2026-11-12): cùng 3 kiểu, cùng mọi kiểm tra và cùng hàm dựng kế hoạch / ghi với Google Sheet (`SubmissionService` truyền nguồn đọc
+vào `Load*SheetAsync`, `Import*Async`); chỉ khác nguồn là `IExcelReaderExternal`. Import Google Sheet ở trên giữ nguyên, vẫn đồng bộ.
+Luồng FE: tải file → chọn **một** kiểu + sheet + cột → chạy thử đúng kiểu đó → xác nhận → import (nhận `jobId`) → hỏi trạng thái mỗi 2 giây.
+Đổi kiểu phải chạy thử lại; luật này **chỉ FE giữ**, BE không lưu trạng thái chạy thử (job tự kiểm lại toàn bộ nên bỏ chạy thử cũng không ghi sai).
+
+| Endpoint (`api/construction/submission/import/excel/...`) | Việc |
+|---|---|
+| `POST upload` (multipart `file`) | Kiểm `.xlsx`, 1 byte – 20 MB → lưu MinIO private → `{ fileKey, fileName, sheets: [{ sheetName, headers }] }`; không sheet nào có header → `343` |
+| `POST append/verify`, `blank/verify`, `overwrite/verify` | Chạy thử, không ghi DB, trả đúng DTO verify Google. Body = body Google + `fileKey` + `sheetName`; overwrite **bỏ** `url` |
+| `POST append`, `blank`, `overwrite` | Kiểm sớm dự án, loại văn bản, `fileKey`, có server queue `import` (`211`) → đẩy `SubmissionImportJob` → `{ jobId, status: 0, fileName }` |
+| `GET job/{jobId}` | `status` 0 chờ / 1 chạy / 2 xong / 3 lỗi, `fileName`, `resultMessage` (khi 2, giống message import Google), `errorMessage` (khi 3) |
+
+- `fileKey` = `construction/submission-import/{yyyyMMdd}/{userId}/{guid}/{tên file đã làm sạch}`. Key đi qua FE nên mọi API nhận key kiểm
+  đúng prefix, đúng 4 phần và phần `userId` là người gọi (`EnsureExcelFileOwnedBy`); sai hoặc file đã bị dọn → `343` "File không tồn tại hoặc
+  đã hết hạn". Tên file lấy từ cuối key cho job và audit, không nhận từ FE.
+- Giới hạn → `343`: chỉ `.xlsx` mở được bằng ClosedXML, ≤ 20 MB, ≤ 100.000 dòng dữ liệu (đếm cả dòng trống giữa). `RequestSizeLimit` = 25 MB để
+  file hơi quá cỡ vẫn vào tới service nhận `343`, không phải HTTP 413.
+- Ô đọc bằng `GetFormattedString`: ngày, số, kết quả công thức đúng như hiển thị; dòng trống giữa vẫn giữ nên `IndexGoogleSheet` đúng dòng thật. Dự án **chưa gắn Google Sheet** vẫn import Excel được.
+- Job (queue `import`, 1 worker vì import khoá theo cặp dự án + loại văn bản) chạy lại toàn bộ kiểm tra — dự án có thể vừa sang `DONE` /
+  `ACCEPTING`, người khác vừa import — rồi dựng kế hoạch trong transaction có `LockImportAsync`. `importedBy` và audit là người tải (`userId`
+  truyền vào job, không có HttpContext); nội dung audit thêm "từ file Excel {tên file}, sheet {sheet}".
+- **Không retry với mọi lỗi**: lỗi dữ liệu thử lại vẫn sai, lỗi hạ tầng tự retry dễ ghi 2 lần. Lỗi nghiệp vụ trả đúng câu của mã, lỗi khác →
+  "Import thất bại, hãy thử lại"; người dùng xem lỗi rồi bấm import lại. Kết quả là chuỗi job trả về, Hangfire giữ ở trạng thái Succeeded.
+- Chỉ người tạo xem được job; người khác, job không phải import, hoặc job đã bị Hangfire xoá (Succeeded sau 24 giờ) → `344`.
+- File giữ 1 ngày theo thư mục ngày, dọn chung `SubmissionExportCleanupJob` ([14](14-ho-so-xoa-xuat.md)); không xoá ngay sau import để chạy
+  kiểu khác trên cùng file trong ngày. File tải lên hỏng / không có header cũng nằm lại tới lượt dọn.
+
+| # | Case đã chốt (2026-11-11) | Chốt |
+|---|---|---|
+| 24.1 | Kiểu import | Cả 3 kiểu như Google Sheet; mỗi lần chọn 1 kiểu, chạy thử và import đúng kiểu đó |
+| 24.2 | Cái gì chạy nền | Chạy thử trả ngay; import thật đẩy job Hangfire, FE hỏi trạng thái |
+| 24.3 | Giới hạn file | `.xlsx`, ≤ 20 MB, ≤ 100.000 dòng dữ liệu |
+| 24.4 | Giữ file trên MinIO | 1 ngày rồi xoá (như file export) |
+
+⚠️ `S3FileStorageExternal` không tách "không có object" khỏi lỗi khác, nên MinIO sập cũng báo `343` "đã hết hạn". ⚠️ Chuỗi số theo culture của
+server (`1,234,567.50` hay `1.234.567,50`), có thể khác Google Sheet (theo cài đặt file sheet). ⚠️ Job đụng import / xoá đồng bộ cùng cặp
+dự án + loại văn bản thì chờ khoá 5 giây rồi Failed `310`, không tự thử lại.
+
+Đã kiểm 2026-11-12 gọi API thật trên DB dev (ZZTEST24, đã xoá; MinIO chung đầy ổ nên dùng S3 giả lập cục bộ qua `S3__*`): verify Excel = Google 3 kiểu; 1.000 hồ sơ / 6.000 ô khớp từng ô bản Google; import lại → 0, không audit; overwrite `false` / `true`, blank; `306`–`344`, `211`; job lỗi Failed không retry; dự án sang `DONE` / `ACCEPTING` khi job chờ → Failed; 2 job tuần tự. **Chưa đo** hiệu năng.
+⚠️ Server import chết đột ngột vẫn coi là sống tới 90 giây (`SERVER_ALIVE_SECONDS`): job tạo lúc đó nằm chờ tới khi server lên lại. ⚠️ Excel dùng chung câu `306` "Google Sheet không có dữ liệu" và `Action` audit "…từ Google Sheet" (chỉ `Content` ghi "từ file Excel").
 
 ## Xem file — proxy
 

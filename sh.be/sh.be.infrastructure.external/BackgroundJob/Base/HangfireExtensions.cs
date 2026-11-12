@@ -35,6 +35,13 @@ namespace sh.be.infrastructure.external.BackgroundJob.Base
                     options.Queues = [BackgroundJobConst.QUEUE_EXPORT];
                     options.WorkerCount = backgroundJobSettings.ExportWorkerCount;
                 });
+                services.AddHangfireServer(options =>
+                {
+                    options.ServerName = $"{Environment.MachineName}:{BackgroundJobConst.QUEUE_IMPORT}";
+                    options.Queues = [BackgroundJobConst.QUEUE_IMPORT];
+                    // Import khoá theo cặp dự án + loại văn bản nên chạy song song không nhanh hơn; 1 worker để các job xếp hàng tuần tự.
+                    options.WorkerCount = BackgroundJobConst.IMPORT_WORKER_COUNT;
+                });
             }
             return services;
         }

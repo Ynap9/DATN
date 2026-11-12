@@ -8,6 +8,8 @@ using sh.be.applications.Module.Construction.Dtos.Project;
 using sh.be.applications.Module.Construction.Interfaces.Queries;
 using sh.be.applications.Module.Construction.Interfaces.Services;
 using sh.be.domain.Base;
+using sh.be.domain.Module.Auth.Repositories;
+using sh.be.domain.Module.Auth.Services;
 using sh.be.domain.Module.Construction.DocumentFields.Repositories;
 using sh.be.domain.Module.Construction.DocumentTypes.Services;
 using sh.be.domain.Module.Construction.Projects.Entities;
@@ -32,12 +34,15 @@ namespace sh.be.applications.Module.Construction.Implements
         private readonly DocumentTypeDomainService _documentTypeDomainService;
         private readonly ProjectConfigDomainService _projectConfigDomainService;
         private readonly IGoogleSheetExternal _googleSheetExternal;
+        private readonly IRoleRepository _roleRepository;
 
         public ProjectService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<ProjectService> logger, IRequestContext requestContext, TimeProvider timeProvider,
             IProjectRepository projectRepository, IDocumentFieldRepository documentFieldRepository, IProjectQuery projectQuery, ProjectDomainService projectDomainService,
-            DocumentTypeDomainService documentTypeDomainService, ProjectConfigDomainService projectConfigDomainService, IGoogleSheetExternal googleSheetExternal
+            DocumentTypeDomainService documentTypeDomainService, ProjectConfigDomainService projectConfigDomainService, IGoogleSheetExternal googleSheetExternal,
+            IRoleRepository roleRepository
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
+            _roleRepository = roleRepository;
             _projectRepository = projectRepository;
             _documentFieldRepository = documentFieldRepository;
             _projectQuery = projectQuery;
@@ -72,6 +77,96 @@ namespace sh.be.applications.Module.Construction.Implements
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
             project.DocumentTypeIds = await _projectRepository.GetDocumentTypeIdsAsync(id);
             return project;
+        }
+
+        public async Task<ViewProjectAcceptanceDto> FindAcceptance(int id)
+        {
+            _logger.LogInformation($"{nameof(FindAcceptance)}, id={id}");
+            var project = await _projectRepository.FindByIdAsync(id)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
+            var blockers = await _projectRepository.CountAcceptanceBlockersAsync(id);
+            var roleNames = await _roleRepository.GetRoleNamesByUserIdAsync(getCurrentUserId());
+
+            var acceptance = await _projectQuery.FindAcceptanceSummary(id);
+            acceptance.ProjectName = project.Name;
+            acceptance.Status = project.Status;
+            acceptance.IsReady = blockers.IsReady;
+            acceptance.CanForce = PermissionDomainService.IsAdmin(roleNames);
+            acceptance.LastTransition = await _projectQuery.FindLastAcceptanceTransition(id);
+            return acceptance;
+        }
+
+        public async Task<ViewProjectAcceptanceDto> StartAcceptance(int id, TransitionAcceptanceProjectDto dto)
+        {
+            _logger.LogInformation($"{nameof(StartAcceptance)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
+            var project = await _projectRepository.FindByIdAsync(id)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
+            var currentUserId = getCurrentUserId();
+            var isAdmin = PermissionDomainService.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            await _projectDomainService.EnsureCanAcceptAsync(id, currentUserId, isAdmin);
+            var now = GetVietnamTime();
+            var oldStatus = project.Status;
+
+            project.StartAcceptance(currentUserId, now);
+            var blockers = await _projectRepository.CountAcceptanceBlockersAsync(id);
+            var reason = ProjectDomainService.EnsureAcceptanceAllowed(blockers, dto.IsForced, isAdmin, dto.Reason, isReasonRequired: false);
+            var summary = await _projectQuery.FindAcceptanceSummary(id);
+
+            _projectRepository.Update(project);
+            AddAuditLog(AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_START, AuditLogConstants.ACTION_TYPE_UPDATE, $"Bắt đầu nghiệm thu dự án {project.Name}",
+                new { ProjectId = id, Status = oldStatus },
+                new { ProjectId = id, project.Status, IsForced = !blockers.IsReady, IsAutomatic = false, Reason = reason, Summary = summary.Total });
+            await _unitOfWork.SaveChangesAsync();
+
+            return await FindAcceptance(id);
+        }
+
+        public async Task<ViewProjectAcceptanceDto> FinishAcceptance(int id, TransitionAcceptanceProjectDto dto)
+        {
+            _logger.LogInformation($"{nameof(FinishAcceptance)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
+            var project = await _projectRepository.FindByIdAsync(id)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
+            var currentUserId = getCurrentUserId();
+            var isAdmin = PermissionDomainService.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            await _projectDomainService.EnsureCanAcceptAsync(id, currentUserId, isAdmin);
+            var now = GetVietnamTime();
+            var oldStatus = project.Status;
+
+            project.FinishAcceptance(currentUserId, now);
+            var blockers = await _projectRepository.CountAcceptanceBlockersAsync(id);
+            var reason = ProjectDomainService.EnsureAcceptanceAllowed(blockers, dto.IsForced, isAdmin, dto.Reason, isReasonRequired: true);
+            var summary = await _projectQuery.FindAcceptanceSummary(id);
+
+            _projectRepository.Update(project);
+            AddAuditLog(AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_FINISH, AuditLogConstants.ACTION_TYPE_UPDATE, $"Hoàn tất nghiệm thu dự án {project.Name}",
+                new { ProjectId = id, Status = oldStatus },
+                new { ProjectId = id, project.Status, IsForced = !blockers.IsReady, IsAutomatic = false, Reason = reason, Summary = summary.Total });
+            await _unitOfWork.SaveChangesAsync();
+
+            return await FindAcceptance(id);
+        }
+
+        public async Task<ViewProjectAcceptanceDto> ReopenAcceptance(int id, ReopenAcceptanceProjectDto dto)
+        {
+            _logger.LogInformation($"{nameof(ReopenAcceptance)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
+            var project = await _projectRepository.FindByIdAsync(id)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
+            var currentUserId = getCurrentUserId();
+            ProjectDomainService.EnsureCanReopen(PermissionDomainService.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId)));
+            var now = GetVietnamTime();
+            var oldStatus = project.Status;
+
+            project.ReopenFromAcceptance(currentUserId, now);
+            var reason = ProjectDomainService.NormalizeAcceptanceReason(dto.Reason);
+            var summary = await _projectQuery.FindAcceptanceSummary(id);
+
+            _projectRepository.Update(project);
+            AddAuditLog(AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_REOPEN, AuditLogConstants.ACTION_TYPE_UPDATE, $"Trả dự án {project.Name} về đang làm",
+                new { ProjectId = id, Status = oldStatus },
+                new { ProjectId = id, project.Status, IsForced = false, IsAutomatic = false, Reason = reason, Summary = summary.Total });
+            await _unitOfWork.SaveChangesAsync();
+
+            return await FindAcceptance(id);
         }
 
         public async Task<FindProjectByIdDto> Create(CreateProjectDto dto)

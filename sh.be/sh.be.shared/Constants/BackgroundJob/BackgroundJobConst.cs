@@ -9,6 +9,8 @@ namespace sh.be.shared.Constants.BackgroundJob
 
         public const string QUEUE_DEFAULT = "default";
         public const string QUEUE_EXPORT = "export";
+        public const string QUEUE_IMPORT = "import";
+        public const int IMPORT_WORKER_COUNT = 1;
         public const int SERVER_ALIVE_SECONDS = 90;
 
         public const int STATUS_WAITING = 0;

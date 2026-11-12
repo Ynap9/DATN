@@ -15,6 +15,7 @@ using sh.be.domain.Base.Models;
 using sh.be.domain.Module.Auth.Repositories;
 using sh.be.domain.Module.Auth.Services;
 using sh.be.domain.Module.Construction.Projects.Entities;
+using sh.be.domain.Module.Construction.Projects.Services;
 using sh.be.domain.Module.Construction.QaAssignments.Services;
 using sh.be.domain.Module.Construction.Submissions.Repositories;
 using sh.be.domain.Module.Construction.Submissions.Services;
@@ -25,6 +26,7 @@ using sh.be.shared.Constants.Core;
 using sh.be.shared.HttpRequest.BaseRequest;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
+using System.Linq.Expressions;
 using System.Text.Json;
 
 namespace sh.be.applications.Module.Construction.Implements
@@ -32,29 +34,36 @@ namespace sh.be.applications.Module.Construction.Implements
     public class SubmissionService : BaseService, ISubmissionService
     {
         private readonly ISubmissionQuery _submissionQuery;
+        private readonly IProjectQuery _projectQuery;
         private readonly ISubmissionRepository _submissionRepository;
         private readonly IRoleRepository _roleRepository;
         private readonly IUserRepository _userRepository;
         private readonly SubmissionDomainService _submissionDomainService;
         private readonly QaAssignmentDomainService _qaAssignmentDomainService;
+        private readonly ProjectDomainService _projectDomainService;
         private readonly IDataReaderExternal _dataReaderExternal;
+        private readonly IExcelReaderExternal _excelReaderExternal;
         private readonly IExcelExternal _excelExternal;
         private readonly IBackgroundJobExternal _backgroundJobExternal;
         private readonly IFileStorageExternal _fileStorageExternal;
 
         public SubmissionService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<SubmissionService> logger, IRequestContext requestContext, TimeProvider timeProvider,
-            ISubmissionQuery submissionQuery, ISubmissionRepository submissionRepository, IRoleRepository roleRepository, IUserRepository userRepository,
-            SubmissionDomainService submissionDomainService, QaAssignmentDomainService qaAssignmentDomainService, IDataReaderExternal dataReaderExternal, IExcelExternal excelExternal,
-            IBackgroundJobExternal backgroundJobExternal, IFileStorageExternal fileStorageExternal
+            ISubmissionQuery submissionQuery, IProjectQuery projectQuery, ISubmissionRepository submissionRepository, IRoleRepository roleRepository, IUserRepository userRepository,
+            SubmissionDomainService submissionDomainService, QaAssignmentDomainService qaAssignmentDomainService, ProjectDomainService projectDomainService,
+            IDataReaderExternal dataReaderExternal, IExcelReaderExternal excelReaderExternal, IExcelExternal excelExternal, IBackgroundJobExternal backgroundJobExternal,
+            IFileStorageExternal fileStorageExternal
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _submissionQuery = submissionQuery;
+            _projectQuery = projectQuery;
             _submissionRepository = submissionRepository;
             _roleRepository = roleRepository;
             _userRepository = userRepository;
             _submissionDomainService = submissionDomainService;
             _qaAssignmentDomainService = qaAssignmentDomainService;
+            _projectDomainService = projectDomainService;
             _dataReaderExternal = dataReaderExternal;
+            _excelReaderExternal = excelReaderExternal;
             _excelExternal = excelExternal;
             _backgroundJobExternal = backgroundJobExternal;
             _fileStorageExternal = fileStorageExternal;
@@ -63,156 +72,149 @@ namespace sh.be.applications.Module.Construction.Implements
         public async Task<ViewVerifyImportAppendSubmissionDto> VerifyImportAppend(ImportSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(VerifyImportAppend)}, dto={JsonSerializer.Serialize(dto)}");
-            var source = await LoadAppendSheetAsync(dto);
-            var plan = await BuildAppendPlanAsync(dto, source, getCurrentUserId(), GetVietnamTime());
-
-            return new ViewVerifyImportAppendSubmissionDto
-            {
-                TotalDataFields = plan.NonEmptyCellCount,
-                TotalAppendRowCount = plan.NewSubmissions.Count,
-                TotalFieldCount = plan.MappedFieldCount,
-                TotalSubmission = plan.ExistingSubmissionCount,
-                TotalSubmissionGoogleSheet = plan.DistinctSheetKeyCount,
-            };
+            return await VerifyAppendAsync(dto, ReadProjectGoogleSheetAsync);
         }
 
         public async Task<ViewImportSubmissionResultDto> ImportAppend(ImportSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(ImportAppend)}, dto={JsonSerializer.Serialize(dto)}");
-            var source = await LoadAppendSheetAsync(dto);
-            var currentUserId = getCurrentUserId();
-            var now = GetVietnamTime();
-
-            var plan = await ImportInTransactionAsync(dto, nameof(ImportAppend),
-                () => BuildAppendPlanAsync(dto, source, currentUserId, now),
-                async appendPlan =>
-                {
-                    if (!appendPlan.HasChanges)
-                    {
-                        return;
-                    }
-
-                    await _submissionRepository.BulkInsertSubmissionsAsync(appendPlan.NewSubmissions.Select(draft => draft.Submission).ToList());
-                    await _submissionRepository.BulkInsertDatasAsync(appendPlan.NewSubmissions.SelectMany(draft => draft.AssignDatasToSubmission()).ToList());
-                    AddAuditLog(AuditLogConstants.ACTION_SUBMISSION_IMPORT_APPEND, AuditLogConstants.ACTION_TYPE_CREATE,
-                        $"Import thêm mới {appendPlan.NewSubmissions.Count} hồ sơ, {appendPlan.NewDataCount} dữ liệu vào dự án {source.Project.Name}, loại văn bản Id = {dto.DocumentTypeId}",
-                        null, new
-                        {
-                            dto.ProjectId,
-                            dto.DocumentTypeId,
-                            SheetUrl = source.Project.UrlGoogleSheetSync,
-                            SheetName = source.Project.GoogleSheetName,
-                            NewSubmissionCount = appendPlan.NewSubmissions.Count,
-                            appendPlan.NewDataCount,
-                            appendPlan.MappedFieldCount,
-                        });
-                });
-
-            return new ViewImportSubmissionResultDto
-            {
-                Message = $"Import hoàn tất. Hồ sơ thêm mới: {plan.NewSubmissions.Count}, "
-                    + $"Dữ liệu thêm mới: {plan.NewDataCount}, Trường đã map: {plan.MappedFieldCount}, Ô dữ liệu có giá trị: {plan.NonEmptyCellCount}",
-                TotalDataFields = plan.NonEmptyCellCount,
-            };
+            var source = await LoadAppendSheetAsync(dto, ReadProjectGoogleSheetAsync);
+            return await ImportAppendAsync(dto, source, getCurrentUserId(),
+                new ImportAuditSource(String.Empty, source.Project.UrlGoogleSheetSync, source.Project.GoogleSheetName));
         }
 
         public async Task<ViewVerifyImportBlankSubmissionDto> VerifyImportBlank(ImportSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(VerifyImportBlank)}, dto={JsonSerializer.Serialize(dto)}");
-            var source = await LoadProjectSheetAsync(dto, null);
-            var plan = await BuildBlankPlanAsync(dto, source, getCurrentUserId(), GetVietnamTime());
-
-            return new ViewVerifyImportBlankSubmissionDto
-            {
-                TotalBlankCount = plan.ChangedDataCount,
-                TotalFieldCount = plan.MappedFieldCount,
-            };
+            return await VerifyBlankAsync(dto, ReadProjectGoogleSheetAsync);
         }
 
         public async Task<ViewImportSubmissionResultDto> ImportBlank(ImportSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(ImportBlank)}, dto={JsonSerializer.Serialize(dto)}");
-            var source = await LoadProjectSheetAsync(dto, null);
-            var currentUserId = getCurrentUserId();
-            var now = GetVietnamTime();
-
-            var plan = await ImportInTransactionAsync(dto, nameof(ImportBlank),
-                () => BuildBlankPlanAsync(dto, source, currentUserId, now),
-                async blankPlan =>
-                {
-                    if (!blankPlan.HasChanges)
-                    {
-                        return;
-                    }
-
-                    await _submissionRepository.BulkUpdateDatasAsync(blankPlan.DatasToUpdate.ToList());
-                    await _submissionRepository.BulkInsertDatasAsync(blankPlan.DatasToInsert.ToList());
-                    AddAuditLog(AuditLogConstants.ACTION_SUBMISSION_IMPORT_BLANK, AuditLogConstants.ACTION_TYPE_UPDATE,
-                        $"Bổ sung {blankPlan.DatasToUpdate.Count} ô trống, thêm {blankPlan.DatasToInsert.Count} dữ liệu vào dự án {source.Project.Name}, loại văn bản Id = {dto.DocumentTypeId}",
-                        null, new
-                        {
-                            dto.ProjectId,
-                            dto.DocumentTypeId,
-                            SheetUrl = source.Project.UrlGoogleSheetSync,
-                            SheetName = source.Project.GoogleSheetName,
-                            UpdatedDataCount = blankPlan.DatasToUpdate.Count,
-                            NewDataCount = blankPlan.DatasToInsert.Count,
-                            blankPlan.MappedFieldCount,
-                        });
-                });
-
-            return new ViewImportSubmissionResultDto
-            {
-                Message = $"Import bổ sung hoàn tất. Ô trống đã điền: {plan.DatasToUpdate.Count}, "
-                    + $"Dữ liệu thêm mới: {plan.DatasToInsert.Count}",
-                TotalDataFields = plan.ChangedDataCount,
-            };
+            var source = await LoadProjectSheetAsync(dto, null, ReadProjectGoogleSheetAsync);
+            return await ImportBlankAsync(dto, source, getCurrentUserId(),
+                new ImportAuditSource(String.Empty, source.Project.UrlGoogleSheetSync, source.Project.GoogleSheetName));
         }
 
         public async Task<ViewVerifyImportOverwriteSubmissionDto> VerifyImportOverwrite(ImportOverwriteSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(VerifyImportOverwrite)}, dto={JsonSerializer.Serialize(dto)}");
-            var source = await LoadOverwriteSheetAsync(dto);
-            var plan = await BuildOverwritePlanAsync(dto, source, getCurrentUserId(), GetVietnamTime());
-
-            return new ViewVerifyImportOverwriteSubmissionDto
-            {
-                TotalOverWriteCount = plan.ChangedDataCount,
-                TotalSkippedChecked = plan.SkippedCheckedCount,
-            };
+            return await VerifyOverwriteAsync(dto, _dataReaderExternal.ReadTableAsync(dto.Url, dto.SheetName));
         }
 
         public async Task<ViewImportSubmissionResultDto> ImportOverwrite(ImportOverwriteSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(ImportOverwrite)}, dto={JsonSerializer.Serialize(dto)}");
-            var source = await LoadOverwriteSheetAsync(dto);
-            var currentUserId = getCurrentUserId();
-            var now = GetVietnamTime();
+            var source = await LoadOverwriteSheetAsync(dto, _dataReaderExternal.ReadTableAsync(dto.Url, dto.SheetName));
+            return await ImportOverwriteAsync(dto, source, getCurrentUserId(), new ImportAuditSource($" từ sheet {dto.SheetName}", null, null));
+        }
 
-            var plan = await ImportInTransactionAsync(dto, nameof(ImportOverwrite),
-                () => BuildOverwritePlanAsync(dto, source, currentUserId, now),
-                async overwritePlan =>
-                {
-                    if (!overwritePlan.HasChanges)
-                    {
-                        return;
-                    }
-
-                    await _submissionRepository.BulkUpdateDatasAsync(overwritePlan.DatasToUpdate.ToList());
-                    await _submissionRepository.BulkInsertDatasAsync(overwritePlan.DatasToInsert.ToList());
-                    AddAuditLog(AuditLogConstants.ACTION_SUBMISSION_IMPORT_OVERWRITE, AuditLogConstants.ACTION_TYPE_UPDATE,
-                        $"Ghi đè {overwritePlan.DatasToUpdate.Count}, thêm {overwritePlan.DatasToInsert.Count} dữ liệu trường Id = {dto.DocumentFieldId} của dự án {source.Project.Name}, "
-                            + $"loại văn bản Id = {dto.DocumentTypeId} từ sheet {dto.SheetName}",
-                        overwritePlan.Changes.Select(change => new { change.SubmissionId, change.FileName, change.DocumentFieldId, Data = change.OldData }),
-                        overwritePlan.Changes.Select(change => new { change.SubmissionId, change.FileName, change.DocumentFieldId, Data = change.NewData }));
-                });
-
-            return new ViewImportSubmissionResultDto
+        public async Task<UploadImportExcelResultDto> UploadImportExcel(UploadImportExcelDto dto)
+        {
+            _logger.LogInformation($"{nameof(UploadImportExcel)}, fileName={dto.File.FileName}, length={dto.File.Length}");
+            SubmissionImportDomainService.EnsureValidExcelFile(dto.File.FileName, dto.File.Length);
+            var fileKey = SubmissionImportDomainService.BuildExcelFileKey(getCurrentUserId(), GetVietnamTime(), dto.File.FileName);
+            await using (var content = dto.File.OpenReadStream())
             {
-                Message = $"Ghi đè hoàn tất. Đã ghi đè: {plan.DatasToUpdate.Count}, "
-                    + $"Thêm mới: {plan.DatasToInsert.Count}, Bỏ qua do đã kiểm tra: {plan.SkippedCheckedCount}",
-                TotalDataFields = plan.ChangedDataCount,
+                await _fileStorageExternal.UploadPrivateAsync(content, fileKey, SubmissionConst.IMPORT_EXCEL_CONTENT_TYPE);
+            }
+
+            var sheets = await _excelReaderExternal.GetSheetHeadersAsync(fileKey);
+            SubmissionImportDomainService.EnsureAnySheetHasHeader(sheets.Select(sheet => sheet.Headers).ToList());
+            return new UploadImportExcelResultDto
+            {
+                FileKey = fileKey,
+                FileName = SubmissionImportDomainService.GetExcelFileName(fileKey),
+                Sheets = sheets,
             };
+        }
+
+        public async Task<ViewVerifyImportAppendSubmissionDto> VerifyImportExcelAppend(ImportExcelSubmissionDto dto)
+        {
+            _logger.LogInformation($"{nameof(VerifyImportExcelAppend)}, dto={JsonSerializer.Serialize(dto)}");
+            var currentUserId = getCurrentUserId();
+            return await VerifyAppendAsync(dto, _ => ReadImportExcelTableAsync(dto, currentUserId));
+        }
+
+        public async Task<ViewVerifyImportBlankSubmissionDto> VerifyImportExcelBlank(ImportExcelSubmissionDto dto)
+        {
+            _logger.LogInformation($"{nameof(VerifyImportExcelBlank)}, dto={JsonSerializer.Serialize(dto)}");
+            var currentUserId = getCurrentUserId();
+            return await VerifyBlankAsync(dto, _ => ReadImportExcelTableAsync(dto, currentUserId));
+        }
+
+        public async Task<ViewVerifyImportOverwriteSubmissionDto> VerifyImportExcelOverwrite(ImportExcelOverwriteSubmissionDto dto)
+        {
+            _logger.LogInformation($"{nameof(VerifyImportExcelOverwrite)}, dto={JsonSerializer.Serialize(dto)}");
+            return await VerifyOverwriteAsync(dto, ReadImportExcelTableAsync(dto, getCurrentUserId()));
+        }
+
+        public async Task<ViewSubmissionImportJobDto> CreateImportExcelAppendJob(ImportExcelSubmissionDto dto)
+        {
+            _logger.LogInformation($"{nameof(CreateImportExcelAppendJob)}, dto={JsonSerializer.Serialize(dto)}");
+            var currentUserId = getCurrentUserId();
+            return await CreateImportExcelJobAsync(dto, currentUserId, job => job.ExecuteAppendAsync(dto, currentUserId));
+        }
+
+        public async Task<ViewSubmissionImportJobDto> CreateImportExcelBlankJob(ImportExcelSubmissionDto dto)
+        {
+            _logger.LogInformation($"{nameof(CreateImportExcelBlankJob)}, dto={JsonSerializer.Serialize(dto)}");
+            var currentUserId = getCurrentUserId();
+            return await CreateImportExcelJobAsync(dto, currentUserId, job => job.ExecuteBlankAsync(dto, currentUserId));
+        }
+
+        public async Task<ViewSubmissionImportJobDto> CreateImportExcelOverwriteJob(ImportExcelOverwriteSubmissionDto dto)
+        {
+            _logger.LogInformation($"{nameof(CreateImportExcelOverwriteJob)}, dto={JsonSerializer.Serialize(dto)}");
+            var currentUserId = getCurrentUserId();
+            return await CreateImportExcelJobAsync(dto, currentUserId, job => job.ExecuteOverwriteAsync(dto, currentUserId));
+        }
+
+        public Task<ViewSubmissionImportJobDto> FindImportJob(string jobId)
+        {
+            _logger.LogInformation($"{nameof(FindImportJob)}, jobId={jobId}");
+            var job = _backgroundJobExternal.FindJob(jobId, [BackgroundJobConst.PARAMETER_JOB_TYPE, BackgroundJobConst.PARAMETER_USER_ID,
+                BackgroundJobConst.PARAMETER_FILE_NAME]);
+            if (job == null
+                || job.Parameters[BackgroundJobConst.PARAMETER_JOB_TYPE] != SubmissionConst.IMPORT_JOB_TYPE
+                || job.Parameters[BackgroundJobConst.PARAMETER_USER_ID] != getCurrentUserId())
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorImportJobNotFound);
+            }
+
+            return Task.FromResult(new ViewSubmissionImportJobDto
+            {
+                JobId = job.JobId,
+                Status = job.Status,
+                FileName = job.Parameters[BackgroundJobConst.PARAMETER_FILE_NAME]!,
+                ResultMessage = job.Status == BackgroundJobConst.STATUS_SUCCEEDED ? job.Result : null,
+                ErrorMessage = job.Status == BackgroundJobConst.STATUS_FAILED ? job.ErrorMessage ?? SubmissionConst.IMPORT_FAILED_MESSAGE : null,
+            });
+        }
+
+        public async Task<string> ImportExcelAppendFromJob(ImportExcelSubmissionDto dto, string userId)
+        {
+            _logger.LogInformation($"{nameof(ImportExcelAppendFromJob)}, userId={userId}, dto={JsonSerializer.Serialize(dto)}");
+            var source = await LoadAppendSheetAsync(dto, _ => ReadImportExcelTableAsync(dto, userId));
+            var result = await ImportAppendAsync(dto, source, userId, ToExcelAuditSource(dto));
+            return result.Message;
+        }
+
+        public async Task<string> ImportExcelBlankFromJob(ImportExcelSubmissionDto dto, string userId)
+        {
+            _logger.LogInformation($"{nameof(ImportExcelBlankFromJob)}, userId={userId}, dto={JsonSerializer.Serialize(dto)}");
+            var source = await LoadProjectSheetAsync(dto, null, _ => ReadImportExcelTableAsync(dto, userId));
+            var result = await ImportBlankAsync(dto, source, userId, ToExcelAuditSource(dto));
+            return result.Message;
+        }
+
+        public async Task<string> ImportExcelOverwriteFromJob(ImportExcelOverwriteSubmissionDto dto, string userId)
+        {
+            _logger.LogInformation($"{nameof(ImportExcelOverwriteFromJob)}, userId={userId}, dto={JsonSerializer.Serialize(dto)}");
+            var source = await LoadOverwriteSheetAsync(dto, ReadImportExcelTableAsync(dto, userId));
+            var result = await ImportOverwriteAsync(dto, source, userId, ToExcelAuditSource(dto));
+            return result.Message;
         }
 
         public async Task<BaseResponsePagingDto<GetListSubmissionDto>> FindPaging(FindPagingSubmissionDto dto)
@@ -385,6 +387,17 @@ namespace sh.be.applications.Module.Construction.Implements
                     AddAuditLog(AuditLogConstants.ACTION_QA_TICKET_CONCLUDE, AuditLogConstants.ACTION_TYPE_UPDATE,
                         $"Phiếu #{qaTicket.Id} FULL ĐẠT ({qaTicket.DocumentCount} văn bản) của dự án {project.Name}",
                         new { qaTicket.Id, Status = QaAssignmentConst.TICKET_STATUS_ACTIVE }, new { qaTicket.Id, qaTicket.Status, qaTicket.ConcludedDate });
+                    await _unitOfWork.SaveChangesAsync();
+                }
+
+                // Văn bản cuối cùng QA đạt thì dự án tự vào nghiệm thu; chỉ tự chuyển ở đây, không tự sang Xong
+                var oldProjectStatus = project.Status;
+                if (qaLog.NewStatusQa == SubmissionConst.QA_PASSED && await _projectDomainService.TryStartAcceptanceAsync(project, currentUserId, now))
+                {
+                    var summary = await _projectQuery.FindAcceptanceSummary(project.Id);
+                    AddAuditLog(AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_START, AuditLogConstants.ACTION_TYPE_UPDATE, $"Tự động bắt đầu nghiệm thu dự án {project.Name}",
+                        new { ProjectId = project.Id, Status = oldProjectStatus },
+                        new { ProjectId = project.Id, project.Status, IsForced = false, IsAutomatic = true, Reason = (string?)null, Summary = summary.Total });
                     await _unitOfWork.SaveChangesAsync();
                 }
 
@@ -614,18 +627,192 @@ namespace sh.be.applications.Module.Construction.Implements
             }
         }
 
-        private async Task<ProjectSheetSource> LoadAppendSheetAsync(ImportSubmissionDto dto)
+        private async Task<ViewVerifyImportAppendSubmissionDto> VerifyAppendAsync(ImportSubmissionDto dto, Func<Project, Task<SheetTable>> readTableAsync)
         {
-            var source = await LoadProjectSheetAsync(dto, dto.LinkColumnImport);
+            var source = await LoadAppendSheetAsync(dto, readTableAsync);
+            var plan = await BuildAppendPlanAsync(dto, source, getCurrentUserId(), GetVietnamTime());
+
+            return new ViewVerifyImportAppendSubmissionDto
+            {
+                TotalDataFields = plan.NonEmptyCellCount,
+                TotalAppendRowCount = plan.NewSubmissions.Count,
+                TotalFieldCount = plan.MappedFieldCount,
+                TotalSubmission = plan.ExistingSubmissionCount,
+                TotalSubmissionGoogleSheet = plan.DistinctSheetKeyCount,
+            };
+        }
+
+        private async Task<ViewVerifyImportBlankSubmissionDto> VerifyBlankAsync(ImportSubmissionDto dto, Func<Project, Task<SheetTable>> readTableAsync)
+        {
+            var source = await LoadProjectSheetAsync(dto, null, readTableAsync);
+            var plan = await BuildBlankPlanAsync(dto, source, getCurrentUserId(), GetVietnamTime());
+
+            return new ViewVerifyImportBlankSubmissionDto
+            {
+                TotalBlankCount = plan.ChangedDataCount,
+                TotalFieldCount = plan.MappedFieldCount,
+            };
+        }
+
+        private async Task<ViewVerifyImportOverwriteSubmissionDto> VerifyOverwriteAsync<TDto>(TDto dto, Task<SheetTable> tableTask)
+            where TDto : ImportSubmissionDto, IImportOverwriteOptions
+        {
+            var source = await LoadOverwriteSheetAsync(dto, tableTask);
+            var plan = await BuildOverwritePlanAsync(dto, source, getCurrentUserId(), GetVietnamTime());
+
+            return new ViewVerifyImportOverwriteSubmissionDto
+            {
+                TotalOverWriteCount = plan.ChangedDataCount,
+                TotalSkippedChecked = plan.SkippedCheckedCount,
+            };
+        }
+
+        private async Task<ViewImportSubmissionResultDto> ImportAppendAsync(ImportSubmissionDto dto, ProjectSheetSource source, string userId, ImportAuditSource auditSource)
+        {
+            var now = GetVietnamTime();
+            var plan = await ImportInTransactionAsync(dto, nameof(ImportAppendAsync),
+                () => BuildAppendPlanAsync(dto, source, userId, now),
+                async appendPlan =>
+                {
+                    if (!appendPlan.HasChanges)
+                    {
+                        return;
+                    }
+
+                    await _submissionRepository.BulkInsertSubmissionsAsync(appendPlan.NewSubmissions.Select(draft => draft.Submission).ToList());
+                    await _submissionRepository.BulkInsertDatasAsync(appendPlan.NewSubmissions.SelectMany(draft => draft.AssignDatasToSubmission()).ToList());
+                    AddAuditLog(AuditLogConstants.ACTION_SUBMISSION_IMPORT_APPEND, AuditLogConstants.ACTION_TYPE_CREATE,
+                        $"Import thêm mới {appendPlan.NewSubmissions.Count} hồ sơ, {appendPlan.NewDataCount} dữ liệu vào dự án {source.Project.Name}, loại văn bản Id = {dto.DocumentTypeId}"
+                            + auditSource.Description,
+                        null, new
+                        {
+                            dto.ProjectId,
+                            dto.DocumentTypeId,
+                            auditSource.SheetUrl,
+                            auditSource.SheetName,
+                            NewSubmissionCount = appendPlan.NewSubmissions.Count,
+                            appendPlan.NewDataCount,
+                            appendPlan.MappedFieldCount,
+                        }, userId);
+                });
+
+            return new ViewImportSubmissionResultDto
+            {
+                Message = $"Import hoàn tất. Hồ sơ thêm mới: {plan.NewSubmissions.Count}, "
+                    + $"Dữ liệu thêm mới: {plan.NewDataCount}, Trường đã map: {plan.MappedFieldCount}, Ô dữ liệu có giá trị: {plan.NonEmptyCellCount}",
+                TotalDataFields = plan.NonEmptyCellCount,
+            };
+        }
+
+        private async Task<ViewImportSubmissionResultDto> ImportBlankAsync(ImportSubmissionDto dto, ProjectSheetSource source, string userId, ImportAuditSource auditSource)
+        {
+            var now = GetVietnamTime();
+            var plan = await ImportInTransactionAsync(dto, nameof(ImportBlankAsync),
+                () => BuildBlankPlanAsync(dto, source, userId, now),
+                async blankPlan =>
+                {
+                    if (!blankPlan.HasChanges)
+                    {
+                        return;
+                    }
+
+                    await _submissionRepository.BulkUpdateDatasAsync(blankPlan.DatasToUpdate.ToList());
+                    await _submissionRepository.BulkInsertDatasAsync(blankPlan.DatasToInsert.ToList());
+                    AddAuditLog(AuditLogConstants.ACTION_SUBMISSION_IMPORT_BLANK, AuditLogConstants.ACTION_TYPE_UPDATE,
+                        $"Bổ sung {blankPlan.DatasToUpdate.Count} ô trống, thêm {blankPlan.DatasToInsert.Count} dữ liệu vào dự án {source.Project.Name}, loại văn bản Id = {dto.DocumentTypeId}"
+                            + auditSource.Description,
+                        null, new
+                        {
+                            dto.ProjectId,
+                            dto.DocumentTypeId,
+                            auditSource.SheetUrl,
+                            auditSource.SheetName,
+                            UpdatedDataCount = blankPlan.DatasToUpdate.Count,
+                            NewDataCount = blankPlan.DatasToInsert.Count,
+                            blankPlan.MappedFieldCount,
+                        }, userId);
+                });
+
+            return new ViewImportSubmissionResultDto
+            {
+                Message = $"Import bổ sung hoàn tất. Ô trống đã điền: {plan.DatasToUpdate.Count}, "
+                    + $"Dữ liệu thêm mới: {plan.DatasToInsert.Count}",
+                TotalDataFields = plan.ChangedDataCount,
+            };
+        }
+
+        private async Task<ViewImportSubmissionResultDto> ImportOverwriteAsync<TDto>(TDto dto, OverwriteSheetSource source, string userId, ImportAuditSource auditSource)
+            where TDto : ImportSubmissionDto, IImportOverwriteOptions
+        {
+            var now = GetVietnamTime();
+            var plan = await ImportInTransactionAsync(dto, nameof(ImportOverwriteAsync),
+                () => BuildOverwritePlanAsync(dto, source, userId, now),
+                async overwritePlan =>
+                {
+                    if (!overwritePlan.HasChanges)
+                    {
+                        return;
+                    }
+
+                    await _submissionRepository.BulkUpdateDatasAsync(overwritePlan.DatasToUpdate.ToList());
+                    await _submissionRepository.BulkInsertDatasAsync(overwritePlan.DatasToInsert.ToList());
+                    AddAuditLog(AuditLogConstants.ACTION_SUBMISSION_IMPORT_OVERWRITE, AuditLogConstants.ACTION_TYPE_UPDATE,
+                        $"Ghi đè {overwritePlan.DatasToUpdate.Count}, thêm {overwritePlan.DatasToInsert.Count} dữ liệu trường Id = {dto.DocumentFieldId} của dự án {source.Project.Name}, "
+                            + $"loại văn bản Id = {dto.DocumentTypeId}{auditSource.Description}",
+                        overwritePlan.Changes.Select(change => new { change.SubmissionId, change.FileName, change.DocumentFieldId, Data = change.OldData }),
+                        overwritePlan.Changes.Select(change => new { change.SubmissionId, change.FileName, change.DocumentFieldId, Data = change.NewData }),
+                        userId);
+                });
+
+            return new ViewImportSubmissionResultDto
+            {
+                Message = $"Ghi đè hoàn tất. Đã ghi đè: {plan.DatasToUpdate.Count}, "
+                    + $"Thêm mới: {plan.DatasToInsert.Count}, Bỏ qua do đã kiểm tra: {plan.SkippedCheckedCount}",
+                TotalDataFields = plan.ChangedDataCount,
+            };
+        }
+
+        private async Task<ViewSubmissionImportJobDto> CreateImportExcelJobAsync(ImportExcelSubmissionDto dto, string currentUserId,
+            Expression<Func<SubmissionImportJob, Task>> job)
+        {
+            // Kiểm sớm để báo lỗi ngay khi bấm import; job vẫn kiểm lại toàn bộ vì dự án có thể đổi trạng thái trong lúc job chờ.
+            await _submissionDomainService.EnsureImportableProjectAsync(dto.ProjectId);
+            await _submissionDomainService.EnsureDocumentTypeInProjectAsync(dto.ProjectId, dto.DocumentTypeId);
+            SubmissionImportDomainService.EnsureExcelFileOwnedBy(dto.FileKey, currentUserId);
+            if (!_backgroundJobExternal.HasServerForQueue(BackgroundJobConst.QUEUE_IMPORT))
+            {
+                throw new UserFriendlyException(ErrorCodes.CoreErrorBackgroundJobUnavailable);
+            }
+
+            var fileName = SubmissionImportDomainService.GetExcelFileName(dto.FileKey);
+            var jobId = _backgroundJobExternal.Enqueue(job, BackgroundJobConst.QUEUE_IMPORT,
+                new Dictionary<string, string>
+                {
+                    [BackgroundJobConst.PARAMETER_JOB_TYPE] = SubmissionConst.IMPORT_JOB_TYPE,
+                    [BackgroundJobConst.PARAMETER_USER_ID] = currentUserId,
+                    [BackgroundJobConst.PARAMETER_FILE_NAME] = fileName,
+                });
+
+            return new ViewSubmissionImportJobDto
+            {
+                JobId = jobId,
+                Status = BackgroundJobConst.STATUS_WAITING,
+                FileName = fileName,
+            };
+        }
+
+        private async Task<ProjectSheetSource> LoadAppendSheetAsync(ImportSubmissionDto dto, Func<Project, Task<SheetTable>> readTableAsync)
+        {
+            var source = await LoadProjectSheetAsync(dto, dto.LinkColumnImport, readTableAsync);
             SubmissionImportDomainService.EnsureFileUrlsPresent(source.Table, source.Columns);
             return source;
         }
 
-        private async Task<ProjectSheetSource> LoadProjectSheetAsync(ImportSubmissionDto dto, string? fileUrlColumn)
+        private async Task<ProjectSheetSource> LoadProjectSheetAsync(ImportSubmissionDto dto, string? fileUrlColumn, Func<Project, Task<SheetTable>> readTableAsync)
         {
             var project = await _submissionDomainService.EnsureImportableProjectAsync(dto.ProjectId);
             await _submissionDomainService.EnsureDocumentTypeInProjectAsync(dto.ProjectId, dto.DocumentTypeId);
-            var tableTask = _dataReaderExternal.ReadTableAsync(project.UrlGoogleSheetSync, project.GoogleSheetName);
+            var tableTask = readTableAsync(project);
             var mappings = await _submissionDomainService.GetImportMappingsAsync(dto.ProjectId, dto.DocumentTypeId);
             var table = await tableTask;
 
@@ -634,9 +821,9 @@ namespace sh.be.applications.Module.Construction.Implements
             return new ProjectSheetSource(project, table, columns, mappedColumns);
         }
 
-        private async Task<OverwriteSheetSource> LoadOverwriteSheetAsync(ImportOverwriteSubmissionDto dto)
+        private async Task<OverwriteSheetSource> LoadOverwriteSheetAsync<TDto>(TDto dto, Task<SheetTable> tableTask)
+            where TDto : ImportSubmissionDto, IImportOverwriteOptions
         {
-            var tableTask = _dataReaderExternal.ReadTableAsync(dto.Url, dto.SheetName);
             var project = await _submissionDomainService.EnsureImportableProjectAsync(dto.ProjectId);
             await _submissionDomainService.EnsureDocumentTypeInProjectAsync(dto.ProjectId, dto.DocumentTypeId);
             var mapping = await _submissionDomainService.EnsureDocumentFieldInProjectAsync(dto.ProjectId, dto.DocumentTypeId, dto.DocumentFieldId);
@@ -645,6 +832,25 @@ namespace sh.be.applications.Module.Construction.Implements
             var columns = ResolveSheetColumns(table, dto, null);
             var columnImportIndex = SubmissionImportDomainService.ResolveSingleColumn(table.Headers, dto.ColumnImport);
             return new OverwriteSheetSource(project, table, columns, mapping, columnImportIndex);
+        }
+
+        private Task<SheetTable> ReadProjectGoogleSheetAsync(Project project)
+        {
+            return _dataReaderExternal.ReadTableAsync(project.UrlGoogleSheetSync, project.GoogleSheetName);
+        }
+
+        private static ImportAuditSource ToExcelAuditSource(ImportExcelSubmissionDto dto)
+        {
+            return new ImportAuditSource($" từ file Excel {SubmissionImportDomainService.GetExcelFileName(dto.FileKey)}, sheet {dto.SheetName}", null, dto.SheetName);
+        }
+
+        // Nhận userId thay vì getCurrentUserId() để job import chạy nền (không có HttpContext) dùng chung đường kiểm này.
+        private async Task<SheetTable> ReadImportExcelTableAsync(ImportExcelSubmissionDto dto, string userId)
+        {
+            SubmissionImportDomainService.EnsureExcelFileOwnedBy(dto.FileKey, userId);
+            var table = await _excelReaderExternal.ReadTableAsync(dto.FileKey, dto.SheetName);
+            SubmissionImportDomainService.EnsureExcelRowLimit(table);
+            return table;
         }
 
         private static SubmissionImportColumns ResolveSheetColumns(SheetTable table, ImportSubmissionDto dto, string? fileUrlColumn)
@@ -671,8 +877,8 @@ namespace sh.be.applications.Module.Construction.Implements
                 dto.ProjectId, dto.DocumentTypeId, importedBy, importedDate);
         }
 
-        private async Task<OverwriteImportPlan> BuildOverwritePlanAsync(ImportOverwriteSubmissionDto dto, OverwriteSheetSource source,
-            string? importedBy, DateTime importedDate)
+        private async Task<OverwriteImportPlan> BuildOverwritePlanAsync<TDto>(TDto dto, OverwriteSheetSource source, string? importedBy, DateTime importedDate)
+            where TDto : ImportSubmissionDto, IImportOverwriteOptions
         {
             var snapshots = await _submissionRepository.GetSnapshotsAsync(dto.ProjectId, dto.DocumentTypeId);
             var existingDatas = await _submissionRepository.GetDatasAsync(dto.ProjectId, dto.DocumentTypeId, [dto.DocumentFieldId]);
@@ -721,5 +927,7 @@ namespace sh.be.applications.Module.Construction.Implements
 
         private record OverwriteSheetSource(Project Project, SheetTable Table, SubmissionImportColumns Columns, ProjectDocumentTypeDocumentField Mapping,
             int ColumnImportIndex);
+
+        private record ImportAuditSource(string Description, string? SheetUrl, string? SheetName);
     }
 }
