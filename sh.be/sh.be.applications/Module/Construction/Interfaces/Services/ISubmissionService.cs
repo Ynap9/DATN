@@ -12,6 +12,17 @@ namespace sh.be.applications.Module.Construction.Interfaces.Services
         Task<ViewImportSubmissionResultDto> ImportBlank(ImportSubmissionDto dto);
         Task<ViewVerifyImportOverwriteSubmissionDto> VerifyImportOverwrite(ImportOverwriteSubmissionDto dto);
         Task<ViewImportSubmissionResultDto> ImportOverwrite(ImportOverwriteSubmissionDto dto);
+        Task<UploadImportExcelResultDto> UploadImportExcel(UploadImportExcelDto dto);
+        Task<ViewVerifyImportAppendSubmissionDto> VerifyImportExcelAppend(ImportExcelSubmissionDto dto);
+        Task<ViewVerifyImportBlankSubmissionDto> VerifyImportExcelBlank(ImportExcelSubmissionDto dto);
+        Task<ViewVerifyImportOverwriteSubmissionDto> VerifyImportExcelOverwrite(ImportExcelOverwriteSubmissionDto dto);
+        Task<ViewSubmissionImportJobDto> CreateImportExcelAppendJob(ImportExcelSubmissionDto dto);
+        Task<ViewSubmissionImportJobDto> CreateImportExcelBlankJob(ImportExcelSubmissionDto dto);
+        Task<ViewSubmissionImportJobDto> CreateImportExcelOverwriteJob(ImportExcelOverwriteSubmissionDto dto);
+        Task<ViewSubmissionImportJobDto> FindImportJob(string jobId);
+        Task<string> ImportExcelAppendFromJob(ImportExcelSubmissionDto dto, string userId);
+        Task<string> ImportExcelBlankFromJob(ImportExcelSubmissionDto dto, string userId);
+        Task<string> ImportExcelOverwriteFromJob(ImportExcelOverwriteSubmissionDto dto, string userId);
         Task<BaseResponsePagingDto<GetListSubmissionDto>> FindPaging(FindPagingSubmissionDto dto);
         Task<ViewSubmissionDetailDto> FindById(int id, FindSubmissionDetailDto dto);
         Task<ViewSubmissionDetailDto> FindNext(int id, SubmissionFilterDto dto);

@@ -8,6 +8,7 @@ using sh.be.api.Base;
 using sh.be.applications.Module.Construction.Dtos.Submission;
 using sh.be.applications.Module.Construction.Interfaces.Services;
 using sh.be.shared.Constants.Auth;
+using sh.be.shared.Constants.Construction;
 using sh.be.shared.Constants.Versioning;
 using sh.be.shared.HttpRequest;
 using System.Net.Mime;
@@ -114,6 +115,128 @@ namespace sh.be.api.Controllers.Module.Construction
             try
             {
                 var data = await _submissionService.ImportOverwrite(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPost("import/excel/upload")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_IMPORT)]
+        [RequestSizeLimit(SubmissionConst.IMPORT_EXCEL_MAX_REQUEST_BYTES)]
+        [RequestFormLimits(MultipartBodyLengthLimit = SubmissionConst.IMPORT_EXCEL_MAX_REQUEST_BYTES)]
+        public async Task<ApiResponse> UploadImportExcel([FromForm] UploadImportExcelDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.UploadImportExcel(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPost("import/excel/append/verify")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_IMPORT)]
+        public async Task<ApiResponse> VerifyImportExcelAppend([FromBody] ImportExcelSubmissionDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.VerifyImportExcelAppend(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPost("import/excel/blank/verify")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_IMPORT)]
+        public async Task<ApiResponse> VerifyImportExcelBlank([FromBody] ImportExcelSubmissionDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.VerifyImportExcelBlank(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPost("import/excel/overwrite/verify")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_IMPORT)]
+        public async Task<ApiResponse> VerifyImportExcelOverwrite([FromBody] ImportExcelOverwriteSubmissionDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.VerifyImportExcelOverwrite(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPost("import/excel/append")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_IMPORT)]
+        public async Task<ApiResponse> CreateImportExcelAppendJob([FromBody] ImportExcelSubmissionDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.CreateImportExcelAppendJob(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPost("import/excel/blank")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_IMPORT)]
+        public async Task<ApiResponse> CreateImportExcelBlankJob([FromBody] ImportExcelSubmissionDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.CreateImportExcelBlankJob(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPost("import/excel/overwrite")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_IMPORT)]
+        public async Task<ApiResponse> CreateImportExcelOverwriteJob([FromBody] ImportExcelOverwriteSubmissionDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.CreateImportExcelOverwriteJob(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("import/excel/job/{jobId}")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_IMPORT)]
+        public async Task<ApiResponse> FindImportJob([FromRoute] string jobId)
+        {
+            try
+            {
+                var data = await _submissionService.FindImportJob(jobId);
                 return new(data);
             }
             catch (Exception ex)

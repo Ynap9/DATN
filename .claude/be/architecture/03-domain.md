@@ -79,7 +79,7 @@ gọi chúng bên trong method của aggregate gốc hoặc seeder; đừng gọ
 **Một tên duy nhất** (2026-11-10): `Services/` chỉ chứa `<Aggregate>DomainService` — không `*Policy`, `Models/`, `Import/`, `Check/`; tìm luật của X
 chỉ mở entity `X` hoặc `XDomainService`. Hàm static gộp vào đặt tên đủ nghĩa (`IsFieldImportMatch`, `CalculateSampleSize`), record trung gian để cùng
 file sau class; class chỉ có hàm thuần là `static class`, không đăng ký DI. Không ngoại lệ: kể cả điểm móc thuật toán QA cũng là method `ValidateStrategy`.
-`SubmissionImportDomainService` thuần, chạy song song an toàn, dựng `Append/Blank/OverwriteImportPlan` dùng chung verify và import.
+`SubmissionImportDomainService` thuần, chạy song song an toàn, dựng `Append/Blank/OverwriteImportPlan` dùng chung verify và import; giữ cả luật file Excel import (đuôi / dung lượng, dựng và kiểm `fileKey` theo người tải, ≤ 100.000 dòng).
 `SubmissionDomainService.BuildCheckPlan` dựng plan kiểm tra hồ sơ (`318` / `311`); `SheetTable`, `SheetRow` ở `domain/Base/Models` (dùng chung mọi module).
 Entity **không** giữ repository; domain service nhận repository qua constructor, đăng ký DI dạng class cụ thể.
 
