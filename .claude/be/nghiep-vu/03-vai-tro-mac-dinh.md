@@ -33,14 +33,14 @@ chỉ Admin / SuperAdmin (`400`, [22](22-nghiem-thu-du-an.md)).
 | `ProjectMember.Manage`, `Price.ManageActual` | x | x | | |
 | `Price.ManageCompany`, `BonusPool.View`, các menu `Menu.Operation`, `.ProjectMember`, `.Assignment` | x | | | |
 | `Assignment.Manage`, `Assignment.ViewAllSubmission` | x | x | | |
-| `Assignment.ViewOwn` | x | | x | |
+| `Assignment.ViewOwn` | x | | x | x |
 
-Đã gán trên DB dev ngày 2026-10-26 (Leader id 2, Data id 3, trước đó chưa có quyền nào). Admin tự có **mọi** key qua `SeedRolePermission`, kể cả `ViewOwn` — vô hại vì Admin không giữ phiếu.
+Đã gán trên DB dev ngày 2026-10-26 (Leader id 2, Data id 3, trước đó chưa có quyền nào); QA id 4 gán `ViewOwn` ngày 2026-11-12. Admin tự có **mọi** key qua `SeedRolePermission`, kể cả `ViewOwn` — vô hại vì Admin không giữ phiếu.
 
 ⚠️ Bẫy: tick một menu là `SyncChecked` cấp **mọi** con của nó. Tick `Menu.Operation.ProjectMember` cho Leader là Leader có luôn
 `Price.ManageCompany`; tick `Menu.Operation.Assignment` là có `BonusPool.View`. Chỉ tick key `Function` (menu tự bật khi đủ mọi con).
-Leader vì vậy không có key hai menu này — FE phải hiện menu khi có **bất kỳ** key con, đừng đòi key `Menu.*`. QA xem phiếu QA ở API
-`qa-assignment` của Construction (Task 18C), không dùng `ViewOwn`. Leader vẫn bị chặn ở service nếu không phải `ProjectMember`
+Leader vì vậy không có key hai menu này — FE phải hiện menu khi có **bất kỳ** key con, đừng đòi key `Menu.*`. Từ Task 13 QA xem đợt QA
+của mình ở `my-assignment` ([23](23-chia-phieu.md)) nên **cần** `ViewOwn` (thiếu thì QA nhận `403`); môi trường mới phải gán lại. Leader vẫn bị chặn ở service nếu không phải `ProjectMember`
 vai trò `Leader` của đúng (dự án, loại văn bản) — quyền chỉ mở cửa API.
 
 ## Tài khoản khởi tạo

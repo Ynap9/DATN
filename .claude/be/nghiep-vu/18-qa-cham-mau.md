@@ -128,7 +128,7 @@ Chặng 1–3 (2026-10-26) xong phần **FULL**; phiếu `SAMPLE` chờ 18D. M�
 
 | Endpoint (`api/v1/construction/qa-assignment/...`) | Quyền | Việc |
 |---|---|---|
-| `POST ticket` | `...Submission.AssignQa` | `{ projectId, documentTypeId, qaUserId, items?: [{ box, profileRange? }], count? }`, trả chi tiết phiếu |
+| `POST ticket` | `...Submission.AssignQa` | `{ projectId, documentTypeId, qaUserId, items?: [{ box, profileRange? }], count? }`, trả chi tiết phiếu. ⚠️ Không biết phụ trách nút của Task 13 — FE giao QA qua `operation/.../assignment` ([23](23-chia-phieu.md)) |
 | `GET ticket/paging` | `AssignQa` hoặc `Qa` | Lọc `projectId`, `documentTypeId`, `qaUserId`, `mode`, `status`; mới nhất trước |
 | `GET ticket/{id:int}` | `AssignQa` hoặc `Qa` | Tham số chụp, vòng, số đếm, `passedCount`, `samples` (rỗng với phiếu FULL; trường mẫu `null`) |
 | `POST ticket/{id:int}/cancel` | `AssignQa` | Huỷ phiếu (R7), trả chi tiết phiếu; không thấy phiếu → `327` |

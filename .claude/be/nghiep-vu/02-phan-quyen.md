@@ -155,6 +155,7 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `GET api/digital-signature/plugin/version`, `.../setup`, `.../setup/content` | — (chỉ cần đăng nhập) |
 | `api/operation/staff-group`: `GET paging`, `GET candidates`, `GET` / `PUT` / `DELETE {id}`, `POST`, `POST` / `DELETE {id}/members` | `Function.Operation.StaffGroup.Manage` (Leader còn bị lọc theo chủ nhóm ở service, [19](19-nhom-nhan-vien.md)) |
 | `api/operation/project/{projectId}`: `GET member/paging`, `GET member/candidates`, `POST leader`, `POST member`, `PUT` / `DELETE member/{memberId}` | `Function.Operation.ProjectMember.Manage` (Leader chỉ trong cặp mình là Leader đang hoạt động, chỉ người mình quản lý; `POST leader` chỉ Admin — kiểm ở service, [21](21-thanh-vien-du-an.md)) |
+| `api/operation/project/{projectId}/document-type/{documentTypeId}`: `GET assignment-tree`, `GET assignment-tree/profiles`, `POST assignment/preview`, `POST assignment`, `GET assignment/{ticketId}`; `GET api/operation/my-assignment` | `Function.Operation.Assignment.Manage` (Leader chỉ cặp mình là Leader, chỉ giao người mình quản lý); `my-assignment` cần `.Assignment.ViewOwn` ([23](23-chia-phieu.md)) |
 
 ## Quyền người dùng: đang lệch so với cây
 

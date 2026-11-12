@@ -103,10 +103,11 @@ namespace sh.be.domain.Module.Operation.ProjectMembers.Services
             List<int> examinedTicketIds = [];
             List<int> cancelledAssignmentTicketIds = [];
             List<int> cancelledQaTicketIds = [];
+            List<int> cancelledQaOwnershipTicketIds = [];
 
             if (member.Role == RoleConstants.ROLE_DATA)
             {
-                foreach (var ticket in await _projectMemberRepository.GetActiveAssignmentTicketsAsync(member.ProjectId, member.DocumentTypeId, member.UserId))
+                foreach (var ticket in await _projectMemberRepository.GetActiveAssignmentTicketsAsync(member.ProjectId, member.DocumentTypeId, member.UserId, RoleConstants.ROLE_DATA))
                 {
                     examinedTicketIds.Add(ticket.Id);
                     var releasedCount = await _projectMemberRepository.ReleaseEntryNotCheckedAsync(ticket.Id);
@@ -130,14 +131,20 @@ namespace sh.be.domain.Module.Operation.ProjectMembers.Services
                     revokedCount += await _qaAssignmentDomainService.CancelTicketAsync(ticket, modifiedBy, now);
                     cancelledQaTicketIds.Add(ticket.Id);
                 }
+                foreach (var ownershipTicket in await _projectMemberRepository.GetActiveAssignmentTicketsAsync(member.ProjectId, member.DocumentTypeId, member.UserId, RoleConstants.ROLE_QA))
+                {
+                    ownershipTicket.Cancel(modifiedBy, now);
+                    cancelledQaOwnershipTicketIds.Add(ownershipTicket.Id);
+                }
             }
 
             var keptCount = examinedTicketIds.Count == 0 ? 0 : await _projectMemberRepository.CountKeptDocumentsAsync(member.Role, examinedTicketIds);
-            return new RevokeOnRemoveResult(revokedCount, keptCount, cancelledAssignmentTicketIds, cancelledQaTicketIds);
+            return new RevokeOnRemoveResult(revokedCount, keptCount, cancelledAssignmentTicketIds, cancelledQaTicketIds, cancelledQaOwnershipTicketIds);
         }
     }
 
     public record OperationAccess(Project Project, DocumentType DocumentType, bool IsAdmin, string? LeaderUserId);
 
-    public record RevokeOnRemoveResult(int RevokedDocumentCount, int KeptDocumentCount, List<int> CancelledAssignmentTicketIds, List<int> CancelledQaTicketIds);
+    public record RevokeOnRemoveResult(int RevokedDocumentCount, int KeptDocumentCount, List<int> CancelledAssignmentTicketIds, List<int> CancelledQaTicketIds,
+        List<int> CancelledQaOwnershipTicketIds);
 }

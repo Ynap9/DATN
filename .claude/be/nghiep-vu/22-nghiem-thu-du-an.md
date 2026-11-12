@@ -112,4 +112,4 @@ lý do `ok` → lưu `ok`; 1001 ký tự → `400`; hoàn tất force không lý
 
 ⚠️ Khoá dòng dự án làm các lần QA đạt trên cùng dự án `DEPLOYING` / `DOING` xếp hàng ở bước cuối (khoá giữ tới commit, ngắn).
 
-> **Tiếp:** hết phần nghiệp vụ. Kiến trúc và quy ước code ở [../architecture/README.md](../architecture/README.md).
+> **Tiếp:** [23-chia-phieu.md](23-chia-phieu.md) — cây Hộp → Hồ sơ, giao phiếu nhập liệu, QA phụ trách nút + đợt QA, phiếu của tôi.

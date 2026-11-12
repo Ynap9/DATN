@@ -22,14 +22,13 @@ namespace sh.be.domain.Module.Operation.Assignments.Entities
         {
         }
 
-        public static AssignmentTicketItem Create(int assignmentTicketId, string box, string? profileRange)
+        public static AssignmentTicketItem Create(int assignmentTicketId, string box, string profileRange)
         {
-            var trimmedProfileRange = profileRange?.Trim();
             return new AssignmentTicketItem
             {
                 AssignmentTicketId = assignmentTicketId,
                 Box = box.Trim(),
-                ProfileRange = String.IsNullOrEmpty(trimmedProfileRange) ? null : trimmedProfileRange,
+                ProfileRange = profileRange.Trim(),
             };
         }
     }
