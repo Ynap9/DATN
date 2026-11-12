@@ -82,6 +82,8 @@ namespace sh.be.shared.HttpRequest.Error
         public const int ConstructionErrorProjectNotReadyForAcceptance = 340;
         public const int ConstructionErrorProjectAccepting = 341;
         public const int ConstructionErrorProjectStatusTransitionInvalid = 342;
+        public const int ConstructionErrorImportFileInvalid = 343;
+        public const int ConstructionErrorImportJobNotFound = 344;
 
         public const int DigitalSignatureErrorTemplateNotFound = 601;
         public const int DigitalSignatureErrorInvalidTemplatePositionKind = 602;

@@ -124,11 +124,22 @@ namespace sh.be.infrastructure.external.BackgroundJob.Implements
                 }
             }
 
+            string? result = null;
+            if (jobData.State == SucceededState.StateName)
+            {
+                var state = connection.GetStateData(jobId);
+                if (state != null && state.Data.TryGetValue("Result", out var serializedResult))
+                {
+                    result = SerializationHelper.Deserialize<string?>(serializedResult, SerializationOption.User);
+                }
+            }
+
             return new BackgroundJobDetailDto
             {
                 JobId = jobId,
                 Status = jobData.State != null ? StatusByStateName.GetValueOrDefault(jobData.State, BackgroundJobConst.STATUS_WAITING) : BackgroundJobConst.STATUS_WAITING,
                 ErrorMessage = errorMessage,
+                Result = result,
                 Parameters = parameterNames.ToDictionary(name => name,
                     name => jobData.ParametersSnapshot != null && jobData.ParametersSnapshot.TryGetValue(name, out var value) ? SerializationHelper.Deserialize<string?>(value) : null),
             };

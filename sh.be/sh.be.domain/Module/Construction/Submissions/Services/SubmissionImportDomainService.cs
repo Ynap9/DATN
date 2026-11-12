@@ -12,6 +12,8 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
     public static class SubmissionImportDomainService
     {
         private const int AlphabetLength = 26;
+        private const int ExcelFileKeyPartCount = 4;
+        private const int ExcelFileKeyUserIdIndex = 1;
 
         public static void EnsureHasData(SheetTable table)
         {
@@ -260,6 +262,59 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
         public static string BuildSheetCellAddress(int columnIndex, int sheetRowNumber)
         {
             return $"{GetColumnLetter(columnIndex)}{sheetRowNumber}";
+        }
+
+        public static void EnsureValidExcelFile(string fileName, long length)
+        {
+            if (!fileName.EndsWith(SubmissionConst.IMPORT_EXCEL_EXTENSION, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorImportFileInvalid, "Chỉ nhận file Excel .xlsx");
+            }
+            if (length <= 0 || length > SubmissionConst.IMPORT_EXCEL_MAX_BYTES)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorImportFileInvalid,
+                    $"File rỗng hoặc vượt quá {SubmissionConst.IMPORT_EXCEL_MAX_BYTES / 1024 / 1024} MB");
+            }
+        }
+
+        public static void EnsureAnySheetHasHeader(List<List<string>> sheetHeaders)
+        {
+            if (!sheetHeaders.Any(headers => headers.Count > 0))
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorImportFileInvalid, "File không có sheet nào có dòng tiêu đề");
+            }
+        }
+
+        // Key chứa userId để chỉ người tải mới đọc lại được file; tên file gốc (đã làm sạch) nằm cuối key để job và audit lấy lại tên.
+        public static string BuildExcelFileKey(string userId, DateTime uploadedDate, string fileName)
+        {
+            var safeFileName = string.Join("_", fileName.Split([.. Path.GetInvalidFileNameChars(), '/', '\\'])).Trim();
+            return $"{SubmissionConst.IMPORT_OBJECT_KEY_PREFIX}/{uploadedDate:yyyyMMdd}/{userId}/{Guid.NewGuid():N}/{safeFileName}";
+        }
+
+        public static string GetExcelFileName(string fileKey)
+        {
+            return fileKey[(fileKey.LastIndexOf('/') + 1)..];
+        }
+
+        // fileKey đi qua FE: chỉ nhận đúng dạng {prefix}/{yyyyMMdd}/{userId}/{guid}/{tên file} của chính người gọi, không cho đoán key đọc file người khác.
+        public static void EnsureExcelFileOwnedBy(string fileKey, string userId)
+        {
+            var keyPrefix = $"{SubmissionConst.IMPORT_OBJECT_KEY_PREFIX}/";
+            var keyParts = fileKey.StartsWith(keyPrefix, StringComparison.Ordinal) ? fileKey[keyPrefix.Length..].Split('/') : [];
+            if (keyParts.Length != ExcelFileKeyPartCount || keyParts[ExcelFileKeyUserIdIndex] != userId)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorImportFileInvalid, "File không tồn tại hoặc đã hết hạn");
+            }
+        }
+
+        public static void EnsureExcelRowLimit(SheetTable table)
+        {
+            if (table.Rows.Count > SubmissionConst.IMPORT_EXCEL_MAX_ROWS)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorImportFileInvalid,
+                    $"Sheet có {table.Rows.Count} dòng dữ liệu, vượt quá giới hạn {SubmissionConst.IMPORT_EXCEL_MAX_ROWS} dòng");
+            }
         }
 
         private static string GetColumnLetter(int columnIndex)

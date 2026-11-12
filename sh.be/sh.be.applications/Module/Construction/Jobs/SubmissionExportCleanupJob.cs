@@ -24,9 +24,13 @@ namespace sh.be.applications.Module.Construction.Jobs
         {
             var today = GetVietnamTime().Date;
             _logger.LogInformation($"{nameof(ExecuteAsync)}, today={today:yyyyMMdd}");
-            for (var day = SubmissionConst.EXPORT_FILE_RETENTION_DAYS + 1; day <= SubmissionConst.EXPORT_FILE_RETENTION_DAYS + SubmissionConst.EXPORT_CLEANUP_LOOKBACK_DAYS; day++)
+            // File Excel tải lên để import giữ cùng thời hạn với file export, nên dọn chung theo thư mục ngày.
+            foreach (var objectKeyPrefix in new[] { SubmissionConst.EXPORT_OBJECT_KEY_PREFIX, SubmissionConst.IMPORT_OBJECT_KEY_PREFIX })
             {
-                await _fileStorageExternal.DeleteByPrefixAsync($"{SubmissionConst.EXPORT_OBJECT_KEY_PREFIX}/{today.AddDays(-day):yyyyMMdd}/");
+                for (var day = SubmissionConst.EXPORT_FILE_RETENTION_DAYS + 1; day <= SubmissionConst.EXPORT_FILE_RETENTION_DAYS + SubmissionConst.EXPORT_CLEANUP_LOOKBACK_DAYS; day++)
+                {
+                    await _fileStorageExternal.DeleteByPrefixAsync($"{objectKeyPrefix}/{today.AddDays(-day):yyyyMMdd}/");
+                }
             }
         }
     }

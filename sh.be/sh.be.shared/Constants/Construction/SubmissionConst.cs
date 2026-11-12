@@ -38,6 +38,14 @@ namespace sh.be.shared.Constants.Construction
         public const string EXPORT_FAILED_MESSAGE = "Xuất Excel thất bại, hãy thử lại";
 
         public const int IMPORT_LOCK_TIMEOUT_MILLISECONDS = 5000;
+        public const int IMPORT_EXCEL_MAX_BYTES = 20 * 1024 * 1024;
+        public const int IMPORT_EXCEL_MAX_REQUEST_BYTES = IMPORT_EXCEL_MAX_BYTES + 5 * 1024 * 1024;
+        public const string IMPORT_EXCEL_EXTENSION = ".xlsx";
+        public const string IMPORT_EXCEL_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        public const int IMPORT_EXCEL_MAX_ROWS = 100_000;
+        public const string IMPORT_OBJECT_KEY_PREFIX = "construction/submission-import";
+        public const string IMPORT_JOB_TYPE = "submission-import";
+        public const string IMPORT_FAILED_MESSAGE = "Import thất bại, hãy thử lại";
         public const int BULK_BATCH_SIZE = 100000;
         public const int BULK_TIMEOUT_SECONDS = 600;
         public const int PARALLEL_ROW_THRESHOLD = 5000;

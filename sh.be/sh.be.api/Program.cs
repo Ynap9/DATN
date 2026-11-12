@@ -394,11 +394,13 @@ builder.Services.AddSingleton<ISigningRunner, SigningRunner>();
 // jobs
 builder.Services.AddScoped<ProjectDeadlineJob>();
 builder.Services.AddScoped<SubmissionExportJob>();
+builder.Services.AddScoped<SubmissionImportJob>();
 builder.Services.AddScoped<SubmissionExportCleanupJob>();
 
 // third-party services
 builder.Services.AddScoped<IMailExternal, MailExternal>();
 builder.Services.AddScoped<IDataReaderExternal, GoogleSheetReaderExternal>();
+builder.Services.AddScoped<IExcelReaderExternal, ExcelReaderExternal>();
 builder.Services.AddScoped<IExcelExternal, ExcelExternal>();
 builder.Services.AddScoped<IGoogleSheetExternal, GoogleSheetExternal>();
 builder.Services.AddScoped<IFileDownloadExternal, HttpFileDownloadExternal>();
