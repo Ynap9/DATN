@@ -1,4 +1,9 @@
+using sh.be.domain.Module.Auth.Repositories;
+using sh.be.domain.Module.Auth.Services;
+using sh.be.domain.Module.Construction.Submissions.Entities;
+using sh.be.domain.Module.Operation.Assignments.Entities;
 using sh.be.domain.Module.Operation.Assignments.Repositories;
+using sh.be.domain.Module.Operation.ProjectMembers.Repositories;
 using sh.be.domain.Module.Operation.ProjectMembers.Services;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Construction;
@@ -11,10 +16,15 @@ namespace sh.be.domain.Module.Operation.Assignments.Services
     public class AssignmentDomainService
     {
         private readonly IAssignmentRepository _assignmentRepository;
+        private readonly IRoleRepository _roleRepository;
+        private readonly IProjectMemberRepository _projectMemberRepository;
 
-        public AssignmentDomainService(IAssignmentRepository assignmentRepository)
+        public AssignmentDomainService(IAssignmentRepository assignmentRepository, IRoleRepository roleRepository,
+            IProjectMemberRepository projectMemberRepository)
         {
             _assignmentRepository = assignmentRepository;
+            _roleRepository = roleRepository;
+            _projectMemberRepository = projectMemberRepository;
         }
 
         public static void EnsureAssignableRole(string role)
@@ -277,6 +287,128 @@ namespace sh.be.domain.Module.Operation.Assignments.Services
             var reviewerMode = await _assignmentRepository.FindQaReviewerModeAsync(projectId, assigneeUserId);
             return BuildQaPlan(assigneeUserId, nodes, emptyItems, rows, ownerships, sameAsEntryIds, reviewerMode == QaAssignmentConst.MODE_SAMPLE);
         }
+
+        public async Task<string?> ResolveRestrictedUserIdAsync(int projectId, int documentTypeId, string userId)
+        {
+            if (PermissionDomainService.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(userId)))
+            {
+                return null;
+            }
+            if ((await _roleRepository.GetPermissionKeysByUserIdAsync(userId)).Contains(PermissionConstants.FUNCTION_ASSIGNMENT_VIEW_ALL_SUBMISSION)
+                && await _projectMemberRepository.FindActiveLeaderAsync(projectId, documentTypeId, userId) != null)
+            {
+                return null;
+            }
+            if (!await _assignmentRepository.IsMemberAsync(projectId, documentTypeId, userId))
+            {
+                throw new UserFriendlyException(ErrorCodes.OperationErrorSubmissionNotAssigned);
+            }
+            return userId;
+        }
+
+        public async Task EnsureCanViewAsync(Submission submission, string userId)
+        {
+            if (await ResolveRestrictedUserIdAsync(submission.ProjectId, submission.DocumentTypeId, userId) == null)
+            {
+                return;
+            }
+            var dataHolder = await _assignmentRepository.FindHolderAsync(submission.Id, RoleConstants.ROLE_DATA);
+            var qaHolder = await _assignmentRepository.FindHolderAsync(submission.Id, RoleConstants.ROLE_QA);
+            if (dataHolder?.UserId != userId && qaHolder?.UserId != userId)
+            {
+                throw new UserFriendlyException(ErrorCodes.OperationErrorSubmissionNotAssigned);
+            }
+        }
+
+        public async Task EnsureCanCheckAsync(Submission submission, string userId)
+        {
+            if (await ResolveRestrictedUserIdAsync(submission.ProjectId, submission.DocumentTypeId, userId) == null)
+            {
+                return;
+            }
+            var dataHolder = await _assignmentRepository.FindHolderAsync(submission.Id, RoleConstants.ROLE_DATA);
+            if (dataHolder?.UserId != userId)
+            {
+                throw new UserFriendlyException(ErrorCodes.OperationErrorSubmissionNotAssigned);
+            }
+            if (submission.StatusQa == SubmissionConst.QA_PASSED)
+            {
+                throw new UserFriendlyException(ErrorCodes.OperationErrorSubmissionQaPassedLocked);
+            }
+        }
+
+        public async Task<QaOwnership?> ResolveQaOwnerForCheckedAsync(Submission submission)
+        {
+            if (submission.StatusQa != SubmissionConst.QA_NOT_REVIEWED
+                || await _assignmentRepository.FindHolderAsync(submission.Id, RoleConstants.ROLE_QA) != null)
+            {
+                return null;
+            }
+            var nodeKey = ToNodeKey(submission.Box, submission.ProfileRange);
+            var owner = (await _assignmentRepository.GetActiveQaOwnershipsAsync(submission.ProjectId, submission.DocumentTypeId))
+                .FirstOrDefault(ownership => ToNodeKey(ownership.Box, ownership.ProfileRange) == nodeKey);
+            if (owner == null
+                || await _assignmentRepository.FindActiveMemberAsync(submission.ProjectId, submission.DocumentTypeId, owner.QaUserId, RoleConstants.ROLE_QA) == null)
+            {
+                return null;
+            }
+            var dataHolder = await _assignmentRepository.FindHolderAsync(submission.Id, RoleConstants.ROLE_DATA);
+            if (dataHolder?.UserId == owner.QaUserId
+                || (await _assignmentRepository.GetSubmissionIdsCheckedByAsync([submission.Id], owner.QaUserId)).Count > 0
+                || await _assignmentRepository.FindQaReviewerModeAsync(submission.ProjectId, owner.QaUserId) == QaAssignmentConst.MODE_SAMPLE)
+            {
+                return null;
+            }
+
+            await _assignmentRepository.LockPairAsync(submission.ProjectId, submission.DocumentTypeId);
+            return await _assignmentRepository.FindHolderAsync(submission.Id, RoleConstants.ROLE_QA) == null ? owner : null;
+        }
+
+        public async Task<QaResultOnEntry?> ApplyQaResultAsync(Submission submission, int newStatusQa, string? modifiedBy, DateTime now)
+        {
+            var dataHolder = await _assignmentRepository.FindHolderAsync(submission.Id, RoleConstants.ROLE_DATA);
+            if (dataHolder == null)
+            {
+                return null;
+            }
+            if (newStatusQa != SubmissionConst.QA_FAILED)
+            {
+                return new QaResultOnEntry(await _assignmentRepository.FindTicketByIdAsync(dataHolder.TicketId)
+                    ?? throw new UserFriendlyException(ErrorCodes.OperationErrorTicketNotFound), dataHolder.UserId, null);
+            }
+
+            await _assignmentRepository.LockPairAsync(submission.ProjectId, submission.DocumentTypeId);
+            var ticket = await _assignmentRepository.FindTicketByIdAsync(dataHolder.TicketId)
+                ?? throw new UserFriendlyException(ErrorCodes.OperationErrorTicketNotFound);
+            string? releaseReason = null;
+            if (ticket.Status != AssignmentConst.STATUS_ACTIVE)
+            {
+                releaseReason = "bị trả khi phiếu đã DONE";
+            }
+            else if (!await _assignmentRepository.IsMemberAsync(submission.ProjectId, submission.DocumentTypeId, dataHolder.UserId))
+            {
+                releaseReason = "bị trả khi người nhập đã bị gỡ khỏi dự án";
+                ticket.DecreaseDocuments(1, modifiedBy, now);
+            }
+            else if (dataHolder.IncreaseReturnAndShouldRelease(modifiedBy, now))
+            {
+                releaseReason = $"bị trả lần {dataHolder.ReturnCount}";
+                ticket.DecreaseDocuments(1, modifiedBy, now);
+            }
+            if (releaseReason != null)
+            {
+                _assignmentRepository.DeleteHolder(dataHolder);
+            }
+            return new QaResultOnEntry(ticket, dataHolder.UserId, releaseReason);
+        }
+
+        public async Task TryMarkDoneAsync(AssignmentTicket ticket, DateTime doneAt)
+        {
+            if (ticket.Status == AssignmentConst.STATUS_ACTIVE && await _assignmentRepository.CountDataNotPassedAsync(ticket.Id) == 0)
+            {
+                await _assignmentRepository.TryMarkDoneAsync(ticket.Id, doneAt);
+            }
+        }
     }
 
     public record AssignmentItem(string Box, string? ProfileRange);
@@ -287,6 +419,8 @@ namespace sh.be.domain.Module.Operation.Assignments.Services
         string? DataHolderUserId, string? QaHolderUserId);
 
     public record QaOwnership(int TicketId, string QaUserId, string Box, string ProfileRange);
+
+    public record QaResultOnEntry(AssignmentTicket Ticket, string HolderUserId, string? ReleaseReason);
 
     public record AssignmentConflict(string Box, string ProfileRange, string HolderUserId, int DocumentCount, bool IsOwner);
 

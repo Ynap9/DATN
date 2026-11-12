@@ -20,5 +20,10 @@ namespace sh.be.domain.Module.Operation.Assignments.Repositories
         void AddTicketItems(List<AssignmentTicketItem> items);
         void AddQaTicket(QaTicket qaTicket);
         Task AddHoldersAsync(List<SubmissionUser> holders);
+        Task<SubmissionUser?> FindHolderAsync(int submissionId, string role);
+        void DeleteHolder(SubmissionUser holder);
+        Task<bool> IsMemberAsync(int projectId, int documentTypeId, string userId);
+        Task<int> CountDataNotPassedAsync(int ticketId);
+        Task<int> TryMarkDoneAsync(int ticketId, DateTime doneAt);
     }
 }

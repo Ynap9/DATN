@@ -148,5 +148,42 @@ namespace sh.be.infrastructure.data.Module.Operation.Repositories
                 throw new UserFriendlyException(ErrorCodes.OperationErrorAssignmentConflict);
             }
         }
+
+        // Dòng người giữ văn bản theo vai trò (tracked), null nếu chưa giao
+        public Task<SubmissionUser?> FindHolderAsync(int submissionId, string role)
+        {
+            return _shDbContext.SubmissionUsers.FirstOrDefaultAsync(u => u.SubmissionId == submissionId && u.Role == role);
+        }
+
+        // Xoá cứng dòng người giữ, văn bản về pool
+        public void DeleteHolder(SubmissionUser holder)
+        {
+            _shDbContext.SubmissionUsers.Remove(holder);
+        }
+
+        // Còn là thành viên chưa gỡ của cặp, không xét bật / tắt
+        public Task<bool> IsMemberAsync(int projectId, int documentTypeId, string userId)
+        {
+            return _shDbContext.ProjectMembers.AnyAsync(m => m.ProjectId == projectId && m.DocumentTypeId == documentTypeId && m.UserId == userId);
+        }
+
+        // Đếm văn bản của phiếu nhập liệu chưa QA đạt
+        public Task<int> CountDataNotPassedAsync(int ticketId)
+        {
+            return _shDbContext.SubmissionUsers
+                .CountAsync(u => u.TicketId == ticketId && u.Role == RoleConstants.ROLE_DATA
+                    && _shDbContext.Submissions.Any(s => s.Id == u.SubmissionId && s.StatusQa != SubmissionConst.QA_PASSED));
+        }
+
+        // Chốt phiếu DONE khi phiếu còn ACTIVE, trả số dòng đã đổi
+        public Task<int> TryMarkDoneAsync(int ticketId, DateTime doneAt)
+        {
+            return _shDbContext.AssignmentTickets
+                .Where(t => t.Id == ticketId && t.Status == AssignmentConst.STATUS_ACTIVE)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(t => t.Status, AssignmentConst.STATUS_DONE)
+                    .SetProperty(t => t.DoneAt, doneAt)
+                    .SetProperty(t => t.ModifiedDate, doneAt));
+        }
     }
 }

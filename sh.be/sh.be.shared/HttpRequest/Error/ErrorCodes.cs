@@ -149,6 +149,7 @@ namespace sh.be.shared.HttpRequest.Error
         public const int OperationErrorLeaderNotMember = 823;
         public const int OperationErrorNothingToAssign = 824;
         public const int OperationErrorTicketTooLarge = 825;
+        public const int OperationErrorSubmissionQaPassedLocked = 826;
 
         public const int AiErrorProviderNotFound = 901;
         public const int AiErrorProviderCodeExists = 902;
