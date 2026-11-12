@@ -73,8 +73,8 @@ Lưu: `AssignmentTicket.CreateManual(Data)` → các nút → `SubmissionUser.Cr
 - Đổi QA phụ trách một nút (đợt này chưa có API chuyển, Task 14): **gỡ QA đó khỏi dự án** — `RevokeHeldDocumentsAsync` huỷ đợt mở
   như cũ và huỷ luôn phiếu phụ trách (`CancelledQaOwnershipTicketIds` trong audit gỡ), nút được mở cho QA khác.
 
-⚠️ API giao QA cũ `POST construction/qa-assignment/ticket` **không biết** phụ trách nút: nó giao được văn bản của nút người khác
-phụ trách. FE chỉ dùng API 23 bên dưới; văn bản do API cũ giao vẫn bị tính là Conflict ở đây.
+API giao QA cũ `POST construction/qa-assignment/ticket` (không biết phụ trách nút) đã xoá 2026-11-12 (Task 26); chỉ còn API 23
+bên dưới. Văn bản do API cũ giao từ trước vẫn bị tính là Conflict ở đây.
 
 ## Chống đua
 

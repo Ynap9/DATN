@@ -128,12 +128,14 @@ Chặng 1–3 (2026-10-26) xong phần **FULL**; phiếu `SAMPLE` chờ 18D. M�
 
 | Endpoint (`api/v1/construction/qa-assignment/...`) | Quyền | Việc |
 |---|---|---|
-| `POST ticket` | `...Submission.AssignQa` | `{ projectId, documentTypeId, qaUserId, items?: [{ box, profileRange? }], count? }`, trả chi tiết phiếu. ⚠️ Không biết phụ trách nút của Task 13 — FE giao QA qua `operation/.../assignment` ([23](23-chia-phieu.md)) |
 | `GET ticket/paging` | `AssignQa` hoặc `Qa` | Lọc `projectId`, `documentTypeId`, `qaUserId`, `mode`, `status`; mới nhất trước |
 | `GET ticket/{id:int}` | `AssignQa` hoặc `Qa` | Tham số chụp, vòng, số đếm, `passedCount`, `samples` (rỗng với phiếu FULL; trường mẫu `null`) |
 | `POST ticket/{id:int}/cancel` | `AssignQa` | Huỷ phiếu (R7), trả chi tiết phiếu; không thấy phiếu → `327` |
 
-**Giao (R1).** Gửi **đúng một** trong `items` / `count`, sai → `400`. `items`: `box` bắt buộc, `profileRange` bỏ trống = cả hộp, có thì
+Giao QA qua `POST operation/.../assignment` ([23](23-chia-phieu.md)); API `POST ticket` đã xoá 2026-11-12 (Task 26).
+
+**Giao (R1).** ⚠️ Luật của API `POST ticket` đã xoá, giữ lại vì code vẫn ở `QaAssignmentDomainService` (`SelectAssignableAsync`,
+`EnsureAssignableModeAsync`, `EnsureQaMemberAsync`) cho 18D dùng lại. Gửi **đúng một** trong `items` / `count`, sai → `400`. `items`: `box` bắt buộc, `profileRange` bỏ trống = cả hộp, có thì
 chỉ hồ sơ đó trong hộp đó. `count` `1`–`5000`: lấy N văn bản đầu theo `Box`, `ProfileRange`, `Id`.
 - Văn bản phù hợp: chưa xoá, `StatusCheck = 1`, `StatusQa = 0`, chưa có dòng `SubmissionUser` Role `QA`. Không có → `328`, > 5000 → `329`.
 - QA phải có role `QA` (`400`, không tồn tại `103`). Có văn bản mà người nhập (log kiểm tra mới nhất, luật Task 18) là chính QA → `331`.
