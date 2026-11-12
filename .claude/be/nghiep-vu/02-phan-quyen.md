@@ -138,7 +138,7 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `GET api/construction/project-config/google-callback` | — (không cần token, kiểm `state` đã ký) |
 | `GET api/construction/qa-assignment/config`, `GET .../reviewer-mode` | `Function.Construction.ProjectConfig.View` |
 | `PUT api/construction/qa-assignment/config`, `PUT .../reviewer-mode` | `Function.Construction.ProjectConfig.Update` |
-| `POST api/construction/qa-assignment/ticket`; `GET .../ticket/paging`, `GET .../ticket/{id}` | `...Submission.AssignQa`; xem phiếu thì `AssignQa` hoặc `Qa`. Leader còn bị lọc theo `ProjectMember` (`337` / `327`), QA chỉ thấy phiếu mình ([18](18-qa-cham-mau.md#18c--phiếu-qa)) |
+| `GET api/construction/qa-assignment/ticket/paging`, `GET .../ticket/{id}` | `...Submission.AssignQa`; xem phiếu thì `AssignQa` hoặc `Qa`. Leader còn bị lọc theo `ProjectMember` (`337` / `327`), QA chỉ thấy phiếu mình ([18](18-qa-cham-mau.md#18c--phiếu-qa)) |
 | `POST api/construction/submission/import/{append\|blank\|overwrite}` và `.../verify` | `Function.Construction.Submission.Import` (Leader chỉ dự án mình — `337`, [11](11-ho-so-import.md)) |
 | `GET api/construction/submission/proxy-file`, `GET .../paging`, `GET .../count`, `GET .../{id}`, `GET .../{id}/next`, `GET .../{id}/previous`, `GET .../{id}/logs`, `GET .../qa/paging`, `GET .../{id}/qa`, `GET .../{id}/qa-logs`, `GET .../field-values`, `GET .../tree`, `GET .../logs`, `GET .../summary`, `GET .../{id}/timeline` | `Function.Construction.Submission.View` |
 | `PUT api/construction/submission/check` (id trong body) | `Function.Construction.Submission.Check` |
