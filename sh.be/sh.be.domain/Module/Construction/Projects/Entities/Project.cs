@@ -23,6 +23,7 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
         public int Status { get; private set; }
         public string UrlGoogleSheetSync { get; private set; } = String.Empty;
         public string GoogleSheetName { get; private set; } = String.Empty;
+        public bool IsQaEnabled { get; private set; }
         public string? CreatedBy { get; private set; }
         public DateTime? CreatedDate { get; private set; }
         public string? ModifiedBy { get; private set; }
@@ -34,7 +35,7 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
         {
         }
 
-        public static Project Create(string name, DateTime? startedAt, DateTime? endedAt, string? createdBy, DateTime? createdDate)
+        public static Project Create(string name, DateTime? startedAt, DateTime? endedAt, bool isQaEnabled, string? createdBy, DateTime? createdDate)
         {
             EnsureValidPeriod(startedAt, endedAt);
 
@@ -45,6 +46,7 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
                 EndedAt = endedAt,
                 Status = ProjectConst.DEPLOYING,
                 GoogleSheetName = name,
+                IsQaEnabled = isQaEnabled,
                 CreatedBy = createdBy,
                 CreatedDate = createdDate,
             };
@@ -133,6 +135,14 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
             if (Status == ProjectConst.EXPIRED && !isSuperAdmin)
             {
                 throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectExpired);
+            }
+        }
+
+        public void EnsureQaEnabled()
+        {
+            if (!IsQaEnabled)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectQaDisabled);
             }
         }
 

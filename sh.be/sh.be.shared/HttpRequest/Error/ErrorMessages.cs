@@ -84,6 +84,7 @@ namespace sh.be.shared.HttpRequest.Error
             { ErrorCodes.ConstructionErrorProjectStatusTransitionInvalid, "Trạng thái dự án không cho phép thao tác này" },
             { ErrorCodes.ConstructionErrorImportFileInvalid, "File import không hợp lệ" },
             { ErrorCodes.ConstructionErrorImportJobNotFound, "Không tìm thấy yêu cầu import hoặc yêu cầu đã hết hạn" },
+            { ErrorCodes.ConstructionErrorProjectQaDisabled, "Dự án không bật QA" },
             { ErrorCodes.DigitalSignatureErrorTemplateNotFound, "Mẫu chữ ký không tồn tại" },
             { ErrorCodes.DigitalSignatureErrorInvalidTemplatePositionKind, "Loại khối chữ ký không hợp lệ" },
             { ErrorCodes.DigitalSignatureErrorTemplatePositionOutOfPage, "Tọa độ khối chữ ký nằm ngoài trang hoặc có kích thước bằng 0" },

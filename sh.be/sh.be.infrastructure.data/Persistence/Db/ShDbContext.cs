@@ -124,6 +124,7 @@ namespace sh.be.infrastructure.data.Persistence.Db
                 entity.HasQueryFilter(e => !e.Deleted);
                 entity.Property(e => e.Deleted).HasDefaultValue(false);
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.Property(e => e.IsQaEnabled).HasDefaultValue(true).HasSentinel(true);
             });
             modelBuilder.Entity<ProjectConfig>(entity =>
             {
