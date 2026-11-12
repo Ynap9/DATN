@@ -181,6 +181,18 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
 
             return new SubmissionCheckPlan(datasToUpdate, datasToInsert, changes);
         }
+
+        // Trả mã cột xuất theo thứ tự EXPORT_COLUMNS, bỏ trùng, không phân biệt hoa thường; mã lạ thì báo lỗi
+        public static List<string> NormalizeExportColumns(List<string>? columns)
+        {
+            var requestedColumns = columns ?? [];
+            var invalidColumn = requestedColumns.FirstOrDefault(column => !SubmissionConst.EXPORT_COLUMNS.Contains(column, StringComparer.OrdinalIgnoreCase));
+            if (invalidColumn != null)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, $"Cột xuất không hợp lệ: {invalidColumn}");
+            }
+            return SubmissionConst.EXPORT_COLUMNS.Where(column => requestedColumns.Contains(column, StringComparer.OrdinalIgnoreCase)).ToList();
+        }
     }
 
     public record SubmissionDataInput(int DocumentFieldId, string Data);
