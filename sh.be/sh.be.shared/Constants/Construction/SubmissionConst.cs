@@ -36,6 +36,19 @@ namespace sh.be.shared.Constants.Construction
         public const int EXPORT_CLEANUP_LOOKBACK_DAYS = 7;
         public const string EXPORT_CLEANUP_RECURRING_JOB_ID = "submission-export-cleanup";
         public const string EXPORT_FAILED_MESSAGE = "Xuất Excel thất bại, hãy thử lại";
+        public const string EXPORT_COLUMN_FILE_URL = "fileUrl";
+        public const string EXPORT_COLUMN_CHECK_STATUS = "checkStatus";
+        public const string EXPORT_COLUMN_CHECKED_BY = "checkedBy";
+        public const string EXPORT_COLUMN_CHECKED_DATE = "checkedDate";
+        public const string EXPORT_COLUMN_QA_STATUS = "qaStatus";
+        public const string EXPORT_COLUMN_QA_BY = "qaBy";
+        public const string EXPORT_COLUMN_QA_DATE = "qaDate";
+        public const string EXPORT_COLUMN_QA_REASON = "qaReason";
+        public const string EXPORT_COLUMN_MODIFIED_BY = "modifiedBy";
+        public const string EXPORT_COLUMN_MODIFIED_DATE = "modifiedDate";
+        public static readonly IReadOnlyList<string> EXPORT_COLUMNS =
+            [EXPORT_COLUMN_FILE_URL, EXPORT_COLUMN_CHECK_STATUS, EXPORT_COLUMN_CHECKED_BY, EXPORT_COLUMN_CHECKED_DATE, EXPORT_COLUMN_QA_STATUS,
+                EXPORT_COLUMN_QA_BY, EXPORT_COLUMN_QA_DATE, EXPORT_COLUMN_QA_REASON, EXPORT_COLUMN_MODIFIED_BY, EXPORT_COLUMN_MODIFIED_DATE];
 
         public const int IMPORT_LOCK_TIMEOUT_MILLISECONDS = 5000;
         public const int IMPORT_EXCEL_MAX_BYTES = 20 * 1024 * 1024;
