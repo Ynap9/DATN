@@ -64,10 +64,13 @@ danh sách, nên số dòng bằng `count.total` cùng bộ lọc.
 - Trạng thái ghi bằng chữ: `Chưa kiểm tra` / `Đã kiểm tra` / `Trả lại`; `Chưa QA` / `Đạt` / `Không đạt`. Ngày theo `dd/MM/yyyy HH:mm:ss`.
   Người kiểm tra và người sửa ghi tên đăng nhập, lấy từ lần kiểm tra gần nhất và `ModifiedBy`.
 - Xuất được cả khi dự án `DONE`. Không đổi trạng thái, không ghi audit.
+- Chỉ Admin / SuperAdmin hoặc Leader đang hoạt động của dự án (Task 25, cả `export-excel/job`), **không** lọc theo người giữ văn bản.
+  ⚠️ Cấp `Export` cho Data / QA là lộ mọi văn bản của cặp: đừng tick menu cha `Menu.Construction.Submission` cho họ ([03](03-vai-tro-mac-dinh.md)).
 
 | Lỗi | Mã |
 |---|---|
 | Dự án / loại văn bản không tồn tại, hoặc loại văn bản chưa gắn dự án | `303` / `301` / `312` |
+| Không phải Admin và không là Leader đang hoạt động của dự án (kiểm sau ba mã trên) | `337` |
 | Số hồ sơ vượt `SubmissionConst.EXPORT_MAX_ROWS` (1.048.575): hãy lọc bớt | `322` |
 
 Lỗi nghiệp vụ không trả file: controller trả `ApiResponse` JSON với HTTP 200. FE phải kiểm `Content-Type` của response như
@@ -91,7 +94,9 @@ Cùng bộ lọc, cùng nội dung file với `GET export-excel`, nhưng chạy 
 [05](../architecture/05-infrastructure-external.md#backgroundjob--hangfire)): request không giữ HTTP lâu, tối đa `ExportWorkerCount` (2) workbook
 dựng cùng lúc. Không làm xuất nhanh hơn. `GET export-excel` cũ giữ song song để FE chuyển dần.
 
-1. FE gọi `POST export-excel/job` + bộ lọc. BE kiểm `303` / `301` / `312` (không tạo job), chốt tên file `{Tên dự án}_{Tên loại văn bản}_{yyyyMMddHHmm}.xlsx`
+⚠️ Job không có user từ token: `337` và phiếu QA chỉ kiểm ở `POST export-excel/job`; job gọi `ExportExcelFromJob` (không kiểm user), đừng gọi `ExportExcel`.
+
+1. FE gọi `POST export-excel/job` + bộ lọc. BE kiểm `303` / `301` / `312` / `337` (không tạo job), chốt tên file `{Tên dự án}_{Tên loại văn bản}_{yyyyMMddHHmm}.xlsx`
    theo giờ VN lúc bấm, xếp job, trả `{ jobId, status: 0, fileName }`. Không kiểm `322` lúc này: job tự báo.
 2. FE gọi `GET export-excel/job/{jobId}` mỗi 2–3 giây tới khi `status` là `2` hoặc `3`.
 3. `status = 2` → `downloadUrl` (link ký sẵn MinIO 15 phút, `attachment` kèm tên file). Link hết hạn thì gọi lại API 2 để lấy link mới.

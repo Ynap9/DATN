@@ -16,6 +16,8 @@ Giá trị từng trường của hồ sơ nằm ở `construction.SubmissionDat
 | Import từ file Excel: tải file, chạy thử, import chạy nền, trạng thái job | 8 API `.../import/excel/...` ([mục dưới](#import-từ-file-excel-chạy-nền)) | `Function.Construction.Submission.Import` |
 | Xem file PDF của hồ sơ | `GET api/construction/submission/proxy-file?url=...` | `Function.Construction.Submission.View` |
 
+Ngoài key quyền, 12 API verify / import / tạo job chỉ cho Admin hoặc Leader đang hoạt động của dự án, kiểm đầu tiên → `337` (Task 25; `upload` không kiểm).
+
 FE luôn gọi `verify` → hiện số liệu → người dùng xác nhận → gọi import. Verify và import dùng **chung** hàm dựng kế hoạch
 (`SubmissionImportDomainService.Build...Plan`), nên số verify bằng đúng số import ghi (nếu sheet và DB không đổi giữa hai lần gọi).
 
