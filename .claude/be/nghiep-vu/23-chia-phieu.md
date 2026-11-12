@@ -65,7 +65,7 @@ Lưu: `AssignmentTicket.CreateManual(Data)` → các nút → `SubmissionUser.Cr
 | Chính người nhận đang giữ | AlreadyHeld | Bỏ qua |
 | `CHECKED`, `QA_NOT_REVIEWED`, chưa ai giữ QA | New | Vào đợt ngay khi lưu |
 | `CHECKED`, đã QA (luồng cũ, không ai giữ) | — | Coi như xong: không giao, không chặn |
-| Chưa `CHECKED` (`NOT_CHECKED`, `RETURNED`) | Later | Kiểm xong tự về QA phụ trách (Task 15) |
+| Chưa `CHECKED` (`NOT_CHECKED`, `RETURNED`) | Later | Kiểm xong tự về QA phụ trách (Task 15), trừ 6 trường hợp dừng ở mục C bên dưới |
 | Người nhận từng có `SubmissionLog` trên văn bản, hoặc đang giữ Data của nó | SameAsEntry | **Chặn** `331` |
 
 - Lưu được khi New = 0 nhưng có Later ở nút mới phụ trách; New = 0 và (Later = 0 hoặc không có nút mới) → `824`.
@@ -116,6 +116,32 @@ nhập liệu quá 1000 văn bản.
 | 2026-11-11 | QA phụ trách lại / nút mới | Một phiếu phụ trách / QA / cặp, dồn vào phiếu cũ |
 | 2026-11-11 | QA Đạt luồng cũ, không ai giữ | Coi như xong |
 | 2026-11-11 | Hồ sơ phụ trách cả hộp | Hộp là cha: phụ trách mọi hồ sơ trong hộp |
+
+## Nối vào luồng kiểm tra / QA
+
+Task 15: thân `SubmissionAssignmentService`, luật ở `AssignmentDomainService`. **Người xem tất cả** của cặp: Admin / SuperAdmin, hoặc có
+`Assignment.ViewAllSubmission` **và** là Leader đang hoạt động của đúng cặp.
+
+| Mục | Luật |
+|---|---|
+| A. Xem | Người xem tất cả thấy mọi văn bản. Còn lại: không là thành viên cặp (đã gỡ / chưa từng) → `820`; là thành viên → chỉ văn bản có dòng `SubmissionUser` (Data hoặc QA) của mình, mở văn bản khác → `820` |
+| B. Kiểm | Người xem tất cả: được, kể cả văn bản đã QA đạt (sửa hộ). Không giữ Data → `820`. Giữ Data, văn bản QA đạt → `826`. Thành viên bị tắt vẫn kiểm văn bản đang giữ |
+| C. Kiểm xong | Dừng (không lỗi) khi: đã QA; đã có QA giữ; nút (hộp, hồ sơ) không có phụ trách; QA phụ trách không còn hoạt động; QA từng kiểm / đang giữ Data văn bản; QA ở `SAMPLE`. Qua hết → khoá cặp, đọc lại, thêm dòng QA vào đợt mở (chưa có thì tạo), phiếu phụ trách +1. Áp cả văn bản chưa từng giao Data |
+| D. QA Không đạt | Khoá cặp rồi xét: phiếu Data không còn `ACTIVE` → về pool ngay, phiếu giữ nguyên; người nhập đã bị gỡ → về pool ngay, phiếu −1; còn lại tăng `ReturnCount`, lần 3 → về pool, phiếu −1. Về pool = xoá dòng Data, giữ dòng QA, audit `Trả văn bản về pool` |
+| D. Sau chấm | Phiếu Data còn `ACTIVE` và mọi văn bản đang thuộc phiếu đã QA đạt → `DONE` (UPDATE có điều kiện `Status = ACTIVE`) |
+| E. Sửa hộ | Admin / Leader kiểm văn bản đã đạt → QA cũ chấm lại; Không đạt khi phiếu đã `DONE` → về pool ngay |
+
+| # | Case | Chốt |
+|---|---|---|
+| 15.1 | Đếm 3 lần trả | Theo từng người giữ; đổi người = đếm từ 0 |
+| 15.2 / 15.8 | Về pool | Giữ QA cũ; chỉ người xem tất cả xem / sửa được tới khi giao lại |
+| 15.3 | Admin / Leader kiểm hộ | Được; văn bản vẫn của nhân viên, `SubmissionLog` ghi người kiểm thật |
+| 15.6 / 15.9 | QA phụ trách tắt / gỡ; kiểm xong | Không tự giao; còn lại luôn vào đợt QA mở hoặc đợt mới |
+| 15.10 | Xuất Excel | Không lọc theo người giữ (Task 25, `337`) |
+| 2026-11-12 | Hai QA cùng chấm văn bản của một phiếu Data | Khoá cặp ở D trước khi nạp phiếu, không mất lượt trừ `DocumentCount` |
+
+⚠️ Đạt chạy song song với một văn bản khác của cùng phiếu về pool có thể đều thấy còn văn bản chưa đạt và không chốt `DONE` (cùng
+giới hạn như chốt đợt QA FULL 18C). Đừng thêm khoá ở nhánh Đạt: dòng `Submission` đã cập nhật trước khi khoá, dễ deadlock.
 
 ## Số đo (DB dev local Docker, 20.000 văn bản / 400 hộp, 2026-11-11)
 
