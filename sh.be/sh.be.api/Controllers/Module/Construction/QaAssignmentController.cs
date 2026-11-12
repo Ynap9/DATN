@@ -84,21 +84,6 @@ namespace sh.be.api.Controllers.Module.Construction
             }
         }
 
-        [HttpPost("ticket")]
-        [Permission(PermissionConstants.FUNCTION_SUBMISSION_ASSIGN_QA)]
-        public async Task<ApiResponse> CreateTicket([FromBody] CreateQaTicketDto dto)
-        {
-            try
-            {
-                var data = await _qaAssignmentService.CreateTicket(dto);
-                return new(data);
-            }
-            catch (Exception ex)
-            {
-                return OkException(ex);
-            }
-        }
-
         [HttpGet("ticket/paging")]
         [Permission(PermissionConstants.FUNCTION_SUBMISSION_ASSIGN_QA, PermissionConstants.FUNCTION_SUBMISSION_QA)]
         public async Task<ApiResponse> FindTicketPaging([FromQuery] FindPagingQaTicketDto dto)
