@@ -53,11 +53,13 @@ namespace sh.be.applications.Module.Construction.Implements
             return _mapper.Map<ViewQaSamplingConfigDto>(config);
         }
 
+        // Tạo / cập nhật cấu hình chấm mẫu của dự án; dự án không QA → 345
         public async Task UpdateConfig(UpdateQaSamplingConfigDto dto)
         {
             _logger.LogInformation($"{nameof(UpdateConfig)}, dto={JsonSerializer.Serialize(dto)}");
             var project = await _projectRepository.FindByIdAsync(dto.ProjectId)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
+            project.EnsureQaEnabled();
             var strategyParamsJson = string.IsNullOrWhiteSpace(dto.StrategyParamsJson) ? null : dto.StrategyParamsJson;
             QaAssignmentDomainService.ValidateStrategy(dto.StrategyCode, strategyParamsJson);
 
@@ -90,11 +92,13 @@ namespace sh.be.applications.Module.Construction.Implements
             return await _qaAssignmentQuery.FindReviewerModes(projectId);
         }
 
+        // Đặt chế độ chấm FULL / SAMPLE cho một QA ở dự án; dự án không QA → 345
         public async Task UpdateReviewerMode(UpdateQaReviewerModeDto dto)
         {
             _logger.LogInformation($"{nameof(UpdateReviewerMode)}, dto={JsonSerializer.Serialize(dto)}");
             var project = await _projectRepository.FindByIdAsync(dto.ProjectId)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
+            project.EnsureQaEnabled();
             var user = await _qaAssignmentDomainService.EnsureQaReviewerAsync(dto.UserId);
 
             var now = GetVietnamTime();
@@ -136,6 +140,7 @@ namespace sh.be.applications.Module.Construction.Implements
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaTicketNotFound);
         }
 
+        // Huỷ phiếu QA, trả văn bản chưa QA đạt về chưa giao; dự án không QA → 345
         public async Task<FindQaTicketByIdDto> CancelTicket(int id)
         {
             _logger.LogInformation($"{nameof(CancelTicket)}, id={id}");
@@ -143,6 +148,7 @@ namespace sh.be.applications.Module.Construction.Implements
             var access = await _qaAssignmentDomainService.GetAccessAsync(currentUserId);
             var ticket = await _qaAssignmentDomainService.EnsureVisibleTicketAsync(id, currentUserId, access);
             var project = await _submissionDomainService.EnsureEditableProjectAsync(ticket.ProjectId, access.IsAdmin);
+            project.EnsureQaEnabled();
             var oldStatus = ticket.Status;
 
             await using var transaction = await _unitOfWork.BeginTransactionAsync();

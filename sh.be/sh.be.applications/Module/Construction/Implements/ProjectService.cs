@@ -79,12 +79,13 @@ namespace sh.be.applications.Module.Construction.Implements
             return project;
         }
 
+        // Xem tổng hợp nghiệm thu: đủ điều kiện theo cờ QA của dự án, quyền cho phép khi chưa đủ, lần chuyển gần nhất
         public async Task<ViewProjectAcceptanceDto> FindAcceptance(int id)
         {
             _logger.LogInformation($"{nameof(FindAcceptance)}, id={id}");
             var project = await _projectRepository.FindByIdAsync(id)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
-            var blockers = await _projectRepository.CountAcceptanceBlockersAsync(id);
+            var blockers = await _projectRepository.CountAcceptanceBlockersAsync(id, project.IsQaEnabled);
             var roleNames = await _roleRepository.GetRoleNamesByUserIdAsync(getCurrentUserId());
 
             var acceptance = await _projectQuery.FindAcceptanceSummary(id);
@@ -96,6 +97,7 @@ namespace sh.be.applications.Module.Construction.Implements
             return acceptance;
         }
 
+        // Chuyển dự án sang nghiệm thu khi đủ điều kiện theo cờ QA, hoặc Admin cho phép khi chưa đủ; lý do tuỳ chọn
         public async Task<ViewProjectAcceptanceDto> StartAcceptance(int id, TransitionAcceptanceProjectDto dto)
         {
             _logger.LogInformation($"{nameof(StartAcceptance)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
@@ -108,8 +110,8 @@ namespace sh.be.applications.Module.Construction.Implements
             var oldStatus = project.Status;
 
             project.StartAcceptance(currentUserId, now);
-            var blockers = await _projectRepository.CountAcceptanceBlockersAsync(id);
-            var reason = ProjectDomainService.EnsureAcceptanceAllowed(blockers, dto.IsForced, isAdmin, dto.Reason, isReasonRequired: false);
+            var blockers = await _projectRepository.CountAcceptanceBlockersAsync(id, project.IsQaEnabled);
+            var reason = ProjectDomainService.EnsureAcceptanceAllowed(blockers, dto.IsForced, isAdmin, dto.Reason);
             var summary = await _projectQuery.FindAcceptanceSummary(id);
 
             _projectRepository.Update(project);
@@ -121,6 +123,7 @@ namespace sh.be.applications.Module.Construction.Implements
             return await FindAcceptance(id);
         }
 
+        // Hoàn tất nghiệm thu khi đủ điều kiện theo cờ QA, hoặc Admin cho phép khi chưa đủ; lý do tuỳ chọn
         public async Task<ViewProjectAcceptanceDto> FinishAcceptance(int id, TransitionAcceptanceProjectDto dto)
         {
             _logger.LogInformation($"{nameof(FinishAcceptance)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
@@ -133,8 +136,8 @@ namespace sh.be.applications.Module.Construction.Implements
             var oldStatus = project.Status;
 
             project.FinishAcceptance(currentUserId, now);
-            var blockers = await _projectRepository.CountAcceptanceBlockersAsync(id);
-            var reason = ProjectDomainService.EnsureAcceptanceAllowed(blockers, dto.IsForced, isAdmin, dto.Reason, isReasonRequired: true);
+            var blockers = await _projectRepository.CountAcceptanceBlockersAsync(id, project.IsQaEnabled);
+            var reason = ProjectDomainService.EnsureAcceptanceAllowed(blockers, dto.IsForced, isAdmin, dto.Reason);
             var summary = await _projectQuery.FindAcceptanceSummary(id);
 
             _projectRepository.Update(project);
@@ -169,6 +172,7 @@ namespace sh.be.applications.Module.Construction.Implements
             return await FindAcceptance(id);
         }
 
+        // Tạo dự án kèm cờ có / không QA (chỉ đặt lúc tạo), gán loại văn bản và tạo Google Sheet đồng bộ
         public async Task<FindProjectByIdDto> Create(CreateProjectDto dto)
         {
             _logger.LogInformation($"{nameof(Create)}, dto={JsonSerializer.Serialize(dto)}");
@@ -179,7 +183,7 @@ namespace sh.be.applications.Module.Construction.Implements
             var documentTypeIds = dto.DocumentTypeIds.Distinct().ToList();
             await _documentTypeDomainService.EnsureAllExistAsync(documentTypeIds);
 
-            var project = Project.Create(dto.Name, dto.StartedAt, dto.EndedAt, currentUserId, now);
+            var project = Project.Create(dto.Name, dto.StartedAt, dto.EndedAt, dto.IsQaEnabled, currentUserId, now);
             var account = await GetSpreadsheetAccountAsync();
             var spreadsheet = await _googleSheetExternal.CreateSpreadsheetAsync(account, project.Name, project.GoogleSheetName);
 
@@ -319,6 +323,7 @@ namespace sh.be.applications.Module.Construction.Implements
                 project.StartedAt,
                 project.EndedAt,
                 project.Status,
+                project.IsQaEnabled,
                 project.UrlGoogleSheetSync,
                 project.GoogleSheetName,
                 DocumentTypeIds = documentTypeIds,

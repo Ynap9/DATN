@@ -8,5 +8,6 @@ namespace sh.be.applications.Module.Construction.Dtos.Project
         public DateTime? EndedAt { get; set; }
         public int Status { get; set; }
         public string UrlGoogleSheetSync { get; set; } = String.Empty;
+        public bool IsQaEnabled { get; set; }
     }
 }

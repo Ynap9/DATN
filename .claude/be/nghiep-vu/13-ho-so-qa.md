@@ -44,7 +44,7 @@ Thống kê QA theo trường, theo người nhập và dòng thời gian một 
 |---|---|---|
 | `GET qa/paging` | `Function.Construction.Submission.View` | Danh sách cho QA + `customData` `{ totalNotReviewed, totalPassed, totalFailed }` |
 | `GET {id:int}/qa` | `...Submission.View` | Chi tiết cho QA: thông tin file, `fields`, QA, người kiểm gần nhất, vị trí |
-| `PUT qa` | `Function.Construction.Submission.Qa` | Chấm QA: `{ id, projectId, documentTypeId, result, reason, wrongDocumentFieldIds }`. Chỉ QA của phiếu chứa văn bản, hoặc Admin / SuperAdmin (`334` / `332`, [18C](18-qa-cham-mau.md#18c--phiếu-qa)) |
+| `PUT qa` | `Function.Construction.Submission.Qa` | Chấm QA: `{ id, projectId, documentTypeId, result, reason, wrongDocumentFieldIds }`. Chỉ QA của phiếu chứa văn bản, hoặc Admin / SuperAdmin (`334` / `332`, [18C](18-qa-cham-mau.md#18c--phiếu-qa)). Dự án không QA (Task 28, [07](07-du-an.md#có--không-qa--isqaenabled)) → `345`, kiểm ngay sau nạp dự án, trước `334` / `332` / `320` |
 | `GET {id:int}/qa-logs` | `...Submission.View` | Lịch sử QA, mới nhất trước |
 
 Đi Sau / Trước giữa các hồ sơ chờ QA: dùng `{id}/next`, `{id}/previous` với `statusCheck=1&statusQa=0`; hai API này trả chi tiết thường
@@ -77,7 +77,7 @@ Thống kê QA theo trường, theo người nhập và dòng thời gian một 
   vì entity không có navigation; lỗi ở bất kỳ bước nào → rollback cả hồ sơ, log, trường sai, audit.
 - Dự án `ACCEPTING` vẫn QA được. Chấm **Đạt** trên dự án `DEPLOYING` / `DOING` mà mọi văn bản đã `CHECKED` + `QA_PASSED` → dự án **tự**
   sang `ACCEPTING` trong cùng transaction, sau khối chốt phiếu FULL, kèm audit `Bắt đầu nghiệm thu` `IsAutomatic = true`
-  ([22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md#tự-chuyển-trong-reviewqa)).
+  ([22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md#tự-chuyển-trong-reviewqa--check)).
 - Trả `{ submissionId, statusCheck, statusQa, qaReason, wrongDocumentFieldIds, qaLogId }`.
 
 Lịch sử QA: phân trang, `CreatedDate` rồi `Id` giảm dần, có `userName`, `fullName` (join `Users` lúc đọc), `wrongDocumentFieldIds` của
@@ -101,6 +101,10 @@ Cùng ngày, sau khi đưa `id` vào body (`PUT qa`, `PUT check`) và thêm trư
 (chọn trùng), `311` (trường `Ghi chú` ngoài cấu hình); Đạt kèm trường sai không lỗi, không lưu dòng nào; Không đạt lưu đúng 2 dòng
 `SubmissionQaLogField` và trả `wrongDocumentFieldIds`; `GET {id}` hồ sơ trả lại có `qaWrongDocumentFieldIds`, kiểm tra lại xong thì rỗng;
 `qa-logs` có trường sai từng lần; route cũ `PUT {id}/qa`, `PUT {id}/check` → `405`; thiếu quyền `Qa` (user `viewer`) → `403`.
+
+Ngày 2026-11-13 (Task 28, dự án tạm `ZZTEST28D`, xoá sạch) — **19/19**: dự án không QA `PUT qa` → `345` (cả văn bản chưa kiểm),
+`PUT config` (cả cỡ mẫu sai), `PUT reviewer-mode` (cả user không tồn tại), `POST ticket/{id}/cancel` → `345`, không ghi gì; 6 API đọc QA
+→ 200; dự án có QA 4 API chạy như cũ (user sai vẫn `103`).
 
 ## Giới hạn
 
