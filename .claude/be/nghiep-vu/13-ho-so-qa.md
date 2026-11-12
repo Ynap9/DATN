@@ -5,6 +5,7 @@
 Sau khi người nhập liệu kiểm tra hồ sơ ([12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md)), người QA mở hồ sơ, đối chiếu PDF với dữ liệu
 rồi chấm **Đạt** hoặc **Không đạt (kèm lý do)**. Không đạt thì hồ sơ bị **trả lại** cho người nhập liệu sửa. Bản gốc `nhaplieu.be`
 không có QA — nghiệp vụ mới hoàn toàn. Không có phân công: ai có quyền đều QA được mọi hồ sơ, kể cả hồ sơ chính mình kiểm.
+Kết quả QA với phiếu nhập liệu (trả lần 3 về pool, phiếu Data DONE) ở [23-chia-phieu.md](23-chia-phieu.md#nối-vào-luồng-kiểm-tra--qa).
 
 ## Hai trạng thái độc lập
 

@@ -52,25 +52,45 @@ còn các API theo `{id}` của hồ sơ đã xoá trả `305`.
 
 ## Xuất Excel
 
-`GET export-excel` nhận bộ lọc chung (`projectId`, `documentTypeId`, `statusCheck`, `statusQa`, `keyword`, hai cặp trường) và
-**không** phân trang: xuất mọi hồ sơ khớp bộ lọc, sắp theo `Id` (thứ tự import). Dùng chung `SubmissionQuery.ApplyFilter` với
+`GET export-excel` nhận bộ lọc chung (`projectId`, `documentTypeId`, `statusCheck`, `statusQa`, `keyword`, hai cặp trường), cột tuỳ chọn
+`columns` (Task 27) và **không** phân trang: xuất mọi hồ sơ khớp bộ lọc, sắp theo `Id` (thứ tự import). Dùng chung `SubmissionQuery.ApplyFilter` với
 danh sách, nên số dòng bằng `count.total` cùng bộ lọc.
 
 - Tên file `{Tên dự án}_{Tên loại văn bản}_{yyyyMMddHHmm}.xlsx`. Sheet mang tên loại văn bản.
 - Hàng 1 là tiêu đề, in đậm và cố định. Độ rộng cột tự chỉnh theo 200 dòng đầu, kẹp trong khoảng 8–60.
-- Cột cố định: `STT`, `Tên file`, `Hồ sơ`, `Hộp`, `Đường dẫn` (link S3), `Trạng thái kiểm tra`, `Người kiểm tra`,
-  `Thời gian kiểm tra`, `Trạng thái QA`, `Lý do QA`, `Người sửa cuối`, `Ngày sửa cuối`.
+- Luôn có 4 cột gốc `STT`, `Tên file`, `Hồ sơ`, `Hộp`; sau đó là các cột tuỳ chọn đã chọn (bảng dưới), mặc định không chọn cột nào như 5sdb.
 - Sau đó là các trường có `IsShowTableView = true` của cấu hình dự án + loại văn bản, theo `OrderTableView`. Ô chưa có dữ liệu để trống.
 - Trạng thái ghi bằng chữ: `Chưa kiểm tra` / `Đã kiểm tra` / `Trả lại`; `Chưa QA` / `Đạt` / `Không đạt`. Ngày theo `dd/MM/yyyy HH:mm:ss`.
-  Người kiểm tra và người sửa ghi tên đăng nhập, lấy từ lần kiểm tra gần nhất và `ModifiedBy`.
+  Cột người ghi họ tên (`FullName`, trống thì tên đăng nhập); user đã xoá cứng thì để trống.
 - Xuất được cả khi dự án `DONE`. Không đổi trạng thái, không ghi audit.
-- Chỉ Admin / SuperAdmin hoặc Leader đang hoạt động của dự án (Task 25, cả `export-excel/job`), **không** lọc theo người giữ văn bản.
-  ⚠️ Cấp `Export` cho Data / QA là lộ mọi văn bản của cặp: đừng tick menu cha `Menu.Construction.Submission` cho họ ([03](03-vai-tro-mac-dinh.md)).
+- Xuất chỉ cho Admin / SuperAdmin hoặc Leader đang hoạt động của dự án để làm báo cáo (Task 25, cả `export-excel/job`); nhân viên
+  không xuất được (`337`). **Không** lọc theo người giữ văn bản.
+
+### Cột tuỳ chọn
+
+FE gửi lặp `?columns=checkStatus&columns=checkedBy` (hộp tick, mặc định không tick). Mã nằm ở `SubmissionConst.EXPORT_COLUMNS`.
+
+| Mã | Tiêu đề | Nguồn |
+|---|---|---|
+| `fileUrl` | Đường dẫn | `FileUrlS3Object` (link S3) |
+| `checkStatus` | Trạng thái kiểm tra | `StatusCheck` |
+| `checkedBy` / `checkedDate` | Người kiểm tra / Thời gian kiểm tra | `SubmissionLog` mới nhất: người kiểm thật (Admin / Leader kiểm hộ thì là họ) |
+| `qaStatus` | Trạng thái QA | `StatusQa` |
+| `qaBy` / `qaDate` | Người QA / Thời gian QA | `Submission.QaBy` / `QaDate` — lần chấm gần nhất |
+| `qaReason` | Lý do QA | `QaReason` |
+| `modifiedBy` / `modifiedDate` | Người sửa cuối / Ngày sửa cuối | `ModifiedBy` / `ModifiedDate` |
+
+- Thứ tự cột luôn theo bảng, không theo thứ tự FE gửi; mã trùng bỏ trùng, so khớp không phân biệt hoa thường
+  (`SubmissionDomainService.NormalizeExportColumns`). Mã lạ → `400` "Cột xuất không hợp lệ: {mã}", kiểm sau `337`, trước khi tạo job.
+- `SubmissionLog` chỉ được đọc khi chọn `checkedBy` / `checkedDate`.
+- Sửa sau QA đưa `StatusQa` về `Chưa QA` nhưng giữ `QaBy` / `QaDate` ([13](13-ho-so-qa.md)): cột Người QA vẫn là người chấm gần nhất. Đúng dữ liệu.
+- ⚠️ Không gửi `columns` thì file không còn 8 cột trạng thái / người như trước Task 27; FE phải thêm hộp tick.
 
 | Lỗi | Mã |
 |---|---|
 | Dự án / loại văn bản không tồn tại, hoặc loại văn bản chưa gắn dự án | `303` / `301` / `312` |
 | Không phải Admin và không là Leader đang hoạt động của dự án (kiểm sau ba mã trên) | `337` |
+| Mã trong `columns` không có trong bảng cột tuỳ chọn | `400` |
 | Số hồ sơ vượt `SubmissionConst.EXPORT_MAX_ROWS` (1.048.575): hãy lọc bớt | `322` |
 
 Lỗi nghiệp vụ không trả file: controller trả `ApiResponse` JSON với HTTP 200. FE phải kiểm `Content-Type` của response như
@@ -96,7 +116,7 @@ dựng cùng lúc. Không làm xuất nhanh hơn. `GET export-excel` cũ giữ s
 
 ⚠️ Job không có user từ token: `337` và phiếu QA chỉ kiểm ở `POST export-excel/job`; job gọi `ExportExcelFromJob` (không kiểm user), đừng gọi `ExportExcel`.
 
-1. FE gọi `POST export-excel/job` + bộ lọc. BE kiểm `303` / `301` / `312` / `337` (không tạo job), chốt tên file `{Tên dự án}_{Tên loại văn bản}_{yyyyMMddHHmm}.xlsx`
+1. FE gọi `POST export-excel/job` + bộ lọc. BE kiểm `303` / `301` / `312` / `337` / `400` mã cột (không tạo job), chốt tên file `{Tên dự án}_{Tên loại văn bản}_{yyyyMMddHHmm}.xlsx`
    theo giờ VN lúc bấm, xếp job, trả `{ jobId, status: 0, fileName }`. Không kiểm `322` lúc này: job tự báo.
 2. FE gọi `GET export-excel/job/{jobId}` mỗi 2–3 giây tới khi `status` là `2` hoặc `3`.
 3. `status = 2` → `downloadUrl` (link ký sẵn MinIO 15 phút, `attachment` kèm tên file). Link hết hạn thì gọi lại API 2 để lấy link mới.

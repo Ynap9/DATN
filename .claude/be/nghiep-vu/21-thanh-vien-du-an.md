@@ -65,7 +65,8 @@ Gỡ (API 14) = xoá mềm + **tự thu hồi** văn bản chưa làm của ngư
 | `Leader` | — | — | Người mình quản lý trong cặp → `ManagedByUserId = null` |
 
 - Data: xoá dòng `SubmissionUser` Role `Data`; dữ liệu đã nhập và `StatusCheck = RETURNED` giữ nguyên. Mỗi phiếu
-  `DecreaseDocuments(số dòng xoá thật)` → về 0 thì `CANCELLED`, còn văn bản `CHECKED` thì phiếu vẫn `ACTIVE`.
+  `DecreaseDocuments(số dòng xoá thật)` → về 0 thì `CANCELLED`, còn văn bản `CHECKED` thì phiếu vẫn `ACTIVE`. Từ Task 15 người đã gỡ
+  mở / kiểm văn bản còn giữ → `820`; QA chấm Không đạt văn bản đó → về pool ngay ([23](23-chia-phieu.md#nối-vào-luồng-kiểm-tra--qa)).
 - QA: gọi thẳng `QaAssignmentDomainService.CancelTicketAsync` của 18C — `Cancel` → `UPDATE` có điều kiện (0 dòng → `335`) → xoá dòng QA
   của văn bản chưa Đạt; `SubmissionQaLog`, `StatusQa` giữ nguyên. QA đã gỡ chấm phiếu cũ → `334`. Từ Task 13 còn huỷ phiếu
   phụ trách nút (`AssignmentTicket` Role `QA`) → trả thêm `cancelledQaOwnershipTicketIds` ([23](23-chia-phieu.md)).

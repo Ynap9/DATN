@@ -23,7 +23,7 @@ namespace sh.be.applications.Module.Construction.Interfaces.Queries
         Task<BaseResponsePagingDto<GetListQaEntryUserStatsDto>> FindQaEntryUserStatsPaging(FindPagingQaEntryUserStatsDto dto, DateTime fromDate,
             DateTime toDateExclusive);
         Task<List<GetListSubmissionTimelineDto>> FindTimeline(int submissionId);
-        Task<SubmissionExportTableDto> FindExportTable(ISubmissionFilter filter);
+        Task<SubmissionExportTableDto> FindExportTable(ExportSubmissionDto filter);
         Task<SubmissionExportNameDto?> FindExportName(int projectId, int documentTypeId);
     }
 }
