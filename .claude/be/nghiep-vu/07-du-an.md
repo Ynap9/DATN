@@ -16,6 +16,8 @@ Trường: `Name`, `StartedAt`, `EndedAt`, `Status`, `UrlGoogleSheetSync`, `Goog
 | Tạo mới (kèm tạo Google Sheet) | `POST api/construction/project` | `Function.Construction.Project.Create` |
 | Cập nhật | `PUT api/construction/project/{id}` | `Function.Construction.Project.Update` |
 | Xoá | `DELETE api/construction/project/{id}` | `Function.Construction.Project.Delete` |
+| Tổng hợp nghiệm thu ([22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md)) | `GET api/construction/project/{id:int}/acceptance` | `Function.Construction.Project.View` |
+| Bắt đầu / hoàn tất nghiệm thu, trả về đang làm | `POST .../{id:int}/acceptance/start`, `.../finish`, `.../reopen` | `Function.Construction.Project.Accept` |
 | Hạn dự án: danh sách, chạy job, trạng thái job, lịch sử mail ([15-han-du-an.md](15-han-du-an.md)) | `GET deadline`, `POST deadline-check/run`, `GET deadline-check/status`, `GET deadline-notification/paging` | `Function.Construction.Project.Deadline` |
 
 Body tạo: `{ "name", "startedAt", "endedAt", "documentTypeIds": [] }`. Hệ thống tự gán `status = DEPLOYING` (đang triển khai)
@@ -63,15 +65,19 @@ khoá ngoại; chưa có API riêng — chỉ được ghi qua CRUD dự án (xe
 |---|---|---|
 | `DEPLOYING` | `1` | Đang triển khai (gán khi tạo) |
 | `DOING` | `2` | Đang làm |
-| `ACCEPTING` | `3` | Đang nghiệm thu |
+| `ACCEPTING` | `3` | Đang nghiệm thu: khoá import (`341`), kiểm tra / QA vẫn được |
 | `DONE` | `4` | Đã xong |
+
+Vào / ra `ACCEPTING` và sang `DONE` **chỉ** qua API nghiệm thu hoặc tự chuyển khi văn bản cuối QA đạt — bảng chuyển, luật và mã
+`340`–`342` ở [22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md).
 | `EXPIRED` | `5` | Hết hạn: job tự chuyển khi qua `EndedAt`, chặn thao tác hồ sơ như `DONE` (mã `323`); mở lại bằng `PUT` |
 
 ## Luật nghiệp vụ
 
 - `Name` **duy nhất** trong các dự án chưa xoá (`ProjectDomainService.EnsureUniqueNameAsync`) → trùng trả `409`
   "Tên dự án đã tồn tại"; khi sửa không tính trùng với chính nó.
-- Sửa: `Status` ngoài `ProjectConst.STATUSES` → `400` "Trạng thái dự án không hợp lệ" (kiểm trong `Project.Update`).
+- Sửa: `Status` ngoài `ProjectConst.STATUSES` → `400` "Trạng thái dự án không hợp lệ" (kiểm trong `Project.Update`). Đổi `Status`
+  sang `ACCEPTING` / `DONE` hoặc rời `ACCEPTING` → `342` "Dùng chức năng nghiệm thu"; giữ nguyên `Status` (kể cả `ACCEPTING` / `DONE`) thì vẫn sửa được.
 - `StartedAt` sau `EndedAt` (khi có cả hai) → `400` "Ngày bắt đầu không được sau ngày kết thúc" (tạo và sửa).
 - Xoá là **xoá mềm** (`Deleted = true`, global query filter ẩn đi); xem lại sau xoá trả `303`. **Không** xoá Google Sheet.
 - Mỗi thao tác ghi để lại audit `Tạo / Cập nhật / Xóa dự án` kèm giá trị cũ và mới.

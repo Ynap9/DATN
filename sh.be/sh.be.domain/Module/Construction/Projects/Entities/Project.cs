@@ -59,6 +59,11 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
         {
             EnsureValidStatus(status);
             EnsureValidPeriod(startedAt, endedAt);
+            // Vào / ra nghiệm thu và sang Xong chỉ qua chức năng nghiệm thu để luôn kiểm điều kiện và ghi audit nghiệm thu
+            if (status != Status && (Status == ProjectConst.ACCEPTING || status == ProjectConst.ACCEPTING || status == ProjectConst.DONE))
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectStatusTransitionInvalid, "Dùng chức năng nghiệm thu");
+            }
 
             Name = name;
             StartedAt = startedAt;
@@ -88,8 +93,27 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
             return true;
         }
 
+        public void StartAcceptance(string? modifiedBy, DateTime modifiedDate)
+        {
+            TransitionStatus(ProjectConst.ACCEPTANCE_START_STATUSES, ProjectConst.ACCEPTING, modifiedBy, modifiedDate);
+        }
+
+        public void FinishAcceptance(string? modifiedBy, DateTime modifiedDate)
+        {
+            TransitionStatus([ProjectConst.ACCEPTING], ProjectConst.DONE, modifiedBy, modifiedDate);
+        }
+
+        public void ReopenFromAcceptance(string? modifiedBy, DateTime modifiedDate)
+        {
+            TransitionStatus([ProjectConst.ACCEPTING], ProjectConst.DOING, modifiedBy, modifiedDate);
+        }
+
         public void EnsureImportable()
         {
+            if (Status == ProjectConst.ACCEPTING)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectAccepting);
+            }
             if (Status == ProjectConst.DONE)
             {
                 throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectDone);
@@ -117,6 +141,18 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
             return documentTypeIds
                 .Select(documentTypeId => ProjectDocumentType.Create(Id, documentTypeId, assignedBy, assignedDate))
                 .ToList();
+        }
+
+        private void TransitionStatus(IReadOnlyList<int> fromStatuses, int toStatus, string? modifiedBy, DateTime modifiedDate)
+        {
+            if (!fromStatuses.Contains(Status))
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectStatusTransitionInvalid);
+            }
+
+            Status = toStatus;
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
         }
 
         private static void EnsureValidStatus(int status)

@@ -5,6 +5,7 @@ namespace sh.be.applications.Base.Dtos.BackgroundJob
         public string JobId { get; set; } = String.Empty;
         public int Status { get; set; }
         public string? ErrorMessage { get; set; }
+        public string? Result { get; set; }
         public IReadOnlyDictionary<string, string?> Parameters { get; set; } = new Dictionary<string, string?>();
     }
 }

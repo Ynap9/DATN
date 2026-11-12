@@ -1,6 +1,6 @@
 # Chia phiếu nhập liệu và QA (Operation)
 
-> **Phần 22/22** · trước: [21-thanh-vien-du-an.md](21-thanh-vien-du-an.md) · mục lục: [README.md](README.md)
+> **Phần 23/23** · trước: [22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md) · mục lục: [README.md](README.md)
 
 Admin hoặc Leader của cặp (dự án, loại văn bản) xem cây **Hộp → Hồ sơ → Văn bản**, chọn người nhận, tích nút, xem trước rồi lưu.
 Data nhận **phiếu nhập liệu**; QA nhận **phụ trách nút** và văn bản đã kiểm vào **đợt QA**. Task 13, 2026-11-11. Không đổi schema,

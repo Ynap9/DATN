@@ -23,6 +23,27 @@ namespace sh.be.domain.Module.Construction.Projects.Services
             }
         }
 
+        // DB đọc snapshot (RCSI): QA song song 2 văn bản cuối sẽ cùng thấy văn bản kia chưa đạt nên phải khoá dự án trước khi đếm
+        // để request sau chờ request trước commit; UPDATE có điều kiện để chỉ 1 request chuyển
+        public async Task<bool> TryStartAcceptanceAsync(Project project, string? modifiedBy, DateTime modifiedDate)
+        {
+            if (!ProjectConst.ACCEPTANCE_START_STATUSES.Contains(project.Status))
+            {
+                return false;
+            }
+            await _projectRepository.LockAsync(project.Id);
+            if (!(await _projectRepository.CountAcceptanceBlockersAsync(project.Id)).IsReady)
+            {
+                return false;
+            }
+            if (await _projectRepository.TryStartAcceptanceAsync(project.Id) == 0)
+            {
+                return false;
+            }
+            project.StartAcceptance(modifiedBy, modifiedDate);
+            return true;
+        }
+
         public static int CalculateDeadlineDaysLeft(DateTime endedAt, DateTime today)
         {
             return (endedAt.Date - today.Date).Days;
@@ -76,7 +97,79 @@ namespace sh.be.domain.Module.Construction.Projects.Services
         {
             return $"{projectId}|{notificationType}|{endedAt:yyyyMMdd}|{toAddress.Trim().ToLowerInvariant()}";
         }
+
+        // Admin / SuperAdmin thao tác mọi dự án; người khác chỉ dự án mình là Leader đang hoạt động (ít nhất một loại văn bản)
+        public async Task EnsureCanAcceptAsync(int projectId, string userId, bool isAdmin)
+        {
+            if (!isAdmin && !await _projectRepository.IsActiveLeaderAsync(projectId, userId))
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotManaged);
+            }
+        }
+
+        public static void EnsureCanReopen(bool isAdmin)
+        {
+            if (!isAdmin)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Chỉ Admin được trả dự án về đang làm");
+            }
+        }
+
+        // Dự án chưa có văn bản thì chặn hẳn, kể cả Admin; đủ điều kiện thì bỏ qua cờ isForced; chưa đủ thì chỉ Admin được cho phép,
+        // lý do bắt buộc khi isReasonRequired (hoàn tất), còn lại tuỳ chọn (bắt đầu). Trả lý do đã trim để ghi audit
+        public static string? EnsureAcceptanceAllowed(ProjectAcceptanceBlockers blockers, bool isForced, bool isAdmin, string? reason, bool isReasonRequired)
+        {
+            if (blockers.TotalCount == 0)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotReadyForAcceptance, "Dự án chưa có văn bản nào");
+            }
+            if (blockers.IsReady)
+            {
+                return NormalizeOptionalAcceptanceReason(reason);
+            }
+            if (!isForced)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotReadyForAcceptance,
+                    $"Còn {blockers.NotCheckedCount} văn bản chưa kiểm, {blockers.NotPassedCount} văn bản chưa QA đạt");
+            }
+            if (!isAdmin)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Chỉ Admin được cho phép khi chưa đủ điều kiện");
+            }
+            return isReasonRequired ? NormalizeAcceptanceReason(reason) : NormalizeOptionalAcceptanceReason(reason);
+        }
+
+        private static string? NormalizeOptionalAcceptanceReason(string? reason)
+        {
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                return null;
+            }
+            var trimmedReason = reason.Trim();
+            if (trimmedReason.Length > ProjectConst.ACCEPTANCE_REASON_MAX)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, $"Lý do tối đa {ProjectConst.ACCEPTANCE_REASON_MAX} ký tự");
+            }
+            return trimmedReason;
+        }
+
+        public static string NormalizeAcceptanceReason(string? reason)
+        {
+            var trimmedReason = reason?.Trim() ?? string.Empty;
+            if (trimmedReason.Length < ProjectConst.ACCEPTANCE_REASON_MIN || trimmedReason.Length > ProjectConst.ACCEPTANCE_REASON_MAX)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest,
+                    $"Lý do phải từ {ProjectConst.ACCEPTANCE_REASON_MIN} đến {ProjectConst.ACCEPTANCE_REASON_MAX} ký tự");
+            }
+            return trimmedReason;
+        }
     }
 
     public record ProjectDeadlineSettings(int WarningDays, bool IsMailEnabled, List<string> DefaultedConfigNames);
+
+    // NotChecked = chưa CHECKED (gồm trả lại); NotPassed = đã CHECKED nhưng chưa QA đạt; tính mọi văn bản chưa xoá của dự án
+    public record ProjectAcceptanceBlockers(int NotCheckedCount, int NotPassedCount, int TotalCount)
+    {
+        public bool IsReady => TotalCount > 0 && NotCheckedCount == 0 && NotPassedCount == 0;
+    }
 }

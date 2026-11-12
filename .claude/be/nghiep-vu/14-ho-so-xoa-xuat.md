@@ -112,7 +112,8 @@ dựng cùng lúc. Không làm xuất nhanh hơn. `GET export-excel` cũ giữ s
   (DB, MinIO) → retry 2 lần rồi `3` với câu chung `Xuất Excel thất bại, hãy thử lại` (không lộ lỗi hệ thống).
 - Người tạo, loại job, tên file, object key lưu ở tham số job Hangfire; không thêm bảng, không ghi audit.
 - File: `construction/submission-export/{yyyyMMdd}/{guid}.xlsx`, private. `SubmissionExportCleanupJob` chạy `BackgroundJob:Jobs:SubmissionExportCleanup`
-  (`0 2 * * *` giờ VN), xoá thư mục ngày cách hôm nay 2–8 ngày (giữ hôm nay + hôm qua, quét lại 7 ngày nếu job lỡ chạy).
+  (`0 2 * * *` giờ VN), xoá thư mục ngày cách hôm nay 2–8 ngày (giữ hôm nay + hôm qua, quét lại 7 ngày nếu job lỡ chạy); dọn cả file Excel
+  tải lên để import (`construction/submission-import`, [11](11-ho-so-import.md#import-từ-file-excel-chạy-nền)) cùng thời hạn.
 - Job Succeeded / Deleted Hangfire tự xoá sau 24 giờ → API 2 trả `326`. ⚠️ Job **Failed thì Hangfire không tự xoá**, nằm mãi ở dashboard.
 
 ⚠️ Mọi app trỏ cùng DB là một server Hangfire. Khi đo, máy đồng đội chạy code cũ (không có `SubmissionExportJob`) đã lấy job đang chờ retry,

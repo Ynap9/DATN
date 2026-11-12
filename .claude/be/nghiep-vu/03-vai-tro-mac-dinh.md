@@ -21,6 +21,10 @@ Một user không được giữ cùng lúc `Data` và `QA` (`RoleConstants.EXCL
 Bốn vai trò `Leader`, `Data`, `QA`, `User` chưa có quyền nào sau khi seed. Muốn dùng phải gán quyền bằng API
 `PUT api/auth/role/permission`.
 
+`Function.Construction.Project.Accept` (nghiệm thu dự án, Task 23) chỉ Admin có qua seeder. Gán thêm cho Leader thì Leader bắt
+đầu / hoàn tất được khi **đủ** điều kiện và chỉ ở dự án mình đang là Leader (`337`); cho vào khi chưa đủ và trả dự án về đang làm vẫn
+chỉ Admin / SuperAdmin (`400`, [22](22-nghiem-thu-du-an.md)).
+
 ### Quyền Operation gán mặc định (bằng API, không qua seeder)
 
 | Key | Admin | Leader | Data | QA |
@@ -36,7 +40,7 @@ Bốn vai trò `Leader`, `Data`, `QA`, `User` chưa có quyền nào sau khi see
 ⚠️ Bẫy: tick một menu là `SyncChecked` cấp **mọi** con của nó. Tick `Menu.Operation.ProjectMember` cho Leader là Leader có luôn
 `Price.ManageCompany`; tick `Menu.Operation.Assignment` là có `BonusPool.View`. Chỉ tick key `Function` (menu tự bật khi đủ mọi con).
 Leader vì vậy không có key hai menu này — FE phải hiện menu khi có **bất kỳ** key con, đừng đòi key `Menu.*`. Từ Task 13 QA xem đợt QA
-của mình ở `my-assignment` ([22](22-chia-phieu.md)) nên **cần** `ViewOwn` (thiếu thì QA nhận `403`); môi trường mới phải gán lại. Leader vẫn bị chặn ở service nếu không phải `ProjectMember`
+của mình ở `my-assignment` ([23](23-chia-phieu.md)) nên **cần** `ViewOwn` (thiếu thì QA nhận `403`); môi trường mới phải gán lại. Leader vẫn bị chặn ở service nếu không phải `ProjectMember`
 vai trò `Leader` của đúng (dự án, loại văn bản) — quyền chỉ mở cửa API.
 
 ## Tài khoản khởi tạo

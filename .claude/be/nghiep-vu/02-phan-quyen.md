@@ -43,7 +43,8 @@ Menu.Construction                  Menu nghiệp vụ xây dựng
 │   ├── Function.Construction.Project.Create
 │   ├── Function.Construction.Project.Update
 │   ├── Function.Construction.Project.Delete
-│   └── Function.Construction.Project.Deadline  (hạn dự án, chạy job kiểm tra hạn, lịch sử mail)
+│   ├── Function.Construction.Project.Deadline  (hạn dự án, chạy job kiểm tra hạn, lịch sử mail)
+│   └── Function.Construction.Project.Accept    (bắt đầu / hoàn tất nghiệm thu, trả về đang làm — Task 23)
 ├── Menu.Construction.ProjectConfig Menu cấu hình dự án
 │   ├── Function.Construction.ProjectConfig.View     (gồm xem cấu hình chấm mẫu và chế độ chấm QA)
 │   ├── Function.Construction.ProjectConfig.Create
@@ -106,17 +107,10 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 
 | Endpoint | Key yêu cầu |
 |---|---|
-| `GET api/auth/user/paging` | `Menu.Auth` |
-| `GET api/auth/user/me` | — (chỉ cần đăng nhập) |
-| `POST api/auth/user` | `Menu.Auth` |
-| `PUT api/auth/user` | `Menu.Auth` |
-| `DELETE api/auth/user/{userid}` | `Menu.Auth` |
-| `PUT api/auth/user/role` | `Menu.Auth` |
-| `PUT api/auth/user/change-password` | — (chỉ cần đăng nhập) |
+| `GET api/auth/user/paging`, `POST` / `PUT api/auth/user`, `DELETE .../{userid}`, `PUT .../role` | `Menu.Auth` |
+| `GET api/auth/user/me`, `PUT api/auth/user/change-password` | — (chỉ cần đăng nhập) |
 | `GET api/auth/role/paging` | `Menu.Auth` |
-| `GET api/auth/role/dropdown` | `Function.Auth.Role.View` |
-| `GET api/auth/role/{id}` | `Function.Auth.Role.View` |
-| `GET api/auth/role/{id}/tree` | `Function.Auth.Role.View` |
+| `GET api/auth/role/dropdown`, `GET .../{id}`, `GET .../{id}/tree` | `Function.Auth.Role.View` |
 | `POST api/auth/role` | `Function.Auth.Role.Create` |
 | `PUT api/auth/role/{id}` | `Function.Auth.Role.Update` |
 | `DELETE api/auth/role/{id}` | `Function.Auth.Role.Delete` |
@@ -132,7 +126,8 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `POST api/construction/document-field`, `POST .../quick-create`, `GET .../sheet-header` | `Function.Construction.DocumentField.Create` |
 | `PUT api/construction/document-field/{id}`, `PUT .../{id}/setting`, `PUT .../{id}/order-table-view`, `PUT .../{id}/order-list-view` | `Function.Construction.DocumentField.Update` |
 | `DELETE api/construction/document-field/{id}`, `DELETE .../quick-delete` | `Function.Construction.DocumentField.Delete` |
-| `GET api/construction/project/{id}` | `Function.Construction.Project.View` |
+| `GET api/construction/project/{id}`, `GET .../{id:int}/acceptance` | `Function.Construction.Project.View` |
+| `POST api/construction/project/{id:int}/acceptance/start`, `.../finish`, `.../reopen` | `Function.Construction.Project.Accept` (Leader chỉ dự án mình là Leader — `337`; `reopen` chỉ Admin — kiểm ở service, [22](22-nghiem-thu-du-an.md)) |
 | `POST api/construction/project` | `Function.Construction.Project.Create` |
 | `PUT api/construction/project/{id}` | `Function.Construction.Project.Update` |
 | `DELETE api/construction/project/{id}` | `Function.Construction.Project.Delete` |
@@ -160,7 +155,7 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `GET api/digital-signature/plugin/version`, `.../setup`, `.../setup/content` | — (chỉ cần đăng nhập) |
 | `api/operation/staff-group`: `GET paging`, `GET candidates`, `GET` / `PUT` / `DELETE {id}`, `POST`, `POST` / `DELETE {id}/members` | `Function.Operation.StaffGroup.Manage` (Leader còn bị lọc theo chủ nhóm ở service, [19](19-nhom-nhan-vien.md)) |
 | `api/operation/project/{projectId}`: `GET member/paging`, `GET member/candidates`, `POST leader`, `POST member`, `PUT` / `DELETE member/{memberId}` | `Function.Operation.ProjectMember.Manage` (Leader chỉ trong cặp mình là Leader đang hoạt động, chỉ người mình quản lý; `POST leader` chỉ Admin — kiểm ở service, [21](21-thanh-vien-du-an.md)) |
-| `api/operation/project/{projectId}/document-type/{documentTypeId}`: `GET assignment-tree`, `GET assignment-tree/profiles`, `POST assignment/preview`, `POST assignment`, `GET assignment/{ticketId}`; `GET api/operation/my-assignment` | `Function.Operation.Assignment.Manage` (Leader chỉ cặp mình là Leader, chỉ giao người mình quản lý); `my-assignment` cần `.Assignment.ViewOwn` ([22](22-chia-phieu.md)) |
+| `api/operation/project/{projectId}/document-type/{documentTypeId}`: `GET assignment-tree`, `GET assignment-tree/profiles`, `POST assignment/preview`, `POST assignment`, `GET assignment/{ticketId}`; `GET api/operation/my-assignment` | `Function.Operation.Assignment.Manage` (Leader chỉ cặp mình là Leader, chỉ giao người mình quản lý); `my-assignment` cần `.Assignment.ViewOwn` ([23](23-chia-phieu.md)) |
 
 ## Quyền người dùng: đang lệch so với cây
 

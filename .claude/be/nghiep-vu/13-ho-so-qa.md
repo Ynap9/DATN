@@ -74,6 +74,9 @@ Thống kê QA theo trường, theo người nhập và dòng thời gian một 
   (migration `Add_SubmissionQaLogField`), **một** `AuditLog` `QA hồ sơ`, `Update` (có `WrongDocumentFieldIds`).
 - Hai lần `SaveChanges` trong **một** transaction: lưu log lấy `Id` rồi mới dựng trường sai (`SubmissionQaLog.CreateWrongFields`),
   vì entity không có navigation; lỗi ở bất kỳ bước nào → rollback cả hồ sơ, log, trường sai, audit.
+- Dự án `ACCEPTING` vẫn QA được. Chấm **Đạt** trên dự án `DEPLOYING` / `DOING` mà mọi văn bản đã `CHECKED` + `QA_PASSED` → dự án **tự**
+  sang `ACCEPTING` trong cùng transaction, sau khối chốt phiếu FULL, kèm audit `Bắt đầu nghiệm thu` `IsAutomatic = true`
+  ([22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md#tự-chuyển-trong-reviewqa)).
 - Trả `{ submissionId, statusCheck, statusQa, qaReason, wrongDocumentFieldIds, qaLogId }`.
 
 Lịch sử QA: phân trang, `CreatedDate` rồi `Id` giảm dần, có `userName`, `fullName` (join `Users` lúc đọc), `wrongDocumentFieldIds` của

@@ -68,7 +68,7 @@ Gỡ (API 14) = xoá mềm + **tự thu hồi** văn bản chưa làm của ngư
   `DecreaseDocuments(số dòng xoá thật)` → về 0 thì `CANCELLED`, còn văn bản `CHECKED` thì phiếu vẫn `ACTIVE`.
 - QA: gọi thẳng `QaAssignmentDomainService.CancelTicketAsync` của 18C — `Cancel` → `UPDATE` có điều kiện (0 dòng → `335`) → xoá dòng QA
   của văn bản chưa Đạt; `SubmissionQaLog`, `StatusQa` giữ nguyên. QA đã gỡ chấm phiếu cũ → `334`. Từ Task 13 còn huỷ phiếu
-  phụ trách nút (`AssignmentTicket` Role `QA`) → trả thêm `cancelledQaOwnershipTicketIds` ([22](22-chia-phieu.md)).
+  phụ trách nút (`AssignmentTicket` Role `QA`) → trả thêm `cancelledQaOwnershipTicketIds` ([23](23-chia-phieu.md)).
 - Chống đua: lệnh xoá có điều kiện trạng thái văn bản **ngay trong câu SQL** (`ExecuteDelete` + `Any` trên `Submissions`), không đọc trước
   rồi xoá sau — văn bản người đó vừa bấm Kiểm tra / vừa chấm Đạt ở lại người đó.
 - Trả `revokedDocumentCount`, `keptDocumentCount` (dòng còn lại của **các phiếu vừa xét**), `cancelledAssignmentTicketIds`,
@@ -121,4 +121,4 @@ gỡ Leader chỉ bỏ quản lý trong cặp; `338` / `339`; phiếu giao trư�
 Chưa kiểm thực tế: đua "gỡ D1 ↔ D1 bấm Kiểm tra" (cần luồng nhập liệu Task 13, an toàn nhờ điều kiện trong câu xoá); dữ liệu nhập của văn
 bản `RETURNED` (seed không có `SubmissionData`; câu thu hồi chỉ xoá `SubmissionUser`).
 
-> **Tiếp:** [22-chia-phieu.md](22-chia-phieu.md) — cây Hộp → Hồ sơ, giao phiếu nhập liệu, QA phụ trách nút + đợt QA, phiếu của tôi.
+> **Tiếp:** [22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md) — nghiệm thu dự án: tự chuyển khi đủ, Admin cho phép khi chưa đủ, khoá import.

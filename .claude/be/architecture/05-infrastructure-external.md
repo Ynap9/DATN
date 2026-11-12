@@ -11,7 +11,7 @@ Service và external chỉ nối qua interface: đổi nhà cung cấp không ch
 |---|---|
 | `Ai` | `ISecretProtectorExternal` → `DataProtectionSecretProtectorExternal` (singleton): `Protect` / `TryUnprotect` theo `purpose` bằng ASP.NET DataProtection; giải mã lỗi (`CryptographicException`, `FormatException` khi chuỗi rác) → `null`. Giữ API key nhà cung cấp AI ([../nghiep-vu/20-ai-nha-cung-cap.md](../nghiep-vu/20-ai-nha-cung-cap.md)) |
 | `BackgroundJob` | `IBackgroundJobExternal` → `HangfireBackgroundJobExternal`; cấu hình Hangfire ở `Base/HangfireExtensions` |
-| `DataReader` | `IDataReaderExternal` → `GoogleSheetReaderExternal` (qua `Base/DataReaderExternalBase`); `IExcelExternal` → `ExcelExternal`; `IGoogleSheetExternal` → `GoogleSheetExternal` |
+| `DataReader` | `IDataReaderExternal` → `GoogleSheetReaderExternal`, `IExcelReaderExternal` → `ExcelReaderExternal` (cùng qua `Base/DataReaderExternalBase`); `IExcelExternal` → `ExcelExternal`; `IGoogleSheetExternal` → `GoogleSheetExternal` |
 | `DigitalSignature` | `IPdfSignerExternal`, `ISigningQueueExternal`, `ITimestampExternal`, `ICertificateValidatorExternal` → `...External` cùng tên (singleton). Xem [09-chu-ky-so.md](09-chu-ky-so.md) |
 | `Mail` | `IMailExternal` → `MailExternal`; HTML ở `Mail/Templates/` (embedded resource: `AccountCreated`, `ProjectDeadline`), đọc qua `Base/MailTemplateLoader` |
 | `SignalR` | `ISignalRExternal` → `SignalRExternal` (singleton); hub, tracker, cấu hình ở `Base/` |
@@ -27,11 +27,11 @@ Service và external chỉ nối qua interface: đổi nhà cung cấp không ch
 
 `AddHangfireBackgroundJob(connectionString, BackgroundJobSettings)`: Hangfire 1.8.25 trên `SO_HOA_DB`, schema `hangfire` (11 bảng **tự tạo**, ngoài EF migration).
 
-- Retry `RETRY_ATTEMPTS = 2`, trừ `UserFriendlyException` (`ExceptOn`: lỗi nghiệp vụ Failed ngay). Khi `BackgroundJob:Enabled` dựng **2 server**: queue
-  `default` (`WorkerCount`) và queue `export` (`ExportWorkerCount`, tên `{máy}:export`), nên mỗi app có `serverCount = 2`.
+- Retry `RETRY_ATTEMPTS = 2`, trừ `UserFriendlyException` (`ExceptOn`: lỗi nghiệp vụ Failed ngay). Khi `BackgroundJob:Enabled` dựng **3 server**: queue
+  `default` (`WorkerCount`), `export` (`ExportWorkerCount`, tên `{máy}:export`), `import` (`IMPORT_WORKER_COUNT = 1`, tên `{máy}:import`) → `serverCount = 3`. Job cần **không retry với mọi lỗi** (import Excel) tự bọc lỗi khác thành `UserFriendlyException`: `applications` không tham chiếu Hangfire nên không gắn được `[AutomaticRetry]`.
 - Cổng ra: `AddOrUpdateRecurring` / `TriggerRecurring` / `FindRecurring` (job định kỳ); `Enqueue<TJob>(job, queue, parameters)` (tham số ghi **cùng lúc**
   tạo job, `IBackgroundJobClientV2.Create`); `FindJob(jobId, names)` (không có / hết hạn / id không phải số → `null`; `0` chờ, `1` chạy, `2` xong, `3` Failed /
-  Deleted; `ErrorMessage` chỉ khi lỗi là `UserFriendlyException`); `HasServerForQueue` (server nghe queue có heartbeat trong `SERVER_ALIVE_SECONDS = 90`).
+  Deleted; `ErrorMessage` chỉ khi lỗi là `UserFriendlyException`; `Result` = giá trị job trả về khi Succeeded); `HasServerForQueue` (server nghe queue có heartbeat trong `SERVER_ALIVE_SECONDS = 90`).
 - Job là class thường ở `applications/Module/<M>/Jobs/`, `AddScoped` nhóm `// jobs`, người thao tác `SYSTEM_USER`. Định kỳ: thêm cron vào
   `BackgroundJobScheduleSettings` + `api/Worker/RecurringJobRegistrar` (giờ VN); theo yêu cầu: `Enqueue`. Ví dụ [15](../nghiep-vu/15-han-du-an.md), [14](../nghiep-vu/14-ho-so-xoa-xuat.md#xuất-excel-chạy-nền).
 - `UseHangfireBackgroundJobDashboard(isReadOnly)` mở `/hangfire` sau `UseAuthorization()`, chỉ đọc khi **không** phải Development;
@@ -59,8 +59,8 @@ khởi động**. Giữ `SetIsOriginAllowed` (có `*` → mọi origin, không t
 `IDataReaderExternal` dùng **template method**: `DataReaderExternalBase` viết luồng chung (bỏ ô trống, trim header; `GetHeadersAsync` kiểm
 `headerRowIndex >= 1` → `400`; `ReadTableAsync` trim mọi ô, **giữ** ô trống để đúng cột, dòng `1` là header, `SheetRowNumber` = số dòng thật),
 lớp con chỉ override `ReadHeaderRowsAsync`, `ReadHeaderCellsAsync`, `ReadRowsAsync`. `GoogleSheetReaderExternal` dùng **service account**
-(`CredentialsPath`, `sh.be.api/Credentials/` trong `.gitignore`): link sai `202`, `GoogleApiException` `203`, không có sheet `204`; chia sẻ cho `client_email`.
-⚠️ Thêm nguồn đọc thứ hai thì DI trả implement đăng ký sau cùng: cần keyed service hoặc factory theo loại nguồn, đừng `AddScoped` thêm rồi để vậy. ⚠️ Dùng `CredentialFactory.FromFile<ServiceAccountCredential | UserCredential>(...)`, **không** `GoogleCredential.FromFile` (CS0618).
+(`CredentialsPath`, `sh.be.api/Credentials/` trong `.gitignore`): link sai `202`, `GoogleApiException` `203`, không có sheet `204`; chia sẻ cho `client_email`. `ExcelReaderExternal`: `source` = `fileKey` MinIO, ClosedXML `GetFormattedString` (ngày / số / công thức đúng như người dùng thấy), giữ dòng trống giữa, tải lỗi / không mở được → `343`.
+⚠️ Hai nguồn tách DI bằng interface đánh dấu `IExcelReaderExternal : IDataReaderExternal`; nguồn mới làm tương tự, đừng `AddScoped` thêm cùng `IDataReaderExternal` (DI trả implement đăng ký sau cùng). ⚠️ Dùng `CredentialFactory.FromFile<ServiceAccountCredential | UserCredential>(...)`, **không** `GoogleCredential.FromFile` (CS0618).
 
 `IGoogleSheetExternal` ghi bằng **Gmail** (OAuth), nhận `SpreadsheetAccountDto` từ `ProjectConfig` ([08](../nghiep-vu/08-cau-hinh-du-an.md)):
 
