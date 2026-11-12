@@ -620,6 +620,7 @@ namespace sh.be.applications.Module.Construction.Implements
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
             await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
             await EnsureQaTicketFilterVisibleAsync(dto);
+            dto.Columns = SubmissionDomainService.NormalizeExportColumns(dto.Columns);
             var table = await _submissionQuery.FindExportTable(dto);
             return _excelExternal.CreateTable($"{table.ProjectName}_{table.DocumentTypeName}_{GetVietnamTime():yyyyMMddHHmm}", table.DocumentTypeName,
                 table.Headers, table.Rows);
@@ -642,6 +643,7 @@ namespace sh.be.applications.Module.Construction.Implements
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
             await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
             await EnsureQaTicketFilterVisibleAsync(dto);
+            dto.Columns = SubmissionDomainService.NormalizeExportColumns(dto.Columns);
             var names = await _submissionQuery.FindExportName(dto.ProjectId, dto.DocumentTypeId)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
             if (!_backgroundJobExternal.HasServerForQueue(BackgroundJobConst.QUEUE_EXPORT))

@@ -18,9 +18,20 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
     public class SubmissionQuery : BaseQuery, ISubmissionQuery
     {
         private const string ExportDateFormat = "dd/MM/yyyy HH:mm:ss";
-        private static readonly IReadOnlyList<string> ExportFixedHeaders =
-            ["STT", "Tên file", "Hồ sơ", "Hộp", "Đường dẫn", "Trạng thái kiểm tra", "Người kiểm tra", "Thời gian kiểm tra", "Trạng thái QA", "Lý do QA",
-                "Người sửa cuối", "Ngày sửa cuối"];
+        private static readonly IReadOnlyList<string> ExportBaseHeaders = ["STT", "Tên file", "Hồ sơ", "Hộp"];
+        private static readonly IReadOnlyDictionary<string, string> ExportColumnHeaders = new Dictionary<string, string>
+        {
+            { SubmissionConst.EXPORT_COLUMN_FILE_URL, "Đường dẫn" },
+            { SubmissionConst.EXPORT_COLUMN_CHECK_STATUS, "Trạng thái kiểm tra" },
+            { SubmissionConst.EXPORT_COLUMN_CHECKED_BY, "Người kiểm tra" },
+            { SubmissionConst.EXPORT_COLUMN_CHECKED_DATE, "Thời gian kiểm tra" },
+            { SubmissionConst.EXPORT_COLUMN_QA_STATUS, "Trạng thái QA" },
+            { SubmissionConst.EXPORT_COLUMN_QA_BY, "Người QA" },
+            { SubmissionConst.EXPORT_COLUMN_QA_DATE, "Thời gian QA" },
+            { SubmissionConst.EXPORT_COLUMN_QA_REASON, "Lý do QA" },
+            { SubmissionConst.EXPORT_COLUMN_MODIFIED_BY, "Người sửa cuối" },
+            { SubmissionConst.EXPORT_COLUMN_MODIFIED_DATE, "Ngày sửa cuối" },
+        };
         private static readonly IReadOnlyDictionary<int, string> CheckStatusNames = new Dictionary<int, string>
         {
             { SubmissionConst.NOT_CHECKED, "Chưa kiểm tra" },
@@ -718,8 +729,9 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 .ToList();
         }
 
-        public async Task<SubmissionExportTableDto> FindExportTable(ISubmissionFilter filter)
+        public async Task<SubmissionExportTableDto> FindExportTable(ExportSubmissionDto filter)
         {
+            var columns = filter.Columns ?? [];
             var query = ApplyFilter(filter, filter.StatusCheck, filter.StatusQa, null);
             if (await query.CountAsync() > SubmissionConst.EXPORT_MAX_ROWS)
             {
@@ -727,28 +739,38 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                     $"Số hồ sơ cần xuất vượt quá {SubmissionConst.EXPORT_MAX_ROWS}, hãy lọc bớt");
             }
 
-            var submissions = await (from s in query.OrderBy(s => s.Id)
-                                     let lastLog = _shDbContext.SubmissionLogs
-                                         .Where(l => l.SubmissionId == s.Id)
-                                         .OrderByDescending(l => l.CreatedDate)
-                                         .ThenByDescending(l => l.Id)
-                                         .FirstOrDefault()
-                                     select new
-                                     {
-                                         s.Id,
-                                         s.FileName,
-                                         s.ProfileRange,
-                                         s.Box,
-                                         s.FileUrlS3Object,
-                                         s.StatusCheck,
-                                         CheckedBy = lastLog != null ? lastLog.UserId : null,
-                                         CheckedDate = lastLog != null ? (DateTime?)lastLog.CreatedDate : null,
-                                         s.StatusQa,
-                                         s.QaReason,
-                                         s.ModifiedBy,
-                                         s.ModifiedDate,
-                                     })
+            var submissions = await query
+                .OrderBy(s => s.Id)
+                .Select(s => new
+                {
+                    s.Id,
+                    s.FileName,
+                    s.ProfileRange,
+                    s.Box,
+                    s.FileUrlS3Object,
+                    s.StatusCheck,
+                    s.StatusQa,
+                    s.QaBy,
+                    s.QaDate,
+                    s.QaReason,
+                    s.ModifiedBy,
+                    s.ModifiedDate,
+                })
                 .ToListAsync();
+
+            // Lần kiểm tra gần nhất chỉ đọc khi chọn cột người / thời gian kiểm tra, tránh subquery SubmissionLog trên toàn bộ hồ sơ
+            var lastLogBySubmissionId = new Dictionary<int, (string? UserId, DateTime? CreatedDate)>();
+            if (columns.Contains(SubmissionConst.EXPORT_COLUMN_CHECKED_BY) || columns.Contains(SubmissionConst.EXPORT_COLUMN_CHECKED_DATE))
+            {
+                lastLogBySubmissionId = await (from s in query
+                                               let lastLog = _shDbContext.SubmissionLogs
+                                                   .Where(l => l.SubmissionId == s.Id)
+                                                   .OrderByDescending(l => l.CreatedDate)
+                                                   .ThenByDescending(l => l.Id)
+                                                   .FirstOrDefault()
+                                               select new { SubmissionId = s.Id, lastLog.UserId, lastLog.CreatedDate })
+                    .ToDictionaryAsync(l => l.SubmissionId, l => ((string?)l.UserId, l.CreatedDate));
+            }
 
             var documentFields = await (from pf in _shDbContext.ProjectDocumentTypeDocumentFields.AsNoTracking()
                                         join d in _shDbContext.DocumentFields.AsNoTracking() on pf.DocumentFieldId equals d.Id
@@ -766,12 +788,26 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 .Select(sd => new { sd.SubmissionId, sd.DocumentFieldId, sd.Data })
                 .ToDictionary(sd => (sd.SubmissionId, sd.DocumentFieldId), sd => sd.Data);
 
-            var userIds = submissions.Select(s => s.CheckedBy).Concat(submissions.Select(s => s.ModifiedBy))
-                .Where(userId => userId != null).Select(userId => userId!).Distinct().ToList();
-            var userNameById = await _shDbContext.Users
+            var userIds = new List<string?>();
+            if (columns.Contains(SubmissionConst.EXPORT_COLUMN_CHECKED_BY))
+            {
+                userIds.AddRange(lastLogBySubmissionId.Values.Select(l => l.UserId));
+            }
+            if (columns.Contains(SubmissionConst.EXPORT_COLUMN_QA_BY))
+            {
+                userIds.AddRange(submissions.Select(s => s.QaBy));
+            }
+            if (columns.Contains(SubmissionConst.EXPORT_COLUMN_MODIFIED_BY))
+            {
+                userIds.AddRange(submissions.Select(s => s.ModifiedBy));
+            }
+            var distinctUserIds = userIds.OfType<string>().Distinct().ToList();
+            // Hiện họ tên, trống thì tên đăng nhập; user đã xoá không có trong dictionary nên ô để trống
+            var displayNameById = await _shDbContext.Users
                 .AsNoTracking()
-                .Where(u => userIds.Contains(u.Id))
-                .ToDictionaryAsync(u => u.Id, u => u.UserName ?? u.Id);
+                .Where(u => distinctUserIds.Contains(u.Id))
+                .Select(u => new { u.Id, u.FullName, u.UserName })
+                .ToDictionaryAsync(u => u.Id, u => String.IsNullOrWhiteSpace(u.FullName) ? u.UserName ?? String.Empty : u.FullName);
 
             return new SubmissionExportTableDto
             {
@@ -779,22 +815,29 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                     ?? String.Empty,
                 DocumentTypeName = await _shDbContext.DocumentTypes.AsNoTracking().Where(d => d.Id == filter.DocumentTypeId).Select(d => d.Name).FirstOrDefaultAsync()
                     ?? String.Empty,
-                Headers = ExportFixedHeaders.Concat(documentFields.Select(d => d.Name)).ToList(),
+                Headers = ExportBaseHeaders.Concat(columns.Select(column => ExportColumnHeaders[column])).Concat(documentFields.Select(d => d.Name)).ToList(),
                 Rows = submissions.Select((s, index) => new List<string>
                     {
                         (index + 1).ToString(),
                         s.FileName,
                         s.ProfileRange,
                         s.Box,
-                        s.FileUrlS3Object,
-                        CheckStatusNames.GetValueOrDefault(s.StatusCheck, String.Empty),
-                        s.CheckedBy != null ? userNameById.GetValueOrDefault(s.CheckedBy, s.CheckedBy) : String.Empty,
-                        s.CheckedDate?.ToString(ExportDateFormat) ?? String.Empty,
-                        QaStatusNames.GetValueOrDefault(s.StatusQa, String.Empty),
-                        s.QaReason ?? String.Empty,
-                        s.ModifiedBy != null ? userNameById.GetValueOrDefault(s.ModifiedBy, s.ModifiedBy) : String.Empty,
-                        s.ModifiedDate?.ToString(ExportDateFormat) ?? String.Empty,
                     }
+                    .Concat(columns.Select(column => column switch
+                    {
+                        SubmissionConst.EXPORT_COLUMN_FILE_URL => s.FileUrlS3Object,
+                        SubmissionConst.EXPORT_COLUMN_CHECK_STATUS => CheckStatusNames.GetValueOrDefault(s.StatusCheck, String.Empty),
+                        SubmissionConst.EXPORT_COLUMN_CHECKED_BY => lastLogBySubmissionId.GetValueOrDefault(s.Id).UserId is string checkedBy
+                            ? displayNameById.GetValueOrDefault(checkedBy, String.Empty) : String.Empty,
+                        SubmissionConst.EXPORT_COLUMN_CHECKED_DATE => lastLogBySubmissionId.GetValueOrDefault(s.Id).CreatedDate?.ToString(ExportDateFormat) ?? String.Empty,
+                        SubmissionConst.EXPORT_COLUMN_QA_STATUS => QaStatusNames.GetValueOrDefault(s.StatusQa, String.Empty),
+                        SubmissionConst.EXPORT_COLUMN_QA_BY => s.QaBy != null ? displayNameById.GetValueOrDefault(s.QaBy, String.Empty) : String.Empty,
+                        SubmissionConst.EXPORT_COLUMN_QA_DATE => s.QaDate?.ToString(ExportDateFormat) ?? String.Empty,
+                        SubmissionConst.EXPORT_COLUMN_QA_REASON => s.QaReason ?? String.Empty,
+                        SubmissionConst.EXPORT_COLUMN_MODIFIED_BY => s.ModifiedBy != null ? displayNameById.GetValueOrDefault(s.ModifiedBy, String.Empty) : String.Empty,
+                        SubmissionConst.EXPORT_COLUMN_MODIFIED_DATE => s.ModifiedDate?.ToString(ExportDateFormat) ?? String.Empty,
+                        _ => String.Empty,
+                    }))
                     .Concat(documentFieldIds.Select(fieldId => dataByCell.GetValueOrDefault((s.Id, fieldId), String.Empty)))
                     .ToList())
                     .ToList(),
