@@ -73,7 +73,8 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
                 && m.Role == RoleConstants.ROLE_LEADER && m.IsActive);
         }
 
-        public async Task<ProjectAcceptanceBlockers> CountAcceptanceBlockersAsync(int projectId)
+        // Đếm văn bản chưa kiểm / chưa QA đạt / tổng của dự án bằng một câu GROUP BY, kèm cờ QA để tính đủ điều kiện nghiệm thu
+        public async Task<ProjectAcceptanceBlockers> CountAcceptanceBlockersAsync(int projectId, bool isQaEnabled)
         {
             return await _shDbContext.Submissions
                 .Where(s => s.ProjectId == projectId)
@@ -81,9 +82,10 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
                 .Select(g => new ProjectAcceptanceBlockers(
                     g.Count(s => s.StatusCheck != SubmissionConst.CHECKED),
                     g.Count(s => s.StatusCheck == SubmissionConst.CHECKED && s.StatusQa != SubmissionConst.QA_PASSED),
-                    g.Count()))
+                    g.Count(),
+                    isQaEnabled))
                 .FirstOrDefaultAsync()
-                ?? new ProjectAcceptanceBlockers(0, 0, 0);
+                ?? new ProjectAcceptanceBlockers(0, 0, 0, isQaEnabled);
         }
 
         public Task<int> TryStartAcceptanceAsync(int projectId)

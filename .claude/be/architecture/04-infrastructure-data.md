@@ -50,7 +50,7 @@ gọi thêm `SaveChanges` trong các luồng đó.
 
 ⚠️ Bẫy: cột `int` có `HasDefaultValue(x)` thì EF bỏ qua giá trị bằng `0` (giá trị mặc định CLR) khi insert, nên DB tự
 điền `x` → gán `0` thành `x`. `DocumentType.DefaultView` vì vậy dùng `HasDefaultValue(1).HasSentinel(-1)`. Cột `bool` default `true` cũng vậy:
-`DocumentField.IsShowTableView` / `IsShowListView` dùng `HasDefaultValue(true).HasSentinel(true)`. Đừng bỏ `HasSentinel`.
+`DocumentField.IsShowTableView` / `IsShowListView`, `Project.IsQaEnabled` dùng `HasDefaultValue(true).HasSentinel(true)`. Đừng bỏ `HasSentinel`.
 `Template` cũng vậy: các cột số có default dùng `HasSentinel(-1)` (`WetSignatureStrokeWidth = 0` là hợp lệ), `IsShowDigitalSignature` dùng `HasSentinel(true)`; `WetSignatureColor` **không** có default (`null` = giữ màu mực ảnh gốc).
 
 `DocumentTypeRepository.LockAsync` khoá dòng loại văn bản (`UPDLOCK, HOLDLOCK`) để tuần tự hoá việc ghi thứ tự trường;
