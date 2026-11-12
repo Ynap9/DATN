@@ -31,6 +31,7 @@
   thứ tự bước có lý do, đánh đổi transaction / hiệu năng. Ngắn (1–2 dòng), bám phần chủ chốt, mô tả **chính xác** khối code
   ngay dưới làm gì và vì sao; không lặp lại tên hàm, không kể lịch sử sửa. Sửa code thì sửa comment cùng lúc.
 - Comment **đã có sẵn** trong code cũ thì giữ nguyên, không xoá, không sửa khi không liên quan yêu cầu.
+- **Bắt buộc** (2026-11-12): method trong `Implements/` và `Repositories/` có **một dòng `//`** ngay trên tóm tắt hàm làm gì, ngắn đủ ý; method mới / đang sửa.
 
 ## Đặt tên, tách hàm
 

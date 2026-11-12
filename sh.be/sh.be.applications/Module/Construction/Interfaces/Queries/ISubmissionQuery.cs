@@ -5,17 +5,17 @@ namespace sh.be.applications.Module.Construction.Interfaces.Queries
 {
     public interface ISubmissionQuery
     {
-        Task<BaseResponsePagingDto<GetListSubmissionDto>> FindPaging(FindPagingSubmissionDto dto);
-        Task<ViewSubmissionDetailDto?> FindById(int id, ISubmissionFilter filter, bool includePosition);
-        Task<int?> FindNextId(int id, ISubmissionFilter filter);
-        Task<int?> FindPreviousId(int id, ISubmissionFilter filter);
-        Task<ViewCountSubmissionDto> Count(ISubmissionFilter filter);
+        Task<BaseResponsePagingDto<GetListSubmissionDto>> FindPaging(FindPagingSubmissionDto dto, string? restrictedUserId = null);
+        Task<ViewSubmissionDetailDto?> FindById(int id, ISubmissionFilter filter, bool includePosition, string? restrictedUserId = null);
+        Task<int?> FindNextId(int id, ISubmissionFilter filter, string? restrictedUserId = null);
+        Task<int?> FindPreviousId(int id, ISubmissionFilter filter, string? restrictedUserId = null);
+        Task<ViewCountSubmissionDto> Count(ISubmissionFilter filter, string? restrictedUserId = null);
         Task<BaseResponsePagingDto<GetListSubmissionLogDto>> FindLogPaging(int submissionId, FindPagingSubmissionLogDto dto);
-        Task<BaseResponsePagingDto<GetListQaSubmissionDto>> FindQaPaging(FindPagingQaSubmissionDto dto);
-        Task<ViewQaSubmissionDetailDto?> FindQaById(int id, ISubmissionFilter filter, bool includePosition);
+        Task<BaseResponsePagingDto<GetListQaSubmissionDto>> FindQaPaging(FindPagingQaSubmissionDto dto, string? restrictedUserId = null);
+        Task<ViewQaSubmissionDetailDto?> FindQaById(int id, ISubmissionFilter filter, bool includePosition, string? restrictedUserId = null);
         Task<BaseResponsePagingDto<GetListSubmissionQaLogDto>> FindQaLogPaging(int submissionId, FindPagingSubmissionQaLogDto dto);
-        Task<List<GetListSubmissionFieldValueDto>> FindFieldValues(FindSubmissionFieldValueDto dto);
-        Task<ViewSubmissionTreeDto> FindTree(ISubmissionFilter filter);
+        Task<List<GetListSubmissionFieldValueDto>> FindFieldValues(FindSubmissionFieldValueDto dto, string? restrictedUserId = null);
+        Task<ViewSubmissionTreeDto> FindTree(ISubmissionFilter filter, string? restrictedUserId = null);
         Task<BaseResponsePagingDto<GetListProjectSubmissionLogDto>> FindProjectLogPaging(FindPagingProjectSubmissionLogDto dto);
         Task<ViewSubmissionSummaryDto> FindSummary(int projectId, int documentTypeId);
         Task<ViewQaStatsSummaryDto> FindQaStatsSummary(FindQaStatsDto dto, DateTime fromDate, DateTime toDateExclusive);

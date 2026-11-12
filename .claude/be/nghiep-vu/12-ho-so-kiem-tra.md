@@ -4,7 +4,7 @@
 
 Sau khi import ([11-ho-so-import.md](11-ho-so-import.md)), người kiểm tra mở màn hình hồ sơ của **một dự án + một loại văn bản**:
 xem bảng, lọc, mở từng hồ sơ (PDF bên trái qua `proxy-file`, form trường bên phải), sửa dữ liệu rồi bấm **Kiểm tra**.
-Không có phân việc: mọi user có quyền đều thấy toàn bộ hồ sơ của dự án. Xoá hồ sơ và xuất Excel nằm ở [14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md).
+Phạm vi xem / kiểm do Vận hành quyết định ([Phạm vi và phân việc](#phạm-vi-và-phân-việc)); tới Task 15 vẫn thấy toàn bộ. Xoá hồ sơ và xuất Excel nằm ở [14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md).
 
 ## Các chức năng
 
@@ -31,6 +31,7 @@ nên `count.total` luôn bằng `paging.totalItems`, và vị trí, hồ sơ li�
 - `keyword`: chứa trong tên file, Hồ sơ hoặc Hộp; không phân biệt hoa thường (theo collation DB).
 - `qaTicketId` (Task 18C): chỉ văn bản có dòng `SubmissionUser` Role `QA` thuộc phiếu đó. Người gọi phải xem được phiếu (luật ở
   [18-qa-cham-mau.md](18-qa-cham-mau.md#18c--phiếu-qa)), không thì `327`; áp cho cả paging, count, next / previous, chi tiết, tree, xuất Excel.
+  `assignmentTicketId` (Task 25, mở từ "Phiếu của tôi"): chỉ văn bản có `SubmissionUser` Role `Data` thuộc phiếu đó; không kiểm người gọi.
 - Cặp trường / giá trị: hồ sơ phải có `SubmissionData` của trường đó với `Data` **bằng đúng** giá trị đã trim. Thiếu một vế thì bỏ
   qua cặp đó. Có hai cặp thì phải thoả cả hai.
 - Trước khi lọc: kiểm dự án / loại văn bản bằng một query; chỉ khi sai mới kiểm chi tiết để trả đúng mã `303` / `301` / `312`.
@@ -42,8 +43,7 @@ nên `count.total` luôn bằng `paging.totalItems`, và vị trí, hồ sơ li�
 - `customData`: trường thuộc cấu hình dự án + loại văn bản và có `IsShowTableView = true`, sắp theo `OrderTableView`.
 - Mỗi dòng (và chi tiết `GET {id}`, `next`, `previous`) có `statusCheck`, `statusQa`, `qaReason`.
 - Mỗi dòng có `submissionDatas` theo thứ tự cột: `id`, `documentFieldId`, `data`, `indexRow`, `indexGoogleSheet` và `documentField`
-  đầy đủ (cùng khuôn `GetListDocumentFieldDto` của API trường văn bản). Trường chưa có dữ liệu thì không có phần tử.
-  Thông tin trường lấy **một lần** cho cả trang rồi gắn vào từng ô, không join lặp lại trong SQL.
+  đầy đủ (khuôn `GetListDocumentFieldDto`, lấy **một lần** cho cả trang rồi gắn vào từng ô). Trường chưa có dữ liệu thì không có phần tử.
 
 ## Chi tiết và vị trí
 
@@ -55,10 +55,8 @@ nên `count.total` luôn bằng `paging.totalItems`, và vị trí, hồ sơ li�
 
 ## Hồ sơ liền kề
 
-- Theo keyset: `next` = hồ sơ có `Id` nhỏ nhất lớn hơn `{id}` trong bộ lọc, `previous` ngược lại. Thời gian như nhau ở đầu hay cuối
-  danh sách, và không nhảy cóc khi có người import thêm.
-- Hồ sơ `{id}` **không cần** thoả bộ lọc, cũng không cần còn tồn tại: lọc "chưa kiểm tra", kiểm xong hồ sơ hiện tại (nó ra khỏi bộ lọc)
-  vẫn đi tiếp được sang hồ sơ chưa kiểm tra kế tiếp.
+- Theo keyset: `next` = hồ sơ có `Id` nhỏ nhất lớn hơn `{id}` trong bộ lọc, `previous` ngược lại; nhanh như nhau ở đầu / cuối, không nhảy cóc.
+- Hồ sơ `{id}` **không cần** thoả bộ lọc, cũng không cần còn tồn tại: kiểm xong hồ sơ hiện tại (ra khỏi lọc "chưa kiểm tra") vẫn đi tiếp được.
 - Hết hồ sơ → `317` (FE tắt nút). Hai route riêng thay cho một route có tham số `direction`: không có giá trị sai để bắt `400`.
 
 ## Kiểm tra hồ sơ
@@ -74,12 +72,23 @@ Body: `{ id, projectId, documentTypeId, datas: [{ documentFieldId, data }], note
   - trường đã có dữ liệu → so sau khi trim, khác thì ghi (cho phép xoá trắng); giữ nguyên `IndexGoogleSheet`, `IndexRow`;
   - trường chưa có dữ liệu → giá trị rỗng thì bỏ qua, khác rỗng thì thêm mới (`IndexRow` = `OrderFieldImport`, `IndexGoogleSheet` rỗng);
   - trường không gửi lên → giữ nguyên.
-- Lỗi, không ghi gì: hồ sơ không tồn tại `305`; sai dự án / loại văn bản `319`; dự án không tồn tại `303`; dự án `DONE` `316`, hết hạn `323` (trừ SuperAdmin)
+- Lỗi, không ghi gì: hồ sơ không tồn tại `305`; sai dự án / loại văn bản `319`; dự án không tồn tại `303`; dự án `DONE` `316`, hết hạn `323`
   (**trừ SuperAdmin**); trường gửi trùng `318`; trường không thuộc cấu hình dự án + loại văn bản `311`; ghi chú quá 1000 ký tự `400`.
 - `changedDataCount` = số ô sửa + số ô thêm. Audit `Kiểm tra hồ sơ`, `Update`, lưu `StatusCheck` và giá trị cũ / mới từng trường.
-- Ghi bằng **một** `SaveChanges` (EF tự bọc transaction): `Submission`, `SubmissionData`, `SubmissionLog`, `AuditLog` cùng thành công
-  hoặc cùng không. Lý do bỏ `BeginTransactionAsync` ở [../architecture/02-applications.md](../architecture/02-applications.md).
+- Một transaction (Task 25): lưu `Submission`, `SubmissionData`, `SubmissionLog`, `AuditLog` → `AssignCheckedToQaAsync` → lưu → commit; lỗi ở đâu cũng không ghi gì.
 - Sau khi kiểm, import overwrite với `overwriteChecked = false` bỏ qua hồ sơ này.
+
+## Phạm vi và phân việc
+
+Luật phân việc thuộc Operation: Thi công chỉ gọi `ISubmissionAssignmentService` (implement `SubmissionAssignmentService`, Task 25), thân rỗng
+tới Task 15 nên hành vi chưa đổi; implement không `SaveChanges` / commit. Không gọi ở `summary`, `logs` dự án, thống kê QA, xuất Excel.
+
+| Method | Gọi ở |
+|---|---|
+| `ResolveRestrictedUserIdAsync` (khác `null` = chỉ văn bản có `SubmissionUser.UserId` này) | `paging`, `count`, `next` / `previous`, `tree`, `field-values`, `qa/paging`, vị trí ở `{id}` / `{id}/qa` |
+| `EnsureCanViewAsync` (nạp hồ sơ trước) | `{id}`, `{id}/qa`, `{id}/logs`, `{id}/qa-logs`, `{id}/timeline` |
+| `EnsureCanCheckAsync` · `AssignCheckedToQaAsync` | `check`: trước khi dựng kế hoạch · sau lần lưu đầu, trong transaction |
+| `ApplyQaResultToAssignmentAsync` | `qa`: sau lưu log QA + trường sai, trước chốt phiếu FULL và tự nghiệm thu ([13](13-ho-so-qa.md)) |
 
 ## Lịch sử kiểm tra
 
@@ -109,11 +118,9 @@ Bốn API chỉ đọc, quyền `Function.Construction.Submission.View`, không 
 
 ## Đã kiểm thực tế
 
-Ngày 2026-10-19, gọi API thật bằng `admin` sau khi chạy migration `Add_SubmissionLog` (seeder đã thêm quyền `Check`) — 18/18 đạt:
-không token → `401`; `paging` và `count` có / không có bộ lọc (keyword, `statusCheck`, hai cặp trường, giá trị có khoảng trắng) trả
-rỗng đúng khi chưa có hồ sơ, EF dịch được `EXISTS` và câu đếm gộp; `pageSize` `0` / `-1` / `500` → `400`; `303`, `301`, `312`;
-chi tiết (có / không `includePosition`), lịch sử, kiểm tra với id không tồn tại → `305`; neighbor `next` / `previous` → `317`;
-`direction` sai → `400`.
+Ngày 2026-10-19, API thật bằng `admin` sau migration `Add_SubmissionLog` — 18/18 đạt: không token `401`; `paging` / `count` có / không lọc
+(keyword, `statusCheck`, hai cặp trường) trả rỗng đúng, EF dịch được `EXISTS` và câu đếm gộp; `pageSize` `0` / `-1` / `500` → `400`; `303`,
+`301`, `312`; chi tiết, lịch sử, kiểm tra với id không tồn tại → `305`; neighbor → `317`; `direction` sai → `400`.
 
 Cùng ngày, chèn 6 hồ sơ + 3 trường test bằng SQL (gắn `ZZTEST`, kiểm xong đã xoá sạch), sau khi gộp import vào `SubmissionService` — 35/35 đạt:
 
@@ -124,17 +131,18 @@ Cùng ngày, chèn 6 hồ sơ + 3 trường test bằng SQL (gắn `ZZTEST`, ki�
   vẫn sinh log); `311`, `318`, `319`, `305`, ghi chú 1001 ký tự → `400`; thiếu quyền `Check` → `403`; dự án `DONE`: người thường
   → `316`, SuperAdmin sửa được.
 - Rollback: gắn tạm `CHECK` constraint làm insert `SubmissionLog` lỗi → `500`; `SubmissionData`, `ModifiedBy` của hồ sơ giữ nguyên,
-  không có log. Lịch sử trả đúng `userName`, `fullName`, mô tả "kiểm tra" / "tái kiểm tra", mới nhất trước; `AuditLog` đủ 5 dòng.
-- Swagger đủ 13 route của `SubmissionController` (lúc đó còn route `neighbor`).
+  không có log. Lịch sử đúng `userName`, `fullName`, mô tả, mới nhất trước; `AuditLog` đủ 5 dòng; Swagger đủ 13 route (lúc đó còn `neighbor`).
 
-Sau khi tách `neighbor` thành `{id}/next` và `{id}/previous`, gọi lại trên dữ liệu `ZZTEST` — 20/20 đạt: đầu / cuối danh sách →
-`317`; lọc trường, `statusCheck`, keyword; đi từ hồ sơ ngoài bộ lọc hoặc id không tồn tại; đi hết danh sách cả hai chiều; `303`,
-`301`, `312`; thiếu quyền `View` → `403`; route cũ `neighbor` → `404`.
+Sau khi tách `neighbor` thành `{id}/next`, `{id}/previous` — 20/20 đạt: đầu / cuối danh sách `317`; lọc trường, `statusCheck`, keyword; đi từ
+hồ sơ ngoài bộ lọc hoặc id không tồn tại; đi hết cả hai chiều; `303`, `301`, `312`; thiếu `View` → `403`; route cũ `neighbor` → `404`.
 
-Tra cứu và thống kê, ngày 2026-10-22 trên `test-data-ho-so.sql` — 37/37 đạt: `field-values` đủ giá trị và số đếm, sắp `value`, keyword không
-phân biệt hoa thường, lọc liên hoàn, bỏ cặp lọc trùng trường, `311` / `303` / `312`; `tree` đúng hình, Hộp cộng đúng lên Hồ sơ, tổng = `count.total`
-có / không lọc; `logs` mới nhất trước, lọc `userId`, `oldStatus` 0 / 1 / 2, trọn ngày, hôm qua → 0, `400`, trang 2, tên file của hồ sơ đã xoá mềm;
-`summary` khớp SQL tay, bỏ hồ sơ đã xoá; không token `401`, `viewer` → `403`, `tester` (`View`) đọc được.
+Tra cứu và thống kê, 2026-10-22 trên `test-data-ho-so.sql` — 37/37 đạt: `field-values` đủ giá trị, số đếm, sắp `value`, keyword không phân biệt
+hoa thường, lọc liên hoàn, bỏ cặp lọc trùng trường, `311` / `303` / `312`; `tree` đúng hình, tổng = `count.total`; `logs` mới nhất trước, lọc
+`userId`, `oldStatus`, trọn ngày, `400`, trang 2, hồ sơ đã xoá mềm; `summary` khớp SQL tay; không token `401`, `viewer` → `403`.
+
+Task 25, 2026-11-12 (dự án 25 hồ sơ × 4 trường + phiếu Data 20 văn bản gắn `ZZTEST25`, đã xoá) — đạt hết: 109 API đọc + xuất Excel giống hệt bản gốc
+chạy song song; `assignmentTicketId` ra 20 / 25 ở mọi API; Check, QA Đạt / Không đạt lưu đúng; `337` cho người ngoài và Leader `IsActive = 0`; thân tạm: Resolve
+trả D1 → chỉ văn bản D1 giữ, xem chi tiết / log bị chặn, lỗi phân việc rollback cả dữ liệu trường của Check và log QA; thân đã trả về rỗng.
 
 Đo trên 20.000 hồ sơ × 30 trường (600.000 ô, 13.334 log, gắn `ZZPERF`, đo xong đã xoá), API chạy build Debug, SQL Server 2022 Docker, trung vị 7 lần
 gọi cả HTTP. Một request nhẹ (`count` 16 hồ sơ) đã tốn ~136 ms (≈ 5 lượt đi – về: `[Permission]`, kiểm dự án, query) nên mục tiêu < 50 ms không đạt được ở môi trường này:
@@ -163,9 +171,8 @@ gộp vào `SubmissionService` (cần Google Sheet thật); code import chỉ ch
 ⚠️ Lọc theo giá trị trường phải đọc cột `SubmissionData.Data` (`nvarchar(max)`, không index được) cho từng hồ sơ trong phạm vi lọc.
 Đừng thêm index / `INCLUDE` cột này: nhân đôi dung lượng và làm chậm bulk import. Nếu đo thấy chậm thì tính cột băm có index.
 
-⚠️ Kiểm tra tốn 8 lượt đi – về DB: ngoài 6 lượt của luồng chính còn 1 lượt lấy vai trò (xác định SuperAdmin) và 1 lượt lấy
-`UserName` qua `IUserRepository` (token không có tên) — đã chốt giữ. Nạp hồ sơ (`305`, `319`) chạy **trước** hai lượt này nên lỗi
-sớm không tốn thêm. Cộng thêm chi phí `[Permission]` mỗi request ([02-phan-quyen.md](02-phan-quyen.md)).
+⚠️ Kiểm tra tốn 8 lượt đi – về DB (6 luồng chính + vai trò + `UserName`, token không có tên — đã chốt giữ), Task 25 thêm mở / commit transaction.
+Nạp hồ sơ (`305`, `319`) chạy **trước** nên lỗi sớm không tốn thêm; cộng chi phí `[Permission]` ([02-phan-quyen.md](02-phan-quyen.md)).
 
 ⚠️ `Description` lưu `UserName` **tại thời điểm kiểm tra**; đổi tên đăng nhập sau đó thì mô tả cũ không đổi, còn cột `userName` /
 `fullName` khi đọc lịch sử luôn là tên hiện tại.
