@@ -12,5 +12,6 @@ namespace sh.be.applications.Module.Construction.Dtos.Submission
         string? FieldValue2 { get; }
         string? Keyword { get; }
         int? QaTicketId { get; }
+        int? AssignmentTicketId { get; }
     }
 }

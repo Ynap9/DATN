@@ -394,6 +394,7 @@ builder.Services.AddScoped<IPackageConfigService, PackageConfigService>();
 builder.Services.AddScoped<IStaffGroupService, StaffGroupService>();
 builder.Services.AddScoped<IProjectMemberService, ProjectMemberService>();
 builder.Services.AddScoped<IAssignmentService, AssignmentService>();
+builder.Services.AddScoped<ISubmissionAssignmentService, SubmissionAssignmentService>();
 builder.Services.AddScoped<IAiProviderService, AiProviderService>();
 builder.Services.AddSingleton<ISigningRunner, SigningRunner>();
 

@@ -2,6 +2,9 @@ using AutoMapper;
 using Microsoft.Extensions.Logging;
 using sh.be.applications.Base.Interfaces.Api;
 using sh.be.domain.Base;
+using sh.be.domain.Module.Auth.Repositories;
+using sh.be.domain.Module.Auth.Services;
+using sh.be.domain.Module.Construction.Projects.Services;
 using sh.be.domain.Module.Core.Entities;
 using sh.be.domain.Module.Core.Repositories;
 using sh.be.shared.Constants.Core;
@@ -31,6 +34,30 @@ namespace sh.be.applications.Base
             _logger = logger;
             _requestContext = requestContext;
             _timeProvider = timeProvider;
+        }
+
+        // Constructor cho service cần EnsureAdminOrProjectLeaderAsync; service khác giữ constructor 6 tham số
+        public BaseService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<BaseService> logger, IRequestContext requestContext, TimeProvider timeProvider,
+            IRoleRepository roleRepository, ProjectDomainService projectDomainService)
+            : this(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
+        {
+            _accessRoleRepository = roleRepository;
+            _accessProjectDomainService = projectDomainService;
+        }
+
+        private readonly IRoleRepository? _accessRoleRepository;
+        private readonly ProjectDomainService? _accessProjectDomainService;
+
+        // Chặn người gọi không phải Admin / SuperAdmin và không là Leader đang hoạt động của dự án (337)
+        protected async Task EnsureAdminOrProjectLeaderAsync(int projectId)
+        {
+            if (_accessRoleRepository == null || _accessProjectDomainService == null)
+            {
+                throw new InvalidOperationException($"{GetType().Name} phải gọi constructor BaseService có IRoleRepository, ProjectDomainService");
+            }
+            var currentUserId = getCurrentUserId();
+            var isAdmin = PermissionDomainService.IsAdmin(await _accessRoleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            await _accessProjectDomainService.EnsureCanAcceptAsync(projectId, currentUserId, isAdmin);
         }
 
         protected string getCurrentUserId()

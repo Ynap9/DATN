@@ -31,5 +31,8 @@ namespace sh.be.applications.Module.Construction.Dtos.Submission
 
         [FromQuery(Name = "qaTicketId")]
         public int? QaTicketId { get; set; }
+
+        [FromQuery(Name = "assignmentTicketId")]
+        public int? AssignmentTicketId { get; set; }
     }
 }

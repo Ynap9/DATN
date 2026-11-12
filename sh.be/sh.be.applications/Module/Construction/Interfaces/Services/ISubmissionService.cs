@@ -44,6 +44,7 @@ namespace sh.be.applications.Module.Construction.Interfaces.Services
         Task<List<GetListSubmissionTimelineDto>> FindTimeline(int id);
         Task<ViewDeleteSubmissionResultDto> Delete(DeleteSubmissionDto dto);
         Task<ExportFileDto> ExportExcel(ExportSubmissionDto dto);
+        Task<ExportFileDto> ExportExcelFromJob(ExportSubmissionDto dto);
         Task<ViewSubmissionExportJobDto> CreateExportJob(ExportSubmissionDto dto);
         Task<ViewSubmissionExportJobDto> FindExportJob(string jobId);
     }

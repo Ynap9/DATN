@@ -46,13 +46,14 @@ namespace sh.be.applications.Module.Construction.Implements
         private readonly IExcelExternal _excelExternal;
         private readonly IBackgroundJobExternal _backgroundJobExternal;
         private readonly IFileStorageExternal _fileStorageExternal;
+        private readonly ISubmissionAssignmentService _submissionAssignmentService;
 
         public SubmissionService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<SubmissionService> logger, IRequestContext requestContext, TimeProvider timeProvider,
             ISubmissionQuery submissionQuery, IProjectQuery projectQuery, ISubmissionRepository submissionRepository, IRoleRepository roleRepository, IUserRepository userRepository,
             SubmissionDomainService submissionDomainService, QaAssignmentDomainService qaAssignmentDomainService, ProjectDomainService projectDomainService,
             IDataReaderExternal dataReaderExternal, IExcelReaderExternal excelReaderExternal, IExcelExternal excelExternal, IBackgroundJobExternal backgroundJobExternal,
-            IFileStorageExternal fileStorageExternal
-        ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
+            IFileStorageExternal fileStorageExternal, ISubmissionAssignmentService submissionAssignmentService
+        ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider, roleRepository, projectDomainService)
         {
             _submissionQuery = submissionQuery;
             _projectQuery = projectQuery;
@@ -67,45 +68,58 @@ namespace sh.be.applications.Module.Construction.Implements
             _excelExternal = excelExternal;
             _backgroundJobExternal = backgroundJobExternal;
             _fileStorageExternal = fileStorageExternal;
+            _submissionAssignmentService = submissionAssignmentService;
         }
 
+        // Chạy thử import nối thêm hồ sơ mới từ Google Sheet dự án, không ghi DB
         public async Task<ViewVerifyImportAppendSubmissionDto> VerifyImportAppend(ImportSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(VerifyImportAppend)}, dto={JsonSerializer.Serialize(dto)}");
+            await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
             return await VerifyAppendAsync(dto, ReadProjectGoogleSheetAsync);
         }
 
+        // Import nối thêm hồ sơ mới từ Google Sheet dự án
         public async Task<ViewImportSubmissionResultDto> ImportAppend(ImportSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(ImportAppend)}, dto={JsonSerializer.Serialize(dto)}");
+            await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
             var source = await LoadAppendSheetAsync(dto, ReadProjectGoogleSheetAsync);
             return await ImportAppendAsync(dto, source, getCurrentUserId(),
                 new ImportAuditSource(String.Empty, source.Project.UrlGoogleSheetSync, source.Project.GoogleSheetName));
         }
 
+        // Chạy thử import điền ô còn trống từ Google Sheet dự án, không ghi DB
         public async Task<ViewVerifyImportBlankSubmissionDto> VerifyImportBlank(ImportSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(VerifyImportBlank)}, dto={JsonSerializer.Serialize(dto)}");
+            await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
             return await VerifyBlankAsync(dto, ReadProjectGoogleSheetAsync);
         }
 
+        // Import điền ô còn trống của hồ sơ đã có từ Google Sheet dự án
         public async Task<ViewImportSubmissionResultDto> ImportBlank(ImportSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(ImportBlank)}, dto={JsonSerializer.Serialize(dto)}");
+            await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
             var source = await LoadProjectSheetAsync(dto, null, ReadProjectGoogleSheetAsync);
             return await ImportBlankAsync(dto, source, getCurrentUserId(),
                 new ImportAuditSource(String.Empty, source.Project.UrlGoogleSheetSync, source.Project.GoogleSheetName));
         }
 
+        // Chạy thử import ghi đè một trường từ sheet chỉ định, không ghi DB
         public async Task<ViewVerifyImportOverwriteSubmissionDto> VerifyImportOverwrite(ImportOverwriteSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(VerifyImportOverwrite)}, dto={JsonSerializer.Serialize(dto)}");
+            await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
             return await VerifyOverwriteAsync(dto, _dataReaderExternal.ReadTableAsync(dto.Url, dto.SheetName));
         }
 
+        // Import ghi đè một trường của hồ sơ đã có từ sheet chỉ định
         public async Task<ViewImportSubmissionResultDto> ImportOverwrite(ImportOverwriteSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(ImportOverwrite)}, dto={JsonSerializer.Serialize(dto)}");
+            await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
             var source = await LoadOverwriteSheetAsync(dto, _dataReaderExternal.ReadTableAsync(dto.Url, dto.SheetName));
             return await ImportOverwriteAsync(dto, source, getCurrentUserId(), new ImportAuditSource($" từ sheet {dto.SheetName}", null, null));
         }
@@ -130,43 +144,55 @@ namespace sh.be.applications.Module.Construction.Implements
             };
         }
 
+        // Chạy thử import nối thêm từ file Excel đã tải lên, không ghi DB
         public async Task<ViewVerifyImportAppendSubmissionDto> VerifyImportExcelAppend(ImportExcelSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(VerifyImportExcelAppend)}, dto={JsonSerializer.Serialize(dto)}");
+            await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
             var currentUserId = getCurrentUserId();
             return await VerifyAppendAsync(dto, _ => ReadImportExcelTableAsync(dto, currentUserId));
         }
 
+        // Chạy thử import điền ô trống từ file Excel đã tải lên, không ghi DB
         public async Task<ViewVerifyImportBlankSubmissionDto> VerifyImportExcelBlank(ImportExcelSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(VerifyImportExcelBlank)}, dto={JsonSerializer.Serialize(dto)}");
+            await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
             var currentUserId = getCurrentUserId();
             return await VerifyBlankAsync(dto, _ => ReadImportExcelTableAsync(dto, currentUserId));
         }
 
+        // Chạy thử import ghi đè một trường từ file Excel đã tải lên, không ghi DB
         public async Task<ViewVerifyImportOverwriteSubmissionDto> VerifyImportExcelOverwrite(ImportExcelOverwriteSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(VerifyImportExcelOverwrite)}, dto={JsonSerializer.Serialize(dto)}");
+            await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
             return await VerifyOverwriteAsync(dto, ReadImportExcelTableAsync(dto, getCurrentUserId()));
         }
 
+        // Xếp job nền import nối thêm từ file Excel, trả jobId
         public async Task<ViewSubmissionImportJobDto> CreateImportExcelAppendJob(ImportExcelSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(CreateImportExcelAppendJob)}, dto={JsonSerializer.Serialize(dto)}");
+            await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
             var currentUserId = getCurrentUserId();
             return await CreateImportExcelJobAsync(dto, currentUserId, job => job.ExecuteAppendAsync(dto, currentUserId));
         }
 
+        // Xếp job nền import điền ô trống từ file Excel, trả jobId
         public async Task<ViewSubmissionImportJobDto> CreateImportExcelBlankJob(ImportExcelSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(CreateImportExcelBlankJob)}, dto={JsonSerializer.Serialize(dto)}");
+            await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
             var currentUserId = getCurrentUserId();
             return await CreateImportExcelJobAsync(dto, currentUserId, job => job.ExecuteBlankAsync(dto, currentUserId));
         }
 
+        // Xếp job nền import ghi đè một trường từ file Excel, trả jobId
         public async Task<ViewSubmissionImportJobDto> CreateImportExcelOverwriteJob(ImportExcelOverwriteSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(CreateImportExcelOverwriteJob)}, dto={JsonSerializer.Serialize(dto)}");
+            await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
             var currentUserId = getCurrentUserId();
             return await CreateImportExcelJobAsync(dto, currentUserId, job => job.ExecuteOverwriteAsync(dto, currentUserId));
         }
@@ -217,6 +243,7 @@ namespace sh.be.applications.Module.Construction.Implements
             return result.Message;
         }
 
+        // Phân trang hồ sơ theo bộ lọc, chỉ văn bản mình giữ nếu bị giới hạn phân việc
         public async Task<BaseResponsePagingDto<GetListSubmissionDto>> FindPaging(FindPagingSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(FindPaging)}, dto={JsonSerializer.Serialize(dto)}");
@@ -226,15 +253,20 @@ namespace sh.be.applications.Module.Construction.Implements
             }
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
             await EnsureQaTicketFilterVisibleAsync(dto);
-            return await _submissionQuery.FindPaging(dto);
+            var restrictedUserId = await _submissionAssignmentService.ResolveRestrictedUserIdAsync(dto.ProjectId, dto.DocumentTypeId, getCurrentUserId());
+            return await _submissionQuery.FindPaging(dto, restrictedUserId);
         }
 
+        // Chi tiết hồ sơ kèm vị trí trong danh sách đã lọc
         public async Task<ViewSubmissionDetailDto> FindById(int id, FindSubmissionDetailDto dto)
         {
             _logger.LogInformation($"{nameof(FindById)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
             await EnsureQaTicketFilterVisibleAsync(dto);
-            var detail = await _submissionQuery.FindById(id, dto, dto.IncludePosition)
+            var currentUserId = getCurrentUserId();
+            await _submissionAssignmentService.EnsureCanViewAsync(await _submissionDomainService.EnsureSubmissionExistsAsync(id), currentUserId);
+            var restrictedUserId = await _submissionAssignmentService.ResolveRestrictedUserIdAsync(dto.ProjectId, dto.DocumentTypeId, currentUserId);
+            var detail = await _submissionQuery.FindById(id, dto, dto.IncludePosition, restrictedUserId)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionNotFound);
             if (detail.ProjectId != dto.ProjectId || detail.DocumentTypeId != dto.DocumentTypeId)
             {
@@ -243,36 +275,43 @@ namespace sh.be.applications.Module.Construction.Implements
             return detail;
         }
 
+        // Hồ sơ kế sau trong danh sách đã lọc
         public async Task<ViewSubmissionDetailDto> FindNext(int id, SubmissionFilterDto dto)
         {
             _logger.LogInformation($"{nameof(FindNext)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
             await EnsureQaTicketFilterVisibleAsync(dto);
-            var nextId = await _submissionQuery.FindNextId(id, dto)
+            var restrictedUserId = await _submissionAssignmentService.ResolveRestrictedUserIdAsync(dto.ProjectId, dto.DocumentTypeId, getCurrentUserId());
+            var nextId = await _submissionQuery.FindNextId(id, dto, restrictedUserId)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionPositionOutOfRange);
-            return await _submissionQuery.FindById(nextId, dto, false)
+            return await _submissionQuery.FindById(nextId, dto, false, restrictedUserId)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionNotFound);
         }
 
+        // Hồ sơ liền trước trong danh sách đã lọc
         public async Task<ViewSubmissionDetailDto> FindPrevious(int id, SubmissionFilterDto dto)
         {
             _logger.LogInformation($"{nameof(FindPrevious)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
             await EnsureQaTicketFilterVisibleAsync(dto);
-            var previousId = await _submissionQuery.FindPreviousId(id, dto)
+            var restrictedUserId = await _submissionAssignmentService.ResolveRestrictedUserIdAsync(dto.ProjectId, dto.DocumentTypeId, getCurrentUserId());
+            var previousId = await _submissionQuery.FindPreviousId(id, dto, restrictedUserId)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionPositionOutOfRange);
-            return await _submissionQuery.FindById(previousId, dto, false)
+            return await _submissionQuery.FindById(previousId, dto, false, restrictedUserId)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionNotFound);
         }
 
+        // Đếm hồ sơ theo trạng thái kiểm tra trong danh sách đã lọc
         public async Task<ViewCountSubmissionDto> Count(SubmissionFilterDto dto)
         {
             _logger.LogInformation($"{nameof(Count)}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
             await EnsureQaTicketFilterVisibleAsync(dto);
-            return await _submissionQuery.Count(dto);
+            var restrictedUserId = await _submissionAssignmentService.ResolveRestrictedUserIdAsync(dto.ProjectId, dto.DocumentTypeId, getCurrentUserId());
+            return await _submissionQuery.Count(dto, restrictedUserId);
         }
 
+        // Kiểm tra hồ sơ: lưu dữ liệu sửa + log + audit, rồi chuyển văn bản vừa kiểm cho QA phụ trách
         public async Task<ViewCheckSubmissionResultDto> Check(CheckSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(Check)}, dto={JsonSerializer.Serialize(dto)}");
@@ -280,6 +319,7 @@ namespace sh.be.applications.Module.Construction.Implements
             submission.EnsureBelongsTo(dto.ProjectId, dto.DocumentTypeId);
 
             var currentUserId = getCurrentUserId();
+            await _submissionAssignmentService.EnsureCanCheckAsync(submission, currentUserId);
             var isSuperAdmin = PermissionDomainService.IsSuperAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
             var project = await _submissionDomainService.EnsureEditableProjectAsync(dto.ProjectId, isSuperAdmin);
             var mappings = await _submissionDomainService.GetImportMappingsAsync(dto.ProjectId, dto.DocumentTypeId);
@@ -298,13 +338,18 @@ namespace sh.be.applications.Module.Construction.Implements
                 new { StatusCheck = log.OldStatus, Datas = plan.Changes.Select(change => new { change.DocumentFieldId, Data = change.OldData }) },
                 new { StatusCheck = log.NewStatus, Datas = plan.Changes.Select(change => new { change.DocumentFieldId, Data = change.NewData }), log.Note });
 
+            await using var transaction = await _unitOfWork.BeginTransactionAsync();
             try
             {
                 await _unitOfWork.SaveChangesAsync();
+                await _submissionAssignmentService.AssignCheckedToQaAsync(submission, currentUserId, now);
+                await _unitOfWork.SaveChangesAsync();
+                await transaction.CommitAsync();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"{nameof(Check)}, id={dto.Id}");
+                await transaction.RollbackAsync();
                 throw;
             }
 
@@ -318,13 +363,15 @@ namespace sh.be.applications.Module.Construction.Implements
             };
         }
 
+        // Phân trang lịch sử kiểm tra của một hồ sơ
         public async Task<BaseResponsePagingDto<GetListSubmissionLogDto>> FindLogPaging(int id, FindPagingSubmissionLogDto dto)
         {
             _logger.LogInformation($"{nameof(FindLogPaging)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
-            await _submissionDomainService.EnsureSubmissionExistsAsync(id);
+            await _submissionAssignmentService.EnsureCanViewAsync(await _submissionDomainService.EnsureSubmissionExistsAsync(id), getCurrentUserId());
             return await _submissionQuery.FindLogPaging(id, dto);
         }
 
+        // Phân trang hồ sơ màn QA kèm số đếm theo trạng thái QA
         public async Task<BaseResponsePagingDto<GetListQaSubmissionDto>> FindQaPaging(FindPagingQaSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(FindQaPaging)}, dto={JsonSerializer.Serialize(dto)}");
@@ -334,15 +381,20 @@ namespace sh.be.applications.Module.Construction.Implements
             }
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
             await EnsureQaTicketFilterVisibleAsync(dto);
-            return await _submissionQuery.FindQaPaging(dto);
+            var restrictedUserId = await _submissionAssignmentService.ResolveRestrictedUserIdAsync(dto.ProjectId, dto.DocumentTypeId, getCurrentUserId());
+            return await _submissionQuery.FindQaPaging(dto, restrictedUserId);
         }
 
+        // Chi tiết hồ sơ màn QA kèm vị trí trong danh sách đã lọc
         public async Task<ViewQaSubmissionDetailDto> FindQaById(int id, FindQaSubmissionDetailDto dto)
         {
             _logger.LogInformation($"{nameof(FindQaById)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
             await EnsureQaTicketFilterVisibleAsync(dto);
-            var detail = await _submissionQuery.FindQaById(id, dto, dto.IncludePosition)
+            var currentUserId = getCurrentUserId();
+            await _submissionAssignmentService.EnsureCanViewAsync(await _submissionDomainService.EnsureSubmissionExistsAsync(id), currentUserId);
+            var restrictedUserId = await _submissionAssignmentService.ResolveRestrictedUserIdAsync(dto.ProjectId, dto.DocumentTypeId, currentUserId);
+            var detail = await _submissionQuery.FindQaById(id, dto, dto.IncludePosition, restrictedUserId)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionNotFound);
             if (detail.ProjectId != dto.ProjectId || detail.DocumentTypeId != dto.DocumentTypeId)
             {
@@ -351,6 +403,7 @@ namespace sh.be.applications.Module.Construction.Implements
             return detail;
         }
 
+        // Chấm QA Đạt / Không đạt: lưu log QA, cập nhật người giữ / phiếu, chốt phiếu FULL, tự vào nghiệm thu khi đủ
         public async Task<ViewQaResultDto> ReviewQa(ReviewQaSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(ReviewQa)}, dto={JsonSerializer.Serialize(dto)}");
@@ -380,6 +433,9 @@ namespace sh.be.applications.Module.Construction.Implements
                     $"QA hồ sơ {submission.FileName} (Id = {dto.Id}) của dự án {project.Name}: {(qaLog.NewStatusQa == SubmissionConst.QA_PASSED ? "Đạt" : "Không đạt")}",
                     new { qaLog.OldStatusCheck, qaLog.OldStatusQa },
                     new { qaLog.NewStatusCheck, qaLog.NewStatusQa, qaLog.Reason, WrongDocumentFieldIds = wrongFields.Select(field => field.DocumentFieldId) });
+                await _unitOfWork.SaveChangesAsync();
+
+                await _submissionAssignmentService.ApplyQaResultToAssignmentAsync(submission, qaLog.NewStatusQa, currentUserId, now);
                 await _unitOfWork.SaveChangesAsync();
 
                 if (qaTicket != null && await _qaAssignmentDomainService.TryPassFullTicketAsync(qaTicket, currentUserId, now))
@@ -423,28 +479,33 @@ namespace sh.be.applications.Module.Construction.Implements
             }
         }
 
+        // Phân trang lịch sử QA của một hồ sơ
         public async Task<BaseResponsePagingDto<GetListSubmissionQaLogDto>> FindQaLogPaging(int id, FindPagingSubmissionQaLogDto dto)
         {
             _logger.LogInformation($"{nameof(FindQaLogPaging)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
-            await _submissionDomainService.EnsureSubmissionExistsAsync(id);
+            await _submissionAssignmentService.EnsureCanViewAsync(await _submissionDomainService.EnsureSubmissionExistsAsync(id), getCurrentUserId());
             return await _submissionQuery.FindQaLogPaging(id, dto);
         }
 
+        // Liệt kê giá trị của một trường trong danh sách đã lọc, dùng cho ô lọc
         public async Task<List<GetListSubmissionFieldValueDto>> FindFieldValues(FindSubmissionFieldValueDto dto)
         {
             _logger.LogInformation($"{nameof(FindFieldValues)}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
             await EnsureQaTicketFilterVisibleAsync(dto);
             await _submissionDomainService.EnsureDocumentFieldInProjectAsync(dto.ProjectId, dto.DocumentTypeId, dto.DocumentFieldId);
-            return await _submissionQuery.FindFieldValues(dto);
+            var restrictedUserId = await _submissionAssignmentService.ResolveRestrictedUserIdAsync(dto.ProjectId, dto.DocumentTypeId, getCurrentUserId());
+            return await _submissionQuery.FindFieldValues(dto, restrictedUserId);
         }
 
+        // Cây hồ sơ / hộp kèm số văn bản theo bộ lọc
         public async Task<ViewSubmissionTreeDto> FindTree(FindSubmissionTreeDto dto)
         {
             _logger.LogInformation($"{nameof(FindTree)}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
             await EnsureQaTicketFilterVisibleAsync(dto);
-            return await _submissionQuery.FindTree(dto);
+            var restrictedUserId = await _submissionAssignmentService.ResolveRestrictedUserIdAsync(dto.ProjectId, dto.DocumentTypeId, getCurrentUserId());
+            return await _submissionQuery.FindTree(dto, restrictedUserId);
         }
 
         public async Task<BaseResponsePagingDto<GetListProjectSubmissionLogDto>> FindProjectLogPaging(FindPagingProjectSubmissionLogDto dto)
@@ -502,10 +563,11 @@ namespace sh.be.applications.Module.Construction.Implements
             return await _submissionQuery.FindQaEntryUserStatsPaging(dto, fromDate, toDate.AddDays(1));
         }
 
+        // Trục thời gian gộp các lần kiểm tra và QA của một hồ sơ
         public async Task<List<GetListSubmissionTimelineDto>> FindTimeline(int id)
         {
             _logger.LogInformation($"{nameof(FindTimeline)}, id={id}");
-            await _submissionDomainService.EnsureSubmissionExistsAsync(id);
+            await _submissionAssignmentService.EnsureCanViewAsync(await _submissionDomainService.EnsureSubmissionExistsAsync(id), getCurrentUserId());
             return await _submissionQuery.FindTimeline(id);
         }
 
@@ -551,20 +613,34 @@ namespace sh.be.applications.Module.Construction.Implements
             }
         }
 
+        // Xuất Excel hồ sơ theo bộ lọc, trả file ngay
         public async Task<ExportFileDto> ExportExcel(ExportSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(ExportExcel)}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
             await EnsureQaTicketFilterVisibleAsync(dto);
             var table = await _submissionQuery.FindExportTable(dto);
             return _excelExternal.CreateTable($"{table.ProjectName}_{table.DocumentTypeName}_{GetVietnamTime():yyyyMMddHHmm}", table.DocumentTypeName,
                 table.Headers, table.Rows);
         }
 
+        // Job nền dựng file Excel hồ sơ; quyền và phiếu QA đã kiểm lúc CreateExportJob vì job không có user từ token
+        public async Task<ExportFileDto> ExportExcelFromJob(ExportSubmissionDto dto)
+        {
+            _logger.LogInformation($"{nameof(ExportExcelFromJob)}, dto={JsonSerializer.Serialize(dto)}");
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            var table = await _submissionQuery.FindExportTable(dto);
+            return _excelExternal.CreateTable($"{table.ProjectName}_{table.DocumentTypeName}_{GetVietnamTime():yyyyMMddHHmm}", table.DocumentTypeName,
+                table.Headers, table.Rows);
+        }
+
+        // Xếp job nền xuất Excel hồ sơ theo bộ lọc, trả jobId
         public async Task<ViewSubmissionExportJobDto> CreateExportJob(ExportSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(CreateExportJob)}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
             await EnsureQaTicketFilterVisibleAsync(dto);
             var names = await _submissionQuery.FindExportName(dto.ProjectId, dto.DocumentTypeId)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);

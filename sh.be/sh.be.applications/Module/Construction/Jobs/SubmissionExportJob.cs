@@ -22,7 +22,7 @@ namespace sh.be.applications.Module.Construction.Jobs
         public async Task ExecuteAsync(ExportSubmissionDto dto, string objectKey)
         {
             _logger.LogInformation($"{nameof(ExecuteAsync)}, dto={JsonSerializer.Serialize(dto)}, objectKey={objectKey}");
-            var file = await _submissionService.ExportExcel(dto);
+            var file = await _submissionService.ExportExcelFromJob(dto);
             using var content = new MemoryStream(file.Content);
             await _fileStorageExternal.UploadPrivateAsync(content, objectKey, file.ContentType);
         }
