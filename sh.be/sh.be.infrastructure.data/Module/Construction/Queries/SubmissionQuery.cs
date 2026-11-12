@@ -38,9 +38,9 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
         {
         }
 
-        public async Task<BaseResponsePagingDto<GetListSubmissionDto>> FindPaging(FindPagingSubmissionDto dto)
+        public async Task<BaseResponsePagingDto<GetListSubmissionDto>> FindPaging(FindPagingSubmissionDto dto, string? restrictedUserId = null)
         {
-            var query = ApplyFilter(dto, dto.StatusCheck, dto.StatusQa);
+            var query = ApplyFilter(dto, dto.StatusCheck, dto.StatusQa, restrictedUserId);
             var totalItems = await query.CountAsync();
 
             var submissions = await query
@@ -114,7 +114,7 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             };
         }
 
-        public async Task<ViewSubmissionDetailDto?> FindById(int id, ISubmissionFilter filter, bool includePosition)
+        public async Task<ViewSubmissionDetailDto?> FindById(int id, ISubmissionFilter filter, bool includePosition, string? restrictedUserId = null)
         {
             var detail = await _shDbContext.Submissions
                 .AsNoTracking()
@@ -142,31 +142,31 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 return null;
             }
 
-            await FillFieldsAndPositionAsync(detail, filter, includePosition);
+            await FillFieldsAndPositionAsync(detail, filter, includePosition, restrictedUserId);
             return detail;
         }
 
-        public Task<int?> FindNextId(int id, ISubmissionFilter filter)
+        public Task<int?> FindNextId(int id, ISubmissionFilter filter, string? restrictedUserId = null)
         {
-            return ApplyFilter(filter, filter.StatusCheck, filter.StatusQa)
+            return ApplyFilter(filter, filter.StatusCheck, filter.StatusQa, restrictedUserId)
                 .Where(s => s.Id > id)
                 .OrderBy(s => s.Id)
                 .Select(s => (int?)s.Id)
                 .FirstOrDefaultAsync();
         }
 
-        public Task<int?> FindPreviousId(int id, ISubmissionFilter filter)
+        public Task<int?> FindPreviousId(int id, ISubmissionFilter filter, string? restrictedUserId = null)
         {
-            return ApplyFilter(filter, filter.StatusCheck, filter.StatusQa)
+            return ApplyFilter(filter, filter.StatusCheck, filter.StatusQa, restrictedUserId)
                 .Where(s => s.Id < id)
                 .OrderByDescending(s => s.Id)
                 .Select(s => (int?)s.Id)
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<ViewCountSubmissionDto> Count(ISubmissionFilter filter)
+        public async Task<ViewCountSubmissionDto> Count(ISubmissionFilter filter, string? restrictedUserId = null)
         {
-            var counts = await ApplyFilter(filter, null, filter.StatusQa)
+            var counts = await ApplyFilter(filter, null, filter.StatusQa, restrictedUserId)
                 .GroupBy(_ => 1)
                 .Select(g => new ViewCountSubmissionDto
                 {
@@ -220,9 +220,9 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             };
         }
 
-        public async Task<BaseResponsePagingDto<GetListQaSubmissionDto>> FindQaPaging(FindPagingQaSubmissionDto dto)
+        public async Task<BaseResponsePagingDto<GetListQaSubmissionDto>> FindQaPaging(FindPagingQaSubmissionDto dto, string? restrictedUserId = null)
         {
-            var query = ApplyFilter(dto, dto.StatusCheck, dto.StatusQa);
+            var query = ApplyFilter(dto, dto.StatusCheck, dto.StatusQa, restrictedUserId);
             var totalItems = await query.CountAsync();
 
             var submissions = await (from s in query.OrderBy(s => s.Id).Paging(dto)
@@ -253,7 +253,7 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                                      })
                 .ToListAsync();
 
-            var qaCounts = await ApplyFilter(dto, dto.StatusCheck, null)
+            var qaCounts = await ApplyFilter(dto, dto.StatusCheck, null, restrictedUserId)
                 .GroupBy(_ => 1)
                 .Select(g => new ViewQaCountDto
                 {
@@ -271,7 +271,7 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             };
         }
 
-        public async Task<ViewQaSubmissionDetailDto?> FindQaById(int id, ISubmissionFilter filter, bool includePosition)
+        public async Task<ViewQaSubmissionDetailDto?> FindQaById(int id, ISubmissionFilter filter, bool includePosition, string? restrictedUserId = null)
         {
             var detail = await (from s in _shDbContext.Submissions.AsNoTracking().Where(s => s.Id == id)
                                 let lastLog = _shDbContext.SubmissionLogs
@@ -311,7 +311,7 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 return null;
             }
 
-            await FillFieldsAndPositionAsync(detail, filter, includePosition);
+            await FillFieldsAndPositionAsync(detail, filter, includePosition, restrictedUserId);
             return detail;
         }
 
@@ -365,9 +365,9 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             };
         }
 
-        public Task<List<GetListSubmissionFieldValueDto>> FindFieldValues(FindSubmissionFieldValueDto dto)
+        public Task<List<GetListSubmissionFieldValueDto>> FindFieldValues(FindSubmissionFieldValueDto dto, string? restrictedUserId = null)
         {
-            var submissionIds = ApplyFilter(dto, dto.StatusCheck, dto.StatusQa, false, dto.DocumentFieldId).Select(s => s.Id);
+            var submissionIds = ApplyFilter(dto, dto.StatusCheck, dto.StatusQa, restrictedUserId, false, dto.DocumentFieldId).Select(s => s.Id);
             var query = _shDbContext.SubmissionDatas
                 .AsNoTracking()
                 .Where(sd => sd.ProjectId == dto.ProjectId && sd.DocumentTypeId == dto.DocumentTypeId && sd.DocumentFieldId == dto.DocumentFieldId
@@ -391,9 +391,9 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 .ToListAsync();
         }
 
-        public async Task<ViewSubmissionTreeDto> FindTree(ISubmissionFilter filter)
+        public async Task<ViewSubmissionTreeDto> FindTree(ISubmissionFilter filter, string? restrictedUserId = null)
         {
-            var boxCounts = await ApplyFilter(filter, filter.StatusCheck, filter.StatusQa)
+            var boxCounts = await ApplyFilter(filter, filter.StatusCheck, filter.StatusQa, restrictedUserId)
                 .GroupBy(s => new { s.ProfileRange, s.Box })
                 .Select(g => new
                 {
@@ -720,7 +720,7 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
 
         public async Task<SubmissionExportTableDto> FindExportTable(ISubmissionFilter filter)
         {
-            var query = ApplyFilter(filter, filter.StatusCheck, filter.StatusQa);
+            var query = ApplyFilter(filter, filter.StatusCheck, filter.StatusQa, null);
             if (await query.CountAsync() > SubmissionConst.EXPORT_MAX_ROWS)
             {
                 throw new UserFriendlyException(ErrorCodes.ConstructionErrorExportTooManyRows,
@@ -915,7 +915,7 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             };
         }
 
-        private async Task FillFieldsAndPositionAsync(ViewSubmissionDetailDto detail, ISubmissionFilter filter, bool includePosition)
+        private async Task FillFieldsAndPositionAsync(ViewSubmissionDetailDto detail, ISubmissionFilter filter, bool includePosition, string? restrictedUserId)
         {
             detail.Fields = await (from pf in _shDbContext.ProjectDocumentTypeDocumentFields.AsNoTracking()
                                    join d in _shDbContext.DocumentFields.AsNoTracking() on pf.DocumentFieldId equals d.Id
@@ -958,7 +958,7 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
 
             if (includePosition)
             {
-                var counts = await ApplyFilter(filter, filter.StatusCheck, filter.StatusQa)
+                var counts = await ApplyFilter(filter, filter.StatusCheck, filter.StatusQa, restrictedUserId)
                     .GroupBy(_ => 1)
                     .Select(g => new
                     {
@@ -973,7 +973,8 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             }
         }
 
-        private IQueryable<Submission> ApplyFilter(ISubmissionFilter filter, int? statusCheck, int? statusQa, bool includeKeyword = true,
+        // Lọc hồ sơ của cặp theo bộ lọc chung; restrictedUserId khác null thì chỉ giữ văn bản người đó đang giữ
+        private IQueryable<Submission> ApplyFilter(ISubmissionFilter filter, int? statusCheck, int? statusQa, string? restrictedUserId, bool includeKeyword = true,
             int? excludedDocumentFieldId = null)
         {
             var query = _shDbContext.Submissions
@@ -1000,6 +1001,17 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             {
                 query = query.Where(s => _shDbContext.SubmissionUsers.Any(u => u.SubmissionId == s.Id && u.Role == RoleConstants.ROLE_QA
                     && u.TicketId == qaTicketId));
+            }
+
+            if (restrictedUserId != null)
+            {
+                query = query.Where(s => _shDbContext.SubmissionUsers.Any(u => u.SubmissionId == s.Id && u.UserId == restrictedUserId));
+            }
+
+            if (filter.AssignmentTicketId is int assignmentTicketId)
+            {
+                query = query.Where(s => _shDbContext.SubmissionUsers.Any(u => u.SubmissionId == s.Id && u.Role == RoleConstants.ROLE_DATA
+                    && u.TicketId == assignmentTicketId));
             }
 
             query = ApplyFieldFilter(query, filter.DocumentFieldId1, filter.FieldValue1, excludedDocumentFieldId);

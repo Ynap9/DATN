@@ -61,8 +61,8 @@ catch (Exception ex)
 - **Được:** nạp aggregate, gọi method entity / domain service, mở transaction, ghi audit, log, gọi cổng ra `I...External`.
 - **Không được:** `if` nghiệp vụ, gán thẳng thuộc tính entity, tự viết luật quyền, truy vấn LINQ trên DB.
 - Lệnh ghi nhiều bước (xoá + thêm, tạo user + gán role) **phải** nằm trong transaction như trên.
-- Ngoại lệ: `SubmissionService.Check` ghi 4 bảng bằng **một** `SaveChanges` (EF tự bọc transaction, gộp batch) nên không mở
-  `BeginTransactionAsync`. ⚠️ Thêm bước ghi thứ hai (`SaveChanges` khác, gửi mail, gọi dịch vụ ngoài) thì phải quay lại mẫu trên.
+- `SubmissionService.Check` từ Task 25 cũng theo mẫu trên: lưu kiểm tra → `ISubmissionAssignmentService.AssignCheckedToQaAsync`
+  → lưu → commit, để lỗi phân việc rollback cả dữ liệu kiểm tra.
 
 ⚠️ `UserService.Create` gửi mail **trước** `CommitAsync`: SMTP chậm thì transaction bị giữ lâu, và nếu commit
 lỗi sau khi mail đã đi thì người dùng nhận mail cho tài khoản không tồn tại. Đã biết, chưa sửa — hướng sửa là
@@ -76,8 +76,10 @@ domain event / outbox, đừng chỉ đảo thứ tự mà bỏ rollback.
 | `getCurrentUserId()` | Id user từ token (`IRequestContext.UserId`) |
 | `GetVietnamTime()` | Giờ `SE Asia Standard Time` tính từ `TimeProvider` |
 | `AddAuditLog(action, actionType, content, oldData?, newData?, userId?)` | Thêm `AuditLog`; lưu khi `SaveChanges` |
+| `EnsureAdminOrProjectLeaderAsync(projectId)` | Chặn người không phải Admin / Leader đang hoạt động của dự án (`337`), dùng luật `ProjectDomainService.EnsureCanAcceptAsync` |
 
-Service mới kế thừa `BaseService` và truyền đủ 6 tham số lên `base(...)`.
+Service mới kế thừa `BaseService` và truyền đủ 6 tham số lên `base(...)`; cần `EnsureAdminOrProjectLeaderAsync` thì dùng constructor
+8 tham số (thêm `IRoleRepository`, `ProjectDomainService`), không thì hàm ném `InvalidOperationException`.
 
 ## DTO
 

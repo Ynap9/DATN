@@ -20,6 +20,9 @@ tầng ngoài chỉ việc implement.
    `[Route("api/v{version:apiVersion}/<module>/<ten>")]` + `[ApiVersion(ApiVersionConstants.V1)]` ([01-api.md](01-api.md#version-api)).
 6. Build + kiểm EF (xem [07-conventions.md](07-conventions.md)).
 
+Module khác cần chen vào luồng ⇒ khai `I<Ten>Service` ở module sở hữu luồng, implement `<Ten>Service` ở module sở hữu luật; không gọi chéo
+service, implement không `SaveChanges` / commit. Mẫu: `ISubmissionAssignmentService` ([../nghiep-vu/12-ho-so-kiem-tra.md](../nghiep-vu/12-ho-so-kiem-tra.md#phạm-vi-và-phân-việc)).
+
 ## Thêm một use case ĐỌC
 
 1. DTO kết quả trong `applications/.../Dtos/`.
