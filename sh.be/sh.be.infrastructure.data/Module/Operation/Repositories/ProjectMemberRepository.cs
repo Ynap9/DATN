@@ -84,11 +84,11 @@ namespace sh.be.infrastructure.data.Module.Operation.Repositories
                 .ToListAsync();
         }
 
-        public Task<List<AssignmentTicket>> GetActiveAssignmentTicketsAsync(int projectId, int documentTypeId, string userId)
+        public Task<List<AssignmentTicket>> GetActiveAssignmentTicketsAsync(int projectId, int documentTypeId, string userId, string role)
         {
             return _shDbContext.AssignmentTickets
                 .Where(t => t.ProjectId == projectId && t.DocumentTypeId == documentTypeId && t.AssigneeUserId == userId
-                    && t.Status == AssignmentConst.STATUS_ACTIVE)
+                    && t.Role == role && t.Status == AssignmentConst.STATUS_ACTIVE)
                 .ToListAsync();
         }
 

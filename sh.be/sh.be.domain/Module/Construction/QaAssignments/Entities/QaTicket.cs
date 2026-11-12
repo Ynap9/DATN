@@ -108,6 +108,17 @@ namespace sh.be.domain.Module.Construction.QaAssignments.Entities
                 .ToList();
         }
 
+        public void AddDocuments(int count, string? modifiedBy, DateTime modifiedDate)
+        {
+            if (Status != QaAssignmentConst.TICKET_STATUS_ACTIVE)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaTicketStatusInvalid);
+            }
+            DocumentCount += count;
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
+        }
+
         public bool IsAssignedTo(string userId)
         {
             return QaUserId == userId;

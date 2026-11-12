@@ -257,7 +257,7 @@ namespace sh.be.applications.Module.Operation.Implements
 
                 AddAuditLog(AuditLogConstants.ACTION_PROJECT_MEMBER_REMOVE, AuditLogConstants.ACTION_TYPE_DELETE,
                     $"Gỡ {user?.UserName ?? member.UserId} khỏi dự án {access.Project.Name} / {access.DocumentType.Name}, thu hồi {revoke.RevokedDocumentCount} văn bản",
-                    oldData, new { revoke.RevokedDocumentCount, revoke.CancelledAssignmentTicketIds, revoke.CancelledQaTicketIds, UnmanagedMemberIds = unmanagedMemberIds });
+                    oldData, new { revoke.RevokedDocumentCount, revoke.CancelledAssignmentTicketIds, revoke.CancelledQaTicketIds, revoke.CancelledQaOwnershipTicketIds, UnmanagedMemberIds = unmanagedMemberIds });
                 await _unitOfWork.SaveChangesAsync();
 
                 await transaction.CommitAsync();

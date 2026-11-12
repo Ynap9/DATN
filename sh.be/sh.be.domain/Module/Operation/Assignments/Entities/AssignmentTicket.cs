@@ -42,9 +42,9 @@ namespace sh.be.domain.Module.Operation.Assignments.Entities
         public static AssignmentTicket CreateManual(int projectId, int documentTypeId, string assigneeUserId, string role, int documentCount,
             int? sourceTicketId, string? createdBy, DateTime createdDate)
         {
-            if (role != RoleConstants.ROLE_DATA)
+            if (role is not (RoleConstants.ROLE_DATA or RoleConstants.ROLE_QA))
             {
-                throw new UserFriendlyException(ErrorCodes.BadRequest, $"Phiếu nhập liệu chỉ giao vai trò {RoleConstants.ROLE_DATA}");
+                throw new UserFriendlyException(ErrorCodes.BadRequest, $"Phiếu chỉ giao vai trò {RoleConstants.ROLE_DATA} hoặc {RoleConstants.ROLE_QA}");
             }
             return new AssignmentTicket
             {
@@ -70,6 +70,23 @@ namespace sh.be.domain.Module.Operation.Assignments.Entities
                 Status = AssignmentConst.STATUS_CANCELLED;
                 CancelledAt = modifiedDate;
             }
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
+        }
+
+        public void AddDocuments(int count, string? modifiedBy, DateTime modifiedDate)
+        {
+            EnsureActive();
+            DocumentCount += count;
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
+        }
+
+        public void Cancel(string? modifiedBy, DateTime modifiedDate)
+        {
+            EnsureActive();
+            Status = AssignmentConst.STATUS_CANCELLED;
+            CancelledAt = modifiedDate;
             ModifiedBy = modifiedBy;
             ModifiedDate = modifiedDate;
         }
