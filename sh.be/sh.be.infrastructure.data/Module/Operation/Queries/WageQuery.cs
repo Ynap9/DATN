@@ -20,14 +20,16 @@ namespace sh.be.infrastructure.data.Module.Operation.Queries
             _memoryCache = memoryCache;
         }
 
-        // Mọi thành viên Data / QA của dự án, kể cả đã gỡ (để tính tiền văn bản đã kiểm đang giữ)
+        // Mỗi (loại văn bản, người, vai trò) một dòng thành viên: dòng chưa gỡ, bị gỡ hẳn thì dòng đã gỡ mới nhất
         public Task<List<WageMemberDto>> FindMembers(int projectId)
         {
             // IgnoreQueryFilters: thành viên đã gỡ vẫn còn văn bản đã kiểm đang giữ thì vẫn được tính tiền
             return _shDbContext.ProjectMembers
                 .IgnoreQueryFilters()
                 .AsNoTracking()
-                .Where(m => m.ProjectId == projectId)
+                .Where(m => m.ProjectId == projectId
+                    && (!m.Deleted || !_shDbContext.ProjectMembers.IgnoreQueryFilters().Any(o => o.ProjectId == m.ProjectId
+                        && o.DocumentTypeId == m.DocumentTypeId && o.UserId == m.UserId && o.Role == m.Role && (!o.Deleted || o.Id > m.Id))))
                 .Select(m => new WageMemberDto
                 {
                     MemberId = m.Id,
