@@ -25,5 +25,13 @@ namespace sh.be.domain.Module.Operation.Assignments.Repositories
         Task<bool> IsMemberAsync(int projectId, int documentTypeId, string userId);
         Task<int> CountDataNotPassedAsync(int ticketId);
         Task<int> TryMarkDoneAsync(int ticketId, DateTime doneAt);
+        Task<List<AssignmentHolderRow>> GetHolderRowsAsync(int projectId, int documentTypeId, string role, string userId, List<AssignmentItem> items);
+        Task<int> DeleteUnfinishedHoldersAsync(string role, string userId, List<int> submissionIds);
+        Task<List<AssignmentTicketItem>> GetTicketItemsAsync(int ticketId);
+        void RemoveTicketItems(List<AssignmentTicketItem> items);
+        Task<List<QaTicket>> FindQaBatchesAsync(List<int> qaTicketIds);
+        Task<int> CountNotPassedInQaBatchAsync(int qaTicketId);
+        Task<int> DecreaseQaBatchDocumentsAsync(int qaTicketId, int count, string? modifiedBy, DateTime modifiedDate);
+        Task<int> DecreaseOwnershipDocumentsAsync(int ticketId, int count, string? modifiedBy, DateTime modifiedDate);
     }
 }

@@ -39,7 +39,8 @@ LeaderUserId)` để service khỏi đọc lại tên dự án / loại văn b�
 - Trùng: dòng `users[]` thắng dòng nhóm (`SourceStaffGroupId = null`); trùng trong `users[]` lấy dòng đầu; trùng giữa 2 nhóm lấy nhóm trước.
 - **Bỏ qua** (trả `skipped[{userId, fullName, reason}]`, không lỗi), xét theo thứ tự: không tồn tại `SKIP_REASON_USER_NOT_FOUND` → đã là
   thành viên cặp (vai trò nào cũng vậy) `ALREADY_MEMBER` → không có role hệ thống đúng vai trò (gồm người từ nhóm nay không còn Data / QA)
-  `INVALID_ROLE`.
+  `INVALID_ROLE` → người QA vào dự án không QA (`IsQaEnabled = false`) `QA_DISABLED` "Dự án không có QA" (Task 14).
+- Dự án không QA: gửi thẳng user Role `QA` trong `users[]` → `345` cả request (`ProjectMemberDomainService.EnsureRoleEnabled`).
 - **Hỏng cả request**: quyền `805` / `801`, phạm vi, `823`, `users` + `staffGroupIds` cùng rỗng / > 500 người **sau khi bung** / role
   khác `Data` / `QA` → `400`. Hai request thêm trùng người cùng lúc: unique chặn, `ProjectMemberRepository.AddRangeAsync` bắt SQL
   `2601` / `2627` → `400` "Có người vừa được thêm bởi thao tác khác, hãy tải lại", rollback.
@@ -72,6 +73,8 @@ Gỡ (API 14) = xoá mềm + **tự thu hồi** văn bản chưa làm của ngư
   phụ trách nút (`AssignmentTicket` Role `QA`) → trả thêm `cancelledQaOwnershipTicketIds` ([23](23-chia-phieu.md)).
 - Chống đua: lệnh xoá có điều kiện trạng thái văn bản **ngay trong câu SQL** (`ExecuteDelete` + `Any` trên `Submissions`), không đọc trước
   rồi xoá sau — văn bản người đó vừa bấm Kiểm tra / vừa chấm Đạt ở lại người đó.
+  ⚠️ Chưa đủ khi DB bật `READ_COMMITTED_SNAPSHOT`: `Any` đọc bản đã commit cũ của dòng Kiểm tra đang ghi dở. Thu hồi / chuyển (Task 14)
+  đã đọc `Submission` `WITH (UPDLOCK, ROWLOCK)` ([26](26-thu-hoi-chuyen-phieu.md#chống-đua-với-kiểm-tra--qa)); câu xoá khi gỡ chưa sửa.
 - Trả `revokedDocumentCount`, `keptDocumentCount` (dòng còn lại của **các phiếu vừa xét**), `cancelledAssignmentTicketIds`,
   `cancelledQaTicketIds`, `cancelledQaOwnershipTicketIds`, `unmanagedMemberCount`. FE hỏi xác nhận trước dựa vào `heldTicketCount` của API 9.
 - Gỡ rồi thêm lại cùng người được; văn bản đã thu hồi **không** tự quay lại.

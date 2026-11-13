@@ -84,6 +84,7 @@ namespace sh.be.applications.Module.Operation.Implements
             return await _projectMemberQuery.FindCandidates(projectId, dto);
         }
 
+        // Admin thêm Leader cho cặp, bỏ qua người không hợp lệ kèm lý do
         public async Task<AddProjectMemberResultDto> AddLeaders(int projectId, AddProjectLeaderDto dto)
         {
             _logger.LogInformation($"{nameof(AddLeaders)}, projectId={projectId}, dto={JsonSerializer.Serialize(dto)}");
@@ -103,7 +104,8 @@ namespace sh.be.applications.Module.Operation.Implements
             List<SkippedMemberDto> skipped = [];
             foreach (var userId in userIds)
             {
-                var skipReason = _projectMemberDomainService.ResolveSkipReason(userId, RoleConstants.ROLE_LEADER, roleNamesByUser, existingMemberUserIds);
+                var skipReason = _projectMemberDomainService.ResolveSkipReason(userId, RoleConstants.ROLE_LEADER, roleNamesByUser, existingMemberUserIds,
+                    access.Project.IsQaEnabled);
                 if (skipReason != null)
                 {
                     skipped.Add(new SkippedMemberDto { UserId = userId, Reason = skipReason });
@@ -114,6 +116,7 @@ namespace sh.be.applications.Module.Operation.Implements
             return await SaveAddedAsync(access, addedMembers, skipped);
         }
 
+        // Thêm Data / QA từng người hoặc theo nhóm; dự án không QA: gửi thẳng QA → 345, QA vào bằng nhóm bị bỏ qua kèm lý do
         public async Task<AddProjectMemberResultDto> AddMembers(int projectId, AddProjectMemberDto dto)
         {
             _logger.LogInformation($"{nameof(AddMembers)}, projectId={projectId}, dto={JsonSerializer.Serialize(dto)}");
@@ -127,6 +130,10 @@ namespace sh.be.applications.Module.Operation.Implements
             }
             var currentUserId = getCurrentUserId();
             var access = await _projectMemberDomainService.EnsureCanManageAsync(projectId, dto.DocumentTypeId, currentUserId, true);
+            foreach (var role in dto.Users.Select(user => user.Role).Distinct())
+            {
+                ProjectMemberDomainService.EnsureRoleEnabled(access.Project, role);
+            }
             var managedByUserId = access.IsAdmin ? dto.ManagedByUserId : access.LeaderUserId;
             if (access.IsAdmin)
             {
@@ -161,7 +168,8 @@ namespace sh.be.applications.Module.Operation.Implements
             foreach (var entry in entries)
             {
                 var role = entry.Role ?? _projectMemberDomainService.ResolveGroupMemberRole(roleNamesByUser.GetValueOrDefault(entry.UserId, []));
-                var skipReason = _projectMemberDomainService.ResolveSkipReason(entry.UserId, role, roleNamesByUser, existingMemberUserIds);
+                var skipReason = _projectMemberDomainService.ResolveSkipReason(entry.UserId, role, roleNamesByUser, existingMemberUserIds,
+                    access.Project.IsQaEnabled);
                 if (skipReason != null)
                 {
                     skipped.Add(new SkippedMemberDto { UserId = entry.UserId, Reason = skipReason });

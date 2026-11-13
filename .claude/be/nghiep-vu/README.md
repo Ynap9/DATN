@@ -31,9 +31,10 @@
 | [20-ai-nha-cung-cap.md](20-ai-nha-cung-cap.md) | Module Ai: 5 bảng nền móng, nhà cung cấp AI (`AiProvider`) với 12 luật R1–R12, key mã hoá + SHA-256, tải key file JSON, 8 API, lỗi `901`–`907` |
 | [21-thanh-vien-du-an.md](21-thanh-vien-du-an.md) | Thành viên dự án (Operation): ai quản lý ai, không có Leader thì Admin quản lý, thêm hàng loạt có bỏ qua, gỡ = tự thu hồi văn bản chưa làm, 6 API |
 | [22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md) | Nghiệm thu dự án: `DOING` → `ACCEPTING` → `DONE`, tự chuyển khi văn bản cuối QA đạt (không QA: được kiểm), Admin cho phép khi chưa đủ (lý do tuỳ chọn, reopen bắt buộc), khoá import, tổng hợp + audit, lỗi `340`–`342` |
-| [23-chia-phieu.md](23-chia-phieu.md) | Chia phiếu (Operation): cây Hộp → Hồ sơ 2 chế độ Data / QA, giao phiếu nhập liệu, QA phụ trách nút + đợt QA, khoá chống đua, phiếu của tôi, 6 API |
+| [23-chia-phieu.md](23-chia-phieu.md) | Chia phiếu (Operation): cây Hộp → Hồ sơ 2 chế độ Data / QA, giao phiếu nhập liệu, QA phụ trách nút + đợt QA, khoá chống đua, phiếu của tôi, 6 API (thu hồi / chuyển ở 26) |
 | [24-don-gia-tien-cong.md](24-don-gia-tien-cong.md) | Đơn giá trên thành viên (công ty / thực nhận, Admin và Leader), thống kê tiền công Data / QA, ai thấy giá nào, cache khối lượng 60 giây |
 | [25-xoa-du-an-danh-sach-cap.md](25-xoa-du-an-danh-sach-cap.md) | Admin xoá mềm dự án kèm 16 bảng phụ thuộc (cùng mốc, đổi tên Google Sheet), chặn xoá loại văn bản đang dùng `346`, paging theo cặp dự án – loại văn bản theo vai trò người gọi |
+| [26-thu-hoi-chuyen-phieu.md](26-thu-hoi-chuyen-phieu.md) | Thu hồi / chuyển phiếu nhập liệu (chỉ văn bản chưa kiểm) và phụ trách QA (văn bản chưa đạt, gộp vào phụ trách sẵn có), chống đua `UPDLOCK`, danh sách phiếu, chặn QA dự án không QA `345` |
 
 ## Thuật ngữ
 

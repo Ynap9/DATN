@@ -75,7 +75,17 @@ namespace sh.be.domain.Module.Operation.ProjectMembers.Services
             }
         }
 
-        public string? ResolveSkipReason(string userId, string? role, Dictionary<string, List<string>> roleNamesByUser, HashSet<string> existingMemberUserIds)
+        // Dự án không QA thì không nhận vai trò QA (345); vai trò khác không chặn
+        public static void EnsureRoleEnabled(Project project, string role)
+        {
+            if (role == RoleConstants.ROLE_QA)
+            {
+                project.EnsureQaEnabled();
+            }
+        }
+
+        public string? ResolveSkipReason(string userId, string? role, Dictionary<string, List<string>> roleNamesByUser, HashSet<string> existingMemberUserIds,
+            bool isQaEnabled)
         {
             if (!roleNamesByUser.TryGetValue(userId, out var roleNames))
             {
@@ -88,6 +98,10 @@ namespace sh.be.domain.Module.Operation.ProjectMembers.Services
             if (role == null || !roleNames.Contains(role))
             {
                 return ProjectMemberConst.SKIP_REASON_INVALID_ROLE;
+            }
+            if (role == RoleConstants.ROLE_QA && !isQaEnabled)
+            {
+                return ProjectMemberConst.SKIP_REASON_QA_DISABLED;
             }
             return null;
         }

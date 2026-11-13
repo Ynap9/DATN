@@ -1,6 +1,6 @@
 # Xoá dự án kèm dữ liệu và danh sách cặp dự án – loại văn bản
 
-> **Phần 25/25** · trước: [24-don-gia-tien-cong.md](24-don-gia-tien-cong.md) · mục lục: [README.md](README.md)
+> **Phần 25/26** · trước: [24-don-gia-tien-cong.md](24-don-gia-tien-cong.md) · mục lục: [README.md](README.md)
 
 Task 29 (2026-11-13). Phần CRUD dự án gốc ở [07-du-an.md](07-du-an.md).
 
@@ -88,3 +88,5 @@ Ngày 2026-11-13, DB dev, dữ liệu tạm `ZZTEST29` đã dọn, audit test đ
 ⚠️ Không có API khôi phục dự án đã xoá; khôi phục tay phải lọc đúng `DeletedDate` của lần xoá để không bật lại dòng đã xoá từ trước.
 
 ⚠️ Đổi tên Google Sheet là bước ngoài transaction: lỗi thì tên file không đổi, chỉ có log.
+
+> **Tiếp:** [26-thu-hoi-chuyen-phieu.md](26-thu-hoi-chuyen-phieu.md) — thu hồi / chuyển phiếu nhập liệu và phụ trách QA, danh sách phiếu.

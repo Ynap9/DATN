@@ -1,6 +1,6 @@
 # Đơn giá và thống kê tiền công (Operation)
 
-> **Phần 24/25** · trước: [23-chia-phieu.md](23-chia-phieu.md) · mục lục: [README.md](README.md)
+> **Phần 24/26** · trước: [23-chia-phieu.md](23-chia-phieu.md) · mục lục: [README.md](README.md)
 
 Task 12, chốt 2026-11-12. Đơn giá nằm trên dòng thành viên `ProjectMember` (`CompanyPrice`, `ActualPrice`), sửa đè, không lịch sử.
 Thống kê khối lượng và tiền theo người trên một màn. Thay bảng `ProjectPriceDefault` và `ProjectMemberPrice` (đã xoá trong migration
