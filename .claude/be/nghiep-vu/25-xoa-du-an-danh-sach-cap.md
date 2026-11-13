@@ -60,10 +60,14 @@ Item `GetListProjectPairDto`:
 | `totalBox`, `totalProfileRange` | Số Hộp / số (Hộp, Hồ sơ) khác nhau của cặp |
 | `totalSubmission`, `checkedCount`, `progressPercent` | Admin / Leader: cả cặp; Data: văn bản mình giữ / đã kiểm; QA: văn bản mình phụ trách / đã chấm (`StatusQa` khác chưa chấm). `%` làm tròn 2 số |
 | `qaPassedCount` | Chỉ Admin / Leader và dự án có QA; còn lại `null` |
-| `filledFieldCount` | Chỉ Data: số ô dữ liệu khác rỗng trong văn bản mình đã kiểm; còn lại `null` |
+| `filledFieldCount` | Chỉ Data: số ô có dữ liệu (trim khác rỗng) của **trường tính tiền** (`IsChargeable`, trường chưa xoá) trong văn bản mình đã kiểm; còn lại `null` |
 
 `ProjectQuery.FindPaging`: 1 câu đếm + 1 câu lấy trang, rồi 5 câu gom theo các cặp trong trang (tên loại văn bản, số thành viên,
-số liệu cả cặp, số "của tôi", số ô đã nhập). Không cache.
+số liệu cả cặp, số "của tôi", số ô đã nhập). Hai câu "của tôi" nằm trong `CountMyHeldSubmissionsAsync`, dùng chung với `myProgresses` ở
+chi tiết dự án (Task 30). Không cache. Phạm vi "được phân" ở đây cũng áp cho danh sách, dropdown, chi tiết, nghiệm thu ([07](07-du-an.md#phạm-vi-xem--task-30)).
+
+`filledFieldCount` từ Task 30 (case 30.11, như 5sdb, cùng luật tiền công [24](24-don-gia-tien-cong.md)) đọc cờ `IsChargeable` **hiện tại**:
+đổi cờ một trường thì số đổi theo cho mọi văn bản đã kiểm.
 
 ⚠️ Bẫy: `IgnoreQueryFilters()` gỡ filter của **cả câu truy vấn**, không riêng bảng join. Muốn lấy tên loại văn bản đã xoá mềm mà vẫn
 giữ filter dự án / thành viên thì tách câu riêng (như `documentTypeNames`), đừng gắn `IgnoreQueryFilters()` vào câu chính.
@@ -82,6 +86,8 @@ Ngày 2026-11-13, DB dev, dữ liệu tạm `ZZTEST29` đã dọn, audit test đ
   loại văn bản đã xoá hiện cuối. Số liệu khớp đếm SQL tay.
 - Thời gian (DB dev qua tunnel, mỗi câu SQL ~110–150 ms, 62 hồ sơ): Admin ~1,3 s, Leader ~1,6–1,9 s (9 câu SQL: 7 paging + 2 kiểm quyền).
   Đa phần là độ trễ mạng; chưa đo trên dữ liệu lớn.
+- Task 30 (`ZZTEST30` đã dọn): JSON paging trước / sau khi tách hàm đếm khớp 5/5 người gọi (trừ `filledFieldCount` của Data);
+  `filledFieldCount` 16 → 12 (chỉ trường tính tiền), tắt thêm 1 cờ → 8, ô rỗng / toàn khoảng trắng và trường đã xoá không tính, khớp SQL tay.
 
 ## Giới hạn
 

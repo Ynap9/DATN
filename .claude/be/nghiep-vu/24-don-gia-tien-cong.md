@@ -20,7 +20,7 @@ tiền QA.
 | 12.4 | Giá mặc định theo vai trò | Không có. Xoá `ProjectPriceDefault`, `ProjectMemberPrice` |
 | 12.5 | Chưa đặt giá | Vẫn giao việc, vẫn làm. Tiền = 0, cờ `isPriceMissing`. Đặt giá sau thì tính cho phần đã làm |
 | 12.6 | Leader | Không có giá, không có tiền trong hệ thống |
-| 12.7 | Tiền nhập liệu (Data) | Số trường có dữ liệu của văn bản × giá. Cộng khi văn bản được kiểm xong |
+| 12.7 | Tiền nhập liệu (Data) | Số trường **tính tiền** có dữ liệu của văn bản × giá (từ Task 30). Cộng khi văn bản được kiểm xong |
 | 12.8 | QA trả, nhân viên sửa lại | Không cộng lần hai: một văn bản tính một lần cho người giữ |
 | 12.9 | Văn bản về pool (trả lần 3) | Trừ tiền văn bản của người giữ cũ. Người mới kiểm xong thì người mới được |
 | 12.10 | Admin / Leader kiểm hộ | Tiền tính cho nhân viên đang giữ văn bản |
@@ -38,7 +38,7 @@ tiền QA.
 - **K2.** Văn bản "kiểm xong bởi lượt giữ hiện tại" = có dòng `SubmissionUser` Data của người đó **và** ít nhất một `SubmissionLog`
   (bất kỳ ai kiểm) có `CreatedDate` ≥ `CreatedDate` của dòng giữ. Về pool (dòng bị xoá) → tự trừ. Nhận lại từ pool mà người mới chưa
   kiểm → chưa tính.
-- **K3.** Đơn vị: Data = 1 trường có dữ liệu; QA = 1 lượt chấm (1 dòng `SubmissionQaLog` chưa xoá).
+- **K3.** Đơn vị: Data = 1 trường tính tiền (`IsChargeable`, chưa xoá) có dữ liệu; QA = 1 lượt chấm (1 dòng `SubmissionQaLog` chưa xoá).
 - **K4.** Dự án `DONE` / `EXPIRED`: không sửa giá nữa, kể cả Admin (`818`). Số tiền đứng yên. Chốt kỳ là việc riêng, không thuộc task này.
 - **K5.** Cache `IMemoryCache` chỉ cho khối lượng, theo dự án, 60 giây. Tiền = khối lượng × giá đọc mới mỗi lần.
 - **K6.** Leader đặt `ActualPrice` khi chưa có `CompanyPrice` → `808`. Admin được đặt `CompanyPrice` trước, `ActualPrice` để trống.
@@ -78,7 +78,8 @@ Phạm vi xét theo từng cặp (dự án, loại văn bản): một người c
 ## Công thức
 
 - **Data** (theo loại văn bản, người): `documentCount` = số văn bản đã kiểm xong đang giữ (K2); `quantity` = `fieldCount` = tổng trường
-  có dữ liệu của các văn bản đó (K1).
+  tính tiền có dữ liệu của các văn bản đó (K1). Task 30 (2026-11-13) thêm điều kiện `IsChargeable` (trước đó đếm mọi trường), đọc cờ
+  **hiện tại** nên đổi cờ thì khối lượng văn bản đã kiểm đổi theo (sau tối đa 60 giây cache) — cùng luật `filledFieldCount` ở [25](25-xoa-du-an-danh-sach-cap.md).
 - **QA** (theo loại văn bản, người): `reviewCount` = số lượt chấm; `passedCount`, `failedCount`; `quantity` = `reviewCount` (K3).
 - `actualAmount` = `quantity` × `ActualPrice` (null coi là 0); `companyAmount` = `quantity` × `CompanyPrice`, `null` với người không thấy
   giá công ty.
@@ -117,6 +118,9 @@ dự án đó. Đợi quá 60 giây rồi chạy lại.
 
 Dự án tạm `115`: một Leader, ba thành viên (hai Data, một QA), hồ sơ test chèn bằng SQL, cấp tạm quyền `Wage.View` cho Leader / Data / QA.
 Xoá sạch sau test.
+
+Ngày 2026-11-13 (Task 30, `ZZTEST30` đã dọn): loại văn bản 4 trường, 3 trường tính tiền, Data kiểm 4 văn bản → `quantity` 16 → **12**;
+tắt `IsChargeable` thêm 1 trường, đợi hết cache 60 giây → 8.
 
 ## Chưa làm (task sau)
 

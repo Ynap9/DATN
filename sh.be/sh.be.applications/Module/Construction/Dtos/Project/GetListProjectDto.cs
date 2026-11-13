@@ -7,7 +7,7 @@ namespace sh.be.applications.Module.Construction.Dtos.Project
         public DateTime? StartedAt { get; set; }
         public DateTime? EndedAt { get; set; }
         public int Status { get; set; }
-        public string UrlGoogleSheetSync { get; set; } = String.Empty;
+        public string? UrlGoogleSheetSync { get; set; }
         public bool IsQaEnabled { get; set; }
     }
 }

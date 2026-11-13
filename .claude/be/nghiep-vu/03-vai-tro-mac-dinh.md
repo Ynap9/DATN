@@ -27,6 +27,8 @@ chỉ Admin / SuperAdmin (`400`, [22](22-nghiem-thu-du-an.md)).
 
 `Function.Construction.Project.View` gán cho Leader id 2, Data id 3, QA id 4 bằng `PUT api/auth/role/permission` trên DB dev ngày
 2026-11-13 (Task 29): paging dự án giờ lọc theo thành viên nên mọi vai trò cần quyền này ([25](25-xoa-du-an-danh-sach-cap.md)). Môi trường mới phải gán lại.
+Từ Task 30, Leader / Data / QA chỉ thấy dự án mình được phân ở **mọi** API cần quyền này (danh sách, dropdown, chi tiết, nghiệm thu; ngoài
+phạm vi `303`), Data / QA không thấy link Google Sheet ([07](07-du-an.md#phạm-vi-xem--task-30)).
 
 ### Quyền Operation gán mặc định (bằng API, không qua seeder)
 
