@@ -5,6 +5,7 @@ using sh.be.applications.Module.Construction.Dtos.Project;
 using sh.be.applications.Module.Construction.Interfaces.Queries;
 using sh.be.infrastructure.data.Base;
 using sh.be.infrastructure.data.Persistence.Db;
+using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.Constants.Core;
 using sh.be.shared.HttpRequest.BaseRequest;
@@ -37,30 +38,139 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 .ToListAsync();
         }
 
-        public async Task<BaseResponsePagingDto<GetListProjectDto>> FindPaging(FindPagingProjectDto dto)
+        // Paging cặp (dự án, loại văn bản): Admin mọi cặp, còn lại cặp mình là thành viên; Admin / Leader xem số tổng, Data / QA xem số văn bản mình giữ.
+        // Lấy trang cặp trước rồi đếm cho đúng các cặp của trang bằng GROUP BY, số câu SQL cố định
+        public async Task<BaseResponsePagingDto<GetListProjectPairDto>> FindPaging(FindPagingProjectDto dto, string userId, bool isAdmin)
         {
-            var query = _shDbContext.Projects.AsNoTracking();
+            var query = from pd in _shDbContext.ProjectDocumentTypes.AsNoTracking()
+                        join p in _shDbContext.Projects on pd.ProjectId equals p.Id
+                        join d in _shDbContext.DocumentTypes on pd.DocumentTypeId equals d.Id into documentTypes
+                        from d in documentTypes.DefaultIfEmpty()
+                        where isAdmin || _shDbContext.ProjectMembers.Any(m => m.ProjectId == pd.ProjectId && m.DocumentTypeId == pd.DocumentTypeId && m.UserId == userId)
+                        select new { Project = p, pd.DocumentTypeId, DocumentTypeName = d != null ? d.Name : null };
             if (dto.Status.HasValue)
             {
-                query = query.Where(p => p.Status == dto.Status);
+                query = query.Where(x => x.Project.Status == dto.Status);
             }
             if (!string.IsNullOrEmpty(dto.Keyword))
             {
-                query = query.Where(p => p.Name.Contains(dto.Keyword));
+                query = query.Where(x => x.Project.Name.Contains(dto.Keyword));
+            }
+            if (dto.DocumentTypeId.HasValue)
+            {
+                query = query.Where(x => x.DocumentTypeId == dto.DocumentTypeId);
             }
 
             var totalCount = await query.CountAsync();
 
-            var projects = await query
-                .OrderByDescending(p => p.CreatedDate)
-                .ThenByDescending(p => p.Id)
+            // Loại văn bản đã xoá (tên null qua query filter) xếp cuối trong dự án, như tổng hợp nghiệm thu
+            var pairs = await query
+                .OrderByDescending(x => x.Project.CreatedDate)
+                .ThenByDescending(x => x.Project.Id)
+                .ThenBy(x => x.DocumentTypeName == null)
+                .ThenBy(x => x.DocumentTypeName)
                 .Paging(dto)
-                .ProjectTo<GetListProjectDto>(_mapper.ConfigurationProvider)
+                .Select(x => new GetListProjectPairDto
+                {
+                    ProjectId = x.Project.Id,
+                    ProjectName = x.Project.Name,
+                    Status = x.Project.Status,
+                    StartedAt = x.Project.StartedAt,
+                    EndedAt = x.Project.EndedAt,
+                    IsQaEnabled = x.Project.IsQaEnabled,
+                    UrlGoogleSheetSync = x.Project.UrlGoogleSheetSync,
+                    DocumentTypeId = x.DocumentTypeId,
+                    ViewerRole = isAdmin
+                        ? RoleConstants.ROLE_ADMIN
+                        : _shDbContext.ProjectMembers
+                            .Where(m => m.ProjectId == x.Project.Id && m.DocumentTypeId == x.DocumentTypeId && m.UserId == userId)
+                            .Select(m => m.Role)
+                            .FirstOrDefault() ?? String.Empty,
+                })
                 .ToListAsync();
 
-            return new BaseResponsePagingDto<GetListProjectDto>
+            var projectIds = pairs.Select(x => x.ProjectId).Distinct().ToList();
+            var documentTypeIds = pairs.Select(x => x.DocumentTypeId).Distinct().ToList();
+            var documentTypeNames = await _shDbContext.DocumentTypes
+                .AsNoTracking()
+                .IgnoreQueryFilters()
+                .Where(d => documentTypeIds.Contains(d.Id))
+                .ToDictionaryAsync(d => d.Id, d => d.Name);
+            var memberCounts = await _shDbContext.ProjectMembers
+                .AsNoTracking()
+                .Where(m => projectIds.Contains(m.ProjectId) && documentTypeIds.Contains(m.DocumentTypeId))
+                .GroupBy(m => new { m.ProjectId, m.DocumentTypeId })
+                .Select(g => new { g.Key.ProjectId, g.Key.DocumentTypeId, Count = g.Count() })
+                .ToDictionaryAsync(c => (c.ProjectId, c.DocumentTypeId), c => c.Count);
+            var totalCounts = await _shDbContext.Submissions
+                .AsNoTracking()
+                .Where(s => projectIds.Contains(s.ProjectId) && documentTypeIds.Contains(s.DocumentTypeId))
+                .GroupBy(s => new { s.ProjectId, s.DocumentTypeId })
+                .Select(g => new
+                {
+                    g.Key.ProjectId,
+                    g.Key.DocumentTypeId,
+                    Counts = new PairCounts(
+                        g.Count(),
+                        g.Select(s => s.Box).Distinct().Count(),
+                        g.Select(s => s.Box + "|" + s.ProfileRange).Distinct().Count(),
+                        g.Count(s => s.StatusCheck == SubmissionConst.CHECKED),
+                        g.Count(s => s.StatusCheck == SubmissionConst.CHECKED && s.StatusQa == SubmissionConst.QA_PASSED)),
+                })
+                .ToDictionaryAsync(c => (c.ProjectId, c.DocumentTypeId), c => c.Counts);
+
+            // Số "của tôi" theo vai trò giữ: Data đếm văn bản đã kiểm, QA đếm văn bản đã chấm
+            var myCounts = await (from u in _shDbContext.SubmissionUsers.AsNoTracking()
+                                  join s in _shDbContext.Submissions on u.SubmissionId equals s.Id
+                                  where u.UserId == userId && projectIds.Contains(u.ProjectId) && documentTypeIds.Contains(u.DocumentTypeId)
+                                  group s by new { u.ProjectId, u.DocumentTypeId, u.Role } into g
+                                  select new
+                                  {
+                                      g.Key.ProjectId,
+                                      g.Key.DocumentTypeId,
+                                      g.Key.Role,
+                                      Counts = new PairCounts(
+                                          g.Count(),
+                                          g.Select(s => s.Box).Distinct().Count(),
+                                          g.Select(s => s.Box + "|" + s.ProfileRange).Distinct().Count(),
+                                          g.Count(s => g.Key.Role == RoleConstants.ROLE_QA
+                                              ? s.StatusQa != SubmissionConst.QA_NOT_REVIEWED
+                                              : s.StatusCheck == SubmissionConst.CHECKED),
+                                          0),
+                                  })
+                                  .ToDictionaryAsync(c => (c.ProjectId, c.DocumentTypeId, c.Role), c => c.Counts);
+            var myFilledFieldCounts = await (from v in _shDbContext.SubmissionDatas.AsNoTracking()
+                                             join u in _shDbContext.SubmissionUsers on v.SubmissionId equals u.SubmissionId
+                                             join s in _shDbContext.Submissions on v.SubmissionId equals s.Id
+                                             where u.UserId == userId && u.Role == RoleConstants.ROLE_DATA && s.StatusCheck == SubmissionConst.CHECKED
+                                                 && v.Data.Trim() != String.Empty
+                                                 && projectIds.Contains(v.ProjectId) && documentTypeIds.Contains(v.DocumentTypeId)
+                                             group v by new { v.ProjectId, v.DocumentTypeId } into g
+                                             select new { g.Key.ProjectId, g.Key.DocumentTypeId, Count = g.Count() })
+                                             .ToDictionaryAsync(c => (c.ProjectId, c.DocumentTypeId), c => c.Count);
+
+            foreach (var pair in pairs)
             {
-                Items = projects,
+                var key = (pair.ProjectId, pair.DocumentTypeId);
+                var isTotalViewer = pair.ViewerRole is RoleConstants.ROLE_ADMIN or RoleConstants.ROLE_LEADER;
+                var counts = (isTotalViewer ? totalCounts.GetValueOrDefault(key) : myCounts.GetValueOrDefault((pair.ProjectId, pair.DocumentTypeId, pair.ViewerRole)))
+                    ?? new PairCounts(0, 0, 0, 0, 0);
+
+                pair.DocumentTypeName = documentTypeNames.GetValueOrDefault(pair.DocumentTypeId) ?? String.Empty;
+                pair.UrlGoogleSheetSync = isTotalViewer ? pair.UrlGoogleSheetSync : null;
+                pair.MemberCount = memberCounts.GetValueOrDefault(key);
+                pair.TotalBox = counts.TotalBox;
+                pair.TotalProfileRange = counts.TotalProfileRange;
+                pair.TotalSubmission = counts.Total;
+                pair.CheckedCount = counts.Checked;
+                pair.QaPassedCount = isTotalViewer && pair.IsQaEnabled ? counts.QaPassed : null;
+                pair.ProgressPercent = counts.Total == 0 ? 0 : Math.Round(counts.Checked * 100m / counts.Total, 2);
+                pair.FilledFieldCount = pair.ViewerRole == RoleConstants.ROLE_DATA ? myFilledFieldCounts.GetValueOrDefault(key) : null;
+            }
+
+            return new BaseResponsePagingDto<GetListProjectPairDto>
+            {
+                Items = pairs,
                 TotalItems = totalCount,
             };
         }
@@ -194,5 +304,7 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
         ];
 
         private record AcceptanceAuditData(int? Status, bool? IsForced, bool? IsAutomatic, string? Reason);
+
+        private record PairCounts(int Total, int TotalBox, int TotalProfileRange, int Checked, int QaPassed);
     }
 }

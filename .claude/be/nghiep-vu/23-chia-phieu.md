@@ -4,7 +4,8 @@
 
 Admin hoặc Leader của cặp (dự án, loại văn bản) xem cây **Hộp → Hồ sơ → Văn bản**, chọn người nhận, tích nút, xem trước rồi lưu.
 Data nhận **phiếu nhập liệu**; QA nhận **phụ trách nút** và văn bản đã kiểm vào **đợt QA**. Task 13, 2026-11-11. Không đổi schema,
-dùng lại `AssignmentTicket`, `AssignmentTicketItem` (Task 9), `QaTicket`, `SubmissionUser` (Task 18C).
+dùng lại `AssignmentTicket`, `AssignmentTicketItem` (Task 9), `QaTicket`, `SubmissionUser` (Task 18C). Ba bảng này có cờ xoá mềm từ Task 29 nhưng
+chỉ dùng khi Admin xoá dự án ([25](25-xoa-du-an-danh-sach-cap.md)); về pool / gỡ thành viên vẫn xoá cứng.
 
 ## Cây
 

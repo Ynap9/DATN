@@ -33,6 +33,7 @@
 | [22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md) | Nghiệm thu dự án: `DOING` → `ACCEPTING` → `DONE`, tự chuyển khi văn bản cuối QA đạt (không QA: được kiểm), Admin cho phép khi chưa đủ (lý do tuỳ chọn, reopen bắt buộc), khoá import, tổng hợp + audit, lỗi `340`–`342` |
 | [23-chia-phieu.md](23-chia-phieu.md) | Chia phiếu (Operation): cây Hộp → Hồ sơ 2 chế độ Data / QA, giao phiếu nhập liệu, QA phụ trách nút + đợt QA, khoá chống đua, phiếu của tôi, 6 API |
 | [24-don-gia-tien-cong.md](24-don-gia-tien-cong.md) | Đơn giá trên thành viên (công ty / thực nhận, Admin và Leader), thống kê tiền công Data / QA, ai thấy giá nào, cache khối lượng 60 giây |
+| [25-xoa-du-an-danh-sach-cap.md](25-xoa-du-an-danh-sach-cap.md) | Admin xoá mềm dự án kèm 16 bảng phụ thuộc (cùng mốc, đổi tên Google Sheet), chặn xoá loại văn bản đang dùng `346`, paging theo cặp dự án – loại văn bản theo vai trò người gọi |
 
 ## Thuật ngữ
 
@@ -51,7 +52,7 @@
 ## Ba quy tắc xuyên suốt
 
 - Mọi thao tác ghi đều tạo `AuditLog` **trong cùng transaction** với thay đổi dữ liệu (xem [04-nhat-ky-he-thong.md](04-nhat-ky-he-thong.md)).
-- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`109` (Auth), `201`–`211` (Core), `301`–`345` (Construction), `601`–`635` (DigitalSignature), `701`–`703` (Packaging), `801`–`826` (Operation, bỏ `814`) hoặc `901`–`907` (Ai).
+- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`109` (Auth), `201`–`211` (Core), `301`–`346` (Construction), `601`–`635` (DigitalSignature), `701`–`703` (Packaging), `801`–`826` (Operation, bỏ `814`) hoặc `901`–`907` (Ai).
 - Thời gian thao tác lấy theo giờ Việt Nam, người thao tác lấy từ token đăng nhập.
 
 Route trong các file nghiệp vụ viết rút gọn `api/<module>/...`; route thật có version: `api/v1/<module>/...` (từ 2026-10-20,

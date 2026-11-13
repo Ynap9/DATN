@@ -20,6 +20,10 @@ Hồ sơ cũ không có dòng `SubmissionUser` = chưa giao, không cần script
 `Update_ProjectMember_Price` (`Migrations/Operation/`, Task 12) chạy sau `Add_OperationModule`: thêm `CompanyPrice` / `ActualPrice`
 `decimal(18,2)` NULL vào `operation.ProjectMember`, bỏ `operation.ProjectMemberPrice` và `operation.ProjectPriceDefault`. Dữ liệu trong hai bảng cũ bị mất khi migrate.
 
+`Add_SoftDelete_ProjectDependents` (`Migrations/Construction/`, Task 29) chạy sau `Update_ProjectMember_Price`: thêm `Deleted` (mặc định `0`) /
+`DeletedBy` / `DeletedDate` cho `SubmissionUser`, `ProjectDeadlineNotification`, `AssignmentTicket`, `AssignmentTicketItem`; index unique
+`SubmissionUser (SubmissionId, Role)` và index mail đã gửi lọc thêm `[Deleted] = 0`. Dòng cũ nhận `Deleted = 0`, không cần script dữ liệu.
+
 ## Dữ liệu test hồ sơ (DB dev)
 
 `test-data-ho-so.sql` tạo 15 hồ sơ + 1 hồ sơ khác loại văn bản (dự án 3, loại văn bản 3/4), 5 trường (`Ghi chú` cố ý không cấu hình

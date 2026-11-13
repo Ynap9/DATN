@@ -24,7 +24,8 @@ Body tạo / sửa: `{ "name": "...", "defaultView": 1 }`. Bỏ `defaultView` kh
 - `Name` **duy nhất** trong các bản ghi chưa xoá (`DocumentTypeDomainService.EnsureUniqueNameAsync`) → trùng trả `409`
   "Tên loại văn bản đã tồn tại". Khi sửa, bản ghi đang sửa không tính là trùng với chính nó.
 - So khớp tên **không phân biệt hoa thường** (theo collation mặc định của SQL Server).
-- Xoá là **xoá mềm**: bản ghi biến mất khỏi danh sách và chi tiết (lỗi `301`), tên được dùng lại.
+- Xoá là **xoá mềm**: bản ghi biến mất khỏi danh sách và chi tiết (lỗi `301`), tên được dùng lại. Còn dự án chưa xoá đang gắn
+  loại này → `346` (Task 29, [25](25-xoa-du-an-danh-sach-cap.md#chặn-xoá-loại-văn-bản-đang-dùng--346)).
 - Danh sách lọc `keyword` theo `Name`, sắp mới tạo trước; `pageSize = -1` lấy tất cả.
 - `{id}/document-fields` trả **mọi cột** (`GetListDocumentFieldDto`) của các trường chưa xoá thuộc loại văn bản, không phân
   trang, sắp theo `OrderTableView` rồi `Id`. Loại văn bản không tồn tại hoặc đã xoá → `301`; chưa có trường → `[]`. Nằm ở

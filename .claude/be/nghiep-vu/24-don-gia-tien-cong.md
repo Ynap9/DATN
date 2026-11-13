@@ -1,6 +1,6 @@
 # Đơn giá và thống kê tiền công (Operation)
 
-> **Phần 24/24** · trước: [23-chia-phieu.md](23-chia-phieu.md) · mục lục: [README.md](README.md)
+> **Phần 24/25** · trước: [23-chia-phieu.md](23-chia-phieu.md) · mục lục: [README.md](README.md)
 
 Task 12, chốt 2026-11-12. Đơn giá nằm trên dòng thành viên `ProjectMember` (`CompanyPrice`, `ActualPrice`), sửa đè, không lịch sử.
 Thống kê khối lượng và tiền theo người trên một màn. Thay bảng `ProjectPriceDefault` và `ProjectMemberPrice` (đã xoá trong migration
@@ -119,3 +119,5 @@ Xoá sạch sau test.
 
 - Doanh thu, quỹ KPI (`bonus-pool`), lịch sử giá: không thuộc task này.
 - Chốt kỳ thanh toán (TC-09), dashboard (TC-08), lọc theo khoảng ngày, xuất Excel thống kê, FE.
+
+> **Tiếp:** [25-xoa-du-an-danh-sach-cap.md](25-xoa-du-an-danh-sach-cap.md) — xoá dự án kèm dữ liệu và danh sách cặp dự án – loại văn bản.

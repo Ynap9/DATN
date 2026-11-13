@@ -130,7 +130,7 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `POST api/construction/project/{id:int}/acceptance/start`, `.../finish`, `.../reopen` | `Function.Construction.Project.Accept` (Leader chỉ dự án mình là Leader — `337`; `reopen` chỉ Admin — kiểm ở service, [22](22-nghiem-thu-du-an.md)) |
 | `POST api/construction/project` | `Function.Construction.Project.Create` |
 | `PUT api/construction/project/{id}` | `Function.Construction.Project.Update` |
-| `DELETE api/construction/project/{id}` | `Function.Construction.Project.Delete` |
+| `DELETE api/construction/project/{id}`, `DELETE .../admin/delete/{id:int}` | `Function.Construction.Project.Delete` (`admin/delete` chỉ Admin — kiểm ở service, `400`, [25](25-xoa-du-an-danh-sach-cap.md)) |
 | `GET api/construction/project/deadline`, `POST .../deadline-check/run`, `GET .../deadline-check/status`, `GET .../deadline-notification/paging` | `Function.Construction.Project.Deadline` |
 | `GET api/construction/project-config`, `GET .../{id}` | `Function.Construction.ProjectConfig.View` |
 | `POST` / `PUT {id}` / `DELETE {id}` `api/construction/project-config` | `...ProjectConfig.Create` / `.Update` / `.Delete` |

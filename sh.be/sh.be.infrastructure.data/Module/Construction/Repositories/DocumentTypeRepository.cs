@@ -35,6 +35,13 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
             return _shDbContext.DocumentTypes.CountAsync(d => ids.Contains(d.Id));
         }
 
+        // Loại văn bản còn gắn với ít nhất một dự án chưa xoá (dòng gắn và dự án đều qua query filter xoá mềm)
+        public Task<bool> IsUsedByProjectAsync(int id)
+        {
+            return _shDbContext.ProjectDocumentTypes.AnyAsync(pd => pd.DocumentTypeId == id
+                && _shDbContext.Projects.Any(p => p.Id == pd.ProjectId));
+        }
+
         public void Add(DocumentType documentType)
         {
             _shDbContext.DocumentTypes.Add(documentType);

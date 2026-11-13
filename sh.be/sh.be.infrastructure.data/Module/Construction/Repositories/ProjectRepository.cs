@@ -1,10 +1,16 @@
 using Microsoft.EntityFrameworkCore;
+using sh.be.domain.Module.Ai.ProjectConfigs.Entities;
 using sh.be.domain.Module.Construction.Projects.Entities;
 using sh.be.domain.Module.Construction.Projects.Repositories;
 using sh.be.domain.Module.Construction.Projects.Services;
+using sh.be.domain.Module.Construction.QaAssignments.Entities;
+using sh.be.domain.Module.Construction.Submissions.Entities;
+using sh.be.domain.Module.Operation.Assignments.Entities;
+using sh.be.domain.Module.Operation.ProjectMembers.Entities;
 using sh.be.infrastructure.data.Persistence.Db;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Construction;
+using sh.be.shared.Interfaces;
 
 namespace sh.be.infrastructure.data.Module.Construction.Repositories
 {
@@ -95,6 +101,32 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
                 .ExecuteUpdateAsync(s => s.SetProperty(p => p.Status, ProjectConst.ACCEPTING));
         }
 
+        // Xoá mềm mọi dữ liệu phụ thuộc dự án, bảng con trước, gồm bảng Operation / Ai (cùng ShDbContext, cùng transaction người gọi); trả số dòng từng bảng
+        public async Task<Dictionary<string, int>> SoftDeleteDependentsAsync(int projectId, string? deletedBy, DateTime deletedDate)
+        {
+            return new Dictionary<string, int>
+            {
+                [nameof(SubmissionQaLogField)] = await SoftDeleteAsync(_shDbContext.SubmissionQaLogFields
+                    .Where(f => _shDbContext.SubmissionQaLogs.Any(l => l.Id == f.SubmissionQaLogId && l.ProjectId == projectId)), deletedBy, deletedDate),
+                [nameof(SubmissionQaLog)] = await SoftDeleteAsync(_shDbContext.SubmissionQaLogs.Where(l => l.ProjectId == projectId), deletedBy, deletedDate),
+                [nameof(SubmissionLog)] = await SoftDeleteAsync(_shDbContext.SubmissionLogs.Where(l => l.ProjectId == projectId), deletedBy, deletedDate),
+                [nameof(SubmissionData)] = await SoftDeleteAsync(_shDbContext.SubmissionDatas.Where(d => d.ProjectId == projectId), deletedBy, deletedDate),
+                [nameof(SubmissionUser)] = await SoftDeleteAsync(_shDbContext.SubmissionUsers.Where(u => u.ProjectId == projectId), deletedBy, deletedDate),
+                [nameof(Submission)] = await SoftDeleteAsync(_shDbContext.Submissions.Where(s => s.ProjectId == projectId), deletedBy, deletedDate),
+                [nameof(QaTicket)] = await SoftDeleteAsync(_shDbContext.QaTickets.Where(t => t.ProjectId == projectId), deletedBy, deletedDate),
+                [nameof(QaReviewerMode)] = await SoftDeleteAsync(_shDbContext.QaReviewerModes.Where(m => m.ProjectId == projectId), deletedBy, deletedDate),
+                [nameof(QaSamplingConfig)] = await SoftDeleteAsync(_shDbContext.QaSamplingConfigs.Where(c => c.ProjectId == projectId), deletedBy, deletedDate),
+                [nameof(AssignmentTicketItem)] = await SoftDeleteAsync(_shDbContext.AssignmentTicketItems
+                    .Where(i => _shDbContext.AssignmentTickets.Any(t => t.Id == i.AssignmentTicketId && t.ProjectId == projectId)), deletedBy, deletedDate),
+                [nameof(AssignmentTicket)] = await SoftDeleteAsync(_shDbContext.AssignmentTickets.Where(t => t.ProjectId == projectId), deletedBy, deletedDate),
+                [nameof(ProjectMember)] = await SoftDeleteAsync(_shDbContext.ProjectMembers.Where(m => m.ProjectId == projectId), deletedBy, deletedDate),
+                [nameof(ProjectAiConfig)] = await SoftDeleteAsync(_shDbContext.ProjectAiConfigs.Where(c => c.ProjectId == projectId), deletedBy, deletedDate),
+                [nameof(ProjectDeadlineNotification)] = await SoftDeleteAsync(_shDbContext.ProjectDeadlineNotifications.Where(n => n.ProjectId == projectId), deletedBy, deletedDate),
+                [nameof(ProjectDocumentTypeDocumentField)] = await SoftDeleteAsync(_shDbContext.ProjectDocumentTypeDocumentFields.Where(pf => pf.ProjectId == projectId), deletedBy, deletedDate),
+                [nameof(ProjectDocumentType)] = await SoftDeleteAsync(_shDbContext.ProjectDocumentTypes.Where(pd => pd.ProjectId == projectId), deletedBy, deletedDate),
+            };
+        }
+
         public void Add(Project project)
         {
             _shDbContext.Projects.Add(project);
@@ -178,6 +210,16 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
                 .IgnoreQueryFilters()
                 .Where(pf => pf.ProjectId == projectId && documentTypeIds.Contains(pf.DocumentTypeId))
                 .ExecuteDeleteAsync();
+        }
+
+        // Đánh dấu xoá các dòng chưa xoá (query filter bỏ dòng đã xoá từ trước, giữ mốc xoá cũ) với cùng người và mốc xoá
+        private static Task<int> SoftDeleteAsync<TEntity>(IQueryable<TEntity> query, string? deletedBy, DateTime deletedDate)
+            where TEntity : class, ISoftDeleted
+        {
+            return query.ExecuteUpdateAsync(s => s
+                .SetProperty(e => e.Deleted, true)
+                .SetProperty(e => e.DeletedBy, deletedBy)
+                .SetProperty(e => e.DeletedDate, deletedDate));
         }
     }
 }
