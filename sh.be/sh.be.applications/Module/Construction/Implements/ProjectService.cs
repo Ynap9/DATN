@@ -52,16 +52,22 @@ namespace sh.be.applications.Module.Construction.Implements
             _googleSheetExternal = googleSheetExternal;
         }
 
+        // Danh sách dự án theo phạm vi người gọi: Admin / SuperAdmin mọi dự án, còn lại dự án mình được phân
         public async Task<List<GetListProjectDto>> GetList()
         {
             _logger.LogInformation($"{nameof(GetList)}");
-            return await _projectQuery.GetList();
+            var currentUserId = getCurrentUserId();
+            var isAdmin = PermissionDomainService.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            return await _projectQuery.GetList(currentUserId, isAdmin);
         }
 
+        // Dropdown dự án theo phạm vi người gọi: Admin / SuperAdmin mọi dự án, còn lại dự án mình được phân
         public async Task<List<GetListProjectDropDownDto>> GetProjectDropDown()
         {
             _logger.LogInformation($"{nameof(GetProjectDropDown)}");
-            return await _projectQuery.GetProjectDropDown();
+            var currentUserId = getCurrentUserId();
+            var isAdmin = PermissionDomainService.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            return await _projectQuery.GetProjectDropDown(currentUserId, isAdmin);
         }
 
         // Paging cặp (dự án, loại văn bản) theo phạm vi người gọi: Admin / SuperAdmin mọi cặp, còn lại cặp mình là thành viên
@@ -73,29 +79,42 @@ namespace sh.be.applications.Module.Construction.Implements
             return await _projectQuery.FindPaging(dto, currentUserId, isAdmin);
         }
 
+        // Chi tiết dự án theo phạm vi người gọi: ngoài dự án → 303; Data / QA ẩn link, kèm tiến trình của bản thân
         public async Task<FindProjectByIdDto> FindById(int id)
         {
             _logger.LogInformation($"{nameof(FindById)}, id={id}");
+            var currentUserId = getCurrentUserId();
+            var isAdmin = PermissionDomainService.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            var isTotalViewer = await _projectDomainService.EnsureViewableAsync(id, currentUserId, isAdmin);
+
             var project = await _projectQuery.FindById(id)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
             project.DocumentTypeIds = await _projectRepository.GetDocumentTypeIdsAsync(id);
+            if (!isTotalViewer)
+            {
+                project.UrlGoogleSheetSync = null;
+                project.MyProgresses = await _projectQuery.FindMyProgresses(id, currentUserId);
+            }
             return project;
         }
 
-        // Xem tổng hợp nghiệm thu: đủ điều kiện theo cờ QA của dự án, quyền cho phép khi chưa đủ, lần chuyển gần nhất
+        // Xem tổng hợp nghiệm thu: người ngoài dự án → 303, Admin / Leader / Data / QA của dự án xem đủ như nhau;
+        // đủ điều kiện theo cờ QA của dự án, quyền cho phép khi chưa đủ, lần chuyển gần nhất
         public async Task<ViewProjectAcceptanceDto> FindAcceptance(int id)
         {
             _logger.LogInformation($"{nameof(FindAcceptance)}, id={id}");
             var project = await _projectRepository.FindByIdAsync(id)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
+            var currentUserId = getCurrentUserId();
+            var isAdmin = PermissionDomainService.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            await _projectDomainService.EnsureViewableAsync(id, currentUserId, isAdmin);
             var blockers = await _projectRepository.CountAcceptanceBlockersAsync(id, project.IsQaEnabled);
-            var roleNames = await _roleRepository.GetRoleNamesByUserIdAsync(getCurrentUserId());
 
             var acceptance = await _projectQuery.FindAcceptanceSummary(id);
             acceptance.ProjectName = project.Name;
             acceptance.Status = project.Status;
             acceptance.IsReady = blockers.IsReady;
-            acceptance.CanForce = PermissionDomainService.IsAdmin(roleNames);
+            acceptance.CanForce = isAdmin;
             acceptance.LastTransition = await _projectQuery.FindLastAcceptanceTransition(id);
             return acceptance;
         }

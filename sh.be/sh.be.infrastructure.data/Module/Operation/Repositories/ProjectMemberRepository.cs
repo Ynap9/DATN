@@ -71,6 +71,15 @@ namespace sh.be.infrastructure.data.Module.Operation.Repositories
             return userIds.ToHashSet();
         }
 
+        public Task<List<ProjectMember>> GetRemovedMembersAsync(int projectId, int documentTypeId, List<string> userIds)
+        {
+            return _shDbContext.ProjectMembers
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .Where(m => m.ProjectId == projectId && m.DocumentTypeId == documentTypeId && m.Deleted && userIds.Contains(m.UserId))
+                .ToListAsync();
+        }
+
         public async Task AddRangeAsync(IEnumerable<ProjectMember> projectMembers)
         {
             await _shDbContext.ProjectMembers.AddRangeAsync(projectMembers);

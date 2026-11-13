@@ -19,20 +19,35 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
         {
         }
 
-        public Task<List<GetListProjectDto>> GetList()
+        // Danh sách dự án: Admin mọi dự án, còn lại dự án mình là thành viên chưa gỡ; link chỉ Admin / Leader của chính dự án đó thấy
+        public Task<List<GetListProjectDto>> GetList(string userId, bool isAdmin)
         {
             return _shDbContext.Projects
                 .AsNoTracking()
+                .Where(p => isAdmin || _shDbContext.ProjectMembers.Any(m => m.ProjectId == p.Id && m.UserId == userId))
                 .OrderByDescending(p => p.CreatedDate)
                 .ThenByDescending(p => p.Id)
-                .ProjectTo<GetListProjectDto>(_mapper.ConfigurationProvider)
+                .Select(p => new GetListProjectDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    StartedAt = p.StartedAt,
+                    EndedAt = p.EndedAt,
+                    Status = p.Status,
+                    UrlGoogleSheetSync = isAdmin || _shDbContext.ProjectMembers.Any(m => m.ProjectId == p.Id && m.UserId == userId && m.Role == RoleConstants.ROLE_LEADER)
+                        ? p.UrlGoogleSheetSync
+                        : null,
+                    IsQaEnabled = p.IsQaEnabled,
+                })
                 .ToListAsync();
         }
 
-        public Task<List<GetListProjectDropDownDto>> GetProjectDropDown()
+        // Dropdown dự án: Admin mọi dự án, còn lại dự án mình là thành viên chưa gỡ
+        public Task<List<GetListProjectDropDownDto>> GetProjectDropDown(string userId, bool isAdmin)
         {
             return _shDbContext.Projects
                 .AsNoTracking()
+                .Where(p => isAdmin || _shDbContext.ProjectMembers.Any(m => m.ProjectId == p.Id && m.UserId == userId))
                 .OrderBy(p => p.Name)
                 .ProjectTo<GetListProjectDropDownDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
@@ -119,35 +134,7 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 })
                 .ToDictionaryAsync(c => (c.ProjectId, c.DocumentTypeId), c => c.Counts);
 
-            // Số "của tôi" theo vai trò giữ: Data đếm văn bản đã kiểm, QA đếm văn bản đã chấm
-            var myCounts = await (from u in _shDbContext.SubmissionUsers.AsNoTracking()
-                                  join s in _shDbContext.Submissions on u.SubmissionId equals s.Id
-                                  where u.UserId == userId && projectIds.Contains(u.ProjectId) && documentTypeIds.Contains(u.DocumentTypeId)
-                                  group s by new { u.ProjectId, u.DocumentTypeId, u.Role } into g
-                                  select new
-                                  {
-                                      g.Key.ProjectId,
-                                      g.Key.DocumentTypeId,
-                                      g.Key.Role,
-                                      Counts = new PairCounts(
-                                          g.Count(),
-                                          g.Select(s => s.Box).Distinct().Count(),
-                                          g.Select(s => s.Box + "|" + s.ProfileRange).Distinct().Count(),
-                                          g.Count(s => g.Key.Role == RoleConstants.ROLE_QA
-                                              ? s.StatusQa != SubmissionConst.QA_NOT_REVIEWED
-                                              : s.StatusCheck == SubmissionConst.CHECKED),
-                                          0),
-                                  })
-                                  .ToDictionaryAsync(c => (c.ProjectId, c.DocumentTypeId, c.Role), c => c.Counts);
-            var myFilledFieldCounts = await (from v in _shDbContext.SubmissionDatas.AsNoTracking()
-                                             join u in _shDbContext.SubmissionUsers on v.SubmissionId equals u.SubmissionId
-                                             join s in _shDbContext.Submissions on v.SubmissionId equals s.Id
-                                             where u.UserId == userId && u.Role == RoleConstants.ROLE_DATA && s.StatusCheck == SubmissionConst.CHECKED
-                                                 && v.Data.Trim() != String.Empty
-                                                 && projectIds.Contains(v.ProjectId) && documentTypeIds.Contains(v.DocumentTypeId)
-                                             group v by new { v.ProjectId, v.DocumentTypeId } into g
-                                             select new { g.Key.ProjectId, g.Key.DocumentTypeId, Count = g.Count() })
-                                             .ToDictionaryAsync(c => (c.ProjectId, c.DocumentTypeId), c => c.Count);
+            var (myCounts, myFilledFieldCounts) = await CountMyHeldSubmissionsAsync(projectIds, documentTypeIds, userId);
 
             foreach (var pair in pairs)
             {
@@ -182,6 +169,46 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 .Where(p => p.Id == id)
                 .ProjectTo<FindProjectByIdDto>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync();
+        }
+
+        // Tiến trình của tôi theo từng cặp mình là Data / QA chưa gỡ của dự án, cùng số với cột "của tôi" ở paging
+        public async Task<List<GetListProjectMyProgressDto>> FindMyProgresses(int projectId, string userId)
+        {
+            // Loại văn bản đã xoá (tên null qua query filter) xếp cuối, như paging
+            var pairs = await (from m in _shDbContext.ProjectMembers.AsNoTracking()
+                               join pd in _shDbContext.ProjectDocumentTypes on new { m.ProjectId, m.DocumentTypeId } equals new { pd.ProjectId, pd.DocumentTypeId }
+                               join d in _shDbContext.DocumentTypes on m.DocumentTypeId equals d.Id into documentTypes
+                               from d in documentTypes.DefaultIfEmpty()
+                               where m.ProjectId == projectId && m.UserId == userId && (m.Role == RoleConstants.ROLE_DATA || m.Role == RoleConstants.ROLE_QA)
+                               select new { m.DocumentTypeId, m.Role, DocumentTypeName = d != null ? d.Name : null })
+                               .OrderBy(x => x.DocumentTypeName == null)
+                               .ThenBy(x => x.DocumentTypeName)
+                               .ToListAsync();
+
+            var documentTypeIds = pairs.Select(x => x.DocumentTypeId).ToList();
+            var documentTypeNames = await _shDbContext.DocumentTypes
+                .AsNoTracking()
+                .IgnoreQueryFilters()
+                .Where(d => documentTypeIds.Contains(d.Id))
+                .ToDictionaryAsync(d => d.Id, d => d.Name);
+            var (myCounts, myFilledFieldCounts) = await CountMyHeldSubmissionsAsync(new List<int> { projectId }, documentTypeIds, userId);
+
+            return pairs.Select(pair =>
+            {
+                var counts = myCounts.GetValueOrDefault((projectId, pair.DocumentTypeId, pair.Role)) ?? new PairCounts(0, 0, 0, 0, 0);
+                return new GetListProjectMyProgressDto
+                {
+                    DocumentTypeId = pair.DocumentTypeId,
+                    DocumentTypeName = documentTypeNames.GetValueOrDefault(pair.DocumentTypeId) ?? String.Empty,
+                    ViewerRole = pair.Role,
+                    TotalBox = counts.TotalBox,
+                    TotalProfileRange = counts.TotalProfileRange,
+                    TotalSubmission = counts.Total,
+                    CheckedCount = counts.Checked,
+                    ProgressPercent = counts.Total == 0 ? 0 : Math.Round(counts.Checked * 100m / counts.Total, 2),
+                    FilledFieldCount = pair.Role == RoleConstants.ROLE_DATA ? myFilledFieldCounts.GetValueOrDefault((projectId, pair.DocumentTypeId)) : null,
+                };
+            }).ToList();
         }
 
         public async Task<ViewProjectAcceptanceDto> FindAcceptanceSummary(int projectId)
@@ -289,6 +316,44 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 IsAutomatic = newData?.IsAutomatic ?? false,
                 Reason = newData?.Reason,
             };
+        }
+
+        // Đếm "của tôi" trên văn bản mình đang giữ theo cặp, dùng chung paging và tiến trình của tôi ở chi tiết dự án
+        private async Task<(Dictionary<(int ProjectId, int DocumentTypeId, string Role), PairCounts> MyCounts, Dictionary<(int ProjectId, int DocumentTypeId), int> MyFilledFieldCounts)>
+            CountMyHeldSubmissionsAsync(List<int> projectIds, List<int> documentTypeIds, string userId)
+        {
+            // Số "của tôi" theo vai trò giữ: Data đếm văn bản đã kiểm, QA đếm văn bản đã chấm
+            var myCounts = await (from u in _shDbContext.SubmissionUsers.AsNoTracking()
+                                  join s in _shDbContext.Submissions on u.SubmissionId equals s.Id
+                                  where u.UserId == userId && projectIds.Contains(u.ProjectId) && documentTypeIds.Contains(u.DocumentTypeId)
+                                  group s by new { u.ProjectId, u.DocumentTypeId, u.Role } into g
+                                  select new
+                                  {
+                                      g.Key.ProjectId,
+                                      g.Key.DocumentTypeId,
+                                      g.Key.Role,
+                                      Counts = new PairCounts(
+                                          g.Count(),
+                                          g.Select(s => s.Box).Distinct().Count(),
+                                          g.Select(s => s.Box + "|" + s.ProfileRange).Distinct().Count(),
+                                          g.Count(s => g.Key.Role == RoleConstants.ROLE_QA
+                                              ? s.StatusQa != SubmissionConst.QA_NOT_REVIEWED
+                                              : s.StatusCheck == SubmissionConst.CHECKED),
+                                          0),
+                                  })
+                                  .ToDictionaryAsync(c => (c.ProjectId, c.DocumentTypeId, c.Role), c => c.Counts);
+            // Ô có dữ liệu chỉ tính trường tính tiền (IsChargeable) theo cờ hiện tại; query filter bỏ trường đã xoá
+            var myFilledFieldCounts = await (from v in _shDbContext.SubmissionDatas.AsNoTracking()
+                                             join u in _shDbContext.SubmissionUsers on v.SubmissionId equals u.SubmissionId
+                                             join s in _shDbContext.Submissions on v.SubmissionId equals s.Id
+                                             where u.UserId == userId && u.Role == RoleConstants.ROLE_DATA && s.StatusCheck == SubmissionConst.CHECKED
+                                                 && v.Data.Trim() != String.Empty
+                                                 && _shDbContext.DocumentFields.Any(f => f.Id == v.DocumentFieldId && f.IsChargeable)
+                                                 && projectIds.Contains(v.ProjectId) && documentTypeIds.Contains(v.DocumentTypeId)
+                                             group v by new { v.ProjectId, v.DocumentTypeId } into g
+                                             select new { g.Key.ProjectId, g.Key.DocumentTypeId, Count = g.Count() })
+                                             .ToDictionaryAsync(c => (c.ProjectId, c.DocumentTypeId), c => c.Count);
+            return (myCounts, myFilledFieldCounts);
         }
 
         private static decimal CalculateQaPassedPercent(int totalQaPassed, int totalSubmissions)

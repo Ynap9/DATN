@@ -27,10 +27,29 @@ và `googleSheetName = name`; FE không gửi hai trường này. Tạo xong tr�
 Body sửa: `{ "name", "startedAt", "endedAt", "status", "documentTypeIds": [] }` — **không** sửa được `urlGoogleSheetSync`,
 `googleSheetName`, `isQaEnabled` (gửi kèm thì bị bỏ qua); đổi `name` thì tên file Google Sheet đổi theo.
 
-Dropdown trả `[{ id, name }]` sắp theo `name`. Danh sách không phân trang trả mọi dự án (`GetListProjectDto`: `id`, `name`, `startedAt`,
-`endedAt`, `status`, `urlGoogleSheetSync`, `isQaEnabled`), sắp mới tạo trước (`CreatedDate` giảm dần, rồi `Id` giảm dần). Paging từ Task 29
-trả theo cặp dự án – loại văn bản, giới hạn theo người gọi ([25](25-xoa-du-an-danh-sach-cap.md#danh-sách-cặp--get-apiconstructionprojectpaging)).
-Cả ba API bỏ dự án đã xoá mềm.
+Dropdown trả `[{ id, name }]` sắp theo `name`. Danh sách không phân trang (`GetListProjectDto`: `id`, `name`, `startedAt`,
+`endedAt`, `status`, `urlGoogleSheetSync`, `isQaEnabled`) sắp mới tạo trước (`CreatedDate` giảm dần, rồi `Id` giảm dần). Paging từ Task 29
+trả theo cặp dự án – loại văn bản ([25](25-xoa-du-an-danh-sach-cap.md#danh-sách-cặp--get-apiconstructionprojectpaging)).
+Cả ba API bỏ dự án đã xoá mềm và giới hạn theo người gọi ([Phạm vi xem](#phạm-vi-xem--task-30)).
+
+## Phạm vi xem — Task 30
+
+Task 30 (2026-11-13): Leader / Data / QA được gán `Project.View` chỉ thấy dự án **được phân** = có dòng `ProjectMember` chưa gỡ của mình ở
+≥ 1 loại văn bản của dự án, mọi vai trò, kể cả đang tắt (cùng luật paging). Admin / SuperAdmin thấy mọi dự án như cũ.
+
+| API | Ngoài phạm vi | Leader của dự án | Data / QA của dự án |
+|---|---|---|---|
+| `GET project`, `GET project/dropdown` | Không hiện (không dự án nào → `[]`) | Có link | `urlGoogleSheetSync = null`, xét **theo từng dòng** |
+| `GET project/{id}` | `303` như dự án không tồn tại | Như cũ, `myProgresses = null` | Link `null`, thêm `myProgresses` |
+| `GET project/{id}/acceptance` | `303` | Xem đủ | Xem đủ như Leader ([22](22-nghiem-thu-du-an.md#api)) |
+
+- Người xem tổng = Admin, hoặc Leader chưa gỡ ở ≥ 1 cặp của dự án (không xét `IsActive`); luật ở `ProjectDomainService.EnsureViewableAsync`
+  (trả `true` / `false`, ngoài dự án ném `303` để không lộ dự án có tồn tại), đọc vai trò qua `ProjectRepository.GetMemberRolesAsync`.
+- `myProgresses` (`GetListProjectMyProgressDto`): mỗi cặp mình là Data / QA chưa gỡ và `ProjectDocumentType` chưa xoá, sắp theo tên loại
+  văn bản (loại đã xoá cuối, giữ tên cũ): `documentTypeId`, `documentTypeName`, `viewerRole`, `totalBox`, `totalProfileRange`,
+  `totalSubmission`, `checkedCount`, `progressPercent`, `filledFieldCount` (chỉ Data). Đếm bằng **cùng hàm** với cột "của tôi" ở paging
+  (`ProjectQuery.CountMyHeldSubmissionsAsync`) nên số luôn khớp ([25](25-xoa-du-an-danh-sach-cap.md#danh-sách-cặp--get-apiconstructionprojectpaging)).
+- Không đổi luật bấm nghiệm thu (`337`); ba API start / finish / reopen vẫn trả `GET acceptance` ở cuối.
 
 ## Loại văn bản của dự án — `ProjectDocumentType`
 
@@ -135,6 +154,13 @@ Chưa có `GoogleRefreshToken` → tạo trả `304` "Thiếu cấu hình dự �
 Ngày 2026-11-13 (Task 28, DB dev, dự án tạm `ZZTEST28` đã xoá) — **10/10**: dự án cũ sau migration đều `isQaEnabled = true`; tạo
 `isQaEnabled = false` → `false`, không gửi → `true` (DB, `GET {id}`, `paging`, `GET` danh sách khớp); audit tạo có `IsQaEnabled`;
 `PUT` gửi `isQaEnabled = true` → cờ vẫn `false`. Tạo thật nên còn 2 file Google Sheet trên Drive (xoá dự án không xoá file).
+
+Ngày 2026-11-13 (Task 30, DB dev, dữ liệu tạm `ZZTEST30` đã dọn) — danh sách + dropdown **21/21**, chi tiết + nghiệm thu (gồm bấm
+nghiệm thu) **32/32**: Admin thấy đủ; Leader có link; Data / QA link `null`; người đang tắt vẫn thấy, đã gỡ / ngoài dự án `[]` / `303` (cùng
+thông báo với id không có); Leader P1 + Data P2 thấy link P1, không link P2; `myProgresses` của Data 10 / 4 = 40%, ô 12 khớp paging và
+SQL đếm tay, QA 4 / 1 = 25%; nghiệm thu của Data / QA giống hệt Leader; start → reopen → start → finish của Admin trả đủ số liệu.
+Ngày 2026-11-14 chạy lại gộp cả checklist **43/43**, thêm user chỉ role `Admin` / chỉ `SuperAdmin` (thấy đủ, `canForce` true) và dự án đã
+xoá mềm mà Data vẫn là thành viên (không hiện ở danh sách, chi tiết / nghiệm thu `303`).
 
 ## Giới hạn
 

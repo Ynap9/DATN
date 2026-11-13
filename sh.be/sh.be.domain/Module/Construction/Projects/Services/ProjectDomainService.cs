@@ -1,5 +1,6 @@
 using sh.be.domain.Module.Construction.Projects.Entities;
 using sh.be.domain.Module.Construction.Projects.Repositories;
+using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
@@ -105,6 +106,21 @@ namespace sh.be.domain.Module.Construction.Projects.Services
             {
                 throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotManaged);
             }
+        }
+
+        // Người ngoài dự án nhận 303 như dự án không tồn tại để không lộ dự án có tồn tại; trả true khi là người xem tổng (Admin / Leader)
+        public async Task<bool> EnsureViewableAsync(int projectId, string userId, bool isAdmin)
+        {
+            if (isAdmin)
+            {
+                return true;
+            }
+            var memberRoles = await _projectRepository.GetMemberRolesAsync(projectId, userId);
+            if (memberRoles.Count == 0)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
+            }
+            return memberRoles.Contains(RoleConstants.ROLE_LEADER);
         }
 
         public static void EnsureCanReopen(bool isAdmin)

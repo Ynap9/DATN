@@ -79,6 +79,17 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
                 && m.Role == RoleConstants.ROLE_LEADER && m.IsActive);
         }
 
+        // Vai trò của người dùng ở mọi loại văn bản của dự án, kể cả đang tắt; người đã gỡ bị query filter loại
+        public Task<List<string>> GetMemberRolesAsync(int projectId, string userId)
+        {
+            return _shDbContext.ProjectMembers
+                .AsNoTracking()
+                .Where(m => m.ProjectId == projectId && m.UserId == userId)
+                .Select(m => m.Role)
+                .Distinct()
+                .ToListAsync();
+        }
+
         // Đếm văn bản chưa kiểm / chưa QA đạt / tổng của dự án bằng một câu GROUP BY, kèm cờ QA để tính đủ điều kiện nghiệm thu
         public async Task<ProjectAcceptanceBlockers> CountAcceptanceBlockersAsync(int projectId, bool isQaEnabled)
         {

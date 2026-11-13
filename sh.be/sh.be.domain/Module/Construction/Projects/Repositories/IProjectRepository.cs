@@ -12,6 +12,7 @@ namespace sh.be.domain.Module.Construction.Projects.Repositories
         Task ReleaseDeadlineCheckLockAsync();
         Task LockAsync(int id);
         Task<bool> IsActiveLeaderAsync(int projectId, string userId);
+        Task<List<string>> GetMemberRolesAsync(int projectId, string userId);
         Task<ProjectAcceptanceBlockers> CountAcceptanceBlockersAsync(int projectId, bool isQaEnabled);
         Task<int> TryStartAcceptanceAsync(int projectId);
         Task<Dictionary<string, int>> SoftDeleteDependentsAsync(int projectId, string? deletedBy, DateTime deletedDate);

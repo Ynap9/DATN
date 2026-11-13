@@ -46,7 +46,9 @@ Gốc `api/v1/construction/project`.
 | `POST {id:int}/acceptance/start`, `.../finish` | `Function.Construction.Project.Accept` | `{ isForced, reason }` |
 | `POST {id:int}/acceptance/reopen` | `Function.Construction.Project.Accept` | `{ reason }` |
 
-Ba API chuyển trả lại đúng dữ liệu `GET acceptance` sau khi chuyển. `GET` trả `ViewProjectAcceptanceDto`: `projectId`, `projectName`,
+`GET acceptance` từ Task 30: người không thuộc dự án (không phải Admin, không có `ProjectMember` chưa gỡ) → `303`; Leader / Data / QA
+của dự án xem **đủ như nhau** (cùng số liệu, chỉ `canForce` khác Admin) vì nhân viên cũng cần biết tiến trình dự án
+([07](07-du-an.md#phạm-vi-xem--task-30)). Ba API chuyển trả lại đúng dữ liệu `GET acceptance` sau khi chuyển. `GET` trả `ViewProjectAcceptanceDto`: `projectId`, `projectName`,
 `status`, `isReady`, `canForce` (người gọi là Admin / SuperAdmin), `documentTypes` (mỗi loại văn bản một dòng), `total` (dòng tổng),
 `lastTransition`. Mỗi dòng (`GetListProjectAcceptanceSummaryDto`): `documentTypeId`, `documentTypeName`, `isRemoved`,
 `totalSubmissions`, `totalNotChecked`, `totalChecked`, `totalReturned`, `totalQaNotReviewed` / `totalQaPassed` (chỉ đếm trong
