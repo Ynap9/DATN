@@ -398,9 +398,9 @@ namespace sh.be.domain.Module.Operation.Assignments.Services
             return new QaResultOnEntry(ticket, dataHolder.UserId, releaseReason);
         }
 
-        public async Task<bool> TryMarkDoneAsync(AssignmentTicket ticket, DateTime doneAt)
+        public async Task<bool> TryMarkDoneAsync(AssignmentTicket ticket, bool isQaEnabled, DateTime doneAt)
         {
-            if (ticket.Status == AssignmentConst.STATUS_ACTIVE && await _assignmentRepository.CountDataNotPassedAsync(ticket.Id) == 0)
+            if (ticket.Status == AssignmentConst.STATUS_ACTIVE && await _assignmentRepository.CountDataNotDoneAsync(ticket.Id, isQaEnabled) == 0)
             {
                 return await _assignmentRepository.TryMarkDoneAsync(ticket.Id, doneAt) > 0;
             }
