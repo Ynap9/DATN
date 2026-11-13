@@ -97,9 +97,9 @@ namespace sh.be.domain.Module.Operation.ProjectMembers.Entities
             {
                 throw new UserFriendlyException(ErrorCodes.OperationErrorPriceInvalid);
             }
-            if (newCompanyPrice != null && newActualPrice != null)
+            if (newCompanyPrice != null)
             {
-                ProjectMemberDomainService.EnsureValidPrice(newCompanyPrice.Value, newActualPrice.Value);
+                ProjectMemberDomainService.EnsureValidPrice(newCompanyPrice.Value, newActualPrice ?? 0);
             }
             CompanyPrice = newCompanyPrice;
             ActualPrice = newActualPrice;
