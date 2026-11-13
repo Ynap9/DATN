@@ -161,6 +161,7 @@ namespace sh.be.applications.Module.Operation.Implements
 
             var roleNamesByUser = await _projectMemberRepository.GetUserRoleNamesAsync(entries.Select(entry => entry.UserId));
             var existingMemberUserIds = await _projectMemberRepository.GetMemberUserIdsAsync(projectId, dto.DocumentTypeId);
+            var removedMembers = await _projectMemberRepository.GetRemovedMembersAsync(projectId, dto.DocumentTypeId, entries.Select(entry => entry.UserId).ToList());
 
             var now = GetVietnamTime();
             List<ProjectMember> addedMembers = [];
@@ -175,7 +176,13 @@ namespace sh.be.applications.Module.Operation.Implements
                     skipped.Add(new SkippedMemberDto { UserId = entry.UserId, Reason = skipReason });
                     continue;
                 }
-                addedMembers.Add(ProjectMember.Create(projectId, dto.DocumentTypeId, entry.UserId, role!, managedByUserId, entry.SourceStaffGroupId, currentUserId, now));
+                var addedMember = ProjectMember.Create(projectId, dto.DocumentTypeId, entry.UserId, role!, managedByUserId, entry.SourceStaffGroupId, currentUserId, now);
+                var removedMember = removedMembers.Where(m => m.UserId == entry.UserId && m.Role == role).MaxBy(m => m.Id);
+                if (removedMember != null)
+                {
+                    addedMember.ChangePrice(removedMember.CompanyPrice, removedMember.ActualPrice, currentUserId, now);
+                }
+                addedMembers.Add(addedMember);
             }
             return await SaveAddedAsync(access, addedMembers, skipped);
         }

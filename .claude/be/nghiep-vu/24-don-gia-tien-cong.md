@@ -33,7 +33,8 @@ tiền QA.
 
 ## Quyết định kỹ thuật
 
-- **K1.** "Trường có dữ liệu" = dòng `SubmissionData` chưa xoá, `Data` sau trim khác rỗng. Văn bản đã xoá không tính.
+- **K1.** "Trường có dữ liệu" = dòng `SubmissionData` chưa xoá, `Data` sau trim khác rỗng, thuộc trường chưa xoá có `IsChargeable = true`
+  (Task 12B, như 5sdb). Cờ đọc theo hiện tại: đổi cờ thì tiền mọi khối lượng đã làm đổi theo. Văn bản đã xoá không tính.
 - **K2.** Văn bản "kiểm xong bởi lượt giữ hiện tại" = có dòng `SubmissionUser` Data của người đó **và** ít nhất một `SubmissionLog`
   (bất kỳ ai kiểm) có `CreatedDate` ≥ `CreatedDate` của dòng giữ. Về pool (dòng bị xoá) → tự trừ. Nhận lại từ pool mà người mới chưa
   kiểm → chưa tính.
@@ -43,7 +44,9 @@ tiền QA.
 - **K6.** Leader đặt `ActualPrice` khi chưa có `CompanyPrice` → `808`. Admin được đặt `CompanyPrice` trước, `ActualPrice` để trống.
 - **K7.** Sửa giá nhận danh sách 1–500 thành viên; lỗi một dòng → cả request lỗi, không dòng nào lưu.
 - **K8.** Thành viên đã gỡ nhưng còn văn bản đã kiểm đang giữ vẫn có dòng (`isRemoved = true`) và được tính tiền theo giá trên dòng
-  đó. Người chấm QA không phải thành viên Role QA của cặp (Admin) → không có dòng, không tiền.
+  đó. Người chấm QA không phải thành viên Role QA của cặp (Admin) → không có dòng, không tiền. Mỗi (loại văn bản, người, vai trò) chỉ
+  một dòng (Task 12B): có dòng chưa gỡ thì lấy dòng đó, gỡ hẳn thì lấy dòng đã gỡ `Id` lớn nhất — gỡ rồi thêm lại không nhân đôi tiền.
+  Thêm lại cùng vai trò thì dòng mới chép `CompanyPrice` / `ActualPrice` từ dòng đã gỡ mới nhất ([21](21-thanh-vien-du-an.md)).
 
 ## Luật sửa giá — `PUT member/price`
 
@@ -57,7 +60,7 @@ Kiểm theo thứ tự, mỗi dòng:
 | 4 | Thành viên không phải Role Leader | `400` "Leader không có đơn giá" |
 | 5 | Leader: thành viên do mình quản lý | `821` |
 | 6 | Leader không gửi `companyPrice` | `809` |
-| 7 | Giá sau khi áp: `ActualPrice` có mà `CompanyPrice` chưa có (K6), hoặc ngoài `0 ≤ actual ≤ company ≤ 100.000.000` | `808` |
+| 7 | Giá sau khi áp: `ActualPrice` có mà `CompanyPrice` chưa có (K6); có `CompanyPrice` là luôn kiểm `0 ≤ company ≤ 100.000.000`; `0 ≤ actual ≤ company` khi có cả hai (Task 12B) | `808` |
 
 Dòng không đổi gì → bỏ qua, không tính vào `updatedCount`. Lưu một lần (một transaction), một audit `ACTION_MEMBER_PRICE_UPDATE` cho cả
 request, `oldData` / `newData` là danh sách `{ MemberId, UserId, CompanyPrice, ActualPrice }` của các dòng đổi.

@@ -15,6 +15,7 @@ namespace sh.be.domain.Module.Operation.ProjectMembers.Repositories
         Task<List<ProjectMember>> FindByIdsAsync(int projectId, List<int> memberIds);
         Task<ProjectMember?> FindActiveLeaderAsync(int projectId, int documentTypeId, string userId);
         Task<HashSet<string>> GetMemberUserIdsAsync(int projectId, int documentTypeId);
+        Task<List<ProjectMember>> GetRemovedMembersAsync(int projectId, int documentTypeId, List<string> userIds);
         Task AddRangeAsync(IEnumerable<ProjectMember> projectMembers);
         Task<List<ProjectMember>> GetManagedMembersAsync(int projectId, int documentTypeId, string leaderUserId);
         Task<List<AssignmentTicket>> GetActiveAssignmentTicketsAsync(int projectId, int documentTypeId, string userId, string role);

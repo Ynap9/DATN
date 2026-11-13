@@ -77,7 +77,8 @@ Gỡ (API 14) = xoá mềm + **tự thu hồi** văn bản chưa làm của ngư
   đã đọc `Submission` `WITH (UPDLOCK, ROWLOCK)` ([26](26-thu-hoi-chuyen-phieu.md#chống-đua-với-kiểm-tra--qa)); câu xoá khi gỡ chưa sửa.
 - Trả `revokedDocumentCount`, `keptDocumentCount` (dòng còn lại của **các phiếu vừa xét**), `cancelledAssignmentTicketIds`,
   `cancelledQaTicketIds`, `cancelledQaOwnershipTicketIds`, `unmanagedMemberCount`. FE hỏi xác nhận trước dựa vào `heldTicketCount` của API 9.
-- Gỡ rồi thêm lại cùng người được; văn bản đã thu hồi **không** tự quay lại.
+- Gỡ rồi thêm lại cùng người được; văn bản đã thu hồi **không** tự quay lại. Thêm lại cùng vai trò thì chép đơn giá từ dòng đã gỡ
+  mới nhất (Task 12B, [24](24-don-gia-tien-cong.md)); khác vai trò thì giá trống.
 
 Phụ thuộc giữa module chỉ một chiều Operation → Construction (2026-11-10): luật huỷ phiếu QA chỉ có một bản ở
 [18C](18-qa-cham-mau.md#18c--phiếu-qa). ⚠️ Construction không được `using` gì của Operation — cần dữ liệu `ProjectMember` thì
