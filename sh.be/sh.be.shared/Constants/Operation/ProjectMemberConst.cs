@@ -8,6 +8,7 @@ namespace sh.be.shared.Constants.Operation
         public const int ROLE_MAX_LENGTH = 20;
 
         public const int USERS_PER_REQUEST_MAX = 500;
+        public const int MEMBER_PRICES_PER_REQUEST_MAX = 500;
         public const int MAX_PAGE_SIZE = 200;
 
         public const string SKIP_REASON_ALREADY_MEMBER = "Đã là thành viên của dự án / loại văn bản";

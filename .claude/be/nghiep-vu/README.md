@@ -2,7 +2,7 @@
 
 > Chức năng và luật nghiệp vụ của module `Auth` (người dùng, vai trò, quyền), `Core` (nhật ký hệ thống) và
 > `Construction` (loại văn bản, dự án, hồ sơ), `DigitalSignature` (mẫu chữ ký, lô ký), `Packaging` (cấu hình đóng gói TT05), `Operation` (vận hành — nền móng
-> Task 9, nhóm nhân viên Task 10, thành viên dự án Task 11, chia phiếu Task 13, plan ở [../plans/van-hanh/README.md](../plans/van-hanh/README.md)) và `Ai` (cửa gọi AI — nhà cung cấp Task 19).
+> Task 9, nhóm nhân viên Task 10, thành viên dự án Task 11, đơn giá và thống kê tiền công Task 12, chia phiếu Task 13, plan ở [../plans/van-hanh/README.md](../plans/van-hanh/README.md)) và `Ai` (cửa gọi AI — nhà cung cấp Task 19).
 > Đối chiếu với code `sh.be` ngày 2026-10-19. Kiến trúc và quy ước code nằm ở [../architecture/README.md](../architecture/README.md).
 
 ## Mục lục
@@ -32,6 +32,7 @@
 | [21-thanh-vien-du-an.md](21-thanh-vien-du-an.md) | Thành viên dự án (Operation): ai quản lý ai, không có Leader thì Admin quản lý, thêm hàng loạt có bỏ qua, gỡ = tự thu hồi văn bản chưa làm, 6 API |
 | [22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md) | Nghiệm thu dự án: `DOING` → `ACCEPTING` → `DONE`, tự chuyển khi văn bản cuối QA đạt (không QA: được kiểm), Admin cho phép khi chưa đủ (lý do tuỳ chọn, reopen bắt buộc), khoá import, tổng hợp + audit, lỗi `340`–`342` |
 | [23-chia-phieu.md](23-chia-phieu.md) | Chia phiếu (Operation): cây Hộp → Hồ sơ 2 chế độ Data / QA, giao phiếu nhập liệu, QA phụ trách nút + đợt QA, khoá chống đua, phiếu của tôi, 6 API |
+| [24-don-gia-tien-cong.md](24-don-gia-tien-cong.md) | Đơn giá trên thành viên (công ty / thực nhận, Admin và Leader), thống kê tiền công Data / QA, ai thấy giá nào, cache khối lượng 60 giây |
 
 ## Thuật ngữ
 

@@ -47,6 +47,13 @@ namespace sh.be.infrastructure.data.Module.Operation.Repositories
             return _shDbContext.ProjectMembers.FirstOrDefaultAsync(m => m.Id == id);
         }
 
+        public Task<List<ProjectMember>> FindByIdsAsync(int projectId, List<int> memberIds)
+        {
+            return _shDbContext.ProjectMembers
+                .Where(m => m.ProjectId == projectId && memberIds.Contains(m.Id))
+                .ToListAsync();
+        }
+
         public Task<ProjectMember?> FindActiveLeaderAsync(int projectId, int documentTypeId, string userId)
         {
             return _shDbContext.ProjectMembers

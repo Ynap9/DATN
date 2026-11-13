@@ -34,8 +34,9 @@ chỉ Admin / SuperAdmin (`400`, [22](22-nghiem-thu-du-an.md)).
 | `Price.ManageCompany`, `BonusPool.View`, các menu `Menu.Operation`, `.ProjectMember`, `.Assignment` | x | | | |
 | `Assignment.Manage`, `Assignment.ViewAllSubmission` | x | x | | |
 | `Assignment.ViewOwn` | x | | x | x |
+| `Wage.View` (thống kê tiền công, Task 12) | x | x | x | x |
 
-Đã gán trên DB dev ngày 2026-10-26 (Leader id 2, Data id 3, trước đó chưa có quyền nào); QA id 4 gán `ViewOwn` ngày 2026-11-12. Admin tự có **mọi** key qua `SeedRolePermission`, kể cả `ViewOwn` — vô hại vì Admin không giữ phiếu.
+Đã gán trên DB dev ngày 2026-10-26 (Leader id 2, Data id 3, trước đó chưa có quyền nào); QA id 4 gán `ViewOwn` ngày 2026-11-12. `Wage.View` gán cho Leader id 2, Data id 3, QA id 4 bằng `PUT api/auth/role/permission` ngày 2026-11-13 (spec 12.2, Task 12). Admin tự có **mọi** key qua `SeedRolePermission`, kể cả `ViewOwn` — vô hại vì Admin không giữ phiếu.
 
 ⚠️ Bẫy: tick một menu là `SyncChecked` cấp **mọi** con của nó. Tick `Menu.Operation.ProjectMember` cho Leader là Leader có luôn
 `Price.ManageCompany`; tick `Menu.Operation.Assignment` là có `BonusPool.View`. Chỉ tick key `Function` (menu tự bật khi đủ mọi con).

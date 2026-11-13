@@ -10,6 +10,7 @@ namespace sh.be.applications.Module.Operation.Interfaces.Services
         Task<AddProjectMemberResultDto> AddLeaders(int projectId, AddProjectLeaderDto dto);
         Task<AddProjectMemberResultDto> AddMembers(int projectId, AddProjectMemberDto dto);
         Task<ViewProjectMemberDto> Update(int projectId, int memberId, UpdateProjectMemberDto dto);
+        Task<UpdateMemberPricesResultDto> UpdatePrices(int projectId, UpdateMemberPricesDto dto);
         Task<RemoveProjectMemberResultDto> Remove(int projectId, int memberId);
     }
 }

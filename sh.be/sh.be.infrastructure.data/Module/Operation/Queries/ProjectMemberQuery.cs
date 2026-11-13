@@ -131,6 +131,8 @@ namespace sh.be.infrastructure.data.Module.Operation.Queries
                     ManagedByFullName = _shDbContext.Users.Where(u => u.Id == m.ManagedByUserId).Select(u => u.FullName).FirstOrDefault(),
                     SourceStaffGroupId = m.SourceStaffGroupId,
                     IsActive = m.IsActive,
+                    CompanyPrice = m.CompanyPrice,
+                    ActualPrice = m.ActualPrice,
                     CreatedDate = m.CreatedDate,
                     HeldTicketCount = m.Role == RoleConstants.ROLE_DATA
                         ? _shDbContext.AssignmentTickets.Count(t => t.ProjectId == m.ProjectId && t.DocumentTypeId == m.DocumentTypeId

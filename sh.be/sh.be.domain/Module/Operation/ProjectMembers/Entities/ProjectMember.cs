@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Db;
+using sh.be.domain.Module.Operation.ProjectMembers.Services;
 using sh.be.shared.Constants.Operation;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
@@ -31,6 +32,10 @@ namespace sh.be.domain.Module.Operation.ProjectMembers.Entities
         public string? ManagedByUserId { get; private set; }
         public int? SourceStaffGroupId { get; private set; }
         public bool IsActive { get; private set; }
+        [Precision(PriceConst.PRICE_PRECISION, PriceConst.PRICE_SCALE)]
+        public decimal? CompanyPrice { get; private set; }
+        [Precision(PriceConst.PRICE_PRECISION, PriceConst.PRICE_SCALE)]
+        public decimal? ActualPrice { get; private set; }
         public string? CreatedBy { get; private set; }
         public DateTime? CreatedDate { get; private set; }
         public string? ModifiedBy { get; private set; }
@@ -78,6 +83,29 @@ namespace sh.be.domain.Module.Operation.ProjectMembers.Entities
             ManagedByUserId = Role == RoleConstants.ROLE_LEADER ? null : managedByUserId;
             ModifiedBy = modifiedBy;
             ModifiedDate = modifiedDate;
+        }
+
+        public bool ChangePrice(decimal? companyPrice, decimal? actualPrice, string? modifiedBy, DateTime modifiedDate)
+        {
+            var newCompanyPrice = companyPrice ?? CompanyPrice;
+            var newActualPrice = actualPrice ?? ActualPrice;
+            if (newCompanyPrice == CompanyPrice && newActualPrice == ActualPrice)
+            {
+                return false;
+            }
+            if (newActualPrice != null && newCompanyPrice == null)
+            {
+                throw new UserFriendlyException(ErrorCodes.OperationErrorPriceInvalid);
+            }
+            if (newCompanyPrice != null && newActualPrice != null)
+            {
+                ProjectMemberDomainService.EnsureValidPrice(newCompanyPrice.Value, newActualPrice.Value);
+            }
+            CompanyPrice = newCompanyPrice;
+            ActualPrice = newActualPrice;
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
+            return true;
         }
 
         public void Activate(string? modifiedBy, DateTime modifiedDate)

@@ -135,7 +135,6 @@ namespace sh.be.shared.HttpRequest.Error
         public const int OperationErrorMemberHasActiveTicket = 807;
         public const int OperationErrorPriceInvalid = 808;
         public const int OperationErrorCompanyPriceForbidden = 809;
-        public const int OperationErrorEffectiveFromInvalid = 810;
         public const int OperationErrorAssigneeNotMember = 811;
         public const int OperationErrorAssignmentConflict = 812;
         public const int OperationErrorAssignmentNodeEmpty = 813;
@@ -146,7 +145,6 @@ namespace sh.be.shared.HttpRequest.Error
         public const int OperationErrorDateRangeInvalid = 819;
         public const int OperationErrorSubmissionNotAssigned = 820;
         public const int OperationErrorLeaderForbiddenTarget = 821;
-        public const int OperationErrorPriceDefaultMissing = 822;
         public const int OperationErrorLeaderNotMember = 823;
         public const int OperationErrorNothingToAssign = 824;
         public const int OperationErrorTicketTooLarge = 825;
