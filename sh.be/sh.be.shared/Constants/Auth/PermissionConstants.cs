@@ -109,6 +109,7 @@ namespace sh.be.shared.Constants.Auth
         public const string FUNCTION_ASSIGNMENT_VIEW_OWN = "Function.Operation.Assignment.ViewOwn";
         public const string FUNCTION_ASSIGNMENT_VIEW_ALL_SUBMISSION = "Function.Operation.Assignment.ViewAllSubmission";
         public const string FUNCTION_BONUS_POOL_VIEW = "Function.Operation.BonusPool.View";
+        public const string FUNCTION_WAGE_VIEW = "Function.Operation.Wage.View";
 
         public const string MODULE_AI = "Ai";
 

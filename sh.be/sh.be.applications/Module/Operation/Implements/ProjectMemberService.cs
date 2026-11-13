@@ -228,6 +228,73 @@ namespace sh.be.applications.Module.Operation.Implements
             return (await _projectMemberQuery.FindByIds([member.Id])).Single();
         }
 
+        // Sửa giá nhiều thành viên trong một lượt: một dòng sai thì cả lượt không lưu
+        public async Task<UpdateMemberPricesResultDto> UpdatePrices(int projectId, UpdateMemberPricesDto dto)
+        {
+            _logger.LogInformation($"{nameof(UpdatePrices)}, projectId={projectId}, dto={JsonSerializer.Serialize(dto)}");
+            if (dto.Items.Count == 0 || dto.Items.Count > ProjectMemberConst.MEMBER_PRICES_PER_REQUEST_MAX)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, $"Mỗi lần sửa từ 1 đến {ProjectMemberConst.MEMBER_PRICES_PER_REQUEST_MAX} thành viên");
+            }
+            var memberIds = dto.Items.Select(item => item.MemberId).ToList();
+            if (memberIds.Distinct().Count() != memberIds.Count)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "memberId bị trùng trong danh sách");
+            }
+            var membersById = (await _projectMemberRepository.FindByIdsAsync(projectId, memberIds)).ToDictionary(m => m.Id);
+            if (membersById.Count != memberIds.Count)
+            {
+                throw new UserFriendlyException(ErrorCodes.OperationErrorMemberNotFound);
+            }
+
+            var currentUserId = getCurrentUserId();
+            var now = GetVietnamTime();
+            Dictionary<int, OperationAccess> accessByDocumentTypeId = [];
+            List<ProjectMember> changedMembers = [];
+            List<object> oldData = [];
+            foreach (var item in dto.Items)
+            {
+                var member = membersById[item.MemberId];
+                if (!accessByDocumentTypeId.TryGetValue(member.DocumentTypeId, out var access))
+                {
+                    access = await _projectMemberDomainService.EnsureCanManageAsync(projectId, member.DocumentTypeId, currentUserId, true);
+                    accessByDocumentTypeId[member.DocumentTypeId] = access;
+                }
+                if (member.Role == RoleConstants.ROLE_LEADER)
+                {
+                    throw new UserFriendlyException(ErrorCodes.BadRequest, "Leader không có đơn giá");
+                }
+                _projectMemberDomainService.EnsureCanTouchMember(access, member);
+                if (!access.IsAdmin && item.CompanyPrice.HasValue)
+                {
+                    throw new UserFriendlyException(ErrorCodes.OperationErrorCompanyPriceForbidden);
+                }
+
+                var oldPrice = new { MemberId = member.Id, member.UserId, member.CompanyPrice, member.ActualPrice };
+                if (member.ChangePrice(item.CompanyPrice, item.ActualPrice, currentUserId, now))
+                {
+                    changedMembers.Add(member);
+                    oldData.Add(oldPrice);
+                }
+            }
+            if (changedMembers.Count == 0)
+            {
+                return new UpdateMemberPricesResultDto();
+            }
+
+            var projectName = accessByDocumentTypeId.Values.First().Project.Name;
+            AddAuditLog(AuditLogConstants.ACTION_MEMBER_PRICE_UPDATE, AuditLogConstants.ACTION_TYPE_UPDATE,
+                $"Cập nhật đơn giá {changedMembers.Count} thành viên dự án {projectName}",
+                oldData, changedMembers.Select(member => new { MemberId = member.Id, member.UserId, member.CompanyPrice, member.ActualPrice }));
+            await _unitOfWork.SaveChangesAsync();
+
+            return new UpdateMemberPricesResultDto
+            {
+                UpdatedCount = changedMembers.Count,
+                Members = await _projectMemberQuery.FindByIds(changedMembers.Select(member => member.Id).ToList()),
+            };
+        }
+
         public async Task<RemoveProjectMemberResultDto> Remove(int projectId, int memberId)
         {
             _logger.LogInformation($"{nameof(Remove)}, projectId={projectId}, memberId={memberId}");

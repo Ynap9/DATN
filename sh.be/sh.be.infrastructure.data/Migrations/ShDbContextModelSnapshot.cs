@@ -2552,6 +2552,14 @@ namespace sh.be.infrastructure.data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<decimal?>("ActualPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("CompanyPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -2616,90 +2624,6 @@ namespace sh.be.infrastructure.data.Migrations
                         .HasFilter("[Deleted] = 0");
 
                     b.ToTable("ProjectMember", "operation");
-                });
-
-            modelBuilder.Entity("sh.be.domain.Module.Operation.ProjectMembers.Entities.ProjectMemberPrice", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("ActualPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("CompanyPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("getdate()");
-
-                    b.Property<DateTime>("EffectiveFrom")
-                        .HasColumnType("date");
-
-                    b.Property<int>("ProjectMemberId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex(new[] { "ProjectMemberId", "EffectiveFrom" }, "IX_ProjectMemberPrice_ProjectMemberId_EffectiveFrom");
-
-                    b.ToTable("ProjectMemberPrice", "operation");
-                });
-
-            modelBuilder.Entity("sh.be.domain.Module.Operation.ProjectMembers.Entities.ProjectPriceDefault", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("ActualPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("CompanyPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("getdate()");
-
-                    b.Property<int>("DocumentTypeId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("EffectiveFrom")
-                        .HasColumnType("date");
-
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DocumentTypeId");
-
-                    b.HasIndex(new[] { "ProjectId", "DocumentTypeId", "Role", "EffectiveFrom" }, "IX_ProjectPriceDefault_ProjectId_DocumentTypeId_Role_EffectiveFrom");
-
-                    b.ToTable("ProjectPriceDefault", "operation");
                 });
 
             modelBuilder.Entity("sh.be.domain.Module.Operation.StaffGroups.Entities.StaffGroup", b =>
@@ -3183,30 +3107,6 @@ namespace sh.be.infrastructure.data.Migrations
                 });
 
             modelBuilder.Entity("sh.be.domain.Module.Operation.ProjectMembers.Entities.ProjectMember", b =>
-                {
-                    b.HasOne("sh.be.domain.Module.Construction.DocumentTypes.Entities.DocumentType", null)
-                        .WithMany()
-                        .HasForeignKey("DocumentTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("sh.be.domain.Module.Construction.Projects.Entities.Project", null)
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("sh.be.domain.Module.Operation.ProjectMembers.Entities.ProjectMemberPrice", b =>
-                {
-                    b.HasOne("sh.be.domain.Module.Operation.ProjectMembers.Entities.ProjectMember", null)
-                        .WithMany()
-                        .HasForeignKey("ProjectMemberId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("sh.be.domain.Module.Operation.ProjectMembers.Entities.ProjectPriceDefault", b =>
                 {
                     b.HasOne("sh.be.domain.Module.Construction.DocumentTypes.Entities.DocumentType", null)
                         .WithMany()
