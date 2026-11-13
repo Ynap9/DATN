@@ -11,5 +11,6 @@ namespace sh.be.applications.Module.Construction.Interfaces.Services
         Task EnsureCanCheckAsync(Submission submission, string userId);
         Task AssignCheckedToQaAsync(Submission submission, string userId, DateTime now);
         Task ApplyQaResultToAssignmentAsync(Submission submission, int newStatusQa, string userId, DateTime now);
+        Task ReleaseDeletedSubmissionsAsync(List<Submission> submissions, string userId, DateTime now);
     }
 }
