@@ -107,6 +107,7 @@ namespace sh.be.infrastructure.data.Persistence.Seeder
             Permission.Create(PermissionConstants.FUNCTION_ASSIGNMENT_VIEW_OWN, "Xem phiếu nhập liệu của mình", PermissionConstants.MENU_OPERATION_ASSIGNMENT, PermissionConstants.MODULE_OPERATION, null),
             Permission.Create(PermissionConstants.FUNCTION_ASSIGNMENT_VIEW_ALL_SUBMISSION, "Xem mọi văn bản không theo phiếu", PermissionConstants.MENU_OPERATION_ASSIGNMENT, PermissionConstants.MODULE_OPERATION, null),
             Permission.Create(PermissionConstants.FUNCTION_BONUS_POOL_VIEW, "Xem quỹ KPI", PermissionConstants.MENU_OPERATION_ASSIGNMENT, PermissionConstants.MODULE_OPERATION, null),
+            Permission.Create(PermissionConstants.FUNCTION_WAGE_VIEW, "Xem thống kê tiền công", PermissionConstants.MENU_OPERATION_ASSIGNMENT, PermissionConstants.MODULE_OPERATION, null),
 
             Permission.Create(PermissionConstants.MENU_AI, "Menu AI", null, PermissionConstants.MODULE_AI, null),
 

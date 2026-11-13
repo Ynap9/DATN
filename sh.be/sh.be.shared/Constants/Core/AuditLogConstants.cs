@@ -86,7 +86,6 @@ namespace sh.be.shared.Constants.Core
         public const string ACTION_PROJECT_MEMBER_UPDATE = "Cập nhật thành viên dự án";
         public const string ACTION_PROJECT_MEMBER_REMOVE = "Gỡ thành viên dự án";
 
-        public const string ACTION_PRICE_DEFAULT_UPDATE = "Cập nhật đơn giá mặc định dự án";
         public const string ACTION_MEMBER_PRICE_UPDATE = "Cập nhật đơn giá thành viên";
 
         public const string ACTION_ASSIGNMENT_CREATE = "Giao phiếu";

@@ -153,4 +153,4 @@ giới hạn như chốt đợt QA FULL 18C). Đừng thêm khoá ở nhánh Đ�
 ⚠️ DB local này trễ ~130 ms **mỗi** lượt gọi DB (API có sẵn `auth/role/dropdown`, 2 câu SQL, mất 260–330 ms), nên số trên chủ yếu là
 độ trễ môi trường; cần đo lại trên DB thật trước khi kết luận chậm.
 
-> **Tiếp:** hết phần nghiệp vụ. Kiến trúc và quy ước code ở [../architecture/README.md](../architecture/README.md).
+> **Tiếp:** [24-don-gia-tien-cong.md](24-don-gia-tien-cong.md) — đơn giá và thống kê tiền công (Task 12). Kiến trúc và quy ước code ở [../architecture/README.md](../architecture/README.md).

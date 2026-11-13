@@ -24,7 +24,7 @@
 
 ## Đơn giá
 
-> 🔬 **Tạm lùi** (2026-10-27) chờ chốt công thức lương; Task 11 không ghi `ProjectMemberPrice`.
+> ✅ **Task 12 (2026-11-12) đã thay mô hình giá dưới đây:** giá nằm trên `ProjectMember` (sửa đè, không lịch sử `EffectiveFrom`), xem [../../nghiep-vu/24-don-gia-tien-cong.md](../../nghiep-vu/24-don-gia-tien-cong.md). Các bảng `ProjectPriceDefault` / `ProjectMemberPrice` bên dưới là thiết kế cũ, đã bỏ.
 
 | Vai trò | Tính trên |
 |---|---|

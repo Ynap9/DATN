@@ -2,7 +2,7 @@
 
 > **Trạng thái:** 🔶 làm dở — Task 9 xong 2026-10-26 (nền móng: schema, mã lỗi, quyền; đã `database update` + gán quyền Leader / Data trên DB dev);
 > Task 10 xong 2026-10-26 (8 API nhóm nhân viên + luật `109` Data / QA); Task 11 xong 2026-10-27 (6 API thành viên dự án + luật giao phiếu
-> QA `338` / `339`) · người làm: TV2 · thay T2.2–T2.5 cũ. **Phần tính tiền (đơn giá Task 12, quỹ KPI Task 14) tạm lùi** chờ chốt công thức lương.
+> QA `338` / `339`) · người làm: TV2 · thay T2.2–T2.5 cũ. Đơn giá Task 12 đã làm (2026-11-12, xem [../../nghiep-vu/24-don-gia-tien-cong.md](../../nghiep-vu/24-don-gia-tien-cong.md)); **quỹ KPI Task 14 tạm lùi**.
 
 Chia tự động (ngẫu nhiên, theo tiến độ) **không** nằm trong plan này — để làm thuật toán sau; phiếu chừa sẵn `Mode`.
 

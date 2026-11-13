@@ -17,6 +17,9 @@ Cần `dotnet-ef` đúng bản EF của dự án: `dotnet tool install --global 
 7 bảng và đúng 1 index `IX_Submission_ProjectId_DocumentTypeId_Box_ProfileRange` trên `construction.Submission`, không thêm cột.
 Hồ sơ cũ không có dòng `SubmissionUser` = chưa giao, không cần script dữ liệu.
 
+`Update_ProjectMember_Price` (`Migrations/Operation/`, Task 12) chạy sau `Add_OperationModule`: thêm `CompanyPrice` / `ActualPrice`
+`decimal(18,2)` NULL vào `operation.ProjectMember`, bỏ `operation.ProjectMemberPrice` và `operation.ProjectPriceDefault`. Dữ liệu trong hai bảng cũ bị mất khi migrate.
+
 ## Dữ liệu test hồ sơ (DB dev)
 
 `test-data-ho-so.sql` tạo 15 hồ sơ + 1 hồ sơ khác loại văn bản (dự án 3, loại văn bản 3/4), 5 trường (`Ghi chú` cố ý không cấu hình
