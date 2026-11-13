@@ -169,12 +169,13 @@ namespace sh.be.infrastructure.data.Module.Operation.Repositories
             return _shDbContext.ProjectMembers.AnyAsync(m => m.ProjectId == projectId && m.DocumentTypeId == documentTypeId && m.UserId == userId);
         }
 
-        // Đếm văn bản của phiếu nhập liệu chưa QA đạt
-        public Task<int> CountDataNotPassedAsync(int ticketId)
+        // Đếm văn bản của phiếu nhập liệu chưa xong: dự án có QA = chưa QA đạt, dự án không QA = chưa kiểm
+        public Task<int> CountDataNotDoneAsync(int ticketId, bool isQaEnabled)
         {
             return _shDbContext.SubmissionUsers
                 .CountAsync(u => u.TicketId == ticketId && u.Role == RoleConstants.ROLE_DATA
-                    && _shDbContext.Submissions.Any(s => s.Id == u.SubmissionId && s.StatusQa != SubmissionConst.QA_PASSED));
+                    && _shDbContext.Submissions.Any(s => s.Id == u.SubmissionId
+                        && (isQaEnabled ? s.StatusQa != SubmissionConst.QA_PASSED : s.StatusCheck != SubmissionConst.CHECKED)));
         }
 
         // Chốt phiếu DONE khi phiếu còn ACTIVE, trả số dòng đã đổi

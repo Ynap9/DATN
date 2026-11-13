@@ -23,7 +23,7 @@ namespace sh.be.domain.Module.Operation.Assignments.Repositories
         Task<SubmissionUser?> FindHolderAsync(int submissionId, string role);
         void DeleteHolder(SubmissionUser holder);
         Task<bool> IsMemberAsync(int projectId, int documentTypeId, string userId);
-        Task<int> CountDataNotPassedAsync(int ticketId);
+        Task<int> CountDataNotDoneAsync(int ticketId, bool isQaEnabled);
         Task<int> TryMarkDoneAsync(int ticketId, DateTime doneAt);
         Task<List<AssignmentHolderRow>> GetHolderRowsAsync(int projectId, int documentTypeId, string role, string userId, List<AssignmentItem> items);
         Task<int> DeleteUnfinishedHoldersAsync(string role, string userId, List<int> submissionIds);

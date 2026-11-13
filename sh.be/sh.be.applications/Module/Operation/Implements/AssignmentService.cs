@@ -268,7 +268,7 @@ namespace sh.be.applications.Module.Operation.Implements
                     {
                         result.CancelledTicketIds.Add(ticket.Id);
                     }
-                    else if (await _assignmentDomainService.TryMarkDoneAsync(ticket, now))
+                    else if (await _assignmentDomainService.TryMarkDoneAsync(ticket, access.Project.IsQaEnabled, now))
                     {
                         result.DoneTicketIds.Add(ticket.Id);
                     }
@@ -343,7 +343,7 @@ namespace sh.be.applications.Module.Operation.Implements
                     {
                         result.CancelledTicketIds.Add(ticket.Id);
                     }
-                    else if (await _assignmentDomainService.TryMarkDoneAsync(ticket, now))
+                    else if (await _assignmentDomainService.TryMarkDoneAsync(ticket, access.Project.IsQaEnabled, now))
                     {
                         result.DoneTicketIds.Add(ticket.Id);
                     }
