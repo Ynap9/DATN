@@ -130,7 +130,7 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `POST api/construction/project/{id:int}/acceptance/start`, `.../finish`, `.../reopen` | `Function.Construction.Project.Accept` (Leader chỉ dự án mình là Leader — `337`; `reopen` chỉ Admin — kiểm ở service, [22](22-nghiem-thu-du-an.md)) |
 | `POST api/construction/project` | `Function.Construction.Project.Create` |
 | `PUT api/construction/project/{id}` | `Function.Construction.Project.Update` |
-| `DELETE api/construction/project/{id}` | `Function.Construction.Project.Delete` |
+| `DELETE api/construction/project/{id}`, `DELETE .../admin/delete/{id:int}` | `Function.Construction.Project.Delete` (`admin/delete` chỉ Admin — kiểm ở service, `400`, [25](25-xoa-du-an-danh-sach-cap.md)) |
 | `GET api/construction/project/deadline`, `POST .../deadline-check/run`, `GET .../deadline-check/status`, `GET .../deadline-notification/paging` | `Function.Construction.Project.Deadline` |
 | `GET api/construction/project-config`, `GET .../{id}` | `Function.Construction.ProjectConfig.View` |
 | `POST` / `PUT {id}` / `DELETE {id}` `api/construction/project-config` | `...ProjectConfig.Create` / `.Update` / `.Delete` |
@@ -155,7 +155,7 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `GET api/digital-signature/plugin/version`, `.../setup`, `.../setup/content` | — (chỉ cần đăng nhập) |
 | `api/operation/staff-group`: `GET paging`, `GET candidates`, `GET` / `PUT` / `DELETE {id}`, `POST`, `POST` / `DELETE {id}/members` | `Function.Operation.StaffGroup.Manage` (Leader còn bị lọc theo chủ nhóm ở service, [19](19-nhom-nhan-vien.md)) |
 | `api/operation/project/{projectId}`: `GET member/paging`, `GET member/candidates`, `POST leader`, `POST member`, `PUT` / `DELETE member/{memberId}` | `Function.Operation.ProjectMember.Manage` (Leader chỉ trong cặp mình là Leader đang hoạt động, chỉ người mình quản lý; `POST leader` chỉ Admin — kiểm ở service, [21](21-thanh-vien-du-an.md)) |
-| `api/operation/project/{projectId}/document-type/{documentTypeId}`: `GET assignment-tree`, `GET assignment-tree/profiles`, `POST assignment/preview`, `POST assignment`, `GET assignment/{ticketId}`; `GET api/operation/my-assignment` | `Function.Operation.Assignment.Manage` (Leader chỉ cặp mình là Leader, chỉ giao người mình quản lý); `my-assignment` cần `.Assignment.ViewOwn` ([23](23-chia-phieu.md)) |
+| `api/operation/project/{projectId}/document-type/{documentTypeId}`: `GET assignment-tree`, `GET assignment-tree/profiles`, `POST assignment/preview`, `POST assignment`, `GET assignment/{ticketId}`, `POST assignment/revoke`, `POST assignment/transfer`, `POST assignment/qa/revoke`, `POST assignment/qa/transfer`, `GET assignment/ticket/paging`; `GET api/operation/my-assignment` | `Function.Operation.Assignment.Manage` (Leader chỉ cặp mình là Leader, chỉ giao / thu / chuyển / xem phiếu người mình quản lý); `my-assignment` cần `.Assignment.ViewOwn` ([23](23-chia-phieu.md), [26](26-thu-hoi-chuyen-phieu.md)) |
 | `api/operation/project/{projectId}`: `PUT member/price` | `Function.Operation.Price.ManageActual` (Admin đặt cả hai giá; Leader chỉ `ActualPrice` người mình quản lý, [24](24-don-gia-tien-cong.md)) |
 | `api/operation/project/{projectId}`: `GET wage/paging` | `Function.Operation.Wage.View` (phạm vi xem theo vai trò, [24](24-don-gia-tien-cong.md)) |
 

@@ -64,10 +64,13 @@ namespace sh.be.applications.Module.Construction.Implements
             return await _projectQuery.GetProjectDropDown();
         }
 
-        public async Task<BaseResponsePagingDto<GetListProjectDto>> FindPaging(FindPagingProjectDto dto)
+        // Paging cặp (dự án, loại văn bản) theo phạm vi người gọi: Admin / SuperAdmin mọi cặp, còn lại cặp mình là thành viên
+        public async Task<BaseResponsePagingDto<GetListProjectPairDto>> FindPaging(FindPagingProjectDto dto)
         {
             _logger.LogInformation($"{nameof(FindPaging)}, dto={JsonSerializer.Serialize(dto)}");
-            return await _projectQuery.FindPaging(dto);
+            var currentUserId = getCurrentUserId();
+            var isAdmin = PermissionDomainService.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            return await _projectQuery.FindPaging(dto, currentUserId, isAdmin);
         }
 
         public async Task<FindProjectByIdDto> FindById(int id)
@@ -289,6 +292,52 @@ namespace sh.be.applications.Module.Construction.Implements
             AddAuditLog(AuditLogConstants.ACTION_PROJECT_DELETE, AuditLogConstants.ACTION_TYPE_DELETE, $"Xóa dự án {project.Name}",
                 ToAuditData(project, projectDocumentTypes.Select(pd => pd.DocumentTypeId)), null);
             await _unitOfWork.SaveChangesAsync();
+        }
+
+        // Admin xoá mềm dự án ở mọi trạng thái kèm mọi dữ liệu phụ thuộc, cùng một mốc xoá; đổi tên Google Sheet sau commit, lỗi chỉ ghi log
+        public async Task DeleteCascade(int id)
+        {
+            _logger.LogInformation($"{nameof(DeleteCascade)}, id={id}");
+            var currentUserId = getCurrentUserId();
+            ProjectDomainService.EnsureCanDeleteWithDependents(PermissionDomainService.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId)));
+            var now = GetVietnamTime();
+
+            // Khoá rồi mới đọc: hai lần xoá cùng lúc thì lần sau thấy dự án đã xoá (303), không ghi đè mốc xoá
+            await using var transaction = await _unitOfWork.BeginTransactionAsync();
+            await _projectRepository.LockAsync(id);
+            var project = await _projectRepository.FindByIdAsync(id)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
+            var documentTypeIds = await _projectRepository.GetDocumentTypeIdsAsync(id);
+            try
+            {
+                var deletedCounts = await _projectRepository.SoftDeleteDependentsAsync(id, currentUserId, now);
+                project.Delete(currentUserId, now);
+                _projectRepository.Update(project);
+                AddAuditLog(AuditLogConstants.ACTION_PROJECT_DELETE, AuditLogConstants.ACTION_TYPE_DELETE, $"Xóa dự án {project.Name} kèm dữ liệu phụ thuộc",
+                    ToAuditData(project, documentTypeIds), new { DeletedDate = now, DeletedCounts = deletedCounts });
+                await _unitOfWork.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{nameof(DeleteCascade)}, id={id}");
+                await transaction.RollbackAsync();
+                throw;
+            }
+
+            try
+            {
+                var account = await GetSpreadsheetAccountAsync();
+                if (!await _googleSheetExternal.TryRenameSpreadsheetAsync(account, project.UrlGoogleSheetSync, $"{project.Name} (đã xoá)"))
+                {
+                    _logger.LogWarning($"{nameof(DeleteCascade)}, id={id}, không đổi tên được Google Sheet {project.UrlGoogleSheetSync}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, $"{nameof(DeleteCascade)}, id={id}, không đổi tên được Google Sheet {project.UrlGoogleSheetSync}");
+            }
         }
 
         private async Task AddDocumentTypesAsync(Project project, List<int> documentTypeIds, string? assignedBy, DateTime assignedDate)

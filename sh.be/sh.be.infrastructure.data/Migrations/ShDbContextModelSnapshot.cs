@@ -1266,6 +1266,17 @@ namespace sh.be.infrastructure.data.Migrations
                     b.Property<int>("DaysLeft")
                         .HasColumnType("int");
 
+                    b.Property<bool>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("EndedAt")
                         .HasColumnType("datetime2");
 
@@ -1303,7 +1314,7 @@ namespace sh.be.infrastructure.data.Migrations
 
                     b.HasIndex(new[] { "ProjectId", "NotificationType", "EndedAt", "ToAddress" }, "IX_ProjectDeadlineNotification_Unique")
                         .IsUnique()
-                        .HasFilter("[IsSuccess] = 1");
+                        .HasFilter("[IsSuccess] = 1 AND [Deleted] = 0");
 
                     b.ToTable("ProjectDeadlineNotification", "construction");
                 });
@@ -2002,6 +2013,17 @@ namespace sh.be.infrastructure.data.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("getdate()");
 
+                    b.Property<bool>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("DocumentTypeId")
                         .HasColumnType("int");
 
@@ -2041,7 +2063,8 @@ namespace sh.be.infrastructure.data.Migrations
                     b.HasIndex(new[] { "ProjectId", "DocumentTypeId", "Role", "UserId" }, "IX_SubmissionUser_ProjectId_DocumentTypeId_Role_UserId");
 
                     b.HasIndex(new[] { "SubmissionId", "Role" }, "IX_SubmissionUser_SubmissionId_Role")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[Deleted] = 0");
 
                     b.HasIndex(new[] { "TicketId", "Role" }, "IX_SubmissionUser_TicketId_Role");
 
@@ -2474,6 +2497,17 @@ namespace sh.be.infrastructure.data.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("getdate()");
 
+                    b.Property<bool>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("DocumentCount")
                         .HasColumnType("int");
 
@@ -2532,6 +2566,17 @@ namespace sh.be.infrastructure.data.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("ProfileRange")
                         .HasMaxLength(100)

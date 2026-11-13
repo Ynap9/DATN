@@ -103,11 +103,13 @@ namespace sh.be.applications.Module.Construction.Implements
             await _unitOfWork.SaveChangesAsync();
         }
 
+        // Xoá mềm loại văn bản; chặn khi còn dự án chưa xoá đang dùng (346)
         public async Task Delete(int id)
         {
             _logger.LogInformation($"{nameof(Delete)}, id={id}");
             var documentType = await _documentTypeRepository.FindByIdAsync(id)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentTypeNotFound);
+            await _documentTypeDomainService.EnsureNotUsedByProjectAsync(id);
 
             documentType.Delete(getCurrentUserId(), GetVietnamTime());
 

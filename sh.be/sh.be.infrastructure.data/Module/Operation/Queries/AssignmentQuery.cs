@@ -84,6 +84,95 @@ namespace sh.be.infrastructure.data.Module.Operation.Queries
             return ticket;
         }
 
+        // Danh sách phiếu nhập liệu / phụ trách QA của cặp, mới nhất trước, không kèm nút; Leader chỉ thấy phiếu người mình quản lý
+        public async Task<BaseResponsePagingDto<ViewAssignmentTicketDto>> FindTicketPaging(int projectId, int documentTypeId, FindPagingAssignmentTicketDto dto,
+            string? managedByLeaderUserId)
+        {
+            var query = _shDbContext.AssignmentTickets
+                .AsNoTracking()
+                .Where(t => t.ProjectId == projectId && t.DocumentTypeId == documentTypeId);
+            if (managedByLeaderUserId != null)
+            {
+                query = query.Where(t => _shDbContext.ProjectMembers.Any(m => m.ProjectId == t.ProjectId && m.DocumentTypeId == t.DocumentTypeId
+                    && m.UserId == t.AssigneeUserId && m.Role == t.Role && m.ManagedByUserId == managedByLeaderUserId));
+            }
+            if (!string.IsNullOrEmpty(dto.Role))
+            {
+                query = query.Where(t => t.Role == dto.Role);
+            }
+            if (!string.IsNullOrEmpty(dto.AssigneeUserId))
+            {
+                query = query.Where(t => t.AssigneeUserId == dto.AssigneeUserId);
+            }
+            if (dto.Status.HasValue)
+            {
+                query = query.Where(t => t.Status == dto.Status);
+            }
+
+            var totalItems = await query.CountAsync();
+            var tickets = await query
+                .OrderByDescending(t => t.CreatedDate)
+                .ThenByDescending(t => t.Id)
+                .Paging(dto)
+                .Select(t => new ViewAssignmentTicketDto
+                {
+                    Id = t.Id,
+                    Role = t.Role,
+                    ProjectId = t.ProjectId,
+                    ProjectName = _shDbContext.Projects.Where(p => p.Id == t.ProjectId).Select(p => p.Name).FirstOrDefault(),
+                    DocumentTypeId = t.DocumentTypeId,
+                    DocumentTypeName = _shDbContext.DocumentTypes.Where(d => d.Id == t.DocumentTypeId).Select(d => d.Name).FirstOrDefault(),
+                    AssigneeUserId = t.AssigneeUserId,
+                    AssigneeFullName = _shDbContext.Users.Where(u => u.Id == t.AssigneeUserId).Select(u => u.FullName).FirstOrDefault(),
+                    Status = t.Status,
+                    DocumentCount = t.DocumentCount,
+                    CreatedBy = t.CreatedBy,
+                    CreatedByFullName = _shDbContext.Users.Where(u => u.Id == t.CreatedBy).Select(u => u.FullName).FirstOrDefault(),
+                    CreatedDate = t.CreatedDate,
+                    DoneAt = t.DoneAt,
+                })
+                .ToListAsync();
+
+            // Đếm như FindTicketById: phiếu Data theo TicketId, phụ trách QA theo văn bản QA đó giữ trong các nút phụ trách
+            var ticketIds = tickets.Select(t => t.Id).ToList();
+            var statsByTicket = await (from t in _shDbContext.AssignmentTickets.AsNoTracking()
+                                       where ticketIds.Contains(t.Id)
+                                       from u in _shDbContext.SubmissionUsers
+                                       where u.Role == t.Role
+                                           && (t.Role == RoleConstants.ROLE_DATA
+                                               ? u.TicketId == t.Id
+                                               : u.ProjectId == t.ProjectId && u.DocumentTypeId == t.DocumentTypeId && u.UserId == t.AssigneeUserId)
+                                       join s in _shDbContext.Submissions on u.SubmissionId equals s.Id
+                                       where t.Role == RoleConstants.ROLE_DATA
+                                           || _shDbContext.AssignmentTicketItems.Any(i => i.AssignmentTicketId == t.Id && i.Box == s.Box && i.ProfileRange == s.ProfileRange)
+                                       group s by t.Id into g
+                                       select new
+                                       {
+                                           TicketId = g.Key,
+                                           Total = g.Count(),
+                                           Checked = g.Count(s => s.StatusCheck == SubmissionConst.CHECKED),
+                                           Returned = g.Count(s => s.StatusCheck == SubmissionConst.RETURNED),
+                                           QaPassed = g.Count(s => s.StatusQa == SubmissionConst.QA_PASSED),
+                                       })
+                                      .ToDictionaryAsync(stats => stats.TicketId);
+            foreach (var ticket in tickets)
+            {
+                if (statsByTicket.TryGetValue(ticket.Id, out var stats))
+                {
+                    ticket.Total = stats.Total;
+                    ticket.Checked = stats.Checked;
+                    ticket.Returned = stats.Returned;
+                    ticket.QaPassed = stats.QaPassed;
+                }
+            }
+
+            return new BaseResponsePagingDto<ViewAssignmentTicketDto>
+            {
+                Items = tickets,
+                TotalItems = totalItems,
+            };
+        }
+
         public async Task<BaseResponsePagingDto<GetListMyAssignmentDto>> FindMyAssignments(string userId, FindMyAssignmentDto dto)
         {
             List<GetListMyAssignmentDto> tickets = [];

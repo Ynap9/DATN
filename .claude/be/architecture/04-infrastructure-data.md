@@ -43,7 +43,7 @@ gọi thêm `SaveChanges` trong các luồng đó.
   Cột chuỗi có index thành `nvarchar(450)` — giá trị dài hơn sẽ lỗi khi lưu.
 - Unique index có filter: attribute khai index + `IsUnique`, `OnModelCreating` gọi `HasIndex([...], <tên>).HasFilter("[Deleted] = 0")` theo
   **cùng tên** (hằng `Submission.UniqueKeyIndexName`, `SubmissionData.UniqueFieldIndexName`, `PackageSchema.UniqueTypeIndexName`,
-  `PackageSchemaField.UniqueElementIndexName`, `PackageCodeValue.UniqueCodeIndexName`, `QaSamplingConfig.UniqueProjectIndexName`, `QaReviewerMode.UniqueReviewerIndexName`, `StaffGroup.UniqueOwnerNameIndexName`, `ProjectMember.UniqueMemberIndexName`, `AiProvider` / `AiModel.UniqueCodeIndexName`, `PromptFieldConfig.UniqueFieldIndexName` / `UniqueOutputKeyIndexName`, `ProjectAiConfig.UniqueProjectDocumentTypeIndexName` — filter để gỡ thành viên / xoá nhóm rồi thêm lại không vướng bản ghi đã xoá mềm; `ProjectDeadlineNotification.UniqueSentIndexName` lọc `[IsSuccess] = 1`; `SubmissionUser.UniqueRoleIndexName` **không** filter vì bảng không xoá mềm; `PromptTemplate.UniqueVersionIndexName` **không** filter vì số phiên bản không dùng lại; `PromptTemplate.UniquePublishedIndexName` lọc `[Status] = 'PUBLISHED' AND [Deleted] = 0` — mỗi loại văn bản một bản đang dùng). ⚠️ Khoá index nonclustered tối đa 1700 byte:
+  `PackageSchemaField.UniqueElementIndexName`, `PackageCodeValue.UniqueCodeIndexName`, `QaSamplingConfig.UniqueProjectIndexName`, `QaReviewerMode.UniqueReviewerIndexName`, `StaffGroup.UniqueOwnerNameIndexName`, `ProjectMember.UniqueMemberIndexName`, `AiProvider` / `AiModel.UniqueCodeIndexName`, `PromptFieldConfig.UniqueFieldIndexName` / `UniqueOutputKeyIndexName`, `ProjectAiConfig.UniqueProjectDocumentTypeIndexName` — filter để gỡ thành viên / xoá nhóm rồi thêm lại không vướng bản ghi đã xoá mềm; `ProjectDeadlineNotification.UniqueSentIndexName` lọc `[IsSuccess] = 1 AND [Deleted] = 0`, `SubmissionUser.UniqueRoleIndexName` lọc `[Deleted] = 0` (Task 29); `PromptTemplate.UniqueVersionIndexName` **không** filter vì số phiên bản không dùng lại; `PromptTemplate.UniquePublishedIndexName` lọc `[Status] = 'PUBLISHED' AND [Deleted] = 0` — mỗi loại văn bản một bản đang dùng). ⚠️ Khoá index nonclustered tối đa 1700 byte:
   `Submission (ProjectId, DocumentTypeId, FileName 255, ProfileRange 100, Box 100)` ≈ 918 byte; đừng nới các cột này lên `nvarchar(500)`.
 - `Deleted` mặc định `0`, `CreatedDate` mặc định `getdate()` (cấu hình trong `OnModelCreating`).
 - EF map được setter/constructor `private` của entity, nên entity giàu hành vi không đổi schema.
@@ -64,7 +64,7 @@ chỉ có tác dụng **bên trong transaction** (xem [../nghiep-vu/06-truong-va
 
 `Role`, `Permission`, `UserRole`, `RolePermission`, `DocumentType`, `DocumentField`, `Project`, `ProjectConfig`, `ProjectDocumentType`, `ProjectDocumentTypeDocumentField`,
 `Submission`, `SubmissionData`, `SubmissionLog`, `SubmissionQaLog`, `SubmissionQaLogField`, `QaSamplingConfig`, `QaReviewerMode`, `QaTicket`, `Template`, `TemplatePosition`, `SigningBatch`, `SigningBatchFile`,
-`PackageSchema`, `PackageSchemaField`, `PackageCodeValue`, `StaffGroup`, `ProjectMember`, `AiProvider`, `AiModel`, `PromptTemplate`, `PromptFieldConfig`, `ProjectAiConfig` có `HasQueryFilter(e => !e.Deleted)` trong `ShDbContext`.
+`PackageSchema`, `PackageSchemaField`, `PackageCodeValue`, `StaffGroup`, `ProjectMember`, `AiProvider`, `AiModel`, `PromptTemplate`, `PromptFieldConfig`, `ProjectAiConfig`, `SubmissionUser`, `ProjectDeadlineNotification`, `AssignmentTicket`, `AssignmentTicketItem` (Task 29) có `HasQueryFilter(e => !e.Deleted)` trong `ShDbContext`.
 Mọi truy vấn LINQ (kể cả `join`, subquery, `Any`, `Count`) tự loại bản ghi đã xoá mềm.
 
 - **Không** viết tay `!x.Deleted` nữa.
@@ -72,7 +72,9 @@ Mọi truy vấn LINQ (kể cả `join`, subquery, `Any`, `Count`) tự loại b
   `DeleteUserRolesAsync` (xoá cứng theo khoá ghép), `DocumentFieldRepository.GetMaxOrderAsync` (thứ tự mới tính cả trường đã xoá), `SigningBatchRepository.GetLastFileOrderAsync` (key nguồn MinIO theo thứ tự, không được dùng lại; các hàm runner `ClaimFilesAsync` / `MarkFile*Async` / `PauseInterruptedAsync` ghi bằng `ExecuteUpdate`, không qua UnitOfWork), `SeedPermission` (khôi phục quyền), `SeedRolePermission`, `SeedUser` (kiểm cặp khoá đã có).
 
 ⚠️ Bẫy: `ExecuteDeleteAsync` cũng bị filter lọc. Xoá cứng mà quên `IgnoreQueryFilters()` thì bản ghi xoá mềm
-còn nằm lại và lần `Add` sau trùng khoá ghép. Đừng "sửa" bằng cách bỏ filter khỏi entity.
+còn nằm lại và lần `Add` sau trùng khoá ghép. Đừng "sửa" bằng cách bỏ filter khỏi entity. Ngược lại `ExecuteUpdateAsync` bị lọc là **có chủ đích**
+ở `ProjectRepository.SoftDeleteDependentsAsync` (xoá mềm 16 bảng, kể cả Operation / Ai, cùng mốc): dòng đã xoá từ trước giữ mốc cũ.
+⚠️ Bẫy: `IgnoreQueryFilters()` gỡ filter của **cả câu**, không riêng một bảng join — cần dòng đã xoá của một bảng thì tách câu riêng.
 
 ## Migration
 

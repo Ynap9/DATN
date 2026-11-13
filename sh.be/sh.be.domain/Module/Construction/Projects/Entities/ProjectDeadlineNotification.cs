@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using sh.be.shared.Constants.Db;
+using sh.be.shared.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -8,7 +9,7 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
     [Table(nameof(ProjectDeadlineNotification), Schema = DbSchemas.Construction)]
     [Index(nameof(ProjectId), nameof(NotificationType), nameof(EndedAt), nameof(ToAddress), IsUnique = true, Name = UniqueSentIndexName)]
     [Index(nameof(CreatedDate), Name = "IX_ProjectDeadlineNotification_CreatedDate")]
-    public class ProjectDeadlineNotification
+    public class ProjectDeadlineNotification : ISoftDeleted
     {
         public const string UniqueSentIndexName = "IX_ProjectDeadlineNotification_Unique";
 
@@ -30,6 +31,9 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
         public string? ErrorMessage { get; private set; }
         public string? CreatedBy { get; private set; }
         public DateTime? CreatedDate { get; private set; }
+        public DateTime? DeletedDate { get; private set; }
+        public bool Deleted { get; private set; }
+        public string? DeletedBy { get; private set; }
 
         private ProjectDeadlineNotification()
         {

@@ -1,10 +1,11 @@
 # Chia phiếu nhập liệu và QA (Operation)
 
-> **Phần 23/23** · trước: [22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md) · mục lục: [README.md](README.md)
+> **Phần 23/26** · trước: [22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md) · mục lục: [README.md](README.md)
 
 Admin hoặc Leader của cặp (dự án, loại văn bản) xem cây **Hộp → Hồ sơ → Văn bản**, chọn người nhận, tích nút, xem trước rồi lưu.
 Data nhận **phiếu nhập liệu**; QA nhận **phụ trách nút** và văn bản đã kiểm vào **đợt QA**. Task 13, 2026-11-11. Không đổi schema,
-dùng lại `AssignmentTicket`, `AssignmentTicketItem` (Task 9), `QaTicket`, `SubmissionUser` (Task 18C).
+dùng lại `AssignmentTicket`, `AssignmentTicketItem` (Task 9), `QaTicket`, `SubmissionUser` (Task 18C). Ba bảng này có cờ xoá mềm từ Task 29 nhưng
+chỉ dùng khi Admin xoá dự án ([25](25-xoa-du-an-danh-sach-cap.md)); về pool / gỡ thành viên vẫn xoá cứng.
 
 ## Cây
 
@@ -70,8 +71,8 @@ Lưu: `AssignmentTicket.CreateManual(Data)` → các nút → `SubmissionUser.Cr
 
 - Lưu được khi New = 0 nhưng có Later ở nút mới phụ trách; New = 0 và (Later = 0 hoặc không có nút mới) → `824`.
 - Audit `Giao phiếu`: "Giao QA {tên} phụ trách {k} hộp / hồ sơ, {n} văn bản đã kiểm, phiếu #{id}".
-- Đổi QA phụ trách một nút (đợt này chưa có API chuyển, Task 14): **gỡ QA đó khỏi dự án** — `RevokeHeldDocumentsAsync` huỷ đợt mở
-  như cũ và huỷ luôn phiếu phụ trách (`CancelledQaOwnershipTicketIds` trong audit gỡ), nút được mở cho QA khác.
+- Đổi QA phụ trách một nút: API `qa/revoke`, `qa/transfer` (Task 14, [26](26-thu-hoi-chuyen-phieu.md)). Gỡ QA khỏi dự án vẫn huỷ đợt
+  mở và phiếu phụ trách (`CancelledQaOwnershipTicketIds` trong audit gỡ).
 
 API giao QA cũ `POST construction/qa-assignment/ticket` (không biết phụ trách nút) đã xoá 2026-11-12 (Task 26); chỉ còn API 23
 bên dưới. Văn bản do API cũ giao từ trước vẫn bị tính là Conflict ở đây.
@@ -98,6 +99,7 @@ huỷ luôn ẩn, phiếu của dự án đã xoá không hiện, phiếu phụ 
 | 22 | POST | `assignment/preview` | `Assignment.Manage` | Xem trước, không ghi |
 | 23 | POST | `assignment` | `Assignment.Manage` | Lưu Data hoặc QA |
 | 24 | GET | `assignment/{ticketId}` | `Assignment.Manage` | Chi tiết phiếu Data / phụ trách QA |
+| 29–33 | POST / GET | `assignment/revoke`, `/transfer`, `/qa/revoke`, `/qa/transfer`, `assignment/ticket/paging` | `Assignment.Manage` | Thu hồi / chuyển, danh sách phiếu ([26](26-thu-hoi-chuyen-phieu.md)) |
 | 28 | GET | `api/v1/operation/my-assignment` | `Assignment.ViewOwn` | Phiếu của tôi |
 
 Phiếu QA trong API 24 đếm văn bản QA đó đang giữ thuộc các nút phụ trách. Mã mới: `824` không có văn bản mới để giao, `825` phiếu

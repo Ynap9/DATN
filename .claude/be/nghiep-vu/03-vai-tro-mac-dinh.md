@@ -25,6 +25,9 @@ Bốn vai trò `Leader`, `Data`, `QA`, `User` chưa có quyền nào sau khi see
 đầu / hoàn tất được khi **đủ** điều kiện và chỉ ở dự án mình đang là Leader (`337`); cho vào khi chưa đủ và trả dự án về đang làm vẫn
 chỉ Admin / SuperAdmin (`400`, [22](22-nghiem-thu-du-an.md)).
 
+`Function.Construction.Project.View` gán cho Leader id 2, Data id 3, QA id 4 bằng `PUT api/auth/role/permission` trên DB dev ngày
+2026-11-13 (Task 29): paging dự án giờ lọc theo thành viên nên mọi vai trò cần quyền này ([25](25-xoa-du-an-danh-sach-cap.md)). Môi trường mới phải gán lại.
+
 ### Quyền Operation gán mặc định (bằng API, không qua seeder)
 
 | Key | Admin | Leader | Data | QA |
