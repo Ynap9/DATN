@@ -14,6 +14,8 @@ namespace sh.be.applications.Module.Operation.Dtos.ProjectMember
         public int? SourceStaffGroupId { get; set; }
         public string? SourceStaffGroupName { get; set; }
         public bool IsActive { get; set; }
+        public decimal? CompanyPrice { get; set; }
+        public decimal? ActualPrice { get; set; }
         public DateTime? CreatedDate { get; set; }
         public int HeldTicketCount { get; set; }
     }

@@ -355,6 +355,8 @@ builder.Services.AddScoped<ISigningBatchQuery, SigningBatchQuery>();
 builder.Services.AddScoped<IPackageConfigQuery, PackageConfigQuery>();
 builder.Services.AddScoped<IStaffGroupQuery, StaffGroupQuery>();
 builder.Services.AddScoped<IProjectMemberQuery, ProjectMemberQuery>();
+builder.Services.AddScoped<IWageQuery, WageQuery>();
+builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IAssignmentQuery, AssignmentQuery>();
 builder.Services.AddScoped<IAiProviderQuery, AiProviderQuery>();
 
@@ -393,6 +395,7 @@ builder.Services.AddScoped<IPluginService, PluginService>();
 builder.Services.AddScoped<IPackageConfigService, PackageConfigService>();
 builder.Services.AddScoped<IStaffGroupService, StaffGroupService>();
 builder.Services.AddScoped<IProjectMemberService, ProjectMemberService>();
+builder.Services.AddScoped<IWageService, WageService>();
 builder.Services.AddScoped<IAssignmentService, AssignmentService>();
 builder.Services.AddScoped<ISubmissionAssignmentService, SubmissionAssignmentService>();
 builder.Services.AddScoped<IAiProviderService, AiProviderService>();

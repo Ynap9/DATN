@@ -12,6 +12,7 @@ namespace sh.be.domain.Module.Operation.ProjectMembers.Repositories
         Task<DocumentType?> FindDocumentTypeAsync(int documentTypeId);
         Task<bool> IsDocumentTypeInProjectAsync(int projectId, int documentTypeId);
         Task<ProjectMember?> FindByIdAsync(int id);
+        Task<List<ProjectMember>> FindByIdsAsync(int projectId, List<int> memberIds);
         Task<ProjectMember?> FindActiveLeaderAsync(int projectId, int documentTypeId, string userId);
         Task<HashSet<string>> GetMemberUserIdsAsync(int projectId, int documentTypeId);
         Task AddRangeAsync(IEnumerable<ProjectMember> projectMembers);

@@ -84,6 +84,21 @@ namespace sh.be.api.Controllers.Module.Operation
             }
         }
 
+        [HttpPut("member/price")]
+        [Permission(PermissionConstants.FUNCTION_PRICE_MANAGE_ACTUAL)]
+        public async Task<ApiResponse> UpdatePrices([FromRoute] int projectId, [FromBody] UpdateMemberPricesDto dto)
+        {
+            try
+            {
+                var data = await _projectMemberService.UpdatePrices(projectId, dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
         [HttpPut("member/{memberId:int}")]
         [Permission(PermissionConstants.FUNCTION_PROJECT_MEMBER_MANAGE)]
         public async Task<ApiResponse> Update([FromRoute] int projectId, [FromRoute] int memberId, [FromBody] UpdateProjectMemberDto dto)

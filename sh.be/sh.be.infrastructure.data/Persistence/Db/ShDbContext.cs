@@ -64,8 +64,6 @@ namespace sh.be.infrastructure.data.Persistence.Db
         public DbSet<StaffGroup> StaffGroups { get; set; }
         public DbSet<StaffGroupMember> StaffGroupMembers { get; set; }
         public DbSet<ProjectMember> ProjectMembers { get; set; }
-        public DbSet<ProjectPriceDefault> ProjectPriceDefaults { get; set; }
-        public DbSet<ProjectMemberPrice> ProjectMemberPrices { get; set; }
         public DbSet<AssignmentTicket> AssignmentTickets { get; set; }
         public DbSet<AssignmentTicketItem> AssignmentTicketItems { get; set; }
         public DbSet<AiProvider> AiProviders { get; set; }
@@ -322,28 +320,6 @@ namespace sh.be.infrastructure.data.Persistence.Db
                 entity.HasOne<DocumentType>()
                     .WithMany()
                     .HasForeignKey(e => e.DocumentTypeId)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-            modelBuilder.Entity<ProjectPriceDefault>(entity =>
-            {
-                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
-                entity.Property(e => e.EffectiveFrom).HasColumnType("date");
-                entity.HasOne<Project>()
-                    .WithMany()
-                    .HasForeignKey(e => e.ProjectId)
-                    .OnDelete(DeleteBehavior.Restrict);
-                entity.HasOne<DocumentType>()
-                    .WithMany()
-                    .HasForeignKey(e => e.DocumentTypeId)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-            modelBuilder.Entity<ProjectMemberPrice>(entity =>
-            {
-                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
-                entity.Property(e => e.EffectiveFrom).HasColumnType("date");
-                entity.HasOne<ProjectMember>()
-                    .WithMany()
-                    .HasForeignKey(e => e.ProjectMemberId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<AssignmentTicket>(entity =>

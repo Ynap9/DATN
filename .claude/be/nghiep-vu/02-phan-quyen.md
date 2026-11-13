@@ -80,7 +80,7 @@ Menu.Operation                     Menu vận hành (Task 9; API ở Task 10–1
 ├── Menu.Operation.StaffGroup      → Function.Operation.StaffGroup.Manage
 ├── Menu.Operation.ProjectMember   → Function.Operation.ProjectMember.Manage, .Price.ManageCompany (chỉ Admin), .Price.ManageActual
 └── Menu.Operation.Assignment      → Function.Operation.Assignment.Manage (giao / thu hồi / chuyển), .Assignment.ViewOwn (phiếu của
-                                     mình), .Assignment.ViewAllSubmission (mọi văn bản, Task 15), .BonusPool.View (quỹ KPI)
+                                     mình), .Assignment.ViewAllSubmission (mọi văn bản, Task 15), .BonusPool.View (quỹ KPI), .Wage.View (thống kê tiền công, Task 12)
 ```
 
 Quy ước đặt key: `Menu.<Module>.<Tên>` cho mục menu, `Function.<Module>.<Tên>.<Hành động>` cho thao tác.
@@ -156,6 +156,8 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `api/operation/staff-group`: `GET paging`, `GET candidates`, `GET` / `PUT` / `DELETE {id}`, `POST`, `POST` / `DELETE {id}/members` | `Function.Operation.StaffGroup.Manage` (Leader còn bị lọc theo chủ nhóm ở service, [19](19-nhom-nhan-vien.md)) |
 | `api/operation/project/{projectId}`: `GET member/paging`, `GET member/candidates`, `POST leader`, `POST member`, `PUT` / `DELETE member/{memberId}` | `Function.Operation.ProjectMember.Manage` (Leader chỉ trong cặp mình là Leader đang hoạt động, chỉ người mình quản lý; `POST leader` chỉ Admin — kiểm ở service, [21](21-thanh-vien-du-an.md)) |
 | `api/operation/project/{projectId}/document-type/{documentTypeId}`: `GET assignment-tree`, `GET assignment-tree/profiles`, `POST assignment/preview`, `POST assignment`, `GET assignment/{ticketId}`; `GET api/operation/my-assignment` | `Function.Operation.Assignment.Manage` (Leader chỉ cặp mình là Leader, chỉ giao người mình quản lý); `my-assignment` cần `.Assignment.ViewOwn` ([23](23-chia-phieu.md)) |
+| `api/operation/project/{projectId}`: `PUT member/price` | `Function.Operation.Price.ManageActual` (Admin đặt cả hai giá; Leader chỉ `ActualPrice` người mình quản lý, [24](24-don-gia-tien-cong.md)) |
+| `api/operation/project/{projectId}`: `GET wage/paging` | `Function.Operation.Wage.View` (phạm vi xem theo vai trò, [24](24-don-gia-tien-cong.md)) |
 
 ## Quyền người dùng: đang lệch so với cây
 

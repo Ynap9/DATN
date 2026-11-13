@@ -4,7 +4,7 @@
 
 Xác định **ai** làm việc trong một cặp (dự án, loại văn bản) và **ai quản lý** họ (`ProjectMember`). Đầu vào của giao phiếu nhập liệu
 (Task 13), giao phiếu QA ([18C](18-qa-cham-mau.md#18c--phiếu-qa)) và phạm vi Leader ở mọi màn Operation. Task 11, 2026-10-27.
-Phần tính tiền (đơn giá lúc thêm người, `ProjectMemberPrice`) **tạm lùi** chờ chốt công thức lương: task này không ghi, không trả giá.
+Thêm người **không** ghi giá. Giá (`CompanyPrice`, `ActualPrice`) nằm trên `ProjectMember`, đặt sau bằng `PUT member/price` ([24](24-don-gia-tien-cong.md)).
 
 ## Ai quản lý ai
 
