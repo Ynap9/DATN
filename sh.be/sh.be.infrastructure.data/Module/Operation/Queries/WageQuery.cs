@@ -46,7 +46,7 @@ namespace sh.be.infrastructure.data.Module.Operation.Queries
                 .ToListAsync();
         }
 
-        // Khối lượng Data / QA theo (loại văn bản, người), cache 60 giây; tiền không cache
+        // Khối lượng Data (ô có dữ liệu của trường tính tiền) / QA theo (loại văn bản, người), cache 60 giây; tiền không cache
         public async Task<Dictionary<(int DocumentTypeId, string UserId), WageQuantityDto>> FindQuantities(int projectId)
         {
             return (await _memoryCache.GetOrCreateAsync($"wage:{projectId}", async entry =>
@@ -65,7 +65,8 @@ namespace sh.be.infrastructure.data.Module.Operation.Queries
                     {
                         x.DocumentTypeId,
                         x.UserId,
-                        FieldCount = _shDbContext.SubmissionDatas.Count(d => d.SubmissionId == x.SubmissionId && d.Data.Trim() != ""),
+                        FieldCount = _shDbContext.SubmissionDatas.Count(d => d.SubmissionId == x.SubmissionId && d.Data.Trim() != ""
+                            && _shDbContext.DocumentFields.Any(f => f.Id == d.DocumentFieldId && f.IsChargeable)),
                     })
                     .GroupBy(x => new { x.DocumentTypeId, x.UserId })
                     .Select(g => new { g.Key.DocumentTypeId, g.Key.UserId, DocumentCount = g.Count(), FieldCount = g.Sum(x => x.FieldCount) })
