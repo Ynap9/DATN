@@ -29,5 +29,13 @@ namespace sh.be.domain.Module.Construction.DocumentTypes.Services
                 throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentTypeNotFound);
             }
         }
+
+        public async Task EnsureNotUsedByProjectAsync(int id)
+        {
+            if (await _documentTypeRepository.IsUsedByProjectAsync(id))
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentTypeInUse);
+            }
+        }
     }
 }

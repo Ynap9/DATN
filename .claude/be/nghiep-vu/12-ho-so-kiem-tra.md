@@ -83,7 +83,8 @@ Body: `{ id, projectId, documentTypeId, datas: [{ documentFieldId, data }], note
 Luật phân việc thuộc Operation: Thi công chỉ gọi `ISubmissionAssignmentService` (implement `SubmissionAssignmentService`, Task 25, thân
 Task 15); implement được `SaveChanges`, không mở / commit transaction. Không gọi ở `summary`, `logs` dự án, thống kê QA, xuất Excel.
 Lỗi: `820` không giữ văn bản / đã bị gỡ khỏi cặp, `826` người nhập kiểm lại văn bản đã QA đạt, `812` chờ khoá cặp quá 5 giây. Luật đủ ở
-[23-chia-phieu.md](23-chia-phieu.md#nối-vào-luồng-kiểm-tra--qa).
+[23-chia-phieu.md](23-chia-phieu.md#nối-vào-luồng-kiểm-tra--qa). `SubmissionUser` có cờ xoá mềm từ Task 29 nhưng chỉ bật khi Admin
+xoá dự án ([25](25-xoa-du-an-danh-sach-cap.md)); về pool / gỡ thành viên vẫn xoá cứng dòng người giữ.
 
 | Method | Gọi ở |
 |---|---|
@@ -155,8 +156,8 @@ gọi cả HTTP. Một request nhẹ (`count` 16 hồ sơ) đã tốn ~136 ms (�
 | `field-values` lọc `statusCheck` + keyword | 319 ms | < 300 | `logs` trang 50 / lọc 7 ngày | 242 / 181 ms | < 50 |
 | `field-values` 18.000 giá trị, lấy 200 | 344 ms | < 300 | `summary` | 382 ms | < 500 |
 
-`summary` lúc đầu 4.528 ms: join `SubmissionData` × `Submission` × `DocumentField` cho từng ô (3,4 triệu logical reads). Viết lại: lọc `Submission` theo dự án
-trong join, `GROUP BY (DocumentFieldId, StatusCheck)` rồi cộng trường cấu hình / tính tiền trong bộ nhớ → ~13.000 reads.
+`summary` lúc đầu 4.528 ms (join ô × hồ sơ × trường, 3,4 triệu logical reads); viết lại lọc `Submission` theo dự án trong join,
+`GROUP BY (DocumentFieldId, StatusCheck)` rồi cộng trong bộ nhớ → ~13.000 reads.
 
 ## Giới hạn
 
@@ -164,11 +165,9 @@ trong join, `GROUP BY (DocumentFieldId, StatusCheck)` rồi cộng trường c�
 không dừng sớm được. Đo tay: `GROUP BY CAST(Data AS nvarchar(4000))` còn 114 ms, nhưng EF cần thêm `DbFunction` trong `ShDbContext` và giá trị
 dài hơn 4.000 ký tự bị cắt khi gộp — chưa làm, chờ chốt. Đừng thêm index / `INCLUDE` cột `Data` (xem dưới).
 
-⚠️ **Chưa đo tốc độ** trên dự án 20.000 hồ sơ (execution plan, import append < 60 s sau khi thêm index). Import chưa gọi lại sau khi
-gộp vào `SubmissionService` (cần Google Sheet thật); code import chỉ chuyển chỗ, không đổi logic.
+⚠️ **Chưa đo** import append 20.000 hồ sơ (mục tiêu < 60 s); import chưa gọi lại sau khi gộp vào `SubmissionService` — code chỉ chuyển chỗ.
 
-⚠️ Hai người cùng kiểm một hồ sơ: người lưu sau ghi đè người lưu trước (last write wins). Muốn chặn thì gửi kèm `ModifiedDate`
-để so (optimistic concurrency) — chưa làm.
+⚠️ Hai người cùng kiểm một hồ sơ: người lưu sau ghi đè (last write wins); chặn thì gửi kèm `ModifiedDate` để so — chưa làm.
 
 ⚠️ Lọc theo giá trị trường phải đọc cột `SubmissionData.Data` (`nvarchar(max)`, không index được) cho từng hồ sơ trong phạm vi lọc.
 Đừng thêm index / `INCLUDE` cột này: nhân đôi dung lượng và làm chậm bulk import. Nếu đo thấy chậm thì tính cột băm có index.
@@ -176,7 +175,6 @@ gộp vào `SubmissionService` (cần Google Sheet thật); code import chỉ ch
 ⚠️ Kiểm tra tốn 8 lượt đi – về DB (6 luồng chính + vai trò + `UserName`, token không có tên — đã chốt giữ), Task 25 thêm mở / commit transaction.
 Nạp hồ sơ (`305`, `319`) chạy **trước** nên lỗi sớm không tốn thêm; cộng chi phí `[Permission]` ([02-phan-quyen.md](02-phan-quyen.md)).
 
-⚠️ `Description` lưu `UserName` **tại thời điểm kiểm tra**; đổi tên đăng nhập sau đó thì mô tả cũ không đổi, còn cột `userName` /
-`fullName` khi đọc lịch sử luôn là tên hiện tại.
+⚠️ `Description` lưu `UserName` **lúc kiểm**; đổi tên đăng nhập sau đó mô tả cũ giữ nguyên, còn `userName` / `fullName` khi đọc là tên hiện tại.
 
 > **Tiếp:** [13-ho-so-qa.md](13-ho-so-qa.md) — QA hồ sơ đã kiểm tra, trả lại hồ sơ không đạt, lịch sử QA.

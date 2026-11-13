@@ -5,5 +5,6 @@ namespace sh.be.applications.Module.Construction.Dtos.Project
     public class FindPagingProjectDto : BaseRequestPagingDto
     {
         public int? Status { get; set; }
+        public int? DocumentTypeId { get; set; }
     }
 }

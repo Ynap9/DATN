@@ -14,6 +14,7 @@ namespace sh.be.domain.Module.Construction.Projects.Repositories
         Task<bool> IsActiveLeaderAsync(int projectId, string userId);
         Task<ProjectAcceptanceBlockers> CountAcceptanceBlockersAsync(int projectId, bool isQaEnabled);
         Task<int> TryStartAcceptanceAsync(int projectId);
+        Task<Dictionary<string, int>> SoftDeleteDependentsAsync(int projectId, string? deletedBy, DateTime deletedDate);
         void Add(Project project);
         void Update(Project project);
         Task<List<ProjectDocumentType>> GetDocumentTypesAsync(int projectId);

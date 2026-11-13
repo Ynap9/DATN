@@ -85,6 +85,7 @@ namespace sh.be.shared.HttpRequest.Error
         public const int ConstructionErrorImportFileInvalid = 343;
         public const int ConstructionErrorImportJobNotFound = 344;
         public const int ConstructionErrorProjectQaDisabled = 345;
+        public const int ConstructionErrorDocumentTypeInUse = 346;
 
         public const int DigitalSignatureErrorTemplateNotFound = 601;
         public const int DigitalSignatureErrorInvalidTemplatePositionKind = 602;

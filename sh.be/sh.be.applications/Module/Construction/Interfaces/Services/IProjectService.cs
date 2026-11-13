@@ -7,7 +7,7 @@ namespace sh.be.applications.Module.Construction.Interfaces.Services
     {
         Task<List<GetListProjectDto>> GetList();
         Task<List<GetListProjectDropDownDto>> GetProjectDropDown();
-        Task<BaseResponsePagingDto<GetListProjectDto>> FindPaging(FindPagingProjectDto dto);
+        Task<BaseResponsePagingDto<GetListProjectPairDto>> FindPaging(FindPagingProjectDto dto);
         Task<FindProjectByIdDto> FindById(int id);
         Task<ViewProjectAcceptanceDto> FindAcceptance(int id);
         Task<ViewProjectAcceptanceDto> StartAcceptance(int id, TransitionAcceptanceProjectDto dto);
@@ -16,5 +16,6 @@ namespace sh.be.applications.Module.Construction.Interfaces.Services
         Task<FindProjectByIdDto> Create(CreateProjectDto dto);
         Task Update(int id, UpdateProjectDto dto);
         Task Delete(int id);
+        Task DeleteCascade(int id);
     }
 }

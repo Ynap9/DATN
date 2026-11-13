@@ -59,6 +59,8 @@ namespace sh.be.applications.Module.Operation.Implements
         public async Task AssignCheckedToQaAsync(Submission submission, string userId, DateTime now)
         {
             _logger.LogInformation($"{nameof(AssignCheckedToQaAsync)}, submissionId={submission.Id}, userId={userId}");
+            // Kiểm lại người giữ sau khi Check đã ghi hồ sơ trong transaction: văn bản vừa bị thu hồi / chuyển giữa chừng thì 820, Check rollback
+            await _assignmentDomainService.EnsureCanCheckAsync(submission, userId);
             var owner = await _assignmentDomainService.ResolveQaOwnerForCheckedAsync(submission);
             if (owner == null)
             {

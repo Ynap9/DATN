@@ -43,7 +43,7 @@ Gốc `api/v1/construction/project`, mọi API cần `Function.Construction.Proj
 
 - Người nhận: user có email thuộc vai trò SuperAdmin hoặc Admin (`IUserQuery.GetEmailsByRoleNamesAsync`, bỏ trùng).
 - Mỗi bộ `(dự án, loại mail, EndedAt, email)` chỉ gửi **một lần thành công**: bảng `construction.ProjectDeadlineNotification`
-  có unique index lọc `[IsSuccess] = 1`. Gửi lỗi thì lưu `IsSuccess = 0` + `ErrorMessage`, lần chạy sau gửi lại.
+  có unique index lọc `[IsSuccess] = 1 AND [Deleted] = 0` (cờ xoá mềm chỉ bật khi Admin xoá dự án kèm dữ liệu, [25](25-xoa-du-an-danh-sach-cap.md)). Gửi lỗi thì lưu `IsSuccess = 0` + `ErrorMessage`, lần chạy sau gửi lại.
 - Gia hạn (đổi `EndedAt`) sinh khoá mới nên được báo lại. Mail sắp hết hạn gửi một lần cho mỗi `EndedAt`, không gửi mỗi ngày.
 - Template `Mail/Templates/ProjectDeadline.html`: HTML thuần, không màu. Tiêu đề `Dự án {tên} sắp hết hạn` / `đã hết hạn`.
 - Bảng là nhật ký: không xoá mềm, không có API xoá. Lưu kèm `ProjectName` lúc gửi, `DaysLeft`, `Subject`.
