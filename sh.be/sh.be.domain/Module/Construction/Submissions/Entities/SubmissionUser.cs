@@ -5,6 +5,7 @@ using sh.be.shared.Constants.Db;
 using sh.be.shared.Constants.Operation;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
+using sh.be.shared.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -16,7 +17,7 @@ namespace sh.be.domain.Module.Construction.Submissions.Entities
     [Index(nameof(ProjectId), nameof(DocumentTypeId), nameof(Role), nameof(UserId),
         Name = $"IX_{nameof(SubmissionUser)}_{nameof(ProjectId)}_{nameof(DocumentTypeId)}_{nameof(Role)}_{nameof(UserId)}")]
     [Index(nameof(UserId), Name = $"IX_{nameof(SubmissionUser)}_{nameof(UserId)}")]
-    public class SubmissionUser
+    public class SubmissionUser : ISoftDeleted
     {
         public const string UniqueRoleIndexName = $"IX_{nameof(SubmissionUser)}_{nameof(SubmissionId)}_{nameof(Role)}";
 
@@ -37,6 +38,9 @@ namespace sh.be.domain.Module.Construction.Submissions.Entities
         public DateTime? CreatedDate { get; private set; }
         public string? ModifiedBy { get; private set; }
         public DateTime? ModifiedDate { get; private set; }
+        public DateTime? DeletedDate { get; private set; }
+        public bool Deleted { get; private set; }
+        public string? DeletedBy { get; private set; }
 
         private SubmissionUser()
         {

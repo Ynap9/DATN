@@ -4,6 +4,7 @@ using sh.be.shared.Constants.Db;
 using sh.be.shared.Constants.Operation;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
+using sh.be.shared.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -13,7 +14,7 @@ namespace sh.be.domain.Module.Operation.Assignments.Entities
     [Index(nameof(ProjectId), nameof(DocumentTypeId), nameof(AssigneeUserId), nameof(Status),
         Name = $"IX_{nameof(AssignmentTicket)}_{nameof(ProjectId)}_{nameof(DocumentTypeId)}_{nameof(AssigneeUserId)}_{nameof(Status)}")]
     [Index(nameof(Status), nameof(DoneAt), Name = $"IX_{nameof(AssignmentTicket)}_{nameof(Status)}_{nameof(DoneAt)}")]
-    public class AssignmentTicket
+    public class AssignmentTicket : ISoftDeleted
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -34,6 +35,9 @@ namespace sh.be.domain.Module.Operation.Assignments.Entities
         public DateTime? CreatedDate { get; private set; }
         public string? ModifiedBy { get; private set; }
         public DateTime? ModifiedDate { get; private set; }
+        public DateTime? DeletedDate { get; private set; }
+        public bool Deleted { get; private set; }
+        public string? DeletedBy { get; private set; }
 
         private AssignmentTicket()
         {

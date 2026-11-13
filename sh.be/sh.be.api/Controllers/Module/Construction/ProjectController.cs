@@ -237,6 +237,21 @@ namespace sh.be.api.Controllers.Module.Construction
             }
         }
 
+        [HttpDelete("admin/delete/{id:int}")]
+        [Permission(PermissionConstants.FUNCTION_PROJECT_DELETE)]
+        public async Task<ApiResponse> DeleteCascade([FromRoute] int id)
+        {
+            try
+            {
+                await _projectService.DeleteCascade(id);
+                return new();
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
         [HttpDelete("{id}")]
         [Permission(PermissionConstants.FUNCTION_PROJECT_DELETE)]
         public async Task<ApiResponse> Delete([FromRoute] int id)

@@ -11,11 +11,12 @@ Trường: `Name`, `StartedAt`, `EndedAt`, `Status`, `UrlGoogleSheetSync`, `Goog
 |---|---|---|
 | Danh sách (không phân trang) | `GET api/construction/project` | `Function.Construction.Project.View` |
 | Dropdown | `GET api/construction/project/dropdown` | `Function.Construction.Project.View` |
-| Danh sách phân trang | `GET api/construction/project/paging` | `Function.Construction.Project.View` |
+| Danh sách phân trang theo cặp dự án – loại văn bản ([25](25-xoa-du-an-danh-sach-cap.md)) | `GET api/construction/project/paging` | `Function.Construction.Project.View` |
 | Xem chi tiết | `GET api/construction/project/{id}` | `Function.Construction.Project.View` |
 | Tạo mới (kèm tạo Google Sheet) | `POST api/construction/project` | `Function.Construction.Project.Create` |
 | Cập nhật | `PUT api/construction/project/{id}` | `Function.Construction.Project.Update` |
 | Xoá | `DELETE api/construction/project/{id}` | `Function.Construction.Project.Delete` |
+| Xoá kèm dữ liệu phụ thuộc, chỉ Admin ([25](25-xoa-du-an-danh-sach-cap.md)) | `DELETE api/construction/project/admin/delete/{id:int}` | `Function.Construction.Project.Delete` |
 | Tổng hợp nghiệm thu ([22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md)) | `GET api/construction/project/{id:int}/acceptance` | `Function.Construction.Project.View` |
 | Bắt đầu / hoàn tất nghiệm thu, trả về đang làm | `POST .../{id:int}/acceptance/start`, `.../finish`, `.../reopen` | `Function.Construction.Project.Accept` |
 | Hạn dự án: danh sách, chạy job, trạng thái job, lịch sử mail ([15-han-du-an.md](15-han-du-an.md)) | `GET deadline`, `POST deadline-check/run`, `GET deadline-check/status`, `GET deadline-notification/paging` | `Function.Construction.Project.Deadline` |
@@ -26,10 +27,10 @@ và `googleSheetName = name`; FE không gửi hai trường này. Tạo xong tr�
 Body sửa: `{ "name", "startedAt", "endedAt", "status", "documentTypeIds": [] }` — **không** sửa được `urlGoogleSheetSync`,
 `googleSheetName`, `isQaEnabled` (gửi kèm thì bị bỏ qua); đổi `name` thì tên file Google Sheet đổi theo.
 
-Dropdown trả `[{ id, name }]` sắp theo `name`. Paging nhận `pageNumber`, `pageSize`, `keyword` (tìm trong `name`, tự trim),
-`status` (tuỳ chọn, lọc đúng trạng thái); trả `{ items, totalItems }`, mỗi item `id`, `name`, `startedAt`, `endedAt`, `status`,
-`urlGoogleSheetSync`, `isQaEnabled`; sắp mới tạo trước (`CreatedDate` giảm dần, rồi `Id` giảm dần). Danh sách không phân trang trả mọi dự án
-cùng dạng item và cùng thứ tự như paging (`GetListProjectDto`). Cả ba API bỏ dự án đã xoá mềm.
+Dropdown trả `[{ id, name }]` sắp theo `name`. Danh sách không phân trang trả mọi dự án (`GetListProjectDto`: `id`, `name`, `startedAt`,
+`endedAt`, `status`, `urlGoogleSheetSync`, `isQaEnabled`), sắp mới tạo trước (`CreatedDate` giảm dần, rồi `Id` giảm dần). Paging từ Task 29
+trả theo cặp dự án – loại văn bản, giới hạn theo người gọi ([25](25-xoa-du-an-danh-sach-cap.md#danh-sách-cặp--get-apiconstructionprojectpaging)).
+Cả ba API bỏ dự án đã xoá mềm.
 
 ## Loại văn bản của dự án — `ProjectDocumentType`
 
@@ -46,7 +47,7 @@ Ghi qua CRUD dự án (`documentTypeIds`), theo mẫu `User` – `UserRole`:
 - Tạo: một transaction — lưu dự án lấy `Id`, rồi gắn loại văn bản + audit, lưu lần hai; lỗi → rollback và xoá file sheet.
 - Sửa: **so khác biệt** với danh sách cũ — loại bị bỏ thì xoá cứng (kể cả dòng đã xoá mềm) ở cả hai bảng; loại mới thì gắn như trên;
   loại giữ nguyên **không đụng** (giữ `FieldImport` / thứ tự đã chỉnh, giữ `CreatedDate`). Tất cả trong một transaction.
-- Xoá dự án: xoá mềm luôn các dòng ở cả hai bảng. `GET {id}` trả `documentTypeIds` đang gắn.
+- Xoá dự án (API cũ): xoá mềm luôn các dòng ở cả hai bảng; API Admin xoá thêm 14 bảng khác ([25](25-xoa-du-an-danh-sach-cap.md)). `GET {id}` trả `documentTypeIds` đang gắn.
 - Xoá trường (`DELETE document-field/{id}` hoặc `quick-delete`) → xoá mềm dòng của trường đó ở mọi dự án
   (`DocumentFieldService.DeleteProjectDocumentFieldsAsync`); `OrderFieldImport` các trường còn lại **không đánh lại** (để hở,
   giống `OrderTableView`). **Thêm** trường sau khi loại đã gắn vào dự án thì chưa đồng bộ sang dự án.
@@ -90,7 +91,7 @@ migration `Add_Project_IsQaEnabled`.
 - Sửa: `Status` ngoài `ProjectConst.STATUSES` → `400` "Trạng thái dự án không hợp lệ" (kiểm trong `Project.Update`). Đổi `Status`
   sang `ACCEPTING` / `DONE` hoặc rời `ACCEPTING` → `342` "Dùng chức năng nghiệm thu"; giữ nguyên `Status` (kể cả `ACCEPTING` / `DONE`) thì vẫn sửa được.
 - `StartedAt` sau `EndedAt` (khi có cả hai) → `400` "Ngày bắt đầu không được sau ngày kết thúc" (tạo và sửa).
-- Xoá là **xoá mềm** (`Deleted = true`, global query filter ẩn đi); xem lại sau xoá trả `303`. **Không** xoá Google Sheet.
+- Xoá là **xoá mềm** (`Deleted = true`, global query filter ẩn đi); xem lại sau xoá trả `303`. **Không** xoá Google Sheet (API Admin đổi tên thành `"{Name} (đã xoá)"`).
 - Mỗi thao tác ghi để lại audit `Tạo / Cập nhật / Xóa dự án` kèm giá trị cũ và mới.
 
 ## Tạo dự án và Google Sheet

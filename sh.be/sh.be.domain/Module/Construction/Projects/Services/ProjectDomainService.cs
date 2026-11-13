@@ -115,6 +115,14 @@ namespace sh.be.domain.Module.Construction.Projects.Services
             }
         }
 
+        public static void EnsureCanDeleteWithDependents(bool isAdmin)
+        {
+            if (!isAdmin)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Chỉ Admin được xoá dự án kèm dữ liệu");
+            }
+        }
+
         // Dự án chưa có văn bản thì chặn hẳn, kể cả Admin; đủ điều kiện thì bỏ qua cờ isForced; chưa đủ thì chỉ Admin được cho phép.
         // Lý do luôn tuỳ chọn (bắt đầu và hoàn tất); trả lý do đã trim để ghi audit
         public static string? EnsureAcceptanceAllowed(ProjectAcceptanceBlockers blockers, bool isForced, bool isAdmin, string? reason)

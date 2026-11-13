@@ -238,14 +238,10 @@ namespace sh.be.domain.Module.Operation.Assignments.Services
         public async Task<AssignmentPlan> PlanAsync(OperationAccess access, string role, string assigneeUserId, List<AssignmentItem> items)
         {
             EnsureAssignableRole(role);
+            ProjectMemberDomainService.EnsureRoleEnabled(access.Project, role);
             var projectId = access.Project.Id;
             var documentTypeId = access.DocumentType.Id;
-            var member = await _assignmentRepository.FindActiveMemberAsync(projectId, documentTypeId, assigneeUserId, role)
-                ?? throw new UserFriendlyException(ErrorCodes.OperationErrorAssigneeNotMember);
-            if (!access.IsAdmin && !member.IsManagedBy(access.LeaderUserId!))
-            {
-                throw new UserFriendlyException(ErrorCodes.OperationErrorLeaderForbiddenTarget);
-            }
+            await EnsureAssigneeAsync(access, assigneeUserId, role);
 
             var normalizedItems = NormalizeItems(items);
             var boxes = normalizedItems.Select(item => item.Box).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
@@ -402,11 +398,240 @@ namespace sh.be.domain.Module.Operation.Assignments.Services
             return new QaResultOnEntry(ticket, dataHolder.UserId, releaseReason);
         }
 
-        public async Task TryMarkDoneAsync(AssignmentTicket ticket, DateTime doneAt)
+        public async Task<bool> TryMarkDoneAsync(AssignmentTicket ticket, DateTime doneAt)
         {
             if (ticket.Status == AssignmentConst.STATUS_ACTIVE && await _assignmentRepository.CountDataNotPassedAsync(ticket.Id) == 0)
             {
-                await _assignmentRepository.TryMarkDoneAsync(ticket.Id, doneAt);
+                return await _assignmentRepository.TryMarkDoneAsync(ticket.Id, doneAt) > 0;
+            }
+            return false;
+        }
+
+        public async Task<AssignmentChangePlan> PlanRevokeAsync(OperationAccess access, int? ticketId, string? holderUserId, List<AssignmentItem>? items)
+        {
+            var isByTicket = ticketId != null && holderUserId == null && (items == null || items.Count == 0);
+            var isByNode = ticketId == null && holderUserId != null && items is { Count: > 0 };
+            if (!isByTicket && !isByNode)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Gửi ticketId, hoặc assigneeUserId kèm hộp / hồ sơ");
+            }
+            var projectId = access.Project.Id;
+            var documentTypeId = access.DocumentType.Id;
+
+            // Theo phiếu: phạm vi = các nút của phiếu; theo nút: mọi phiếu Data ACTIVE của người đó trong cặp
+            List<AssignmentTicket> tickets;
+            List<AssignmentItem> scopeItems;
+            if (isByTicket)
+            {
+                var ticket = await _assignmentRepository.FindTicketByIdAsync(ticketId!.Value);
+                if (ticket == null || ticket.ProjectId != projectId || ticket.DocumentTypeId != documentTypeId || ticket.Role != RoleConstants.ROLE_DATA)
+                {
+                    throw new UserFriendlyException(ErrorCodes.OperationErrorTicketNotFound);
+                }
+                ticket.EnsureActive();
+                holderUserId = ticket.AssigneeUserId;
+                tickets = [ticket];
+                scopeItems = (await _assignmentRepository.GetTicketItemsAsync(ticket.Id))
+                    .Select(item => new AssignmentItem(item.Box, item.ProfileRange ?? ""))
+                    .ToList();
+            }
+            else
+            {
+                tickets = await _projectMemberRepository.GetActiveAssignmentTicketsAsync(projectId, documentTypeId, holderUserId!, RoleConstants.ROLE_DATA);
+                if (tickets.Count == 0)
+                {
+                    throw new UserFriendlyException(ErrorCodes.OperationErrorTicketNotActive);
+                }
+                scopeItems = NormalizeItems(items!);
+            }
+
+            await EnsureManagedHolderAsync(access, holderUserId!, RoleConstants.ROLE_DATA);
+
+            var ticketIds = tickets.Select(ticket => ticket.Id).ToHashSet();
+            var rows = (await _assignmentRepository.GetHolderRowsAsync(projectId, documentTypeId, RoleConstants.ROLE_DATA, holderUserId!, scopeItems))
+                .Where(row => row.StatusCheck == SubmissionConst.NOT_CHECKED && ticketIds.Contains(row.TicketId))
+                .ToList();
+            if (rows.Count == 0)
+            {
+                throw new UserFriendlyException(ErrorCodes.OperationErrorNothingToRevoke);
+            }
+            var affectedTicketIds = rows.Select(row => row.TicketId).ToHashSet();
+            return new AssignmentChangePlan(holderUserId!, tickets.Where(ticket => affectedTicketIds.Contains(ticket.Id)).ToList(), rows);
+        }
+
+        public async Task<AssignmentChangePlan> PlanTransferAsync(OperationAccess access, string fromUserId, string toUserId, int? ticketId, List<AssignmentItem>? items)
+        {
+            if (fromUserId == toUserId)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Người nhận phải khác người chuyển");
+            }
+            // Phía người chuyển dùng chung luật thu hồi; chuyển theo phiếu thì phiếu phải của đúng người chuyển
+            var plan = await PlanRevokeAsync(access, ticketId, ticketId == null ? fromUserId : null, items);
+            if (plan.HolderUserId != fromUserId)
+            {
+                throw new UserFriendlyException(ErrorCodes.OperationErrorTicketNotFound);
+            }
+            await EnsureAssigneeAsync(access, toUserId, RoleConstants.ROLE_DATA);
+            if (plan.Rows.Count > AssignmentConst.DATA_TICKET_MAX_DOCUMENTS)
+            {
+                throw new UserFriendlyException(ErrorCodes.OperationErrorTicketTooLarge);
+            }
+            return plan;
+        }
+
+        public async Task<QaOwnershipChangePlan> PlanQaRevokeAsync(OperationAccess access, int ticketId, List<AssignmentItem>? items)
+        {
+            access.Project.EnsureQaEnabled();
+            var projectId = access.Project.Id;
+            var documentTypeId = access.DocumentType.Id;
+            var ownership = await _assignmentRepository.FindTicketByIdAsync(ticketId);
+            if (ownership == null || ownership.ProjectId != projectId || ownership.DocumentTypeId != documentTypeId || ownership.Role != RoleConstants.ROLE_QA)
+            {
+                throw new UserFriendlyException(ErrorCodes.OperationErrorTicketNotFound);
+            }
+            ownership.EnsureActive();
+            await EnsureManagedHolderAsync(access, ownership.AssigneeUserId, RoleConstants.ROLE_QA);
+
+            // Không gửi nút = lấy cả phụ trách; gửi nút thì mỗi hộp / hồ sơ phải nằm trong phụ trách (hộp = mọi hồ sơ phụ trách của hộp đó)
+            var ownedItems = await _assignmentRepository.GetTicketItemsAsync(ownership.Id);
+            var removedItems = ownedItems;
+            if (items is { Count: > 0 })
+            {
+                List<AssignmentItem> foreignItems = [];
+                HashSet<int> removedItemIds = [];
+                foreach (var item in NormalizeItems(items))
+                {
+                    var matchedItems = ownedItems
+                        .Where(owned => string.Equals(owned.Box, item.Box, StringComparison.OrdinalIgnoreCase)
+                            && (item.ProfileRange == null || string.Equals(owned.ProfileRange, item.ProfileRange, StringComparison.OrdinalIgnoreCase)))
+                        .ToList();
+                    if (matchedItems.Count == 0)
+                    {
+                        foreignItems.Add(item);
+                    }
+                    removedItemIds.UnionWith(matchedItems.Select(owned => owned.Id));
+                }
+                if (foreignItems.Count > 0)
+                {
+                    throw new UserFriendlyException(ErrorCodes.BadRequest,
+                        $"Hộp / hồ sơ không thuộc phụ trách: {string.Join(", ", foreignItems.Select(item => item.ProfileRange == null ? item.Box : $"{item.Box} / {item.ProfileRange}"))}");
+                }
+                removedItems = ownedItems.Where(owned => removedItemIds.Contains(owned.Id)).ToList();
+            }
+
+            // K4 giảm theo mọi văn bản QA đó giữ trong nút bị lấy (cả văn bản đã đạt); chỉ văn bản chưa đạt bị lấy khỏi QA đó (14.4)
+            var rows = await _assignmentRepository.GetHolderRowsAsync(projectId, documentTypeId, RoleConstants.ROLE_QA, ownership.AssigneeUserId,
+                removedItems.Select(item => new AssignmentItem(item.Box, item.ProfileRange ?? "")).ToList());
+            var unfinishedRows = rows.Where(row => row.StatusQa != SubmissionConst.QA_PASSED).ToList();
+            if (removedItems.Count == 0 && unfinishedRows.Count == 0)
+            {
+                throw new UserFriendlyException(ErrorCodes.OperationErrorNothingToRevoke);
+            }
+            return new QaOwnershipChangePlan(ownership, removedItems, removedItems.Count == ownedItems.Count, rows.Count, unfinishedRows);
+        }
+
+        public async Task<QaOwnershipChangePlan> PlanQaTransferAsync(OperationAccess access, int ticketId, string toUserId, List<AssignmentItem>? items)
+        {
+            var plan = await PlanQaRevokeAsync(access, ticketId, items);
+            var projectId = access.Project.Id;
+            var documentTypeId = access.DocumentType.Id;
+            if (plan.Ownership.AssigneeUserId == toUserId)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Người nhận phải khác người chuyển");
+            }
+            await EnsureAssigneeAsync(access, toUserId, RoleConstants.ROLE_QA);
+            if (await _assignmentRepository.FindQaReviewerModeAsync(projectId, toUserId) == QaAssignmentConst.MODE_SAMPLE)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Chưa hỗ trợ giao phiếu chế độ SAMPLE");
+            }
+
+            // Người nhận không được chấm văn bản mình từng kiểm hoặc đang giữ nhập liệu
+            var unfinishedIds = plan.UnfinishedRows.Select(row => row.SubmissionId).ToHashSet();
+            var removedNodes = plan.RemovedItems.Select(item => new AssignmentItem(item.Box, item.ProfileRange ?? "")).ToList();
+            if ((await _assignmentRepository.GetSubmissionIdsCheckedByAsync([.. unfinishedIds], toUserId)).Count > 0
+                || (await _assignmentRepository.GetHolderRowsAsync(projectId, documentTypeId, RoleConstants.ROLE_DATA, toUserId, removedNodes))
+                    .Any(row => unfinishedIds.Contains(row.SubmissionId)))
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaSameAsEntry);
+            }
+
+            // Nút đang chuyển chỉ được thuộc phụ trách nguồn; phụ trách sẵn có của người nhận ở nút khác thì gộp vào
+            var removedNodeKeys = plan.RemovedItems.Select(item => ToNodeKey(item.Box, item.ProfileRange ?? "")).ToHashSet();
+            var ownerships = await _assignmentRepository.GetActiveQaOwnershipsAsync(projectId, documentTypeId);
+            if (ownerships.Any(owner => owner.TicketId != plan.Ownership.Id && removedNodeKeys.Contains(ToNodeKey(owner.Box, owner.ProfileRange))))
+            {
+                throw new UserFriendlyException(ErrorCodes.OperationErrorAssignmentConflict);
+            }
+            if (plan.UnfinishedRows.Count > QaAssignmentConst.TICKET_MAX_DOCUMENTS)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaTicketTooLarge);
+            }
+            return plan with { TargetOwnershipTicketId = ownerships.FirstOrDefault(owner => owner.QaUserId == toUserId)?.TicketId };
+        }
+
+        // Nhả các nút khỏi phụ trách nguồn và xoá văn bản chưa đạt của QA đó; trả số văn bản xoá thật
+        public async Task<int> ReleaseQaOwnershipAsync(QaOwnershipChangePlan plan, string? modifiedBy, DateTime now)
+        {
+            if (plan.IsAllNodesRemoved)
+            {
+                plan.Ownership.Cancel(modifiedBy, now);
+            }
+            else
+            {
+                // K4: phụ trách còn nút thì giảm số bằng UPDATE, không qua DecreaseDocuments (về 0 sẽ tự CANCELLED)
+                _assignmentRepository.RemoveTicketItems(plan.RemovedItems);
+                await _assignmentRepository.DecreaseOwnershipDocumentsAsync(plan.Ownership.Id, plan.RemovedDocuments, modifiedBy, now);
+            }
+
+            // K3: đợt ACTIVE về 0 → Cancel; còn văn bản và đều đã đạt → Pass; đợt PASSED / REJECTED chỉ giảm số
+            var rowsByBatch = plan.UnfinishedRows.GroupBy(row => row.TicketId).ToDictionary(group => group.Key, group => group.ToList());
+            var batches = await _assignmentRepository.FindQaBatchesAsync([.. rowsByBatch.Keys]);
+            var releasedCount = 0;
+            foreach (var batch in batches)
+            {
+                var deletedCount = await _assignmentRepository.DeleteUnfinishedHoldersAsync(RoleConstants.ROLE_QA, plan.Ownership.AssigneeUserId,
+                    rowsByBatch[batch.Id].Select(row => row.SubmissionId).ToList());
+                if (deletedCount == 0)
+                {
+                    continue;
+                }
+                releasedCount += deletedCount;
+                await _assignmentRepository.DecreaseQaBatchDocumentsAsync(batch.Id, deletedCount, modifiedBy, now);
+                if (batch.Status != QaAssignmentConst.TICKET_STATUS_ACTIVE)
+                {
+                    continue;
+                }
+                // batch đọc trước lệnh UPDATE nên DocumentCount còn là số cũ
+                if (batch.DocumentCount <= deletedCount)
+                {
+                    batch.Cancel(modifiedBy, now);
+                }
+                else if (await _assignmentRepository.CountNotPassedInQaBatchAsync(batch.Id) == 0)
+                {
+                    batch.Pass(modifiedBy, now);
+                }
+            }
+            return releasedCount;
+        }
+
+        // Leader chỉ đụng người mình quản lý đúng vai trò của cặp; tính cả thành viên đang tắt (14.8)
+        private async Task EnsureManagedHolderAsync(OperationAccess access, string holderUserId, string role)
+        {
+            if (!access.IsAdmin && !(await _projectMemberRepository.GetManagedMembersAsync(access.Project.Id, access.DocumentType.Id, access.LeaderUserId!))
+                .Any(member => member.UserId == holderUserId && member.Role == role))
+            {
+                throw new UserFriendlyException(ErrorCodes.OperationErrorLeaderForbiddenTarget);
+            }
+        }
+
+        // Người nhận phải là thành viên đang hoạt động đúng vai trò của cặp (811); Leader chỉ giao cho người mình quản lý (821)
+        private async Task EnsureAssigneeAsync(OperationAccess access, string assigneeUserId, string role)
+        {
+            var member = await _assignmentRepository.FindActiveMemberAsync(access.Project.Id, access.DocumentType.Id, assigneeUserId, role)
+                ?? throw new UserFriendlyException(ErrorCodes.OperationErrorAssigneeNotMember);
+            if (!access.IsAdmin && !member.IsManagedBy(access.LeaderUserId!))
+            {
+                throw new UserFriendlyException(ErrorCodes.OperationErrorLeaderForbiddenTarget);
             }
         }
     }
@@ -417,6 +642,8 @@ namespace sh.be.domain.Module.Operation.Assignments.Services
 
     public record AssignmentSubmissionRow(int SubmissionId, string Box, string ProfileRange, int StatusCheck, int StatusQa,
         string? DataHolderUserId, string? QaHolderUserId);
+
+    public record AssignmentHolderRow(int SubmissionId, int TicketId, string Box, string ProfileRange, int StatusCheck, int StatusQa);
 
     public record QaOwnership(int TicketId, string QaUserId, string Box, string ProfileRange);
 
@@ -442,4 +669,9 @@ namespace sh.be.domain.Module.Operation.Assignments.Services
         public int? OwnershipTicketId { get; init; }
         public bool IsSampleMode { get; init; }
     }
+
+    public record AssignmentChangePlan(string HolderUserId, List<AssignmentTicket> Tickets, List<AssignmentHolderRow> Rows);
+
+    public record QaOwnershipChangePlan(AssignmentTicket Ownership, List<AssignmentTicketItem> RemovedItems, bool IsAllNodesRemoved, int RemovedDocuments,
+        List<AssignmentHolderRow> UnfinishedRows, int? TargetOwnershipTicketId = null);
 }

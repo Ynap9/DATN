@@ -144,10 +144,12 @@ namespace sh.be.infrastructure.data.Persistence.Db
             });
             modelBuilder.Entity<ProjectDeadlineNotification>(entity =>
             {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(false);
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
                 entity.HasIndex([nameof(ProjectDeadlineNotification.ProjectId), nameof(ProjectDeadlineNotification.NotificationType),
                         nameof(ProjectDeadlineNotification.EndedAt), nameof(ProjectDeadlineNotification.ToAddress)], ProjectDeadlineNotification.UniqueSentIndexName)
-                    .HasFilter("[IsSuccess] = 1");
+                    .HasFilter("[IsSuccess] = 1 AND [Deleted] = 0");
             });
             modelBuilder.Entity<Submission>(entity =>
             {
@@ -187,7 +189,11 @@ namespace sh.be.infrastructure.data.Persistence.Db
             });
             modelBuilder.Entity<SubmissionUser>(entity =>
             {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(false);
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.HasIndex([nameof(SubmissionUser.SubmissionId), nameof(SubmissionUser.Role)], SubmissionUser.UniqueRoleIndexName)
+                    .HasFilter("[Deleted] = 0");
                 entity.HasOne<Submission>()
                     .WithMany()
                     .HasForeignKey(e => e.SubmissionId)
@@ -324,6 +330,8 @@ namespace sh.be.infrastructure.data.Persistence.Db
             });
             modelBuilder.Entity<AssignmentTicket>(entity =>
             {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(false);
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
                 entity.HasOne<Project>()
                     .WithMany()
@@ -336,6 +344,8 @@ namespace sh.be.infrastructure.data.Persistence.Db
             });
             modelBuilder.Entity<AssignmentTicketItem>(entity =>
             {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(false);
                 entity.HasOne<AssignmentTicket>()
                     .WithMany()
                     .HasForeignKey(e => e.AssignmentTicketId)

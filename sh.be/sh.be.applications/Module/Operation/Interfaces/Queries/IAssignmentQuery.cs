@@ -8,6 +8,7 @@ namespace sh.be.applications.Module.Operation.Interfaces.Queries
         Task<BaseResponsePagingDto<AssignmentNodeDto>> FindBoxNodes(int projectId, int documentTypeId, FindAssignmentTreeDto dto);
         Task<BaseResponsePagingDto<AssignmentNodeDto>> FindProfileNodes(int projectId, int documentTypeId, FindAssignmentProfilesDto dto);
         Task<ViewAssignmentTicketDto?> FindTicketById(int ticketId);
+        Task<BaseResponsePagingDto<ViewAssignmentTicketDto>> FindTicketPaging(int projectId, int documentTypeId, FindPagingAssignmentTicketDto dto, string? managedByLeaderUserId);
         Task<BaseResponsePagingDto<GetListMyAssignmentDto>> FindMyAssignments(string userId, FindMyAssignmentDto dto);
         Task<Dictionary<string, string>> FindFullNames(List<string> userIds);
     }

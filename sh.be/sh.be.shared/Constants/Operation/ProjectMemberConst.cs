@@ -14,5 +14,6 @@ namespace sh.be.shared.Constants.Operation
         public const string SKIP_REASON_ALREADY_MEMBER = "Đã là thành viên của dự án / loại văn bản";
         public const string SKIP_REASON_INVALID_ROLE = "Không có vai trò hệ thống phù hợp";
         public const string SKIP_REASON_USER_NOT_FOUND = "Không tìm thấy người dùng";
+        public const string SKIP_REASON_QA_DISABLED = "Dự án không có QA";
     }
 }
