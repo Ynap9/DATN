@@ -26,6 +26,7 @@ cuối cùng QA đạt — dự án không QA (Task 28, `Project.IsQaEnabled`, [
 |---|---|---|---|
 | Tự chuyển (trong `PUT submission/qa`) — dự án có QA | `DEPLOYING`, `DOING` | `ACCEPTING` | Kết quả QA là Đạt và dự án đủ điều kiện |
 | Tự chuyển (trong `PUT submission/check`) — dự án không QA | `DEPLOYING`, `DOING` | `ACCEPTING` | Dự án đủ điều kiện sau lần kiểm |
+| Tự chuyển (trong `DELETE submission`, Task 32) — mọi dự án | `DEPLOYING`, `DOING` | `ACCEPTING` | Xoá đúng văn bản cuối còn chặn; xoá hết văn bản thì không |
 | `POST {id:int}/acceptance/start` | `DEPLOYING`, `DOING` | `ACCEPTING` | Đủ, hoặc Admin `isForced` (lý do tuỳ chọn) |
 | `POST {id:int}/acceptance/finish` | `ACCEPTING` | `DONE` | Đủ, hoặc Admin `isForced` (lý do tuỳ chọn) |
 | `POST {id:int}/acceptance/reopen` | `ACCEPTING` | `DOING` | Chỉ Admin, bắt buộc lý do |
@@ -77,13 +78,15 @@ trạng thái nguồn `342` (entity `StartAcceptance` / `FinishAcceptance` / `Re
 `isQaEnabled` của dự án đã nạp; `IsReady` bỏ `b` khi không QA — luật nằm trong record ở domain, mọi chỗ gọi cùng một kết quả.
 `341` "Dự án đang nghiệm thu, không import được": `Project.EnsureImportable`, kiểm trước `313` / `323`.
 
-## Tự chuyển trong `ReviewQa` / `Check`
+## Tự chuyển trong `ReviewQa` / `Check` / `Delete`
 
 `ReviewQa` (có QA): sau khối chốt phiếu FULL, chỉ khi kết quả là Đạt. `Check` (không QA, Task 28): sau `AssignCheckedToQaAsync` +
-`SaveChanges`, trước commit, chỉ khi `!project.IsQaEnabled`. Cả hai trong **cùng transaction**, gọi chung
+`SaveChanges`, trước commit, chỉ khi `!project.IsQaEnabled`. `Delete` (Task 32): sau lưu xoá + `ReleaseDeletedSubmissionsAsync`, không
+điều kiện. Cả ba trong **cùng transaction**, gọi chung
 `ProjectDomainService.TryStartAcceptanceAsync` (đếm theo cờ của `project`) — dự án `DEPLOYING` / `DOING` → khoá dòng `Project`
 (`ProjectRepository.LockAsync`, `UPDLOCK, HOLDLOCK`) → đếm → đủ thì `TryStartAcceptanceAsync` (UPDATE có điều kiện trạng thái) trả `1`
-mới gọi `project.StartAcceptance`, rồi ghi audit `IsAutomatic = true`, người ghi = người vừa QA / kiểm. Khối audit chép ở 2 chỗ.
+mới gọi `project.StartAcceptance`, rồi ghi audit `IsAutomatic = true`, người ghi = người vừa QA / kiểm / xoá. Khối này là private
+`SubmissionService.TryStartAcceptanceAutomaticallyAsync`, mỗi chỗ gọi giữ điều kiện riêng.
 
 ⚠️ Bẫy: DB bật `READ_COMMITTED_SNAPSHOT`, nên hai request QA đạt **song song** hai văn bản cuối cùng thấy văn bản kia "chưa đạt" và
 **không ai** chuyển (đã tái hiện 1/3 vòng trên DB dev). Khoá dòng dự án trước khi đếm buộc request sau chờ request trước commit;
@@ -115,6 +118,8 @@ bản chưa kiểm", kiểm hết (kể cả QA chưa chấm / không đạt) �
 `null`; `ok` → `ok`; 1001 ký tự → `400`; reopen không lý do vẫn `400`. Tự chuyển ở `Check` **12/12** + rollback **2/2**: văn bản cuối →
 `ACCEPTING`, 1 audit, người ghi = người kiểm; kiểm lại khi `ACCEPTING` không thêm audit; có QA kiểm hết không chuyển, QA đạt cuối vẫn
 chuyển; 3/3 vòng kiểm song song hai văn bản cuối → đúng 1 audit; ném lỗi tạm sau khối tự chuyển → không lưu gì.
+Ngày 2026-11-14 (Task 32, `ZZTEST32` đã dọn): `Check` / `ReviewQa` sau khi gom khối vẫn chuyển đúng; `Delete` văn bản cuối còn chặn (có
+và không QA) → `ACCEPTING` + audit, `lastTransition` đúng; đang `ACCEPTING`, còn chặn, xoá hết văn bản → không đổi; `325` → không lưu gì.
 
 ## Giới hạn
 
@@ -124,6 +129,7 @@ chuyển; 3/3 vòng kiểm song song hai văn bản cuối → đúng 1 audit; n
 
 ⚠️ Khoá dòng dự án làm các lần QA đạt trên cùng dự án `DEPLOYING` / `DOING` xếp hàng ở bước cuối (khoá giữ tới commit, ngắn).
 Từ Task 28 khoá này **cũng chạy ở mỗi lần Check** của dự án không QA đang `DEPLOYING` / `DOING`. Thứ tự khoá ở `Check`: cặp dự án +
-loại văn bản (`AssignCheckedToQaAsync`, chỉ khi có QA phụ trách) rồi mới dự án; `ReviewQa` nhánh Đạt chỉ khoá dự án — không ngược chiều.
+loại văn bản (`AssignCheckedToQaAsync`, chỉ khi có QA phụ trách) rồi mới dự án; `Delete` cũng cặp (`LockImportAsync`) rồi dự án; `ReviewQa`
+nhánh Đạt chỉ khoá dự án — không ngược chiều.
 
 > **Tiếp:** [23-chia-phieu.md](23-chia-phieu.md) — cây Hộp → Hồ sơ, giao phiếu nhập liệu, QA phụ trách nút + đợt QA, phiếu của tôi.

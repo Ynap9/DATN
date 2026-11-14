@@ -143,7 +143,7 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `GET api/construction/submission/proxy-file`, `GET .../paging`, `GET .../count`, `GET .../{id}`, `GET .../{id}/next`, `GET .../{id}/previous`, `GET .../{id}/logs`, `GET .../qa/paging`, `GET .../{id}/qa`, `GET .../{id}/qa-logs`, `GET .../field-values`, `GET .../tree`, `GET .../logs`, `GET .../summary`, `GET .../{id}/timeline` | `Function.Construction.Submission.View` |
 | `PUT api/construction/submission/check` (id trong body) | `Function.Construction.Submission.Check` |
 | `PUT api/construction/submission/qa` (id trong body) | `Function.Construction.Submission.Qa` |
-| `DELETE api/construction/submission` (ids trong body) | `Function.Construction.Submission.Delete` |
+| `DELETE api/construction/submission` (ids trong body) | `Function.Construction.Submission.Delete`, chỉ Admin / SuperAdmin (`400`, Task 32, [14](14-ho-so-xoa-xuat.md#xoá-hồ-sơ)) |
 | `GET api/construction/submission/export-excel`, `POST .../export-excel/job`, `GET .../export-excel/job/{jobId}` | `Function.Construction.Submission.Export` (POST / GET file: Leader chỉ dự án mình — `337`, [14](14-ho-so-xoa-xuat.md)) |
 | `GET api/construction/submission/qa-stats/summary`, `GET .../qa-stats/fields`, `GET .../qa-stats/entry-users` | `Function.Construction.Submission.QaStats` |
 | `GET api/digital-signature/template/paging`, `GET .../{id}`, `GET .../sample-file` | `Function.DigitalSignature.Template.View` |
