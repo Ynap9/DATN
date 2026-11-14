@@ -108,11 +108,14 @@ namespace sh.be.infrastructure.data.Module.Operation.Repositories
                 .ToListAsync();
         }
 
+        // Xoá cứng dòng giữ Data chưa kiểm / bị trả của phiếu, điều kiện xét lại lúc xoá; trả số dòng xoá thật
         public Task<int> ReleaseEntryNotCheckedAsync(int assignmentTicketId)
         {
+            // UPDLOCK như DeleteUnfinishedHoldersAsync: Check đang ghi dở thì chờ nó xong (READ_COMMITTED_SNAPSHOT đọc thường thấy bản cũ "chưa kiểm")
+            var lockedSubmissions = _shDbContext.Submissions.FromSqlRaw(AssignmentRepository.LockSubmissionsSql);
             return _shDbContext.SubmissionUsers
                 .Where(u => u.TicketId == assignmentTicketId && u.Role == RoleConstants.ROLE_DATA
-                    && _shDbContext.Submissions.Any(s => s.Id == u.SubmissionId
+                    && lockedSubmissions.Any(s => s.Id == u.SubmissionId
                         && (s.StatusCheck == SubmissionConst.NOT_CHECKED || s.StatusCheck == SubmissionConst.RETURNED)))
                 .ExecuteDeleteAsync();
         }
