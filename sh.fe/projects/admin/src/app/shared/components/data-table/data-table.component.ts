@@ -1,11 +1,13 @@
 import { DatePipe, NgComponentOutlet } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, inject, InjectionToken, Injector, input, OnInit, output, OutputEmitterRef } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, inject, InjectionToken, Injector, input, model, OnInit, output, OutputEmitterRef } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { CurrencyPipe } from '@sh/ui';
 import { CellViewTypes, TableEventTypes } from '@/shared/constants/data-table.constants';
-import { IColumn, ITableEvent } from '@/shared/models/data-table.models';
+import { IColumn, ITableEvent, ITableRowReorder } from '@/shared/models/data-table.models';
 import { TblAction } from '../tbl-action/tbl-action.component';
 
 export const TBL_CUSTOM_COMP_EMIT = new InjectionToken<OutputEmitterRef<ITableEvent>>('TBL_CUSTOM_COMP_EMIT');
@@ -14,7 +16,7 @@ const COLUMN_WIDTH_STORAGE_PREFIX = 'tbl_col_widths_';
 
 @Component({
     selector: 'app-data-table',
-    imports: [TableModule, PaginatorModule, TagModule, DatePipe, NgComponentOutlet, CurrencyPipe, TblAction],
+    imports: [FormsModule, TableModule, PaginatorModule, TagModule, ToggleSwitchModule, DatePipe, NgComponentOutlet, CurrencyPipe, TblAction],
     templateUrl: './data-table.component.html',
     styleUrl: './data-table.component.scss',
 })
@@ -31,9 +33,14 @@ export class DataTable implements OnInit, AfterViewInit {
     total = input(0);
     tableKey = input('');
     rowsPerPageOptions = input([10, 25, 50, 100]);
+    paginator = input(true);
+    reorderable = input(false);
+    selectable = input(false);
+    selection = model<any[]>([]);
 
     pageChange = output<PaginatorState>();
     action = output<ITableEvent>();
+    rowReorder = output<ITableRowReorder>();
 
     readonly cellViewTypes = CellViewTypes;
     readonly emptyText = '—';

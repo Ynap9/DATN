@@ -29,7 +29,6 @@ tooltip, thông báo lỗi để form nào cũng giống nhau.
 `CurrencyPipe` trong `CommonModule`. Đừng "gọn lại" bằng `CommonModule` ở component nào dùng `| currency`.
 ⚠️ Directive dạng thuộc tính trơn (`pRipple`, `pTemplate`, `pButton`) thiếu import thì Angular **bỏ qua im lặng**,
 build vẫn qua; thêm vào template thì thêm module PrimeNG tương ứng vào `imports`.
-⚠️ `sh-input-text.html` dùng `pInputTextarea` (tên cũ), PrimeNG 21 là `pTextarea`, nên ô textarea chưa nhận style.
 
 ## Pipe
 
