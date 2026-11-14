@@ -276,40 +276,72 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             };
         }
 
+        // Số ô có dữ liệu theo loại văn bản: ô trim khác rỗng của trường tính tiền chưa xoá, trên văn bản đã kiểm chưa xoá của dự án
+        public Task<Dictionary<int, int>> FindAcceptanceFilledFieldCounts(int projectId)
+        {
+            return (from v in _shDbContext.SubmissionDatas.AsNoTracking()
+                    join s in _shDbContext.Submissions on v.SubmissionId equals s.Id
+                    where s.ProjectId == projectId && s.StatusCheck == SubmissionConst.CHECKED
+                        && v.Data.Trim() != String.Empty
+                        && _shDbContext.DocumentFields.Any(f => f.Id == v.DocumentFieldId && f.IsChargeable)
+                    group v by s.DocumentTypeId into g
+                    select new { DocumentTypeId = g.Key, Count = g.Count() })
+                    .ToDictionaryAsync(c => c.DocumentTypeId, c => c.Count);
+        }
+
+        // Lần chuyển trạng thái nghiệm thu gần nhất của dự án
         public async Task<ViewProjectAcceptanceTransitionDto?> FindLastAcceptanceTransition(int projectId)
+        {
+            var auditRow = await QueryAcceptanceAuditRows(projectId)
+                .OrderByDescending(a => a.CreatedDate)
+                .ThenByDescending(a => a.Id)
+                .FirstOrDefaultAsync();
+            return auditRow == null ? null : ToAcceptanceTransition(auditRow);
+        }
+
+        // Mọi lần chuyển trạng thái nghiệm thu của dự án, cũ → mới
+        public async Task<List<ViewProjectAcceptanceTransitionDto>> FindAcceptanceTransitions(int projectId)
+        {
+            var auditRows = await QueryAcceptanceAuditRows(projectId)
+                .OrderBy(a => a.CreatedDate)
+                .ThenBy(a => a.Id)
+                .ToListAsync();
+            return auditRows.Select(ToAcceptanceTransition).ToList();
+        }
+
+        // Audit chuyển trạng thái nghiệm thu của dự án kèm tên người thao tác, chưa sắp xếp
+        private IQueryable<AcceptanceAuditRow> QueryAcceptanceAuditRows(int projectId)
         {
             // Audit nghiệm thu luôn ghi ProjectId là trường đầu của NewData, nên lọc theo tiền tố JSON thay cho cột ProjectId mà AuditLog không có
             var newDataPrefix = $"{{\"ProjectId\":{projectId},";
-            var auditLog = await _shDbContext.AuditLogs
+            return _shDbContext.AuditLogs
                 .AsNoTracking()
                 .Where(a => AcceptanceActions.Contains(a.Action) && a.NewData!.StartsWith(newDataPrefix))
-                .OrderByDescending(a => a.CreatedDate)
-                .ThenByDescending(a => a.Id)
-                .Select(a => new
+                .Select(a => new AcceptanceAuditRow
                 {
-                    a.Action,
-                    a.CreatedDate,
-                    a.UserId,
+                    Id = a.Id,
+                    Action = a.Action,
+                    CreatedDate = a.CreatedDate,
+                    UserId = a.UserId,
                     UserName = _shDbContext.Users.Where(u => u.Id == a.UserId).Select(u => u.UserName).FirstOrDefault(),
                     FullName = _shDbContext.Users.Where(u => u.Id == a.UserId).Select(u => u.FullName).FirstOrDefault(),
-                    a.OldData,
-                    a.NewData,
-                })
-                .FirstOrDefaultAsync();
-            if (auditLog == null)
-            {
-                return null;
-            }
+                    OldData = a.OldData,
+                    NewData = a.NewData,
+                });
+        }
 
-            var oldData = JsonSerializer.Deserialize<AcceptanceAuditData>(auditLog.OldData ?? "{}");
-            var newData = JsonSerializer.Deserialize<AcceptanceAuditData>(auditLog.NewData!);
+        // Đọc trạng thái cũ / mới, cờ cho phép, tự động, lý do từ JSON audit ra DTO lần chuyển
+        private static ViewProjectAcceptanceTransitionDto ToAcceptanceTransition(AcceptanceAuditRow auditRow)
+        {
+            var oldData = JsonSerializer.Deserialize<AcceptanceAuditData>(auditRow.OldData ?? "{}");
+            var newData = JsonSerializer.Deserialize<AcceptanceAuditData>(auditRow.NewData!);
             return new ViewProjectAcceptanceTransitionDto
             {
-                Action = auditLog.Action,
-                CreatedDate = auditLog.CreatedDate,
-                UserId = auditLog.UserId,
-                UserName = auditLog.UserName,
-                FullName = auditLog.FullName,
+                Action = auditRow.Action,
+                CreatedDate = auditRow.CreatedDate,
+                UserId = auditRow.UserId,
+                UserName = auditRow.UserName,
+                FullName = auditRow.FullName,
                 OldStatus = oldData?.Status,
                 NewStatus = newData?.Status,
                 IsForced = newData?.IsForced ?? false,
@@ -369,6 +401,18 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
         ];
 
         private record AcceptanceAuditData(int? Status, bool? IsForced, bool? IsAutomatic, string? Reason);
+
+        private class AcceptanceAuditRow
+        {
+            public long Id { get; init; }
+            public string Action { get; init; } = String.Empty;
+            public DateTime CreatedDate { get; init; }
+            public string? UserId { get; init; }
+            public string? UserName { get; init; }
+            public string? FullName { get; init; }
+            public string? OldData { get; init; }
+            public string? NewData { get; init; }
+        }
 
         private record PairCounts(int Total, int TotalBox, int TotalProfileRange, int Checked, int QaPassed);
     }

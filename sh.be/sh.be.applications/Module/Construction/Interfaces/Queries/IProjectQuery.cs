@@ -11,6 +11,8 @@ namespace sh.be.applications.Module.Construction.Interfaces.Queries
         Task<FindProjectByIdDto?> FindById(int id);
         Task<List<GetListProjectMyProgressDto>> FindMyProgresses(int projectId, string userId);
         Task<ViewProjectAcceptanceDto> FindAcceptanceSummary(int projectId);
+        Task<Dictionary<int, int>> FindAcceptanceFilledFieldCounts(int projectId);
         Task<ViewProjectAcceptanceTransitionDto?> FindLastAcceptanceTransition(int projectId);
+        Task<List<ViewProjectAcceptanceTransitionDto>> FindAcceptanceTransitions(int projectId);
     }
 }

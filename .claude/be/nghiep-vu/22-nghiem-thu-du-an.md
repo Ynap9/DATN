@@ -46,6 +46,7 @@ Gốc `api/v1/construction/project`.
 | `GET {id:int}/acceptance` | `Function.Construction.Project.View` | — |
 | `POST {id:int}/acceptance/start`, `.../finish` | `Function.Construction.Project.Accept` | `{ isForced, reason }` |
 | `POST {id:int}/acceptance/reopen` | `Function.Construction.Project.Accept` | `{ reason }` |
+| `GET {id:int}/acceptance/report` | `Function.Construction.Project.View` | — (trả file PDF, [Biên bản](#biên-bản-nghiệm-thu-pdf--task-34)) |
 
 `GET acceptance` từ Task 30: người không thuộc dự án (không phải Admin, không có `ProjectMember` chưa gỡ) → `303`; Leader / Data / QA
 của dự án xem **đủ như nhau** (cùng số liệu, chỉ `canForce` khác Admin) vì nhân viên cũng cần biết tiến trình dự án
@@ -102,6 +103,25 @@ lúc chuyển, `Summary` = dòng tổng của `GET` lúc chuyển. `GET acceptan
 ⚠️ `AuditLog` không có cột `ProjectId`: lần chuyển gần nhất lọc `NewData LIKE '{"ProjectId":<id>,%'`. `ProjectId` **phải** là trường
 **đầu tiên** của `newData` (serializer PascalCase của `AuditLogUtils`); thêm trường lên trước là `lastTransition` thành `null`.
 
+## Biên bản nghiệm thu (PDF) — Task 34
+
+`GET {id:int}/acceptance/report` (2026-11-14) sinh PDF A4 dọc từ số liệu đang có, mỗi lần gọi dựng lại; **không** lưu MinIO, **không** audit,
+**không** đổi trạng thái. Không có số trang, chấm mẫu bên nghiệm thu, ô chữ ký / con dấu, ký số biên bản.
+
+- Thứ tự kiểm: dự án không có `303` → người ngoài dự án `303` (`EnsureViewableAsync`, cùng thông báo) → không phải Admin / Leader đang hoạt động
+  của dự án `337` (`EnsureCanAcceptAsync`, cùng người được bấm nghiệm thu; Data / QA cũng `337`) → dự án không `ACCEPTING` / `DONE` → `400`
+  "Chỉ xuất biên bản khi dự án đang nghiệm thu hoặc đã xong" (`Project.EnsureAcceptanceReportable`).
+- Nội dung: tiêu đề "BIÊN BẢN NGHIỆM THU DỰ ÁN" + tên dự án; thời gian dự án (`dd/MM/yyyy`, trống "—"), trạng thái, có / không QA, thời điểm
+  xuất, họ tên người xuất; bảng theo loại văn bản + dòng Tổng; bảng **mọi** lần chuyển nghiệm thu cũ → mới (`ProjectQuery.FindAcceptanceTransitions`,
+  cùng điều kiện lọc audit với `lastTransition`).
+- Bảng loại văn bản: Loại văn bản | Số hồ sơ | Đã kiểm | Số ô có dữ liệu | QA đạt | QA không đạt | Tỷ lệ QA đạt (%) — số lấy từ
+  `FindAcceptanceSummary` nên khớp `GET acceptance`; dự án không QA bỏ 3 cột QA; loại đã gỡ còn văn bản thêm hậu tố " (đã gỡ)", xếp cuối.
+- "Số ô có dữ liệu" (`FindAcceptanceFilledFieldCounts`): ô trim khác rỗng của trường `IsChargeable` chưa xoá, trên văn bản **đã kiểm** chưa xoá
+  (cùng luật đếm ô của Task 30).
+- Bảng chuyển: Thời điểm | Hành động | Người (họ tên, trống thì tài khoản; tự động "Hệ thống") | Cách chuyển ("Tự động" / "Admin trả về" cho
+  reopen / "Admin cho phép khi chưa đủ" khi `IsForced` / "Đủ điều kiện") | Lý do (trống "—").
+- Vẽ PDF qua `IPdfExternal` ([../architecture/05-infrastructure-external.md](../architecture/05-infrastructure-external.md)); service không gọi PDFsharp.
+
 ## Đã kiểm thực tế
 
 Ngày 2026-11-11 trên DB dev (dữ liệu `ZZTEST23`, xoá sạch sau test): bấm tay **48/48** — `GET` đúng số từng loại và dòng tổng,
@@ -120,6 +140,13 @@ bản chưa kiểm", kiểm hết (kể cả QA chưa chấm / không đạt) �
 chuyển; 3/3 vòng kiểm song song hai văn bản cuối → đúng 1 audit; ném lỗi tạm sau khối tự chuyển → không lưu gì.
 Ngày 2026-11-14 (Task 32, `ZZTEST32` đã dọn): `Check` / `ReviewQa` sau khi gom khối vẫn chuyển đúng; `Delete` văn bản cuối còn chặn (có
 và không QA) → `ACCEPTING` + audit, `lastTransition` đúng; đang `ACCEPTING`, còn chặn, xoá hết văn bản → không đổi; `325` → không lưu gì.
+Ngày 2026-11-14 (Task 34, `ZZTEST34` đã dọn) — biên bản **36/36** (30 ca chạy thẳng + 6 ca bảng chuyển chạy lại sau khi sửa script so chữ bị
+xuống dòng trong ô): `DOING` / `DEPLOYING` / `EXPIRED` → `400`; dự án có QA đi force có lý do → reopen → QA văn bản cuối tự chuyển → hoàn tất
+đủ điều kiện, PDF `DONE` đúng 4 dòng chuyển, người / cách chuyển / lý do; bảng loại văn bản + Tổng khớp `GET acceptance`, số ô A 3 / B 2 /
+C (đã gỡ) 1 khớp đếm tay (loại ô trắng, trường không tính tiền, trường và văn bản đã xoá); Leader đang hoạt động xuất được, Leader tắt / Data
+/ QA `337`, người ngoài `303` cùng thông báo id không có; dự án không QA không có cột QA, văn bản chưa kiểm không tính ô; 61 lần chuyển → 7
+trang, lặp hàng tiêu đề, lý do dài xuống dòng không đè ô; 5 request song song đều trả PDF; `lastTransition` y như cũ. Chưa kiểm xuất biên
+bản xen với ký số lô (người dùng bỏ qua, cần token).
 
 ## Giới hạn
 

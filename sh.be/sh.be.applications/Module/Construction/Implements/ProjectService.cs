@@ -35,14 +35,18 @@ namespace sh.be.applications.Module.Construction.Implements
         private readonly ProjectConfigDomainService _projectConfigDomainService;
         private readonly IGoogleSheetExternal _googleSheetExternal;
         private readonly IRoleRepository _roleRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly IPdfExternal _pdfExternal;
 
         public ProjectService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<ProjectService> logger, IRequestContext requestContext, TimeProvider timeProvider,
             IProjectRepository projectRepository, IDocumentFieldRepository documentFieldRepository, IProjectQuery projectQuery, ProjectDomainService projectDomainService,
             DocumentTypeDomainService documentTypeDomainService, ProjectConfigDomainService projectConfigDomainService, IGoogleSheetExternal googleSheetExternal,
-            IRoleRepository roleRepository
+            IRoleRepository roleRepository, IUserRepository userRepository, IPdfExternal pdfExternal
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _roleRepository = roleRepository;
+            _userRepository = userRepository;
+            _pdfExternal = pdfExternal;
             _projectRepository = projectRepository;
             _documentFieldRepository = documentFieldRepository;
             _projectQuery = projectQuery;
@@ -192,6 +196,85 @@ namespace sh.be.applications.Module.Construction.Implements
             await _unitOfWork.SaveChangesAsync();
 
             return await FindAcceptance(id);
+        }
+
+        // Xuất PDF biên bản nghiệm thu (số liệu theo loại văn bản + các lần chuyển trạng thái) cho Admin / Leader dự án; không lưu file, không audit
+        public async Task<ExportFileDto> ExportAcceptanceReport(int id)
+        {
+            _logger.LogInformation($"{nameof(ExportAcceptanceReport)}, id={id}");
+            var project = await _projectRepository.FindByIdAsync(id)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
+            var currentUserId = getCurrentUserId();
+            var isAdmin = PermissionDomainService.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            await _projectDomainService.EnsureViewableAsync(id, currentUserId, isAdmin);
+            await _projectDomainService.EnsureCanAcceptAsync(id, currentUserId, isAdmin);
+            project.EnsureAcceptanceReportable();
+
+            var summary = await _projectQuery.FindAcceptanceSummary(id);
+            var filledFieldCounts = await _projectQuery.FindAcceptanceFilledFieldCounts(id);
+            var transitions = await _projectQuery.FindAcceptanceTransitions(id);
+            var exporter = await _userRepository.FindByIdAsync(currentUserId);
+            var now = GetVietnamTime();
+
+            var documentTypeHeaders = new List<string> { "Loại văn bản", "Số hồ sơ", "Đã kiểm", "Số ô có dữ liệu" };
+            if (project.IsQaEnabled)
+            {
+                documentTypeHeaders.AddRange(["QA đạt", "QA không đạt", "Tỷ lệ QA đạt (%)"]);
+            }
+            List<string> ToDocumentTypeCells(string name, GetListProjectAcceptanceSummaryDto row, int filledFieldCount)
+            {
+                var cells = new List<string> { name, row.TotalSubmissions.ToString(), row.TotalChecked.ToString(), filledFieldCount.ToString() };
+                if (project.IsQaEnabled)
+                {
+                    cells.AddRange([row.TotalQaPassed.ToString(), row.TotalQaFailed.ToString(), row.QaPassedPercent.ToString("0.0")]);
+                }
+                return cells;
+            }
+            var documentTypeRows = summary.DocumentTypes
+                .Select(row => ToDocumentTypeCells(row.IsRemoved ? $"{row.DocumentTypeName} (đã gỡ)" : row.DocumentTypeName ?? String.Empty, row,
+                    filledFieldCounts.GetValueOrDefault(row.DocumentTypeId!.Value)))
+                .ToList();
+            documentTypeRows.Add(ToDocumentTypeCells("Tổng", summary.Total,
+                summary.DocumentTypes.Sum(row => filledFieldCounts.GetValueOrDefault(row.DocumentTypeId!.Value))));
+
+            // Cách chuyển: tự động trước, trả về đang làm luôn do Admin, còn lại theo cờ cho phép khi chưa đủ
+            var transitionRows = transitions
+                .Select(transition => new List<string>
+                {
+                    transition.CreatedDate.ToString("dd/MM/yyyy HH:mm"),
+                    transition.Action,
+                    transition.IsAutomatic ? "Hệ thống" : !String.IsNullOrWhiteSpace(transition.FullName) ? transition.FullName : transition.UserName ?? "—",
+                    transition.IsAutomatic ? "Tự động"
+                        : transition.Action == AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_REOPEN ? "Admin trả về"
+                        : transition.IsForced ? "Admin cho phép khi chưa đủ"
+                        : "Đủ điều kiện",
+                    String.IsNullOrWhiteSpace(transition.Reason) ? "—" : transition.Reason,
+                })
+                .ToList();
+
+            var report = new PdfReportDto
+            {
+                Title = $"BIÊN BẢN NGHIỆM THU DỰ ÁN\n{project.Name}",
+                InfoLines =
+                [
+                    $"Thời gian dự án: {project.StartedAt?.ToString("dd/MM/yyyy") ?? "—"} – {project.EndedAt?.ToString("dd/MM/yyyy") ?? "—"}",
+                    $"Trạng thái: {(project.Status == ProjectConst.DONE ? "Đã xong" : "Đang nghiệm thu")}",
+                    $"Dự án có QA: {(project.IsQaEnabled ? "Có" : "Không")}",
+                    $"Thời điểm xuất: {now:dd/MM/yyyy HH:mm}",
+                    $"Người xuất: {(!String.IsNullOrWhiteSpace(exporter?.FullName) ? exporter.FullName : exporter?.UserName ?? currentUserId)}",
+                ],
+                Tables =
+                [
+                    new PdfReportTableDto { Heading = "Số liệu theo loại văn bản", Headers = documentTypeHeaders, Rows = documentTypeRows },
+                    new PdfReportTableDto
+                    {
+                        Heading = "Các lần chuyển trạng thái nghiệm thu",
+                        Headers = ["Thời điểm", "Hành động", "Người", "Cách chuyển", "Lý do"],
+                        Rows = transitionRows,
+                    },
+                ],
+            };
+            return _pdfExternal.CreateReport($"BienBanNghiemThu_{project.Name}_{now:yyyyMMddHHmm}", report);
         }
 
         // Tạo dự án kèm cờ có / không QA (chỉ đặt lúc tạo), gán loại văn bản và tạo Google Sheet đồng bộ
