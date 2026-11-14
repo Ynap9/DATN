@@ -15,7 +15,7 @@ import { BaseComponent } from '@/shared/base/base.component';
 import { DataTable } from '@/shared/components/data-table/data-table.component';
 import { PageHeader } from '@/shared/components/page-header/page-header.component';
 import { CellViewTypes, TableEventTypes } from '@/shared/constants/data-table.constants';
-import { DOCUMENT_TYPE_VIEW_TABLE, DOCUMENT_TYPE_VIEWS } from '@/shared/constants/document-type.constants';
+import { DOCUMENT_TYPE_VIEW_TABLE, DOCUMENT_TYPE_VIEWS, METADATA_URL } from '@/shared/constants/document-type.constants';
 import { PermissionConstants } from '@/shared/constants/permission.constants';
 import { IColumn, ITableAction, ITableEvent, ITableRowReorder } from '@/shared/models/data-table.models';
 import { SharedImports } from '@/shared/import.shared';
@@ -24,8 +24,6 @@ import { DocumentFieldFormComponent } from './document-field-form/document-field
 import { DocumentFieldQuickCreateComponent } from './document-field-quick-create/document-field-quick-create.component';
 import { DocumentFieldSheetCheckComponent } from './document-field-sheet-check/document-field-sheet-check.component';
 import { DocumentTypeFormComponent } from './document-type-form/document-type-form.component';
-
-const DOCUMENT_TYPE_LIST_URL = '/admin/construction/document-type';
 
 const DOCUMENT_FIELD_ACTIONS = {
     EDIT: 'edit',
@@ -39,6 +37,7 @@ type DocumentFieldSetting = 'isShow' | 'isChargeable';
     selector: 'app-document-type-detail',
     imports: [SharedImports, SelectButtonModule, DataTable, PageHeader],
     templateUrl: './document-type-detail.component.html',
+    styleUrl: './document-type-detail.component.scss',
 })
 export class DocumentTypeDetailComponent extends BaseComponent {
     private readonly _documentTypeService = inject(DocumentTypeService);
@@ -66,19 +65,19 @@ export class DocumentTypeDetailComponent extends BaseComponent {
     selectedFields: DocumentFieldRow[] = [];
 
     private readonly _fieldActions: ITableAction[] = [
-        ...(this.canUpdateField ? [{ type: DOCUMENT_FIELD_ACTIONS.EDIT, label: 'Sửa' }] : []),
-        ...(this.canDeleteField ? [{ type: DOCUMENT_FIELD_ACTIONS.DELETE, label: 'Xóa' }] : []),
+        ...(this.canUpdateField ? [{ type: DOCUMENT_FIELD_ACTIONS.EDIT, label: 'Sửa', icon: 'pi pi-pencil' }] : []),
+        ...(this.canDeleteField ? [{ type: DOCUMENT_FIELD_ACTIONS.DELETE, label: 'Xóa', icon: 'pi pi-trash', severity: 'danger' as const }] : []),
     ];
 
     readonly columns: IColumn<DocumentFieldRow>[] = [
-        { header: '#', field: 'order', headerContainerStyle: 'width: 64px' },
+        { header: 'Thứ tự', field: 'order', headerContainerStyle: 'width: 88px' },
         { header: 'Tên trường', field: 'name' },
         { header: 'Tên cột import', field: 'fieldImport' },
         { header: 'Hiển thị', field: 'isShow', cellViewType: CellViewTypes.SWITCH, headerContainerStyle: 'width: 110px', disabled: () => !this.canUpdateField },
         { header: 'Tính tiền', field: 'isChargeable', cellViewType: CellViewTypes.SWITCH, headerContainerStyle: 'width: 110px', disabled: () => !this.canUpdateField },
         { header: 'OCR', field: 'ocrLabel' },
         ...(this._fieldActions.length
-            ? [{ header: '', cellViewType: CellViewTypes.ACTIONS, headerContainerStyle: 'width: 64px', actions: this._fieldActions }]
+            ? [{ header: 'Thao tác', cellViewType: CellViewTypes.ACTIONS, headerContainerStyle: 'width: 100px; text-align: center', actions: this._fieldActions }]
             : []),
     ];
 
@@ -88,6 +87,10 @@ export class DocumentTypeDetailComponent extends BaseComponent {
 
     get ocrCount(): number {
         return this.fields.filter((field) => field.isFieldOcr).length;
+    }
+
+    get orderViewHint(): string | undefined {
+        return this.views.find((view) => view.value === this.orderView.value)?.hint;
     }
 
     // Đang lọc thì vị trí trên bảng không còn là thứ tự thật nên tắt kéo thả
@@ -107,12 +110,12 @@ export class DocumentTypeDetailComponent extends BaseComponent {
             .pipe(takeUntilDestroyed(this._destroyRef))
             .subscribe((res) => {
                 if (!this.isResponseSucceed(res)) {
-                    this.router.navigate([DOCUMENT_TYPE_LIST_URL]);
+                    this.router.navigate([METADATA_URL]);
                     return;
                 }
                 this.documentType = res.data;
                 this.defaultViewLabel = DOCUMENT_TYPE_VIEWS.find((view) => view.value === res.data.defaultView)?.label;
-                this.breadcrumbs = [{ label: 'Hồ sơ thi công' }, { label: 'Loại văn bản', routerLink: DOCUMENT_TYPE_LIST_URL }, { label: res.data.name }];
+                this.breadcrumbs = [{ label: 'Cấu hình dự án' }, { label: 'Metadata', routerLink: METADATA_URL }, { label: res.data.name }];
                 this.loadFields();
             });
     }
@@ -176,7 +179,7 @@ export class DocumentTypeDetailComponent extends BaseComponent {
 
     openDocumentTypeForm() {
         this._dialogService
-            .open(DocumentTypeFormComponent, { header: 'Sửa loại văn bản', width: '32rem', modal: true, closable: true, data: { documentType: this.documentType } })
+            .open(DocumentTypeFormComponent, { header: 'Sửa metadata', width: '32rem', modal: true, closable: true, data: { documentType: this.documentType } })
             ?.onClose.subscribe((changed) => changed && this.loadDocumentType());
     }
 
@@ -223,7 +226,7 @@ export class DocumentTypeDetailComponent extends BaseComponent {
                 const error = await readErrorResponse(response);
                 if (error) {
                     this.isResponseSucceed(error);
-                    this.router.navigate([DOCUMENT_TYPE_LIST_URL]);
+                    this.router.navigate([METADATA_URL]);
                     return;
                 }
                 Utils.makeDownload(response, url);

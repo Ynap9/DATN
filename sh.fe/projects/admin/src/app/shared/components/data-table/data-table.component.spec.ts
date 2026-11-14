@@ -13,7 +13,7 @@ describe('DataTable', () => {
         { header: 'STT', cellViewType: CellViewTypes.INDEX },
         { header: 'Tên', field: 'info.name' },
         { header: 'Tiền', field: 'amount', cellViewType: CellViewTypes.CURRENCY },
-        { header: 'Thao tác', cellViewType: CellViewTypes.ACTIONS, actions: [{ type: 'delete', label: 'Xoá' }] },
+        { header: 'Thao tác', cellViewType: CellViewTypes.ACTIONS, actions: [{ type: 'delete', label: 'Xoá', icon: 'pi pi-trash' }] },
     ];
 
     function render(data: unknown[]): HTMLElement {
@@ -50,7 +50,7 @@ describe('DataTable', () => {
         render([row]);
 
         const action = fixture.debugElement.query((el) => el.componentInstance instanceof TblAction).componentInstance as TblAction;
-        action.menuItems()[0].command({});
+        action.menuItems()[0].command!({});
 
         expect(events).toEqual([{ type: 'delete', row }]);
     });

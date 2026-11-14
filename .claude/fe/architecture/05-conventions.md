@@ -59,7 +59,10 @@ quá 6–7 file mới chia thư mục con (`components/`).
 - Form reactive (`FormBuilder`), kiểm bằng `isFormInvalid` của `BaseComponent` trước khi gửi.
 - Bảng dùng `DataTable` + `TblAction`; input, nút dùng `sh-*`; `imports` dùng `SharedImports`. Màn mới không dùng `sh-table`, `Page`.
 - `DataTable` có thêm `paginator` (mặc định `true`), `reorderable` + output `rowReorder`, `selectable` + `[(selection)]`, cột `SWITCH`
-  (bấm phát `CELL_CLICK`, khoá bằng `disabled`). Không truyền thì bảng y như cũ.
+  (bấm phát `CELL_CLICK`, khoá bằng `disabled`). Không truyền thì bảng y như cũ. Dòng trống thay nội dung bằng phần tử con có
+  thuộc tính `tableEmpty` (vd. câu hướng dẫn + nút thêm), không có thì hiện "Không có dữ liệu".
+- Cột thao tác: header `Thao tác`, `width: 100px; text-align: center`. `TblAction` là nút ⋯ mở dropdown; mỗi `ITableAction` bắt buộc
+  có `icon`, thao tác xoá đặt `severity: 'danger'` (chữ đỏ).
 - Style: Tailwind cho bố cục; style riêng component dưới 8 kB.
 - Thông điệp người dùng tiếng Việt, lấy từ `SuccessMessage` / `ErrorMessage` khi có sẵn.
 

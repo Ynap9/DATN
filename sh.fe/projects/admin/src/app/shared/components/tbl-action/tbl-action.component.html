@@ -1,4 +1,11 @@
 <div class="flex justify-center">
-    <p-button icon="pi pi-ellipsis-h" severity="secondary" [text]="true" [rounded]="true" (onClick)="menu.toggle($event)" />
-    <p-menu #menu [model]="menuItems()" [popup]="true" appendTo="body" />
+    <p-button icon="pi pi-ellipsis-h" severity="secondary" [text]="true" [rounded]="true" ariaLabel="Thao tác" (onClick)="menu.toggle($event)" />
+    <p-menu #menu [model]="menuItems()" [popup]="true" appendTo="body" [dt]="menuTokens">
+        <ng-template #item let-item>
+            <a class="p-menu-item-link" [style.color]="item.state?.danger ? 'var(--p-red-600)' : null">
+                <span [class]="item.icon" [style.color]="item.state?.danger ? 'var(--p-red-600)' : null"></span>
+                <span>{{ item.label }}</span>
+            </a>
+        </ng-template>
+    </p-menu>
 </div>
