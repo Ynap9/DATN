@@ -1,0 +1,18 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="flex flex-col gap-4">
+        <sh-input-text label="Tên loại văn bản" formControlName="name" [required]="true" />
+
+        <div class="flex flex-col gap-2">
+            <label>Kiểu xem mặc định</label>
+            <p-selectbutton formControlName="defaultView" [options]="views" optionLabel="label" optionValue="value" [allowEmpty]="false" />
+            @if (form.controls.defaultView.touched && form.controls.defaultView.invalid) {
+                <small class="text-red-600">Chọn kiểu xem mặc định</small>
+            }
+        </div>
+    </div>
+
+    <div class="flex justify-end gap-2 mt-6">
+        <p-button label="Hủy" severity="secondary" [outlined]="true" (onClick)="close()" />
+        <p-button type="submit" label="Lưu" [loading]="submitting" />
+    </div>
+</form>
