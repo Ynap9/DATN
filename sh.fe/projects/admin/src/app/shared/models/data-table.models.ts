@@ -6,7 +6,8 @@ export type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' |
 export interface ITableAction {
     type: string;
     label: string;
-    icon?: string;
+    icon: string;
+    severity?: 'secondary' | 'danger';
 }
 
 export interface ITableEvent<T = any> {

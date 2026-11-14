@@ -1,38 +1,30 @@
 @if (documentType) {
-    <app-page-header [title]="documentType.name" [breadcrumbs]="breadcrumbs" />
+    <app-page-header [title]="documentType.name" [breadcrumbs]="breadcrumbs">
+        @if (canCreateField) {
+            <p-button label="Kiểm tra với Google Sheet" icon="pi pi-check-circle" [outlined]="true" (onClick)="openSheetCheck()" />
+        }
+        <p-button label="Tải template Excel" icon="pi pi-file-excel" (onClick)="downloadTemplate()" />
+    </app-page-header>
 
-    <div class="flex flex-wrap items-center gap-3 mb-6">
-        <span class="text-sm text-muted-color">Kiểu xem mặc định: {{ defaultViewLabel ?? '—' }}</span>
+    <div class="flex items-center gap-2 mb-5 text-sm text-muted-color">
+        <span>Kiểu xem mặc định: {{ defaultViewLabel ?? '—' }}</span>
         @if (canUpdateDocumentType) {
             <p-button label="Sửa" [link]="true" size="small" (onClick)="openDocumentTypeForm()" />
         }
-        <div class="flex flex-wrap gap-2 ml-auto">
-            @if (canCreateField) {
-                <p-button label="Kiểm tra với Google Sheet" severity="secondary" [outlined]="true" (onClick)="openSheetCheck()" />
-            }
-            <p-button label="Tải template Excel" severity="secondary" [outlined]="true" (onClick)="downloadTemplate()" />
-        </div>
     </div>
 
-    <h2 class="text-base font-semibold mb-3">Trường văn bản</h2>
-
-    @if (!loading && !fields.length) {
-        <div class="flex flex-col items-center gap-3 py-12 rounded-md border border-[var(--app-line)] bg-[var(--app-surface)]">
-            <span class="text-muted-color">Loại văn bản này chưa có trường.</span>
-            @if (canCreateField) {
-                <div class="flex gap-2">
-                    <p-button label="Thêm nhanh" severity="secondary" [outlined]="true" (onClick)="openQuickCreate()" />
-                    <p-button label="Thêm trường" (onClick)="openFieldForm()" />
-                </div>
-            }
+    <div class="flex flex-wrap items-center gap-3 mb-4">
+        <input pInputText class="w-full sm:w-80" placeholder="Tìm trường" [formControl]="keyword" />
+        <div class="flex items-center gap-2">
+            <span class="text-sm font-medium">Thứ tự theo</span>
+            <p-selectbutton class="order-view" [formControl]="orderView" [options]="views" optionLabel="label" optionValue="value" [allowEmpty]="false">
+                <ng-template #item let-view>
+                    <span [class]="view.icon"></span>
+                    <span>{{ view.label }}</span>
+                </ng-template>
+            </p-selectbutton>
         </div>
-    } @else {
-        <div class="flex flex-wrap items-center gap-3 mb-4">
-            <input pInputText class="w-full sm:w-80" placeholder="Tìm trường" [formControl]="keyword" />
-            <div class="flex items-center gap-2">
-                <span class="text-sm text-muted-color">Thứ tự:</span>
-                <p-selectbutton [formControl]="orderView" [options]="views" optionLabel="label" optionValue="value" [allowEmpty]="false" size="small" />
-            </div>
+        @if (fields.length) {
             <div class="flex flex-wrap gap-2 ml-auto">
                 @if (canDeleteField && selectedFields.length) {
                     <p-button [label]="'Xóa ' + selectedFields.length + ' trường'" severity="danger" [outlined]="true" (onClick)="confirmQuickDelete()" />
@@ -42,13 +34,29 @@
                     <p-button icon="pi pi-plus" label="Thêm trường" (onClick)="openFieldForm()" />
                 }
             </div>
+        }
+    </div>
+
+    <p class="-mt-2 mb-3 text-[13px] text-muted-color">{{ orderViewHint }}</p>
+
+    <app-data-table [columns]="columns" [data]="filteredFields" [loading]="loading" [paginator]="false" [selectable]="canDeleteField"
+        [reorderable]="canReorder" [(selection)]="selectedFields" (action)="onAction($event)" (rowReorder)="onRowReorder($event)">
+        <div tableEmpty class="flex flex-col items-center gap-3">
+            @if (fields.length) {
+                <span>Không tìm thấy trường phù hợp.</span>
+            } @else {
+                <span>Metadata này chưa có trường.</span>
+                @if (canCreateField) {
+                    <div class="flex gap-2">
+                        <p-button label="Thêm nhanh" severity="secondary" [outlined]="true" (onClick)="openQuickCreate()" />
+                        <p-button icon="pi pi-plus" label="Thêm trường" (onClick)="openFieldForm()" />
+                    </div>
+                }
+            }
         </div>
+    </app-data-table>
 
-        <app-data-table [columns]="columns" [data]="filteredFields" [loading]="loading" [paginator]="false" [selectable]="canDeleteField"
-            [reorderable]="canReorder" [(selection)]="selectedFields" (action)="onAction($event)" (rowReorder)="onRowReorder($event)" />
-
-        <p class="mt-3 text-[13px] text-muted-color">
-            Tổng {{ fields.length }} trường · {{ chargeableCount }} tính tiền · {{ ocrCount }} OCR
-        </p>
+    @if (fields.length) {
+        <p class="mt-3 text-[13px] text-muted-color">Tổng {{ fields.length }} trường · {{ chargeableCount }} tính tiền · {{ ocrCount }} OCR</p>
     }
 }
