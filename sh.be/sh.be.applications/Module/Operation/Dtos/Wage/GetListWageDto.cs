@@ -14,6 +14,7 @@ namespace sh.be.applications.Module.Operation.Dtos.Wage
         public int Quantity { get; set; }
         public int DocumentCount { get; set; }
         public int ReviewCount { get; set; }
+        public int ReviewDocumentCount { get; set; }
         public int PassedCount { get; set; }
         public int FailedCount { get; set; }
         public decimal? CompanyPrice { get; set; }
