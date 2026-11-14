@@ -53,7 +53,7 @@ export class DocumentTypeFormComponent extends BaseComponent {
                 takeUntilDestroyed(this._destroyRef),
             )
             .subscribe((res) => {
-                if (this.isResponseSucceed(res, true, 'Lưu loại văn bản thành công')) {
+                if (this.isResponseSucceed(res, true, 'Lưu metadata thành công')) {
                     this._ref.close(true);
                 }
             });

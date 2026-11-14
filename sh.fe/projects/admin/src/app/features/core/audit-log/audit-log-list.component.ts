@@ -54,9 +54,9 @@ export class AuditLogListComponent extends BaseComponent {
         },
         { header: 'Nguồn', field: 'source' },
         {
-            header: '',
+            header: 'Thao tác',
             cellViewType: CellViewTypes.ACTIONS,
-            headerContainerStyle: 'width: 64px',
+            headerContainerStyle: 'width: 100px; text-align: center',
             actions: [{ type: AUDIT_LOG_ACTIONS.VIEW, label: 'Xem chi tiết', icon: 'pi pi-eye' }],
         },
     ];

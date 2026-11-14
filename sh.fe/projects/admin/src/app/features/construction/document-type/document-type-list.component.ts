@@ -13,7 +13,7 @@ import { BaseComponent } from '@/shared/base/base.component';
 import { DataTable } from '@/shared/components/data-table/data-table.component';
 import { PageHeader } from '@/shared/components/page-header/page-header.component';
 import { CellViewTypes, TableEventTypes } from '@/shared/constants/data-table.constants';
-import { DOCUMENT_TYPE_VIEWS } from '@/shared/constants/document-type.constants';
+import { DOCUMENT_TYPE_VIEWS, METADATA_URL } from '@/shared/constants/document-type.constants';
 import { PermissionConstants } from '@/shared/constants/permission.constants';
 import { IColumn, ITableAction, ITableEvent } from '@/shared/models/data-table.models';
 import { SharedImports } from '@/shared/import.shared';
@@ -40,7 +40,7 @@ export class DocumentTypeListComponent extends BaseComponent {
     private readonly _sharedService = inject(SharedService);
     private readonly _destroyRef = inject(DestroyRef);
 
-    readonly breadcrumbs: MenuItem[] = [{ label: 'Hồ sơ thi công' }, { label: 'Loại văn bản' }];
+    readonly breadcrumbs: MenuItem[] = [{ label: 'Cấu hình dự án' }, { label: 'Metadata' }];
     readonly canCreate = this._sharedService.isGranted(PermissionConstants.FUNCTION_DOCUMENT_TYPE_CREATE);
 
     keyword = new FormControl('', { nonNullable: true });
@@ -51,17 +51,22 @@ export class DocumentTypeListComponent extends BaseComponent {
 
     readonly columns: IColumn<DocumentTypeRow>[] = [
         { header: 'STT', cellViewType: CellViewTypes.INDEX, headerContainerStyle: 'width: 72px' },
-        { header: 'Tên loại văn bản', field: 'name', clickable: true },
+        { header: 'Tên metadata', field: 'name', clickable: true },
         { header: 'Kiểu xem mặc định', field: 'defaultViewLabel', headerContainerStyle: 'width: 200px' },
         {
-            header: '',
+            header: 'Thao tác',
             cellViewType: CellViewTypes.ACTIONS,
-            headerContainerStyle: 'width: 64px',
+            headerContainerStyle: 'width: 100px; text-align: center',
             actions: [
-                { type: DOCUMENT_TYPE_ACTIONS.CONFIG_FIELDS, label: 'Cấu hình trường' },
-                ...this.grantedAction(PermissionConstants.FUNCTION_DOCUMENT_TYPE_UPDATE, { type: DOCUMENT_TYPE_ACTIONS.EDIT, label: 'Sửa' }),
-                { type: DOCUMENT_TYPE_ACTIONS.DOWNLOAD_TEMPLATE, label: 'Tải template Excel' },
-                ...this.grantedAction(PermissionConstants.FUNCTION_DOCUMENT_TYPE_DELETE, { type: DOCUMENT_TYPE_ACTIONS.DELETE, label: 'Xóa' }),
+                { type: DOCUMENT_TYPE_ACTIONS.CONFIG_FIELDS, label: 'Cấu hình trường', icon: 'pi pi-cog' },
+                ...this.grantedAction(PermissionConstants.FUNCTION_DOCUMENT_TYPE_UPDATE, { type: DOCUMENT_TYPE_ACTIONS.EDIT, label: 'Sửa', icon: 'pi pi-pencil' }),
+                { type: DOCUMENT_TYPE_ACTIONS.DOWNLOAD_TEMPLATE, label: 'Tải template Excel', icon: 'pi pi-download' },
+                ...this.grantedAction(PermissionConstants.FUNCTION_DOCUMENT_TYPE_DELETE, {
+                    type: DOCUMENT_TYPE_ACTIONS.DELETE,
+                    label: 'Xóa',
+                    icon: 'pi pi-trash',
+                    severity: 'danger',
+                }),
             ],
         },
     ];
@@ -105,7 +110,7 @@ export class DocumentTypeListComponent extends BaseComponent {
 
     onAction(event: ITableEvent<DocumentTypeRow>) {
         if (event.type === TableEventTypes.CELL_CLICK || event.type === DOCUMENT_TYPE_ACTIONS.CONFIG_FIELDS) {
-            this.router.navigate(['/admin/construction/document-type', event.row!.id]);
+            this.router.navigate([METADATA_URL, event.row!.id]);
         } else if (event.type === DOCUMENT_TYPE_ACTIONS.EDIT) {
             this.openForm(event.row);
         } else if (event.type === DOCUMENT_TYPE_ACTIONS.DOWNLOAD_TEMPLATE) {
@@ -118,7 +123,7 @@ export class DocumentTypeListComponent extends BaseComponent {
     openForm(documentType?: IViewDocumentType) {
         this._dialogService
             .open(DocumentTypeFormComponent, {
-                header: documentType ? 'Sửa loại văn bản' : 'Thêm loại văn bản',
+                header: documentType ? 'Sửa metadata' : 'Thêm metadata',
                 width: '32rem',
                 modal: true,
                 closable: true,
@@ -149,13 +154,13 @@ export class DocumentTypeListComponent extends BaseComponent {
 
     private confirmDeleteDocumentType(documentType: IViewDocumentType) {
         this.confirmDelete(
-            { header: 'Xóa loại văn bản', message: `Xóa loại văn bản ${documentType.name}? Các trường của loại này không còn dùng được.` },
+            { header: 'Xóa metadata', message: `Xóa metadata ${documentType.name}? Các trường của metadata này không còn dùng được.` },
             () => {
                 this._documentTypeService
                     .delete(documentType.id)
                     .pipe(takeUntilDestroyed(this._destroyRef))
                     .subscribe((res) => {
-                        if (this.isResponseSucceed(res, true, 'Xóa loại văn bản thành công')) {
+                        if (this.isResponseSucceed(res, true, 'Xóa metadata thành công')) {
                             this.load();
                         }
                     });

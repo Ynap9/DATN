@@ -62,7 +62,8 @@ export class RoleService {
 Route và quyền chi tiết của từng action: controller trong `sh.be/sh.be.api/Controllers/Module/` và nghiệp vụ ở
 [../../be/nghiep-vu/README.md](../../be/nghiep-vu/README.md).
 
-Loại / trường văn bản (`/admin/construction/document-type`, `.../:id`):
+Loại / trường văn bản, giao diện gọi là **Metadata**, nằm trong mục menu **Cấu hình dự án**
+(`/admin/construction/project-config` → `.../metadata`, `.../metadata/:id`; hằng `METADATA_URL`). Menu không có mục "Hồ sơ".
 
 - Route nhận `Menu.Construction.DocumentType` **hoặc** `Function.Construction.DocumentType.View`; menu theo View, vì tích một Function con
   không cấp key Menu cha.

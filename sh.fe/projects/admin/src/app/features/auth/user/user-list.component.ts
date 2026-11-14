@@ -59,12 +59,12 @@ export class UserListComponent extends BaseComponent {
         { header: 'Người tạo', field: 'createdBy' },
         { header: 'Ngày tạo', field: 'createdDate', cellViewType: CellViewTypes.DATE, dateFormat: 'dd/MM/yyyy HH:mm:ss' },
         {
-            header: '',
+            header: 'Thao tác',
             cellViewType: CellViewTypes.ACTIONS,
-            headerContainerStyle: 'width: 64px',
+            headerContainerStyle: 'width: 100px; text-align: center',
             actions: [
                 { type: USER_ACTIONS.ASSIGN_ROLE, label: 'Gán vai trò', icon: 'pi pi-shield' },
-                { type: USER_ACTIONS.DELETE, label: 'Xóa', icon: 'pi pi-trash' },
+                { type: USER_ACTIONS.DELETE, label: 'Xóa', icon: 'pi pi-trash', severity: 'danger' },
             ],
         },
     ];
