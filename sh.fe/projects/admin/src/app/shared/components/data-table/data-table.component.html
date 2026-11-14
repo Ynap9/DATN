@@ -74,7 +74,9 @@
     </ng-template>
     <ng-template #emptymessage>
         <tr>
-            <td [attr.colspan]="columns().length + (selectable() ? 1 : 0) + (reorderable() ? 1 : 0)" class="data-table-empty">Không có dữ liệu</td>
+            <td [attr.colspan]="columns().length + (selectable() ? 1 : 0) + (reorderable() ? 1 : 0)" class="data-table-empty">
+                <ng-content select="[tableEmpty]">Không có dữ liệu</ng-content>
+            </td>
         </tr>
     </ng-template>
 </p-table>

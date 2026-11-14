@@ -10,9 +10,13 @@ export const APP_MENU_ITEMS: MenuItem[] = [
         label: 'Hồ sơ thi công',
         items: [
             { label: 'Dự án', icon: 'pi pi-building', routerLink: ['/admin/construction/project'], permission: PermissionConstants.MENU_PROJECT },
-            { label: 'Cấu hình dự án', icon: 'pi pi-sliders-h', routerLink: ['/admin/construction/project-config'], permission: PermissionConstants.MENU_PROJECT_CONFIG },
-            { label: 'Hồ sơ', icon: 'pi pi-folder-open', routerLink: ['/admin/construction/submission'], permission: PermissionConstants.MENU_SUBMISSION },
-            { label: 'Loại văn bản', icon: 'pi pi-file', routerLink: ['/admin/construction/document-type'], permission: PermissionConstants.FUNCTION_DOCUMENT_TYPE_VIEW },
+            {
+                label: 'Cấu hình dự án',
+                icon: 'pi pi-sliders-h',
+                routerLink: ['/admin/construction/project-config'],
+                routerLinkActiveOptions: { paths: 'subset', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' },
+                permission: PermissionConstants.FUNCTION_DOCUMENT_TYPE_VIEW,
+            },
         ],
     },
     {
