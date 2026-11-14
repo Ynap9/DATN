@@ -27,7 +27,7 @@ namespace sh.be.infrastructure.data.Module.Operation.Repositories
             + "SELECT ProjectId FROM [construction].[ProjectDocumentType] WITH (UPDLOCK, HOLDLOCK) WHERE ProjectId = {0} AND DocumentTypeId = {1}; "
             + "SET LOCK_TIMEOUT -1;";
 
-        private const string LockSubmissionsSql = "SELECT * FROM [construction].[Submission] WITH (UPDLOCK, ROWLOCK)";
+        internal const string LockSubmissionsSql = "SELECT * FROM [construction].[Submission] WITH (UPDLOCK, ROWLOCK)";
 
         private readonly ShDbContext _shDbContext;
 
@@ -161,6 +161,12 @@ namespace sh.be.infrastructure.data.Module.Operation.Repositories
         public void DeleteHolder(SubmissionUser holder)
         {
             _shDbContext.SubmissionUsers.Remove(holder);
+        }
+
+        // Mọi dòng người giữ (Data, QA) của các văn bản (tracked)
+        public Task<List<SubmissionUser>> GetHoldersAsync(List<int> submissionIds)
+        {
+            return _shDbContext.SubmissionUsers.Where(u => submissionIds.Contains(u.SubmissionId)).ToListAsync();
         }
 
         // Còn là thành viên chưa gỡ của cặp, không xét bật / tắt

@@ -73,8 +73,9 @@ Gỡ (API 14) = xoá mềm + **tự thu hồi** văn bản chưa làm của ngư
   phụ trách nút (`AssignmentTicket` Role `QA`) → trả thêm `cancelledQaOwnershipTicketIds` ([23](23-chia-phieu.md)).
 - Chống đua: lệnh xoá có điều kiện trạng thái văn bản **ngay trong câu SQL** (`ExecuteDelete` + `Any` trên `Submissions`), không đọc trước
   rồi xoá sau — văn bản người đó vừa bấm Kiểm tra / vừa chấm Đạt ở lại người đó.
-  ⚠️ Chưa đủ khi DB bật `READ_COMMITTED_SNAPSHOT`: `Any` đọc bản đã commit cũ của dòng Kiểm tra đang ghi dở. Thu hồi / chuyển (Task 14)
-  đã đọc `Submission` `WITH (UPDLOCK, ROWLOCK)` ([26](26-thu-hoi-chuyen-phieu.md#chống-đua-với-kiểm-tra--qa)); câu xoá khi gỡ chưa sửa.
+  ⚠️ DB bật `READ_COMMITTED_SNAPSHOT`, `Any` đọc thường thấy bản đã commit cũ của dòng Kiểm tra đang ghi dở. Từ Task 31 câu xoá khi gỡ
+  (`ReleaseEntryNotCheckedAsync`) đọc `Submission` `WITH (UPDLOCK, ROWLOCK)` như thu hồi / chuyển ([26](26-thu-hoi-chuyen-phieu.md#chống-đua-với-kiểm-tra--qa)):
+  Kiểm tra ghi trước → văn bản ở lại người đó; gỡ trước → Kiểm tra `820`, rollback (cả dự án không QA).
 - Trả `revokedDocumentCount`, `keptDocumentCount` (dòng còn lại của **các phiếu vừa xét**), `cancelledAssignmentTicketIds`,
   `cancelledQaTicketIds`, `cancelledQaOwnershipTicketIds`, `unmanagedMemberCount`. FE hỏi xác nhận trước dựa vào `heldTicketCount` của API 9.
 - Gỡ rồi thêm lại cùng người được; văn bản đã thu hồi **không** tự quay lại. Thêm lại cùng vai trò thì chép đơn giá từ dòng đã gỡ
@@ -123,7 +124,11 @@ khi bung → `400`; gỡ D1 thu hồi 11 giữ 2, phiếu `DONE` và cặp (X, B
 `SubmissionQaLog`; rollback khi ném lỗi sau bước thu hồi (chèn `throw` tạm rồi gỡ); hai Admin cùng gỡ một QA → 1 thành công, 1 `400`;
 gỡ Leader chỉ bỏ quản lý trong cặp; `338` / `339`; phiếu giao trước luật vẫn chấm; `403` / `401`; Swagger 6 route.
 
-Chưa kiểm thực tế: đua "gỡ D1 ↔ D1 bấm Kiểm tra" (cần luồng nhập liệu Task 13, an toàn nhờ điều kiện trong câu xoá); dữ liệu nhập của văn
-bản `RETURNED` (seed không có `SubmissionData`; câu thu hồi chỉ xoá `SubmissionUser`).
+Đua "gỡ D1 ↔ D1 bấm Kiểm tra" (Task 31, 2026-11-14, `ZZTEST31` đã dọn): 2 request song song, quét độ trễ cả hai chiều. Bản sửa: dự án có
+QA 101 vòng, không QA 75 vòng, **0 vòng** văn bản `CHECKED` mất người giữ; chỉ ra (a) kiểm xong + còn người giữ hoặc (b) `820` + văn bản
+sạch (log: `820` bắt ở `AssignCheckedToQaAsync` trong transaction). Đối chứng bỏ `UPDLOCK`: 18/50 vòng `CHECKED` không người giữ. Gỡ không
+đua (2 chưa kiểm, 1 bị trả, 1 đã kiểm) → thu hồi 3, giữ 1 như trước.
+
+Chưa kiểm thực tế: dữ liệu nhập của văn bản `RETURNED` (seed không có `SubmissionData`; câu thu hồi chỉ xoá `SubmissionUser`).
 
 > **Tiếp:** [22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md) — nghiệm thu dự án: tự chuyển khi đủ, Admin cho phép khi chưa đủ, khoá import.

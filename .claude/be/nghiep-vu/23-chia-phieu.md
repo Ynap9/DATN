@@ -130,7 +130,8 @@ Task 15: thân `SubmissionAssignmentService`, luật ở `AssignmentDomainServic
 | B. Kiểm | Người xem tất cả: được, kể cả văn bản đã QA đạt (sửa hộ). Không giữ Data → `820`. Giữ Data, văn bản QA đạt → `826`. Thành viên bị tắt vẫn kiểm văn bản đang giữ |
 | C. Kiểm xong | Dừng (không lỗi) khi: đã QA; đã có QA giữ; nút (hộp, hồ sơ) không có phụ trách; QA phụ trách không còn hoạt động; QA từng kiểm / đang giữ Data văn bản; QA ở `SAMPLE`. Qua hết → khoá cặp, đọc lại, thêm dòng QA vào đợt mở (chưa có thì tạo), phiếu phụ trách +1. Áp cả văn bản chưa từng giao Data |
 | D. QA Không đạt | Khoá cặp rồi xét: phiếu Data không còn `ACTIVE` → về pool ngay, phiếu giữ nguyên; người nhập đã bị gỡ → về pool ngay, phiếu −1; còn lại tăng `ReturnCount`, lần 3 → về pool, phiếu −1. Về pool = xoá dòng Data, giữ dòng QA, audit `Trả văn bản về pool` |
-| D. Sau chấm | Phiếu Data còn `ACTIVE` và mọi văn bản đang thuộc phiếu đã QA đạt → `DONE` (UPDATE có điều kiện `Status = ACTIVE`) |
+| D. Sau chấm | Phiếu Data còn `ACTIVE` và mọi văn bản đang thuộc phiếu đã QA đạt → `DONE` (UPDATE có điều kiện `Status = ACTIVE`). Dự án không QA: `DONE` khi mọi văn bản của phiếu **đã kiểm**, xét ngay trong Check (`AssignCheckedToQaAsync`, Task 15F) |
+| D. Xoá hồ sơ | `ReleaseDeletedSubmissionsAsync` (Task 31, gọi từ xoá hồ sơ Task 32): xoá cứng dòng giữ Data / QA; phiếu Data `ACTIVE` −số dòng (về 0 → `CANCELLED`) rồi xét `DONE`, phiếu không `ACTIVE` giữ nguyên; đợt QA, phiếu phụ trách không đổi |
 | E. Sửa hộ | Admin / Leader kiểm văn bản đã đạt → QA cũ chấm lại; Không đạt khi phiếu đã `DONE` → về pool ngay |
 
 | # | Case | Chốt |

@@ -73,6 +73,7 @@ bản của một phiếu: `GET construction/submission/paging?assignmentTicketI
 
 Chặn hẳn QA phía Operation → `345`: thêm thẳng user Role QA, preview / giao role QA, `qa/revoke`, `qa/transfer`. Thêm theo nhóm thì
 người QA bị **bỏ qua** với `SKIP_REASON_QA_DISABLED` ([21](21-thanh-vien-du-an.md)). Kiểm qua `ProjectMemberDomainService.EnsureRoleEnabled`.
+Luật `DONE` theo `CountDataNotDoneAsync(ticketId, isQaEnabled)`: có QA đếm văn bản chưa QA đạt, không QA đếm văn bản chưa kiểm — thu hồi / chuyển truyền cờ QA của dự án.
 
 ## Case đã chốt (2026-11-12, 2026-11-13)
 
