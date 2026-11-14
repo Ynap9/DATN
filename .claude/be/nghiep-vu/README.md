@@ -22,7 +22,7 @@
 | [11-ho-so-import.md](11-ho-so-import.md) | Hồ sơ (`Submission`, `SubmissionData`): import append / blank / overwrite từ Google Sheet, hoặc từ file Excel (chạy thử ngay, import chạy nền Hangfire), proxy xem file PDF |
 | [12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md) | Hồ sơ: danh sách, lọc, chi tiết, hồ sơ liền kề, đếm, kiểm tra / tái kiểm tra (`SubmissionLog`), lịch sử |
 | [13-ho-so-qa.md](13-ho-so-qa.md) | Hồ sơ: QA Đạt / Không đạt, trả lại, `StatusQa` độc lập với `StatusCheck`, lịch sử QA (`SubmissionQaLog`) |
-| [14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md) | Hồ sơ: xoá mềm nhiều hồ sơ (chặn hồ sơ đã kiểm tra), xuất Excel theo bộ lọc (trả file ngay hoặc chạy nền Hangfire + link tải) |
+| [14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md) | Hồ sơ: chỉ Admin xoá mềm nhiều hồ sơ (chặn hồ sơ đã kiểm tra, gỡ người giữ, tự vào nghiệm thu), xuất Excel theo bộ lọc (trả file ngay hoặc chạy nền Hangfire + link tải) |
 | [15-han-du-an.md](15-han-du-an.md) | Hạn dự án: job Hangfire hằng ngày chuyển `EXPIRED`, mail báo sắp / đã hết hạn chống trùng, lịch sử gửi |
 | [16-dong-goi-cau-hinh.md](16-dong-goi-cau-hinh.md) | Đóng gói: 20 schema (5 loại gói × 4 loại metadata), trường đúng thứ tự, luật bắt buộc, 13 nhóm mã, seeder |
 | [17-thong-ke-qa.md](17-thong-ke-qa.md) | Thống kê QA: 1 văn bản = 1 lượt, người nhập theo lịch sử kiểm tra, tỉ lệ đúng theo ô tính tiền, theo trường / người nhập, dòng thời gian |

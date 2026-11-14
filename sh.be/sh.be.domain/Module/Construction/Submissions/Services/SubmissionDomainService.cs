@@ -68,6 +68,14 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
             return submissions;
         }
 
+        public static void EnsureCanDelete(bool isAdmin)
+        {
+            if (!isAdmin)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Chỉ Admin được xoá hồ sơ");
+            }
+        }
+
         public void EnsureCheckedDeletable(List<Submission> submissions, bool isSuperAdmin)
         {
             var checkedIds = submissions.Where(submission => submission.IsChecked()).Select(submission => submission.Id).ToList();

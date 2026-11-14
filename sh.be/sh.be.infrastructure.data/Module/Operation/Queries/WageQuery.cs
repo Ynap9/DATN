@@ -82,6 +82,7 @@ namespace sh.be.infrastructure.data.Module.Operation.Queries
                         g.Key.DocumentTypeId,
                         g.Key.UserId,
                         ReviewCount = g.Count(),
+                        ReviewDocumentCount = g.Select(l => l.SubmissionId).Distinct().Count(),
                         PassedCount = g.Count(l => l.NewStatusQa == SubmissionConst.QA_PASSED),
                         FailedCount = g.Count(l => l.NewStatusQa == SubmissionConst.QA_FAILED),
                     })
@@ -100,6 +101,7 @@ namespace sh.be.infrastructure.data.Module.Operation.Queries
                         quantities[(item.DocumentTypeId, item.UserId)] = quantity;
                     }
                     quantity.ReviewCount = item.ReviewCount;
+                    quantity.ReviewDocumentCount = item.ReviewDocumentCount;
                     quantity.PassedCount = item.PassedCount;
                     quantity.FailedCount = item.FailedCount;
                 }

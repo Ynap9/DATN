@@ -11,17 +11,14 @@ namespace sh.be.infrastructure.external.DigitalSignature.Base
 {
     public class PdfAppearanceBuilder
     {
-        private static readonly object PdfSharpLock = new();
-
         public PdfAppearanceBuilder(IFontResolver fontResolver)
         {
-            GlobalFontSettings.UseWindowsFontsUnderWindows = true;
-            GlobalFontSettings.FontResolver = fontResolver;
+            PdfSharpSetup.EnsureFontResolver(fontResolver);
         }
 
         public PdfRect MeasureText(string firstLine, string secondLine, string fontFamily, double fontSize)
         {
-            lock (PdfSharpLock)
+            lock (PdfSharpSetup.Lock)
             {
                 var font = new XFont(fontFamily, fontSize);
                 var padding = fontSize * PdfSigningConst.APPEARANCE_PADDING_RATIO;
@@ -98,7 +95,7 @@ namespace sh.be.infrastructure.external.DigitalSignature.Base
 
         private static byte[] Draw(double width, double height, Action<XGraphics, XRect> draw)
         {
-            lock (PdfSharpLock)
+            lock (PdfSharpSetup.Lock)
             {
                 try
                 {
