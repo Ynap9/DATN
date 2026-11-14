@@ -71,8 +71,8 @@ Hết file: lô `DONE`, `CloseSession`. Lô dừng giữa chừng thì `Pause` h
 hai nhánh: G1 (`rootca` + Sub-CA `cp`) hoặc G2 (`rootcag2` + `cpg2`, `dcscag2`); `CustomRootTrust` nên **không** tin kho chứng thư
 Windows, revocation `NoCheck` (chứng thư bị thu hồi vẫn qua). Plugin liệt kê chứng thư ở máy người dùng, server không đọc kho chứng thư.
 
-⚠️ PDFsharp giữ font cache toàn tiến trình: mọi lệnh vẽ nằm trong một `lock`, và `GlobalFontSettings.FontResolver` chỉ đặt được
-**một lần** — `PdfSignerExternal` phải là singleton. ⚠️ Model `PdfIndirectObject` không được đặt tên `PdfObject` (trùng `PdfSharp.Pdf.PdfObject`).
+⚠️ PDFsharp giữ font resolver + cache toàn tiến trình, dùng chung với `PdfExternal` (biên bản nghiệm thu, Task 34): mọi lệnh đo / vẽ khoá `PdfSharpSetup.Lock`,
+resolver chỉ gán qua `PdfSharpSetup.EnsureFontResolver` (bỏ qua khi đã có — đổi sau lần dùng font đầu là lỗi); đừng gán `GlobalFontSettings` thẳng. ⚠️ Model `PdfIndirectObject` không được đặt tên `PdfObject` (trùng `PdfSharp.Pdf.PdfObject`).
 
 ⚠️ Phiên ký (`SigningQueueExternal`) và slot của `SigningRunner` nằm trong bộ nhớ tiến trình. Hệ thống chỉ chạy đúng với
 **một** instance API. Muốn scale ngang phải đưa hàng đợi và trạng thái phiên ra ngoài (Redis hoặc DB). Đừng nhân bản API

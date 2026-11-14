@@ -138,6 +138,14 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
             }
         }
 
+        public void EnsureAcceptanceReportable()
+        {
+            if (Status != ProjectConst.ACCEPTING && Status != ProjectConst.DONE)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Chỉ xuất biên bản khi dự án đang nghiệm thu hoặc đã xong");
+            }
+        }
+
         public void EnsureQaEnabled()
         {
             if (!IsQaEnabled)

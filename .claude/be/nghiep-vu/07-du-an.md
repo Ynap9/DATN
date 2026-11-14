@@ -17,7 +17,7 @@ Trường: `Name`, `StartedAt`, `EndedAt`, `Status`, `UrlGoogleSheetSync`, `Goog
 | Cập nhật | `PUT api/construction/project/{id}` | `Function.Construction.Project.Update` |
 | Xoá | `DELETE api/construction/project/{id}` | `Function.Construction.Project.Delete` |
 | Xoá kèm dữ liệu phụ thuộc, chỉ Admin ([25](25-xoa-du-an-danh-sach-cap.md)) | `DELETE api/construction/project/admin/delete/{id:int}` | `Function.Construction.Project.Delete` |
-| Tổng hợp nghiệm thu ([22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md)) | `GET api/construction/project/{id:int}/acceptance` | `Function.Construction.Project.View` |
+| Tổng hợp nghiệm thu, xuất PDF biên bản nghiệm thu ([22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md)) | `GET api/construction/project/{id:int}/acceptance`, `.../acceptance/report` | `Function.Construction.Project.View` |
 | Bắt đầu / hoàn tất nghiệm thu, trả về đang làm | `POST .../{id:int}/acceptance/start`, `.../finish`, `.../reopen` | `Function.Construction.Project.Accept` |
 | Hạn dự án: danh sách, chạy job, trạng thái job, lịch sử mail ([15-han-du-an.md](15-han-du-an.md)) | `GET deadline`, `POST deadline-check/run`, `GET deadline-check/status`, `GET deadline-notification/paging` | `Function.Construction.Project.Deadline` |
 

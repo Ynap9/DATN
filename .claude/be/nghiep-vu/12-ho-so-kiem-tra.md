@@ -75,7 +75,7 @@ Body: `{ id, projectId, documentTypeId, datas: [{ documentFieldId, data }], note
 - Lỗi, không ghi gì: hồ sơ không tồn tại `305`; sai dự án / loại văn bản `319`; dự án không tồn tại `303`; dự án `DONE` `316`, hết hạn `323`
   (**trừ SuperAdmin**); trường gửi trùng `318`; trường không thuộc cấu hình dự án + loại văn bản `311`; ghi chú quá 1000 ký tự `400`.
 - `changedDataCount` = số ô sửa + số ô thêm. Audit `Kiểm tra hồ sơ`, `Update`, lưu `StatusCheck` và giá trị cũ / mới từng trường.
-- Một transaction (Task 25): lưu `Submission`, `SubmissionData`, `SubmissionLog`, `AuditLog` → `AssignCheckedToQaAsync` (kiểm lại người giữ `820`; dự án không QA thì xét `DONE` phiếu Data, không giao QA) → lưu → (dự án không QA, Task 28: tự vào nghiệm thu khi văn bản cuối được kiểm, [22](22-nghiem-thu-du-an.md#tự-chuyển-trong-reviewqa--check)) → commit; lỗi ở đâu cũng không ghi gì.
+- Một transaction (Task 25): lưu `Submission`, `SubmissionData`, `SubmissionLog`, `AuditLog` → `AssignCheckedToQaAsync` (kiểm lại người giữ `820`; dự án không QA thì xét `DONE` phiếu Data, không giao QA) → lưu → (dự án không QA, Task 28: tự vào nghiệm thu khi văn bản cuối được kiểm, [22](22-nghiem-thu-du-an.md#tự-chuyển-trong-reviewqa--check--delete)) → commit; lỗi ở đâu cũng không ghi gì.
 - Sau khi kiểm, import overwrite với `overwriteChecked = false` bỏ qua hồ sơ này.
 
 ## Phạm vi và phân việc

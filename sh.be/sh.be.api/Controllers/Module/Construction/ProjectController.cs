@@ -162,6 +162,21 @@ namespace sh.be.api.Controllers.Module.Construction
             }
         }
 
+        [HttpGet("{id:int}/acceptance/report")]
+        [Permission(PermissionConstants.FUNCTION_PROJECT_VIEW)]
+        public async Task<IActionResult> ExportAcceptanceReport([FromRoute] int id)
+        {
+            try
+            {
+                var file = await _projectService.ExportAcceptanceReport(id);
+                return File(file.Content, file.ContentType, file.FileName);
+            }
+            catch (Exception ex)
+            {
+                return Ok(OkException(ex));
+            }
+        }
+
         [HttpPost("{id:int}/acceptance/start")]
         [Permission(PermissionConstants.FUNCTION_PROJECT_ACCEPT)]
         public async Task<ApiResponse> StartAcceptance([FromRoute] int id, [FromBody] TransitionAcceptanceProjectDto dto)
