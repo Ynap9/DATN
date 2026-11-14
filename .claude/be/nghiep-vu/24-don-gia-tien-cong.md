@@ -80,7 +80,7 @@ Phạm vi xét theo từng cặp (dự án, loại văn bản): một người c
 - **Data** (theo loại văn bản, người): `documentCount` = số văn bản đã kiểm xong đang giữ (K2); `quantity` = `fieldCount` = tổng trường
   tính tiền có dữ liệu của các văn bản đó (K1). Task 30 (2026-11-13) thêm điều kiện `IsChargeable` (trước đó đếm mọi trường), đọc cờ
   **hiện tại** nên đổi cờ thì khối lượng văn bản đã kiểm đổi theo (sau tối đa 60 giây cache) — cùng luật `filledFieldCount` ở [25](25-xoa-du-an-danh-sach-cap.md).
-- **QA** (theo loại văn bản, người): `reviewCount` = số lượt chấm; `passedCount`, `failedCount`; `quantity` = `reviewCount` (K3).
+- **QA** (theo loại văn bản, người): `reviewCount` = số lượt chấm; `reviewDocumentCount` = số văn bản khác nhau đã chấm; `passedCount`, `failedCount`; `quantity` = `reviewCount` (K3).
 - `actualAmount` = `quantity` × `ActualPrice` (null coi là 0); `companyAmount` = `quantity` × `CompanyPrice`, `null` với người không thấy
   giá công ty.
 - Thành viên chưa làm gì vẫn có dòng với `quantity` 0. Thành viên đã gỡ mà `quantity` 0 thì bỏ.
@@ -88,7 +88,7 @@ Phạm vi xét theo từng cặp (dự án, loại văn bản): một người c
   Tổng tính trên **toàn bộ dòng trong phạm vi**, không theo trang.
 - Sắp: loại văn bản, vai trò, họ tên.
 
-## Hai API
+## API
 
 Gốc `api/v1/operation/project/{projectId}`.
 
@@ -96,6 +96,14 @@ Gốc `api/v1/operation/project/{projectId}`.
 |---|---|---|---|
 | PUT | `member/price` | `Function.Operation.Price.ManageActual` | Body `{ items: [{ memberId, companyPrice?, actualPrice? }] }`, trả `{ updatedCount, members[] }` |
 | GET | `wage/paging` | `Function.Operation.Wage.View` | Query `documentTypeId?`, `role?` (Data / QA), `keyword?`, `pageNumber`, `pageSize` (1–200). Trả dòng + `summary` |
+| GET | `wage/export-excel` | `Function.Operation.Wage.View` + **chỉ Admin / SuperAdmin** | Query `documentTypeId?`, `role?`, `keyword?` (cùng luật với paging, không phân trang). Trả file `TienCong_<dự án>_<yyyyMMddHHmm>.xlsx`, sheet "Tiền công" |
+
+`wage/export-excel`: kiểm Admin trước mọi luật khác (không phải Admin → `400` "Chỉ Admin được xuất Excel tiền công", trả `ApiResponse`, không trả file).
+Nội dung là các dòng của `wage/paging` của Admin, không phân trang, kể cả thành viên đã gỡ còn khối lượng. Cột: STT, Loại văn bản, Tài khoản,
+Họ tên, Vai trò, Trạng thái (`Đã gỡ` ưu tiên, rồi `Đang tắt`, còn lại `Đang làm`), Số văn bản (Data: `documentCount`; QA: `reviewDocumentCount`),
+Khối lượng, Lượt đạt / Lượt không đạt (chỉ QA), Đơn giá và Thành tiền thực nhận, Đơn giá và Thành tiền công ty. Ô tiền dùng `InvariantCulture`,
+đơn giá chưa đặt để trống. Dòng cuối "Tổng": khối lượng Data / QA, thành tiền thực nhận và công ty theo `summary`; không có dòng nào thì Tổng = 0.
+Excel ghi mọi ô dạng chuỗi nên không SUM được (xem [ExcelExternal](../architecture/05-infrastructure-external.md)).
 
 Quyền `Price.ManageCompany` là key trong cây quyền để gán menu; API `member/price` không kiểm riêng nó, luật Admin nằm trong service
 (`809`).
@@ -125,6 +133,6 @@ tắt `IsChargeable` thêm 1 trường, đợi hết cache 60 giây → 8.
 ## Chưa làm (task sau)
 
 - Doanh thu, quỹ KPI (`bonus-pool`), lịch sử giá: không thuộc task này.
-- Chốt kỳ thanh toán (TC-09), dashboard (TC-08), lọc theo khoảng ngày, xuất Excel thống kê, FE.
+- Chốt kỳ thanh toán (TC-09), dashboard (TC-08), FE. Lọc theo khoảng ngày: đã chốt không làm (2026-11-14).
 
 > **Tiếp:** [25-xoa-du-an-danh-sach-cap.md](25-xoa-du-an-danh-sach-cap.md) — xoá dự án kèm dữ liệu và danh sách cặp dự án – loại văn bản.
