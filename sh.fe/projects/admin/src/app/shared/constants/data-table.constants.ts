@@ -3,6 +3,7 @@ export const CellViewTypes = {
     DATE: 'DATE',
     CURRENCY: 'CURRENCY',
     CHECKBOX: 'CHECKBOX',
+    SWITCH: 'SWITCH',
     LINK_BLANK: 'LINK_BLANK',
     STATUS: 'STATUS',
     ACTIONS: 'ACTIONS',

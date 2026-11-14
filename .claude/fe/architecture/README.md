@@ -1,10 +1,10 @@
 # Kiến trúc Frontend sh.fe
 
 > Angular 21 standalone, zone.js, PrimeNG 21 (theme Aura), Tailwind 4. Phân tầng gọn theo tinh thần clean,
-> chia tính năng theo module BE. Cập nhật 2026-10-30.
+> chia tính năng theo module BE. Cập nhật 2026-11-14.
 
 Trạng thái: **bộ khung**. Đã có layout (gốc Sakai), trang đăng nhập (chưa gọi API), auth / guard / interceptor,
-UI kit `@sh/ui`. Chưa có màn hình nghiệp vụ; mỗi module BE đã có file route rỗng chờ thêm màn hình. Chỗ lệch với
+UI kit `@sh/ui`, màn Người dùng, Vai trò, Nhật ký và Loại / trường văn bản (`construction`). Chỗ lệch với
 BE xem [../plans/khop-voi-be.plan.md](../plans/khop-voi-be.plan.md).
 
 ## Các tầng

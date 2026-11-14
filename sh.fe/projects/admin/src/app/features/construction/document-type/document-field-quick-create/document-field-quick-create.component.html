@@ -1,0 +1,15 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="flex flex-col gap-2">
+        <sh-input-text label="Tên các trường" formControlName="fieldNames" [textarea]="true" [rows]="5" [required]="true"
+            placeholder="Số hiệu; Ngày ký; Trích yếu" />
+        <small class="text-muted-color">Các tên cách nhau bằng dấu ";". Tên cột import sẽ bằng đúng tên trường.</small>
+        @if (previewNames().length) {
+            <p class="m-0 text-sm">Sẽ tạo {{ previewNames().length }} trường: {{ previewNames().join(', ') }}</p>
+        }
+    </div>
+
+    <div class="flex justify-end gap-2 mt-6">
+        <p-button label="Hủy" severity="secondary" [outlined]="true" (onClick)="close()" />
+        <p-button type="submit" label="Thêm" [loading]="submitting" [disabled]="!previewNames().length" />
+    </div>
+</form>

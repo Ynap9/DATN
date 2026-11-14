@@ -1,0 +1,21 @@
+<app-page-header title="Loại văn bản" [breadcrumbs]="breadcrumbs" />
+
+<div class="flex flex-wrap items-center gap-3 mb-4">
+    <input pInputText class="w-full sm:w-80" placeholder="Tìm theo tên loại văn bản" [formControl]="keyword" />
+    <span class="text-sm text-muted-color">{{ totalRecords }} mục</span>
+    @if (canCreate) {
+        <p-button class="ml-auto" icon="pi pi-plus" label="Thêm loại văn bản" (onClick)="openForm()" />
+    }
+</div>
+
+@if (!loading && !totalRecords && !keyword.value) {
+    <div class="flex flex-col items-center gap-3 py-12 rounded-md border border-[var(--app-line)] bg-[var(--app-surface)]">
+        <span class="text-muted-color">Chưa có loại văn bản nào.</span>
+        @if (canCreate) {
+            <p-button label="Thêm loại văn bản" (onClick)="openForm()" />
+        }
+    </div>
+} @else {
+    <app-data-table [columns]="columns" [data]="documentTypes" [loading]="loading" [pageNumber]="pageNumber" [pageSize]="pageSize"
+        [total]="totalRecords" (pageChange)="onPageChange($event)" (action)="onAction($event)" />
+}
