@@ -27,4 +27,10 @@ export interface IColumn<T = any> {
     actions?: ITableAction[];
     customComponent?: Type<unknown>;
     statusSeverity?: (row: T) => TagSeverity;
+    disabled?: (row: T) => boolean;
+}
+
+export interface ITableRowReorder {
+    dragIndex: number;
+    dropIndex: number;
 }

@@ -28,7 +28,7 @@
 		<textarea
 			*ngIf="textarea"
 			#inputTextarea
-			pInputTextarea
+			pTextarea
 			class="custom-disabled w-full lib-textarea"
 			[id]="inputId"
 			(input)="_onChange($any($event.target).value?.trim() || firstValue); onInput.emit($event)"

@@ -1,0 +1,41 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="flex flex-col gap-6">
+        <section class="flex flex-col gap-4">
+            <h3 class="text-base font-semibold m-0">Thông tin</h3>
+            <sh-input-text label="Tên trường" formControlName="name" [required]="true" />
+            <div>
+                <sh-input-text label="Tên cột import" formControlName="fieldImport" />
+                <small class="text-muted-color">Tên cột trên Google Sheet / Excel khi import. Để trống thì dùng tên trường.</small>
+            </div>
+        </section>
+
+        <section class="flex flex-col gap-4">
+            <h3 class="text-base font-semibold m-0">Cấu hình</h3>
+            <div class="flex flex-wrap gap-6">
+                <label class="flex items-center gap-2"><p-toggleswitch formControlName="isShow" /> Hiển thị</label>
+                <label class="flex items-center gap-2"><p-toggleswitch formControlName="isChargeable" /> Tính tiền</label>
+                <label class="flex items-center gap-2"><p-toggleswitch formControlName="isFieldOcr" /> Nhận dạng OCR</label>
+            </div>
+            @if (form.controls.isFieldOcr.value) {
+                <sh-input-text label="Tên trường OCR" formControlName="fieldNameOcr" [required]="true" />
+            }
+        </section>
+
+        @if (documentField) {
+            <p-fieldset legend="Hiển thị" [toggleable]="true" [collapsed]="true">
+                <div class="flex flex-col gap-4">
+                    <div class="flex flex-wrap gap-6">
+                        <label class="flex items-center gap-2"><p-toggleswitch formControlName="isShowTableView" /> Hiện ở dạng bảng</label>
+                        <label class="flex items-center gap-2"><p-toggleswitch formControlName="isShowListView" /> Hiện ở dạng danh sách</label>
+                    </div>
+                    <sh-input-number label="Độ rộng cột (px)" formControlName="width" [useGrouping]="false" />
+                </div>
+            </p-fieldset>
+        }
+    </div>
+
+    <div class="flex justify-end gap-2 mt-6">
+        <p-button label="Hủy" severity="secondary" [outlined]="true" (onClick)="close()" />
+        <p-button type="submit" label="Lưu" [loading]="submitting" />
+    </div>
+</form>

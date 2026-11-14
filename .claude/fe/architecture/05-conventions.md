@@ -19,7 +19,7 @@ chưa yêu cầu) giống BE — xem [../../be/architecture/07-conventions.md](.
 |---|---|
 | Màn hình của một tính năng | `features/<module-be>/<tinh-nang>/` (ví dụ `features/auth/role/`) |
 | Service gọi API | `services/<controller>.service.ts`, phẳng, mỗi file một controller BE |
-| Kiểu DTO khớp BE | `models/<controller>.models.ts`, phẳng (trường **camelCase đúng như JSON BE trả**) |
+| Kiểu DTO khớp BE | `models/<controller>.model.ts` (số ít), phẳng (trường **camelCase đúng như JSON BE trả**) |
 | Mục menu | `app/app.menu.ts` |
 | Route của module | `features/<module-be>/<module-be>.routes.ts` |
 | Component con chỉ một tính năng dùng | Ngay trong thư mục tính năng đó |
@@ -34,7 +34,7 @@ quá 6–7 file mới chia thư mục con (`components/`).
 
 ## Tên
 
-- File kebab-case có hậu tố: `role-list.component.ts`, `role.service.ts`, `role.models.ts`, `role.routes.ts`;
+- File kebab-case có hậu tố: `role-list.component.ts`, `role.service.ts`, `role.model.ts`, `role.routes.ts`;
   class PascalCase + hậu tố (`RoleListComponent`, `RoleService`); interface tiền tố `I` (`IRole`).
 - `core/layout/` giữ kiểu Sakai gốc (`app-topbar.ts`, class `AppTopbar`); code mới dùng kiểu có hậu tố.
 - Selector: `app-` cho component của admin, `sh-` cho component UI kit (class `Sh...Component`, file
@@ -48,7 +48,7 @@ quá 6–7 file mới chia thư mục con (`components/`).
 - Service `@Injectable({ providedIn: 'root' })`, base URL `environment.api` (import `@env/environment`), route
   **copy đúng** từ controller BE, có version (`api/v1/auth/role/paging`; `/connect/token` không có version).
 - Service trả `Observable`; component subscribe kèm `takeUntilDestroyed(this.destroyRef)`.
-- Service lấy đường dẫn bằng `apiUrl('auth/role')` (`@/shared/utils/api-url`), `baseUrlInterceptor` ghép base URL. Không ghi cứng `v1`.
+- Service khai `api = apiUrl('auth/role')` (`@/shared/utils/api-url`) và `http = inject(HttpClient)`; `baseUrlInterceptor` ghép base URL. Không ghi cứng `v1`.
 - Hằng số đặt ở `shared/constants/`. `ApiVersionConstants` (`@/shared/constants/api-version.constants`) khớp `ApiVersionConstants` của BE. BE thêm `V2` thì thêm ở FE; endpoint riêng dùng `apiUrl('auth/role', ApiVersionConstants.V2)`; BE đổi `DEFAULT_VERSION` thì đổi một chỗ ở FE. `/connect/*` không có version.
 - App chạy **zone.js**, field thường vẫn cập nhật giao diện; nút ghi khoá bằng `submitting` + `finalize()` vì không có interceptor chống trùng.
 - Không tự gắn header `Authorization`, không tự toast lỗi HTTP (interceptor đã làm). Muốn tắt thì dùng
@@ -58,6 +58,8 @@ quá 6–7 file mới chia thư mục con (`components/`).
 
 - Form reactive (`FormBuilder`), kiểm bằng `isFormInvalid` của `BaseComponent` trước khi gửi.
 - Bảng dùng `DataTable` + `TblAction`; input, nút dùng `sh-*`; `imports` dùng `SharedImports`. Màn mới không dùng `sh-table`, `Page`.
+- `DataTable` có thêm `paginator` (mặc định `true`), `reorderable` + output `rowReorder`, `selectable` + `[(selection)]`, cột `SWITCH`
+  (bấm phát `CELL_CLICK`, khoá bằng `disabled`). Không truyền thì bảng y như cũ.
 - Style: Tailwind cho bố cục; style riêng component dưới 8 kB.
 - Thông điệp người dùng tiếng Việt, lấy từ `SuccessMessage` / `ErrorMessage` khi có sẵn.
 

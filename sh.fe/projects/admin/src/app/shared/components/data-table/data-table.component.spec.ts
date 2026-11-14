@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { providePrimeNG } from 'primeng/config';
-import { CellViewTypes } from '@/shared/constants/data-table.constants';
+import { CellViewTypes, TableEventTypes } from '@/shared/constants/data-table.constants';
 import { IColumn, ITableEvent } from '@/shared/models/data-table.models';
 import { TblAction } from '../tbl-action/tbl-action.component';
 import { DataTable } from './data-table.component';
@@ -53,5 +53,42 @@ describe('DataTable', () => {
         action.menuItems()[0].command({});
 
         expect(events).toEqual([{ type: 'delete', row }]);
+    });
+
+    it('mặc định có chân phân trang, không có cột chọn và tay kéo', () => {
+        const element = render([{ id: 1, info: { name: 'An' }, amount: 1 }]);
+
+        expect(element.querySelector('.data-table-footer')).not.toBeNull();
+        expect(element.querySelector('p-tableheadercheckbox')).toBeNull();
+        expect(element.querySelector('[preorderablerowhandle]')).toBeNull();
+    });
+
+    it('paginator = false thì ẩn chân phân trang', () => {
+        fixture.componentRef.setInput('paginator', false);
+
+        expect(render([]).querySelector('.data-table-footer')).toBeNull();
+    });
+
+    it('selectable, reorderable thì thêm cột chọn và tay kéo, colspan dòng rỗng tính cả hai', () => {
+        fixture.componentRef.setInput('selectable', true);
+        fixture.componentRef.setInput('reorderable', true);
+        const element = render([]);
+
+        expect(element.querySelectorAll('thead th').length).toBe(columns.length + 2);
+        expect(element.querySelector('p-tableheadercheckbox')).not.toBeNull();
+        expect(element.querySelector('.data-table-empty')?.getAttribute('colspan')).toBe(String(columns.length + 2));
+    });
+
+    it('ô SWITCH bấm thì phát CELL_CLICK kèm field và dòng, khoá theo disabled', () => {
+        const row = { id: 1, isShow: false };
+        const events: ITableEvent[] = [];
+        fixture.componentInstance.action.subscribe((event) => events.push(event));
+        fixture.componentRef.setInput('columns', [{ header: 'Hiển thị', field: 'isShow', cellViewType: CellViewTypes.SWITCH, disabled: () => false }]);
+        fixture.componentRef.setInput('data', [row]);
+        fixture.detectChanges();
+
+        (fixture.nativeElement.querySelector('p-toggleswitch input') as HTMLInputElement).click();
+
+        expect(events).toEqual([{ type: TableEventTypes.CELL_CLICK, field: 'isShow', row }]);
     });
 });
