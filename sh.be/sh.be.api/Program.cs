@@ -412,6 +412,7 @@ builder.Services.AddScoped<IMailExternal, MailExternal>();
 builder.Services.AddScoped<IDataReaderExternal, GoogleSheetReaderExternal>();
 builder.Services.AddScoped<IExcelReaderExternal, ExcelReaderExternal>();
 builder.Services.AddScoped<IExcelExternal, ExcelExternal>();
+builder.Services.AddScoped<IPdfExternal, PdfExternal>();
 builder.Services.AddScoped<IGoogleSheetExternal, GoogleSheetExternal>();
 builder.Services.AddScoped<IFileDownloadExternal, HttpFileDownloadExternal>();
 builder.Services.AddScoped<IFileStorageExternal, S3FileStorageExternal>();

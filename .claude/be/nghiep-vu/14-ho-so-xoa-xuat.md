@@ -9,7 +9,7 @@ hiện tại về Excel. Cùng `SubmissionController` và cùng bộ lọc với
 
 | Endpoint (`api/v1/construction/submission/...`) | Quyền | Việc |
 |---|---|---|
-| `DELETE` (gốc, `ids` trong body) | `Function.Construction.Submission.Delete` | Xoá mềm nhiều hồ sơ, tối đa 500 mỗi lần |
+| `DELETE` (gốc, `ids` trong body) | `Function.Construction.Submission.Delete`, chỉ Admin / SuperAdmin | Xoá mềm nhiều hồ sơ, tối đa 500 mỗi lần |
 | `GET export-excel` + bộ lọc chung | `Function.Construction.Submission.Export` | Tải `.xlsx` theo bộ lọc |
 | `POST export-excel/job` + bộ lọc chung | `Function.Construction.Submission.Export` | Xếp job xuất Excel chạy nền, trả `jobId` |
 | `GET export-excel/job/{jobId}` | `Function.Construction.Submission.Export` | Trạng thái job + link tải khi xong |
@@ -20,6 +20,7 @@ Body `DeleteSubmissionDto`: `{ projectId, documentTypeId, ids: [] }`. Mọi hồ
 
 | Lỗi | Mã |
 |---|---|
+| Không phải Admin / SuperAdmin, kể cả có quyền `Delete` (Task 32); kiểm trước mọi lỗi dưới | `400` "Chỉ Admin được xoá hồ sơ" |
 | Dự án không tồn tại / đã xoá | `303` |
 | Dự án `DONE` (trừ SuperAdmin) | `316` |
 | Dự án hết hạn `EXPIRED` (trừ SuperAdmin) | `323` |
@@ -40,6 +41,8 @@ Luật:
   `SubmissionQaLog` giữ nguyên.
 - Ghi `AuditLog` action `Xóa hồ sơ`, type `Delete`, mô tả `Xóa N hồ sơ của dự án …, loại văn bản Id = …`. Giá trị cũ là danh sách
   `Id, FileName, ProfileRange, Box, StatusCheck, StatusQa` của từng hồ sơ.
+- Cùng transaction, sau khi lưu xoá (Task 32): gỡ người giữ, trừ phiếu nhập liệu, xét `DONE` qua `ReleaseDeletedSubmissionsAsync`
+  ([23](23-chia-phieu.md#nối-vào-luồng-kiểm-tra--qa)); rồi dự án đủ điều kiện thì tự vào nghiệm thu ([22](22-nghiem-thu-du-an.md#tự-chuyển-trong-reviewqa--check--delete)).
 - Trả `{ deletedSubmissionCount, deletedDataCount }`.
 
 Sau khi xoá, import lại cùng khoá sẽ tạo hồ sơ mới: snapshot lúc import và unique index (`[Deleted] = 0`) đều bỏ qua bản đã xoá.
@@ -156,7 +159,8 @@ Ngày 2026-10-25, Release chạy `dotnet` trên máy dev (không Docker), DB dev
   Tắt server nền → `211`. Restart app khi 2 job đang chạy + 3 job chờ → cả 5 Succeeded (2 job bị cắt chạy lại sau ~5 phút).
 - Bấm 5 lần liền với 20.000 hồ sơ: tối đa 2 Processing, 3 Enqueued, cả 5 Succeeded. Dọn file: còn thư mục 0, 1 và 9 ngày trước, mất 2, 3, 8.
 - Chưa đợi đủ 15 phút để thử link hết hạn: chỉ kiểm tham số link.
-- `DELETE` (xoá hồ sơ) chưa gọi thật trên DB có dữ liệu, chưa kiểm luồng bị khoá bởi import (`310`).
+- `DELETE` (xoá hồ sơ) gọi thật ở Task 32 (2026-11-14, `ZZTEST32` đã dọn): Leader / Data / QA `403` (DB dev chỉ Admin, SuperAdmin có quyền);
+  Admin xoá chưa kiểm được, đã kiểm `325`, SuperAdmin được; phiếu 4 → 3, về 0 → `CANCELLED`, không QA → `DONE` + `ACCEPTING`; `325` giữa chừng không đổi gì. Chưa kiểm khoá import `310`.
 
 | Đo (20.000 hồ sơ × 30 trường, file 5,06 MB) | Kết quả |
 |---|---|

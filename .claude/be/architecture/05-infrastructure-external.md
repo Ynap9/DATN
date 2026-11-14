@@ -11,7 +11,7 @@ Service và external chỉ nối qua interface: đổi nhà cung cấp không ch
 |---|---|
 | `Ai` | `ISecretProtectorExternal` → `DataProtectionSecretProtectorExternal` (singleton): `Protect` / `TryUnprotect` theo `purpose` bằng ASP.NET DataProtection; giải mã lỗi (`CryptographicException`, `FormatException` khi chuỗi rác) → `null`. Giữ API key nhà cung cấp AI ([../nghiep-vu/20-ai-nha-cung-cap.md](../nghiep-vu/20-ai-nha-cung-cap.md)) |
 | `BackgroundJob` | `IBackgroundJobExternal` → `HangfireBackgroundJobExternal`; cấu hình Hangfire ở `Base/HangfireExtensions` |
-| `DataReader` | `IDataReaderExternal` → `GoogleSheetReaderExternal`, `IExcelReaderExternal` → `ExcelReaderExternal` (cùng qua `Base/DataReaderExternalBase`); `IExcelExternal` → `ExcelExternal`; `IGoogleSheetExternal` → `GoogleSheetExternal` |
+| `DataReader` | `IDataReaderExternal` → `GoogleSheetReaderExternal`, `IExcelReaderExternal` → `ExcelReaderExternal` (cùng qua `Base/DataReaderExternalBase`); `IExcelExternal` → `ExcelExternal`; `IGoogleSheetExternal` → `GoogleSheetExternal`; `IPdfExternal` → `PdfExternal` (PDFsharp: `PdfReportDto` = tiêu đề + dòng thông tin + bảng, A4 dọc, tự xuống dòng, sang trang lặp hàng tiêu đề, không biết nghiệp vụ; chữ đậm do PDFsharp giả lập nên mảnh; font dùng chung với ký số — ⚠️ ở [09](09-chu-ky-so.md)) |
 | `DigitalSignature` | `IPdfSignerExternal`, `ISigningQueueExternal`, `ITimestampExternal`, `ICertificateValidatorExternal` → `...External` cùng tên (singleton). Xem [09-chu-ky-so.md](09-chu-ky-so.md) |
 | `Mail` | `IMailExternal` → `MailExternal`; HTML ở `Mail/Templates/` (embedded resource: `AccountCreated`, `ProjectDeadline`), đọc qua `Base/MailTemplateLoader` |
 | `SignalR` | `ISignalRExternal` → `SignalRExternal` (singleton); hub, tracker, cấu hình ở `Base/` |

@@ -346,14 +346,9 @@ namespace sh.be.applications.Module.Construction.Implements
                 await _unitOfWork.SaveChangesAsync();
 
                 // Dự án không QA: văn bản cuối cùng được kiểm thì dự án tự vào nghiệm thu; dự án có QA chỉ tự chuyển ở ReviewQa
-                var oldProjectStatus = project.Status;
-                if (!project.IsQaEnabled && await _projectDomainService.TryStartAcceptanceAsync(project, currentUserId, now))
+                if (!project.IsQaEnabled)
                 {
-                    var summary = await _projectQuery.FindAcceptanceSummary(project.Id);
-                    AddAuditLog(AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_START, AuditLogConstants.ACTION_TYPE_UPDATE, $"Tự động bắt đầu nghiệm thu dự án {project.Name}",
-                        new { ProjectId = project.Id, Status = oldProjectStatus },
-                        new { ProjectId = project.Id, project.Status, IsForced = false, IsAutomatic = true, Reason = (string?)null, Summary = summary.Total });
-                    await _unitOfWork.SaveChangesAsync();
+                    await TryStartAcceptanceAutomaticallyAsync(project, currentUserId, now);
                 }
 
                 await transaction.CommitAsync();
@@ -460,14 +455,9 @@ namespace sh.be.applications.Module.Construction.Implements
                 }
 
                 // Văn bản cuối cùng QA đạt thì dự án tự vào nghiệm thu; dự án có QA chỉ tự chuyển ở đây (không QA thì ở Check), không tự sang Xong
-                var oldProjectStatus = project.Status;
-                if (qaLog.NewStatusQa == SubmissionConst.QA_PASSED && await _projectDomainService.TryStartAcceptanceAsync(project, currentUserId, now))
+                if (qaLog.NewStatusQa == SubmissionConst.QA_PASSED)
                 {
-                    var summary = await _projectQuery.FindAcceptanceSummary(project.Id);
-                    AddAuditLog(AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_START, AuditLogConstants.ACTION_TYPE_UPDATE, $"Tự động bắt đầu nghiệm thu dự án {project.Name}",
-                        new { ProjectId = project.Id, Status = oldProjectStatus },
-                        new { ProjectId = project.Id, project.Status, IsForced = false, IsAutomatic = true, Reason = (string?)null, Summary = summary.Total });
-                    await _unitOfWork.SaveChangesAsync();
+                    await TryStartAcceptanceAutomaticallyAsync(project, currentUserId, now);
                 }
 
                 await transaction.CommitAsync();
@@ -584,11 +574,14 @@ namespace sh.be.applications.Module.Construction.Implements
             return await _submissionQuery.FindTimeline(id);
         }
 
+        // Admin xoá mềm nhiều hồ sơ kèm dữ liệu (đã kiểm tra chỉ SuperAdmin), khoá cặp như import, gỡ người giữ, dự án đủ điều kiện thì tự vào nghiệm thu
         public async Task<ViewDeleteSubmissionResultDto> Delete(DeleteSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(Delete)}, dto={JsonSerializer.Serialize(dto)}");
             var currentUserId = getCurrentUserId();
-            var isSuperAdmin = PermissionDomainService.IsSuperAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            var roleNames = await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId);
+            SubmissionDomainService.EnsureCanDelete(PermissionDomainService.IsAdmin(roleNames));
+            var isSuperAdmin = PermissionDomainService.IsSuperAdmin(roleNames);
             var project = await _submissionDomainService.EnsureEditableProjectAsync(dto.ProjectId, isSuperAdmin);
             var now = GetVietnamTime();
 
@@ -610,6 +603,11 @@ namespace sh.be.applications.Module.Construction.Implements
                     $"Xóa {submissions.Count} hồ sơ của dự án {project.Name}, loại văn bản Id = {dto.DocumentTypeId}",
                     submissions.Select(submission => new { submission.Id, submission.FileName, submission.ProfileRange, submission.Box, submission.StatusCheck, submission.StatusQa }));
                 await _unitOfWork.SaveChangesAsync();
+
+                // Gỡ người giữ, trừ phiếu, xét DONE trên văn bản vừa xoá; rồi mới đếm nghiệm thu vì đếm trên DB đã lưu xoá
+                await _submissionAssignmentService.ReleaseDeletedSubmissionsAsync(submissions, currentUserId, now);
+                await _unitOfWork.SaveChangesAsync();
+                await TryStartAcceptanceAutomaticallyAsync(project, currentUserId, now);
 
                 await transaction.CommitAsync();
                 return new ViewDeleteSubmissionResultDto
@@ -1012,6 +1010,20 @@ namespace sh.be.applications.Module.Construction.Implements
                 throw new UserFriendlyException(ErrorCodes.BadRequest, $"Khoảng thời gian tối đa {SubmissionConst.QA_STATS_MAX_DAYS} ngày");
             }
             return (normalizedFromDate, normalizedToDate);
+        }
+
+        // Dự án đủ điều kiện thì tự vào nghiệm thu và ghi audit "Bắt đầu nghiệm thu" tự động; gọi trong transaction của Check / ReviewQa / Delete
+        private async Task TryStartAcceptanceAutomaticallyAsync(Project project, string currentUserId, DateTime now)
+        {
+            var oldProjectStatus = project.Status;
+            if (await _projectDomainService.TryStartAcceptanceAsync(project, currentUserId, now))
+            {
+                var summary = await _projectQuery.FindAcceptanceSummary(project.Id);
+                AddAuditLog(AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_START, AuditLogConstants.ACTION_TYPE_UPDATE, $"Tự động bắt đầu nghiệm thu dự án {project.Name}",
+                    new { ProjectId = project.Id, Status = oldProjectStatus },
+                    new { ProjectId = project.Id, project.Status, IsForced = false, IsAutomatic = true, Reason = (string?)null, Summary = summary.Total });
+                await _unitOfWork.SaveChangesAsync();
+            }
         }
 
         private record ProjectSheetSource(Project Project, SheetTable Table, SubmissionImportColumns Columns, List<MappedImportColumn> MappedColumns);

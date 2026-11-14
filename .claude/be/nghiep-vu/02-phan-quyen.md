@@ -126,7 +126,7 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `POST api/construction/document-field`, `POST .../quick-create`, `GET .../sheet-header` | `Function.Construction.DocumentField.Create` |
 | `PUT api/construction/document-field/{id}`, `PUT .../{id}/setting`, `PUT .../{id}/order-table-view`, `PUT .../{id}/order-list-view` | `Function.Construction.DocumentField.Update` |
 | `DELETE api/construction/document-field/{id}`, `DELETE .../quick-delete` | `Function.Construction.DocumentField.Delete` |
-| `GET api/construction/project/{id}`, `GET .../{id:int}/acceptance` | `Function.Construction.Project.View` |
+| `GET api/construction/project/{id}`, `GET .../{id:int}/acceptance`, `GET .../{id:int}/acceptance/report` | `Function.Construction.Project.View` (`report`: chỉ Admin / Leader đang hoạt động của dự án — `337`, kiểm ở service, [22](22-nghiem-thu-du-an.md)) |
 | `POST api/construction/project/{id:int}/acceptance/start`, `.../finish`, `.../reopen` | `Function.Construction.Project.Accept` (Leader chỉ dự án mình là Leader — `337`; `reopen` chỉ Admin — kiểm ở service, [22](22-nghiem-thu-du-an.md)) |
 | `POST api/construction/project` | `Function.Construction.Project.Create` |
 | `PUT api/construction/project/{id}` | `Function.Construction.Project.Update` |
@@ -143,7 +143,7 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `GET api/construction/submission/proxy-file`, `GET .../paging`, `GET .../count`, `GET .../{id}`, `GET .../{id}/next`, `GET .../{id}/previous`, `GET .../{id}/logs`, `GET .../qa/paging`, `GET .../{id}/qa`, `GET .../{id}/qa-logs`, `GET .../field-values`, `GET .../tree`, `GET .../logs`, `GET .../summary`, `GET .../{id}/timeline` | `Function.Construction.Submission.View` |
 | `PUT api/construction/submission/check` (id trong body) | `Function.Construction.Submission.Check` |
 | `PUT api/construction/submission/qa` (id trong body) | `Function.Construction.Submission.Qa` |
-| `DELETE api/construction/submission` (ids trong body) | `Function.Construction.Submission.Delete` |
+| `DELETE api/construction/submission` (ids trong body) | `Function.Construction.Submission.Delete`, chỉ Admin / SuperAdmin (`400`, Task 32, [14](14-ho-so-xoa-xuat.md#xoá-hồ-sơ)) |
 | `GET api/construction/submission/export-excel`, `POST .../export-excel/job`, `GET .../export-excel/job/{jobId}` | `Function.Construction.Submission.Export` (POST / GET file: Leader chỉ dự án mình — `337`, [14](14-ho-so-xoa-xuat.md)) |
 | `GET api/construction/submission/qa-stats/summary`, `GET .../qa-stats/fields`, `GET .../qa-stats/entry-users` | `Function.Construction.Submission.QaStats` |
 | `GET api/digital-signature/template/paging`, `GET .../{id}`, `GET .../sample-file` | `Function.DigitalSignature.Template.View` |

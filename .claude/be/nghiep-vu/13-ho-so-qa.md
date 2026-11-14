@@ -77,7 +77,7 @@ Thống kê QA theo trường, theo người nhập và dòng thời gian một 
   vì entity không có navigation; lỗi ở bất kỳ bước nào → rollback cả hồ sơ, log, trường sai, audit.
 - Dự án `ACCEPTING` vẫn QA được. Chấm **Đạt** trên dự án `DEPLOYING` / `DOING` mà mọi văn bản đã `CHECKED` + `QA_PASSED` → dự án **tự**
   sang `ACCEPTING` trong cùng transaction, sau khối chốt phiếu FULL, kèm audit `Bắt đầu nghiệm thu` `IsAutomatic = true`
-  ([22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md#tự-chuyển-trong-reviewqa--check)).
+  ([22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md#tự-chuyển-trong-reviewqa--check--delete)).
 - Trả `{ submissionId, statusCheck, statusQa, qaReason, wrongDocumentFieldIds, qaLogId }`.
 
 Lịch sử QA: phân trang, `CreatedDate` rồi `Id` giảm dần, có `userName`, `fullName` (join `Users` lúc đọc), `wrongDocumentFieldIds` của
