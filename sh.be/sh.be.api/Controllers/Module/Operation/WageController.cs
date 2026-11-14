@@ -38,5 +38,20 @@ namespace sh.be.api.Controllers.Module.Operation
                 return OkException(ex);
             }
         }
+
+        [HttpGet("wage/export-excel")]
+        [Permission(PermissionConstants.FUNCTION_WAGE_VIEW)]
+        public async Task<IActionResult> ExportExcel([FromRoute] int projectId, [FromQuery] ExportWageDto dto)
+        {
+            try
+            {
+                var file = await _wageService.ExportExcel(projectId, dto);
+                return File(file.Content, file.ContentType, file.FileName);
+            }
+            catch (Exception ex)
+            {
+                return Ok(OkException(ex));
+            }
+        }
     }
 }

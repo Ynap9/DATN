@@ -1,4 +1,6 @@
 using sh.be.shared.Constants.Auth;
+using sh.be.shared.HttpRequest.Error;
+using sh.be.shared.HttpRequest.Exception;
 
 namespace sh.be.domain.Module.Operation.Wages.Services
 {
@@ -25,6 +27,14 @@ namespace sh.be.domain.Module.Operation.Wages.Services
         public static decimal CalculateAmount(int quantity, decimal? price)
         {
             return quantity * (price ?? 0m);
+        }
+
+        public static void EnsureCanExport(bool isAdmin)
+        {
+            if (!isAdmin)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Chỉ Admin được xuất Excel tiền công");
+            }
         }
     }
 
