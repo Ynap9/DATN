@@ -8,11 +8,13 @@ using sh.be.domain.Base;
 using sh.be.domain.Module.Construction.QaAssignments.Entities;
 using sh.be.domain.Module.Construction.Submissions.Entities;
 using sh.be.domain.Module.Core.Repositories;
+using sh.be.domain.Module.Operation.Assignments.Entities;
 using sh.be.domain.Module.Operation.Assignments.Repositories;
 using sh.be.domain.Module.Operation.Assignments.Services;
 using sh.be.domain.Module.Operation.ProjectMembers.Repositories;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Core;
+using sh.be.shared.Constants.Operation;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
 
@@ -65,6 +67,8 @@ namespace sh.be.applications.Module.Operation.Implements
             _logger.LogInformation($"{nameof(AssignCheckedToQaAsync)}, submissionId={submission.Id}, userId={userId}");
             var project = await _projectMemberRepository.FindProjectAsync(submission.ProjectId)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
+            // Kiểm lại người giữ sau khi Check đã ghi hồ sơ trong transaction: văn bản vừa bị thu hồi / chuyển / gỡ thành viên giữa chừng thì 820, Check rollback
+            await _assignmentDomainService.EnsureCanCheckAsync(submission, userId);
             // Dự án không QA: kiểm xong là xong — không giao QA, phiếu nhập liệu của người giữ DONE khi mọi văn bản của phiếu đã kiểm
             if (!project.IsQaEnabled)
             {
@@ -78,8 +82,6 @@ namespace sh.be.applications.Module.Operation.Implements
                 return;
             }
 
-            // Kiểm lại người giữ sau khi Check đã ghi hồ sơ trong transaction: văn bản vừa bị thu hồi / chuyển giữa chừng thì 820, Check rollback
-            await _assignmentDomainService.EnsureCanCheckAsync(submission, userId);
             var owner = await _assignmentDomainService.ResolveQaOwnerForCheckedAsync(submission);
             if (owner == null)
             {
@@ -123,6 +125,46 @@ namespace sh.be.applications.Module.Operation.Implements
                 await _unitOfWork.SaveChangesAsync();
             }
             await _assignmentDomainService.TryMarkDoneAsync(result.Ticket, true, now);
+        }
+
+        // Gỡ người giữ của văn bản bị xoá: xoá dòng giữ Data / QA, trừ phiếu nhập liệu còn ACTIVE rồi xét chốt DONE
+        public async Task ReleaseDeletedSubmissionsAsync(List<Submission> submissions, string userId, DateTime now)
+        {
+            var submissionIds = submissions.Select(s => s.Id).ToList();
+            _logger.LogInformation($"{nameof(ReleaseDeletedSubmissionsAsync)}, submissionIds={string.Join(",", submissionIds)}, userId={userId}");
+            if (submissions.Count == 0)
+            {
+                return;
+            }
+            var project = await _projectMemberRepository.FindProjectAsync(submissions[0].ProjectId)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
+            var holders = await _assignmentRepository.GetHoldersAsync(submissionIds);
+            if (holders.Count == 0)
+            {
+                return;
+            }
+
+            List<AssignmentTicket> activeDataTickets = [];
+            foreach (var ticketHolders in holders.Where(h => h.Role == RoleConstants.ROLE_DATA).GroupBy(h => h.TicketId))
+            {
+                var ticket = await _assignmentRepository.FindTicketByIdAsync(ticketHolders.Key)
+                    ?? throw new UserFriendlyException(ErrorCodes.OperationErrorTicketNotFound);
+                if (ticket.Status == AssignmentConst.STATUS_ACTIVE)
+                {
+                    ticket.DecreaseDocuments(ticketHolders.Count(), userId, now);
+                    activeDataTickets.Add(ticket);
+                }
+            }
+            foreach (var holder in holders)
+            {
+                _assignmentRepository.DeleteHolder(holder);
+            }
+            await _unitOfWork.SaveChangesAsync();
+
+            foreach (var ticket in activeDataTickets)
+            {
+                await _assignmentDomainService.TryMarkDoneAsync(ticket, project.IsQaEnabled, now);
+            }
         }
     }
 }

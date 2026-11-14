@@ -20,7 +20,7 @@ tiền QA.
 | 12.4 | Giá mặc định theo vai trò | Không có. Xoá `ProjectPriceDefault`, `ProjectMemberPrice` |
 | 12.5 | Chưa đặt giá | Vẫn giao việc, vẫn làm. Tiền = 0, cờ `isPriceMissing`. Đặt giá sau thì tính cho phần đã làm |
 | 12.6 | Leader | Không có giá, không có tiền trong hệ thống |
-| 12.7 | Tiền nhập liệu (Data) | Số trường **tính tiền** có dữ liệu của văn bản × giá (từ Task 30). Cộng khi văn bản được kiểm xong |
+| 12.7 | Tiền nhập liệu (Data) | Số trường **tính tiền** có dữ liệu của văn bản × giá (Task 12B; paging / tiến trình của tôi cùng luật từ Task 30). Cộng khi văn bản được kiểm xong |
 | 12.8 | QA trả, nhân viên sửa lại | Không cộng lần hai: một văn bản tính một lần cho người giữ |
 | 12.9 | Văn bản về pool (trả lần 3) | Trừ tiền văn bản của người giữ cũ. Người mới kiểm xong thì người mới được |
 | 12.10 | Admin / Leader kiểm hộ | Tiền tính cho nhân viên đang giữ văn bản |
