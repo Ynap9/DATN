@@ -30,6 +30,10 @@ chỉ Admin / SuperAdmin (`400`, [22](22-nghiem-thu-du-an.md)).
 Từ Task 30, Leader / Data / QA chỉ thấy dự án mình được phân ở **mọi** API cần quyền này (danh sách, dropdown, chi tiết, nghiệm thu; ngoài
 phạm vi `303`), Data / QA không thấy link Google Sheet ([07](07-du-an.md#phạm-vi-xem--task-30)).
 
+`Function.Construction.DocumentType.View` gán cho Leader id 2, Data id 3, QA id 4 cùng cách trên ngày 2026-11-14 (Task 36), để lọc
+metadata ở màn Dự án. Năm API đọc loại văn bản lọc theo dự án được phân ([05](05-loai-van-ban.md#phạm-vi-xem--task-36)); menu / màn
+Metadata hiện cho ba vai trò này nhưng chỉ đọc. Môi trường mới phải gán lại.
+
 ### Quyền Operation gán mặc định (bằng API, không qua seeder)
 
 | Key | Admin | Leader | Data | QA |

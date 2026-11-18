@@ -70,6 +70,14 @@ Loại / trường văn bản, giao diện gọi là **Metadata**, nằm trong m
 - Form trường không có ô mã: FE gửi `field = name` (mã trường BE không dùng ở luồng nào); tên cột import để trống thì gửi bằng tên.
 - Kéo thả gửi `targetOrder` = thứ tự đang đứng ở vị trí thả; tắt khi đang tìm kiếm vì danh sách lọc không liền thứ tự.
 
+**Dự án** (Task 36, `/admin/construction/project`, `.../project/:id`; hằng `PROJECT_URL`, `PROJECT_STATUSES`):
+
+- Danh sách đọc `GET project/paging` — mỗi dòng một cặp dự án – metadata, số liệu theo vai trò người xem; dự án 0 metadata không hiện
+  nên form bắt chọn ≥ 1 metadata. Sửa từ danh sách gọi `GET {id}` trước để có đủ `documentTypeIds`.
+- Ngày gửi chuỗi local `YYYY-MM-DDT00:00:00` của `sh-calendar`, **không** `toISOString` (lệch UTC lùi 1 ngày).
+- Xoá dùng `DELETE admin/delete/{id}` (kèm dữ liệu), chỉ Admin / SuperAdmin có quyền Delete; không gọi `DELETE {id}` cũ.
+- Nghiệm thu: `a` = tổng − đã kiểm, `b` = đã kiểm − QA đạt (khớp `340` của BE); sau mỗi lần chuyển gán dữ liệu trả về rồi tải lại `GET {id}`.
+
 ## Checklist
 
 1. Model, route, tên trường copy từ BE, không đoán?

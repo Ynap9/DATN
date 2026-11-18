@@ -1,0 +1,46 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="sm:col-span-2 flex flex-col gap-1">
+            <sh-input-text label="Tên dự án" formControlName="name" [required]="true" />
+            @if (!project) {
+                <small class="text-muted-color">Hệ thống tạo Google Sheet cho dự án, có thể mất vài giây.</small>
+            }
+        </div>
+
+        <sh-calendar label="Ngày bắt đầu" formControlName="startedAt" [showClear]="true" />
+        <div class="flex flex-col gap-1">
+            <sh-calendar label="Ngày kết thúc" formControlName="endedAt" [showClear]="true" />
+            @if (form.hasError('dateRange')) {
+                <small class="text-red-600">Ngày bắt đầu phải trước hoặc bằng ngày kết thúc</small>
+            }
+        </div>
+
+        <div class="sm:col-span-2 flex flex-col gap-2">
+            <sh-multi-select label="Metadata" formControlName="documentTypeIds" [options]="documentTypes" optionLabel="name" optionValue="id"
+                [filter]="true" display="chip" [required]="true" />
+            @if (hasRemovedDocumentTypes) {
+                <p-message severity="warn" size="small" variant="simple">
+                    Bỏ metadata khỏi dự án sẽ gỡ cấu hình cột import của metadata đó; chọn lại metadata để khôi phục.
+                </p-message>
+            }
+        </div>
+
+        @if (project) {
+            <sh-select label="Trạng thái" formControlName="status" [options]="statuses" optionLabel="label" optionValue="value" />
+            <div class="flex flex-col gap-2">
+                <label class="font-bold">Kiểm tra QA</label>
+                <span>{{ project.isQaEnabled ? 'Có' : 'Không' }}</span>
+            </div>
+        } @else {
+            <div class="sm:col-span-2 flex flex-col gap-1">
+                <label class="flex items-center gap-2"><p-toggleswitch formControlName="isQaEnabled" /> Có kiểm tra QA</label>
+                <small class="text-muted-color">Tắt thì văn bản kiểm xong là hoàn thành, không qua QA. Không đổi được sau khi tạo.</small>
+            </div>
+        }
+    </div>
+
+    <div class="flex justify-end gap-2 mt-6">
+        <p-button label="Hủy" severity="secondary" [outlined]="true" (onClick)="close()" />
+        <p-button type="submit" label="Lưu" [loading]="submitting" />
+    </div>
+</form>
