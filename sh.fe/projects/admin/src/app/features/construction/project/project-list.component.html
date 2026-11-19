@@ -1,22 +1,82 @@
-<app-page-header title="Dự án" [breadcrumbs]="breadcrumbs">
-    @if (canCreate) {
-        <p-button icon="pi pi-plus" label="Tạo dự án" (onClick)="openForm()" />
-    }
+<app-page-header title="Dự án" description="Theo dõi tiến độ các dự án số hoá" [breadcrumbs]="breadcrumbs">
+    <div class="project-header-actions">
+        <div class="project-view-toggle">
+            @for (mode of viewModes; track mode.value) {
+                <button type="button" [class.is-active]="viewMode === mode.value" [pTooltip]="mode.label" tooltipPosition="bottom"
+                    [attr.aria-label]="mode.label" [attr.aria-pressed]="viewMode === mode.value" (click)="setViewMode(mode.value)">
+                    <i [class]="mode.icon"></i>
+                </button>
+            }
+        </div>
+        @if (canCreate) {
+            <p-button icon="pi pi-plus" label="Tạo dự án" (onClick)="openForm()" />
+        }
+    </div>
 </app-page-header>
 
-<p-selectbutton class="mb-3" [formControl]="status" [options]="statusTabs" optionLabel="label" optionValue="value" [allowEmpty]="false" />
-
-<div class="flex flex-wrap items-center gap-3 mb-4">
-    <input pInputText class="w-full sm:w-80" placeholder="Tìm theo tên dự án" [formControl]="keyword" />
-    <sh-select class="w-full sm:w-64" placeholder="Tất cả metadata" [formControl]="documentTypeId" [options]="documentTypes" optionLabel="name"
-        optionValue="id" [filter]="true" [showClear]="true" />
-    <span class="text-sm text-muted-color">{{ totalRecords }} mục</span>
+<div class="project-tabs" role="tablist">
+    @for (tab of statusTabs; track tab.label) {
+        <button type="button" role="tab" class="project-tab" [class]="tab.tone ? 'project-tab--' + tab.tone : ''"
+            [class.is-active]="filters.status === tab.value" [attr.aria-selected]="filters.status === tab.value" (click)="selectStatus(tab.value)">
+            {{ tab.label }}
+        </button>
+    }
 </div>
 
-<app-data-table [columns]="columns" [data]="projects" [loading]="loading" [pageNumber]="pageNumber" [pageSize]="pageSize"
-    [total]="totalRecords" (pageChange)="onPageChange($event)" (action)="onAction($event)">
-    <div tableEmpty class="flex flex-col items-center gap-3 py-8">
-        @if (isFiltering) {
+<div class="project-toolbar">
+    <div class="project-search">
+        <i class="pi pi-search"></i>
+        <input pInputText placeholder="Tìm tên dự án..." [formControl]="keyword" />
+    </div>
+    <sh-select class="project-metadata" placeholder="Tất cả metadata" [formControl]="documentTypeId" [options]="documentTypes" optionLabel="name"
+        optionValue="id" [filter]="true" [showClear]="true" />
+    @if (activeFilterCount) {
+        <div class="project-filter-summary">
+            <span>Đang lọc: {{ activeFilterCount }}</span>
+            <p-button label="Xoá lọc" icon="pi pi-filter-slash" [text]="true" size="small" (onClick)="clearFilters()" />
+        </div>
+    }
+</div>
+
+@if (viewMode === 'table') {
+    <app-data-table class="project-table" tableKey="construction-project" [columns]="columns" [data]="projects" [loading]="loading"
+        [pageNumber]="pageNumber" [pageSize]="pageSize" [total]="totalRecords" [columnSettings]="true" [filterValues]="columnFilters"
+        (filterChange)="onColumnFilterChange($event)" (pageChange)="onPageChange($event)" (action)="onAction($event)">
+        <div tableEmpty>
+            <ng-container [ngTemplateOutlet]="emptyState" />
+        </div>
+    </app-data-table>
+} @else {
+    <div class="project-card-grid">
+        @if (loading) {
+            @for (skeleton of skeletons; track skeleton) {
+                <div class="project-card-skeleton">
+                    <p-skeleton shape="circle" size="38px" />
+                    <p-skeleton width="60%" />
+                    <p-skeleton width="40%" />
+                    <p-skeleton width="80%" />
+                </div>
+            }
+        } @else {
+            @for (project of projects; track project.projectId + '-' + project.documentTypeId) {
+                <app-project-card [project]="project" [actions]="rowActions" (open)="openProject(project)"
+                    (action)="onAction({ type: $event, row: project })" />
+            }
+        }
+    </div>
+    @if (!loading && !projects.length) {
+        <ng-container [ngTemplateOutlet]="emptyState" />
+    }
+    <div class="project-card-footer">
+        <span>Tất cả {{ totalRecords }} dự án</span>
+        <p-paginator [first]="(pageNumber - 1) * pageSize" [rows]="pageSize" [totalRecords]="totalRecords" [rowsPerPageOptions]="rowsPerPageOptions"
+            (onPageChange)="onPageChange($event)" />
+    </div>
+}
+
+<ng-template #emptyState>
+    <div class="flex flex-col items-center gap-3 py-8">
+        @if (activeFilterCount || filters.status !== undefined) {
             <span class="text-muted-color">Không tìm thấy dự án phù hợp.</span>
         } @else {
             <span class="text-muted-color">Chưa có dự án nào.</span>
@@ -25,4 +85,4 @@
             }
         }
     </div>
-</app-data-table>
+</ng-template>

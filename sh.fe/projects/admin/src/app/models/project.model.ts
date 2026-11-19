@@ -3,6 +3,12 @@ import { IBaseRequestPaging } from '@/shared/models/request-paging.base.models';
 export interface IFindPagingProject extends IBaseRequestPaging {
     status?: number;
     documentTypeId?: number;
+    creatorKeyword?: string;
+    // yyyy-MM-dd, BE lọc bao gồm hai đầu
+    startedFrom?: string;
+    startedTo?: string;
+    endedFrom?: string;
+    endedTo?: string;
 }
 
 export interface IViewProjectPair {
@@ -13,6 +19,7 @@ export interface IViewProjectPair {
     endedAt: string | null;
     isQaEnabled: boolean;
     urlGoogleSheetSync: string | null;
+    creatorName?: string | null;
     documentTypeId: number;
     documentTypeName: string;
     viewerRole: string;

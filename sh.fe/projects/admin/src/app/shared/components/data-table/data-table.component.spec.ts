@@ -1,8 +1,9 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { providePrimeNG } from 'primeng/config';
+import { DialogService } from 'primeng/dynamicdialog';
 import { CellViewTypes, TableEventTypes } from '@/shared/constants/data-table.constants';
-import { IColumn, ITableEvent } from '@/shared/models/data-table.models';
+import { IColumn, IColumnFilterValue, ITableEvent } from '@/shared/models/data-table.models';
 import { TblAction } from '../tbl-action/tbl-action.component';
 import { DataTable } from './data-table.component';
 
@@ -27,7 +28,7 @@ describe('DataTable', () => {
     }
 
     beforeEach(() => {
-        TestBed.configureTestingModule({ providers: [provideNoopAnimations(), providePrimeNG()] });
+        TestBed.configureTestingModule({ providers: [provideNoopAnimations(), providePrimeNG(), DialogService] });
         fixture = TestBed.createComponent(DataTable);
     });
 
@@ -90,5 +91,130 @@ describe('DataTable', () => {
         (fixture.nativeElement.querySelector('p-toggleswitch input') as HTMLInputElement).click();
 
         expect(events).toEqual([{ type: TableEventTypes.CELL_CLICK, field: 'isShow', row }]);
+    });
+
+    it('ô PROGRESS làm tròn, chặn trong 0..100', () => {
+        fixture.componentRef.setInput('columns', [{ header: 'Tiến độ', field: 'percent', cellViewType: CellViewTypes.PROGRESS }]);
+        fixture.componentRef.setInput('data', [{ id: 1, percent: 62.4 }, { id: 2, percent: 130 }, { id: 3, percent: null }]);
+        fixture.detectChanges();
+
+        const values = Array.from(fixture.nativeElement.querySelectorAll('.data-table-progress-value')).map((el) => (el as HTMLElement).textContent!.trim());
+        const fills = Array.from(fixture.nativeElement.querySelectorAll('.data-table-progress-fill')).map((el) => (el as HTMLElement).style.width);
+
+        expect(values).toEqual(['62%', '100%', '0%']);
+        expect(fills).toEqual(['62%', '100%', '0%']);
+    });
+
+    it('ô NUMBER định dạng vi-VN, thiếu field thì hiện —', () => {
+        fixture.componentRef.setInput('columns', [
+            { header: 'Số', field: 'total', cellViewType: CellViewTypes.NUMBER },
+            { header: 'Chưa có', field: 'missing', cellViewType: CellViewTypes.NUMBER },
+        ]);
+        fixture.componentRef.setInput('data', [{ id: 1, total: 1234 }]);
+        fixture.detectChanges();
+
+        const cells = fixture.nativeElement.querySelectorAll('tbody td');
+        expect(cells[0].textContent.trim()).toBe(new Intl.NumberFormat('vi-VN').format(1234));
+        expect(cells[1].textContent.trim()).toBe('—');
+    });
+
+    it('ô BADGE theo tone, không có badge thì hiện —', () => {
+        fixture.componentRef.setInput('columns', [
+            { header: 'Trạng thái', cellViewType: CellViewTypes.BADGE, badge: () => ({ label: 'Hết hạn', tone: 'red' }) },
+            { header: 'Khác', cellViewType: CellViewTypes.BADGE },
+        ]);
+        fixture.componentRef.setInput('data', [{ id: 1 }]);
+        fixture.detectChanges();
+
+        const cells = fixture.nativeElement.querySelectorAll('tbody td');
+        expect(cells[0].querySelector('.status-badge--red')?.textContent.trim()).toBe('Hết hạn');
+        expect(cells[1].textContent.trim()).toBe('—');
+    });
+
+    it('chỉ bật cuộn khi có cột frozen', () => {
+        render([]);
+        expect(fixture.nativeElement.querySelector('.p-datatable-scrollable')).toBeNull();
+
+        fixture.componentRef.setInput('columns', [{ header: 'Tên', field: 'name', frozen: 'left' }, { header: 'Khác', field: 'other' }]);
+        fixture.detectChanges();
+
+        expect(fixture.nativeElement.querySelector('.p-datatable-scrollable')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('thead th').classList).toContain('p-datatable-frozen-column');
+    });
+
+    it('độ rộng cột nhớ theo key, bỏ cache cũ khoá theo vị trí', fakeAsync(() => {
+        localStorage.setItem('tbl_col_widths_spec', JSON.stringify({ 'info.name': 220, '0': 99 }));
+        fixture.componentRef.setInput('tableKey', 'spec');
+        render([{ id: 1, info: { name: 'An' }, amount: 1 }]);
+        tick();
+
+        const headers: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('thead th'));
+        expect(headers.find((th) => th.dataset['colKey'] === 'info.name')!.style.width).toBe('220px');
+        expect(headers.find((th) => th.dataset['colKey'] === 'STT')!.style.width).toBe('');
+        localStorage.removeItem('tbl_col_widths_spec');
+    }));
+
+    describe('cấu hình cột', () => {
+        const settingColumns: IColumn[] = [
+            { header: 'STT', key: 'index', cellViewType: CellViewTypes.INDEX, locked: true },
+            { header: 'A', field: 'a' },
+            { header: 'B', field: 'b', hidden: true },
+            { header: 'C', field: 'c' },
+            { header: 'Thao tác', key: 'actions', cellViewType: CellViewTypes.ACTIONS, locked: true, actions: [] },
+        ];
+
+        function headers(): string[] {
+            return Array.from(fixture.nativeElement.querySelectorAll('thead th')).map((th) => (th as HTMLElement).dataset['colKey']!);
+        }
+
+        function renderSettings(enabled: boolean): void {
+            fixture.componentRef.setInput('columns', settingColumns);
+            fixture.componentRef.setInput('data', []);
+            fixture.componentRef.setInput('tableKey', 'spec');
+            fixture.componentRef.setInput('columnSettings', enabled);
+            fixture.detectChanges();
+        }
+
+        afterEach(() => localStorage.removeItem('tbl_cols_spec'));
+
+        it('tắt thì hiện mọi cột như cũ, không có ⚙', () => {
+            renderSettings(false);
+
+            expect(headers()).toEqual(['index', 'a', 'b', 'c', 'actions']);
+            expect(fixture.nativeElement.querySelector('.data-table-settings-icon')).toBeNull();
+        });
+
+        it('bật mà chưa lưu thì ẩn cột hidden, cột Thao tác thành ⚙', () => {
+            renderSettings(true);
+
+            expect(headers()).toEqual(['index', 'a', 'c', 'actions']);
+            expect(fixture.nativeElement.querySelector('.data-table-settings-icon')).not.toBeNull();
+        });
+
+        it('áp cấu hình đã lưu, cột khoá giữ chỗ', () => {
+            localStorage.setItem('tbl_cols_spec', JSON.stringify([{ key: 'c', visible: true }, { key: 'b', visible: true }, { key: 'a', visible: false }]));
+            renderSettings(true);
+
+            expect(headers()).toEqual(['index', 'c', 'b', 'actions']);
+        });
+
+        it('cache khác tập key hiện tại thì về mặc định', () => {
+            localStorage.setItem('tbl_cols_spec', JSON.stringify([{ key: 'c', visible: true }, { key: 'x', visible: true }]));
+            renderSettings(true);
+
+            expect(headers()).toEqual(['index', 'a', 'c', 'actions']);
+        });
+    });
+
+    it('lọc cột phát cả map, xoá lọc thì bỏ key', () => {
+        const events: IColumnFilterValue[] = [];
+        fixture.componentInstance.filterChange.subscribe((value) => events.push(value));
+        fixture.componentRef.setInput('filterValues', { name: 'An' });
+        const column: IColumn = { header: 'Ngày', field: 'date', filter: { type: 'dateRange' } };
+
+        fixture.componentInstance.onFilterApply(column, { from: '2026-01-01' });
+        fixture.componentInstance.onFilterApply({ header: 'Tên', field: 'name' }, null);
+
+        expect(events).toEqual([{ name: 'An', date: { from: '2026-01-01' } }, {}]);
     });
 });

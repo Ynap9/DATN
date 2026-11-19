@@ -12,6 +12,7 @@ import { ITableAction } from '@/shared/models/data-table.models';
 export class TblAction {
     actions = input.required<ITableAction[]>();
     row = input<unknown>();
+    icon = input('pi pi-ellipsis-h');
 
     action = output<string>();
 

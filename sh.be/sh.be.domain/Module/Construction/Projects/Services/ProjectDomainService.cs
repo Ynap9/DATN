@@ -127,7 +127,7 @@ namespace sh.be.domain.Module.Construction.Projects.Services
         {
             if (!isAdmin)
             {
-                throw new UserFriendlyException(ErrorCodes.BadRequest, "Chỉ Admin được trả dự án về đang làm");
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Chỉ Admin được trả dự án về đang triển khai");
             }
         }
 

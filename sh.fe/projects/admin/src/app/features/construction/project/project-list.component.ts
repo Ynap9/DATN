@@ -1,14 +1,13 @@
-import { formatDate } from '@angular/common';
-import { Component, DestroyRef, inject, LOCALE_ID } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl } from '@angular/forms';
 import { ShSelectComponent } from '@sh/ui';
 import { MenuItem } from 'primeng/api';
-import { PaginatorState } from 'primeng/paginator';
-import { SelectButtonModule } from 'primeng/selectbutton';
-import { debounceTime, distinctUntilChanged, finalize } from 'rxjs';
+import { PaginatorModule, PaginatorState } from 'primeng/paginator';
+import { SkeletonModule } from 'primeng/skeleton';
+import { debounceTime, finalize } from 'rxjs';
 import { IDocumentTypeDropdown } from '@/models/document-type.model';
-import { IViewProject, IViewProjectPair } from '@/models/project.model';
+import { IFindPagingProject, IViewProject, IViewProjectPair } from '@/models/project.model';
 import { DocumentTypeService } from '@/services/document-type.service';
 import { ProjectService } from '@/services/project.service';
 import { SharedService } from '@/services/shared.service';
@@ -18,11 +17,11 @@ import { PageHeader } from '@/shared/components/page-header/page-header.componen
 import { AuthConstants } from '@/shared/constants/auth.constants';
 import { CellViewTypes, TableEventTypes } from '@/shared/constants/data-table.constants';
 import { PermissionConstants } from '@/shared/constants/permission.constants';
-import { PROJECT_STATUSES, PROJECT_URL } from '@/shared/constants/project.constants';
-import { IColumn, ITableEvent } from '@/shared/models/data-table.models';
+import { getProjectStatusBadge, PROJECT_STATUSES, PROJECT_URL } from '@/shared/constants/project.constants';
+import { IColumn, IColumnFilterValue, IDateRangeValue, ITableAction, ITableEvent } from '@/shared/models/data-table.models';
 import { SharedImports } from '@/shared/import.shared';
+import { ProjectCardComponent } from './project-card/project-card.component';
 import { ProjectFormComponent } from './project-form/project-form.component';
-import { ProjectProgressCellComponent } from './project-progress-cell/project-progress-cell.component';
 
 const PROJECT_ACTIONS = {
     VIEW: 'view',
@@ -31,93 +30,101 @@ const PROJECT_ACTIONS = {
     DELETE: 'delete',
 } as const;
 
-type ProjectPairRow = IViewProjectPair & { periodLabel: string; statusLabel?: string };
+const PROGRESS_TOOLTIPS: Record<string, string> = {
+    Data: 'Bạn đã kiểm / văn bản bạn giữ',
+    QA: 'Bạn đã chấm / văn bản bạn phụ trách',
+};
+
+const PROJECT_VIEW_MODES = [
+    { value: 'table', icon: 'pi pi-list', label: 'Dạng bảng' },
+    { value: 'card', icon: 'pi pi-th-large', label: 'Dạng thẻ' },
+] as const;
+const VIEW_MODE_STORAGE_KEY = 'construction-project-view';
+const CARD_SKELETON_COUNT = 6;
+
+const NUMBER_STYLE = 'text-align: right';
+const CENTER_STYLE = 'text-align: center';
+
+type ProjectViewMode = (typeof PROJECT_VIEW_MODES)[number]['value'];
+type ProjectListFilters = Omit<IFindPagingProject, 'pageNumber' | 'pageSize'>;
 
 @Component({
     selector: 'app-project-list',
-    imports: [SharedImports, DataTable, PageHeader, ShSelectComponent, SelectButtonModule],
+    imports: [SharedImports, DataTable, PageHeader, ShSelectComponent, PaginatorModule, SkeletonModule, ProjectCardComponent],
     templateUrl: './project-list.component.html',
+    styleUrl: './project-list.component.scss',
 })
 export class ProjectListComponent extends BaseComponent {
     private readonly _projectService = inject(ProjectService);
     private readonly _documentTypeService = inject(DocumentTypeService);
     private readonly _sharedService = inject(SharedService);
     private readonly _destroyRef = inject(DestroyRef);
-    private readonly _locale = inject(LOCALE_ID);
     private readonly _isAdmin = this._sharedService.isSuperAdmin() || this._sharedService.roles.includes(AuthConstants.ADMIN_ROLE);
 
     readonly breadcrumbs: MenuItem[] = [{ label: 'Hồ sơ thi công' }, { label: 'Dự án' }];
     readonly canCreate = this._sharedService.isGranted(PermissionConstants.FUNCTION_PROJECT_CREATE);
-    readonly statusTabs = [{ value: null, label: 'Tất cả' }, ...PROJECT_STATUSES];
+    readonly statusTabs = [{ value: undefined, label: 'Tất cả', tone: undefined }, ...PROJECT_STATUSES];
+    readonly viewModes = PROJECT_VIEW_MODES;
+    readonly rowsPerPageOptions = [10, 25, 50, 100];
+    readonly skeletons = Array.from({ length: CARD_SKELETON_COUNT }, (_, index) => index);
+    // Bảng và thẻ dùng chung một menu ⋯; quyền tính một lần khi mở trang
+    readonly rowActions: ITableAction[] = [
+        { type: PROJECT_ACTIONS.VIEW, label: 'Xem chi tiết', icon: 'pi pi-eye' },
+        {
+            type: PROJECT_ACTIONS.OPEN_SHEET,
+            label: 'Mở Google Sheet',
+            icon: 'pi pi-external-link',
+            visible: (row: IViewProjectPair) => !!row.urlGoogleSheetSync,
+        },
+        ...(this._sharedService.isGranted(PermissionConstants.FUNCTION_PROJECT_UPDATE)
+            ? [{ type: PROJECT_ACTIONS.EDIT, label: 'Sửa', icon: 'pi pi-pencil' }]
+            : []),
+        ...(this.canDelete ? [{ type: PROJECT_ACTIONS.DELETE, label: 'Xóa', icon: 'pi pi-trash', severity: 'danger' as const }] : []),
+    ];
 
+    viewMode: ProjectViewMode = this.readViewMode();
     keyword = new FormControl('', { nonNullable: true });
-    status = new FormControl<number | null>(null);
     documentTypeId = new FormControl<number | null>(null);
+    // Một nguồn lọc duy nhất: tab, ô tìm, ô metadata và popover cột cùng đọc / ghi
+    filters: ProjectListFilters = {};
+    columnFilters: IColumnFilterValue = {};
     documentTypes: IDocumentTypeDropdown[] = [];
-    projects: ProjectPairRow[] = [];
+    projects: IViewProjectPair[] = [];
+    columns: IColumn<IViewProjectPair>[] = this.buildColumns();
     pageNumber = this.START_PAGE_NUMBER;
     pageSize = 25;
     override totalRecords = 0;
 
-    readonly columns: IColumn<ProjectPairRow>[] = [
-        { header: 'STT', cellViewType: CellViewTypes.INDEX, headerContainerStyle: 'width: 64px' },
-        { header: 'Tên dự án', field: 'projectName', clickable: true },
-        { header: 'Metadata', field: 'documentTypeName' },
-        ...(this._isAdmin
-            ? []
-            : [{ header: 'Vai trò', field: 'viewerRole', cellViewType: CellViewTypes.STATUS, statusSeverity: () => 'secondary' as const }]),
-        { header: 'Thời gian', field: 'periodLabel', headerContainerStyle: 'width: 190px' },
-        { header: 'Văn bản', field: 'totalSubmission', headerContainerStyle: 'width: 90px' },
-        { header: 'Tiến độ', cellViewType: CellViewTypes.CUSTOM_COMP, customComponent: ProjectProgressCellComponent, headerContainerStyle: 'width: 170px' },
-        { header: 'QA đạt', field: 'qaPassedCount', headerContainerStyle: 'width: 80px' },
-        { header: 'Thành viên', field: 'memberCount', headerContainerStyle: 'width: 100px' },
-        {
-            header: 'Trạng thái',
-            field: 'statusLabel',
-            cellViewType: CellViewTypes.STATUS,
-            statusSeverity: (row) => PROJECT_STATUSES.find((status) => status.value === row.status)?.severity ?? 'secondary',
-            headerContainerStyle: 'width: 150px',
-        },
-        {
-            header: 'Thao tác',
-            cellViewType: CellViewTypes.ACTIONS,
-            headerContainerStyle: 'width: 90px; text-align: center',
-            actions: [
-                { type: PROJECT_ACTIONS.VIEW, label: 'Xem chi tiết', icon: 'pi pi-eye' },
-                {
-                    type: PROJECT_ACTIONS.OPEN_SHEET,
-                    label: 'Mở Google Sheet',
-                    icon: 'pi pi-external-link',
-                    visible: (row: ProjectPairRow) => !!row.urlGoogleSheetSync,
-                },
-                ...(this._sharedService.isGranted(PermissionConstants.FUNCTION_PROJECT_UPDATE)
-                    ? [{ type: PROJECT_ACTIONS.EDIT, label: 'Sửa', icon: 'pi pi-pencil' }]
-                    : []),
-                ...(this.canDelete ? [{ type: PROJECT_ACTIONS.DELETE, label: 'Xóa', icon: 'pi pi-trash', severity: 'danger' as const }] : []),
-            ],
-        },
-    ];
+    get activeFilterCount() {
+        return Object.keys(this.columnFilters).filter((key) => key !== 'status').length;
+    }
 
     get canDelete() {
         return this._isAdmin && this._sharedService.isGranted(PermissionConstants.FUNCTION_PROJECT_DELETE);
     }
 
-    get isFiltering() {
-        return !!this.keyword.value || this.status.value !== null || this.documentTypeId.value !== null;
-    }
-
     override ngOnInit(): void {
-        this.keyword.valueChanges
-            .pipe(debounceTime(400), distinctUntilChanged(), takeUntilDestroyed(this._destroyRef))
-            .subscribe(() => this.search());
-        this.status.valueChanges.pipe(takeUntilDestroyed(this._destroyRef)).subscribe(() => this.search());
-        this.documentTypeId.valueChanges.pipe(takeUntilDestroyed(this._destroyRef)).subscribe(() => this.search());
+        // So với state thay vì distinctUntilChanged: popover cột có thể đổi keyword mà ô tìm không phát sự kiện
+        this.keyword.valueChanges.pipe(debounceTime(400), takeUntilDestroyed(this._destroyRef)).subscribe((value) => {
+            const keyword = value.trim() || undefined;
+            if (keyword !== this.filters.keyword) {
+                this.setFilters({ keyword });
+            }
+        });
+        // sh-select phát null lúc khởi tạo: so với state để không tải trùng lần đầu
+        this.documentTypeId.valueChanges.pipe(takeUntilDestroyed(this._destroyRef)).subscribe((value) => {
+            const documentTypeId = value ?? undefined;
+            if (documentTypeId !== this.filters.documentTypeId) {
+                this.setFilters({ documentTypeId });
+            }
+        });
         this._documentTypeService
             .dropdown()
             .pipe(takeUntilDestroyed(this._destroyRef))
             .subscribe((res) => {
                 if (this.isResponseSucceed(res)) {
                     this.documentTypes = res.data;
+                    this.columns = this.buildColumns();
                 }
             });
         this.load();
@@ -126,32 +133,54 @@ export class ProjectListComponent extends BaseComponent {
     load() {
         this.loading = true;
         this._projectService
-            .findPaging({
-                pageNumber: this.pageNumber,
-                pageSize: this.pageSize,
-                keyword: this.keyword.value,
-                ...(this.status.value !== null ? { status: this.status.value } : {}),
-                ...(this.documentTypeId.value !== null ? { documentTypeId: this.documentTypeId.value } : {}),
-            })
+            .findPaging({ pageNumber: this.pageNumber, pageSize: this.pageSize, ...this.filters })
             .pipe(
                 finalize(() => (this.loading = false)),
                 takeUntilDestroyed(this._destroyRef),
             )
             .subscribe((res) => {
                 if (this.isResponseSucceed(res)) {
-                    this.projects = res.data.items.map((project) => ({
-                        ...project,
-                        periodLabel: project.startedAt || project.endedAt ? `${this.formatDay(project.startedAt)} – ${this.formatDay(project.endedAt)}` : '—',
-                        statusLabel: PROJECT_STATUSES.find((status) => status.value === project.status)?.label,
-                    }));
+                    this.projects = res.data.items;
                     this.totalRecords = res.data.totalItems;
                 }
             });
     }
 
-    search() {
-        this.pageNumber = this.START_PAGE_NUMBER;
-        this.load();
+    setViewMode(viewMode: ProjectViewMode) {
+        this.viewMode = viewMode;
+        try {
+            localStorage.setItem(VIEW_MODE_STORAGE_KEY, viewMode);
+        } catch {
+            // localStorage bị chặn: chỉ nhớ dạng xem tới khi tải lại trang
+        }
+    }
+
+    openProject(project: IViewProjectPair) {
+        this.router.navigate([PROJECT_URL, project.projectId]);
+    }
+
+    selectStatus(status: number | undefined) {
+        this.setFilters({ status });
+    }
+
+    onColumnFilterChange(values: IColumnFilterValue) {
+        const started = values['startedAt'] as IDateRangeValue | undefined;
+        const ended = values['endedAt'] as IDateRangeValue | undefined;
+        this.setFilters({
+            keyword: values['projectName'] as string | undefined,
+            documentTypeId: values['documentTypeName'] as number | undefined,
+            creatorKeyword: values['creatorName'] as string | undefined,
+            startedFrom: started?.from,
+            startedTo: started?.to,
+            endedFrom: ended?.from,
+            endedTo: ended?.to,
+            status: values['status'] as number | undefined,
+        });
+    }
+
+    clearFilters() {
+        this.filters = { status: this.filters.status };
+        this.applyFilters();
     }
 
     onPageChange(event: PaginatorState) {
@@ -160,9 +189,9 @@ export class ProjectListComponent extends BaseComponent {
         this.load();
     }
 
-    onAction(event: ITableEvent<ProjectPairRow>) {
+    onAction(event: ITableEvent<IViewProjectPair>) {
         if (event.type === TableEventTypes.CELL_CLICK || event.type === PROJECT_ACTIONS.VIEW) {
-            this.router.navigate([PROJECT_URL, event.row!.projectId]);
+            this.openProject(event.row!);
         } else if (event.type === PROJECT_ACTIONS.OPEN_SHEET) {
             window.open(event.row!.urlGoogleSheetSync!, '_blank', 'noopener');
         } else if (event.type === PROJECT_ACTIONS.EDIT) {
@@ -184,6 +213,163 @@ export class ProjectListComponent extends BaseComponent {
             ?.onClose.subscribe((changed) => changed && this.load());
     }
 
+    private setFilters(patch: ProjectListFilters) {
+        this.filters = { ...this.filters, ...patch };
+        this.applyFilters();
+    }
+
+    // Đồng bộ state lọc ra ô tìm, ô metadata, popover cột rồi tải lại từ trang 1
+    private applyFilters() {
+        const filters = this.filters;
+        this.keyword.setValue(filters.keyword ?? '', { emitEvent: false });
+        this.documentTypeId.setValue(filters.documentTypeId ?? null, { emitEvent: false });
+        const values: IColumnFilterValue = {
+            projectName: filters.keyword,
+            documentTypeName: filters.documentTypeId,
+            creatorName: filters.creatorKeyword,
+            startedAt: filters.startedFrom || filters.startedTo ? { from: filters.startedFrom, to: filters.startedTo } : undefined,
+            endedAt: filters.endedFrom || filters.endedTo ? { from: filters.endedFrom, to: filters.endedTo } : undefined,
+            status: filters.status,
+        };
+        this.columnFilters = Object.fromEntries(Object.entries(values).filter(([, value]) => value !== undefined));
+        this.pageNumber = this.START_PAGE_NUMBER;
+        this.load();
+    }
+
+    private buildColumns(): IColumn<IViewProjectPair>[] {
+        return [
+            {
+                header: 'STT',
+                key: 'index',
+                cellViewType: CellViewTypes.INDEX,
+                locked: true,
+                frozen: 'left',
+                headerContainerStyle: 'width: 64px',
+            },
+            {
+                header: 'Tên dự án',
+                field: 'projectName',
+                clickable: true,
+                locked: true,
+                frozen: 'left',
+                cellClass: 'project-name-cell',
+                headerContainerStyle: 'min-width: 240px',
+                filter: { type: 'text' },
+            },
+            {
+                header: 'Metadata',
+                field: 'documentTypeName',
+                headerContainerStyle: 'min-width: 160px',
+                filter: { type: 'select', options: this.documentTypes.map((type) => ({ label: type.name, value: type.id })) },
+            },
+            ...(this._isAdmin
+                ? []
+                : [
+                      {
+                          header: 'Vai trò',
+                          field: 'viewerRole',
+                          cellViewType: CellViewTypes.STATUS,
+                          statusSeverity: () => 'secondary' as const,
+                      },
+                  ]),
+            {
+                header: 'Số văn bản',
+                field: 'totalSubmission',
+                cellViewType: CellViewTypes.NUMBER,
+                headerContainerStyle: NUMBER_STYLE,
+                cellStyle: NUMBER_STYLE,
+            },
+            {
+                header: 'Số trang',
+                field: 'totalPages',
+                cellViewType: CellViewTypes.NUMBER,
+                headerContainerStyle: NUMBER_STYLE,
+                cellStyle: NUMBER_STYLE,
+            },
+            {
+                header: 'Đã OCR',
+                field: 'ocrDoneCount',
+                cellViewType: CellViewTypes.NUMBER,
+                cellClass: 'project-ocr-done',
+                headerContainerStyle: NUMBER_STYLE,
+                cellStyle: NUMBER_STYLE,
+            },
+            {
+                header: 'Chưa OCR',
+                field: 'ocrPendingCount',
+                cellViewType: CellViewTypes.NUMBER,
+                cellClass: 'project-ocr-pending',
+                headerContainerStyle: NUMBER_STYLE,
+                cellStyle: NUMBER_STYLE,
+            },
+            {
+                header: 'Tiến độ xác nhận',
+                field: 'progressPercent',
+                cellViewType: CellViewTypes.PROGRESS,
+                progressTooltip: (row) =>
+                    `${PROGRESS_TOOLTIPS[row.viewerRole] ?? 'Đã kiểm / tổng văn bản'} · ${row.checkedCount} / ${row.totalSubmission}`,
+            },
+            {
+                header: 'QA đạt',
+                field: 'qaPassedCount',
+                cellViewType: CellViewTypes.NUMBER,
+                headerContainerStyle: NUMBER_STYLE,
+                cellStyle: NUMBER_STYLE,
+            },
+            {
+                header: 'Thành viên',
+                field: 'memberCount',
+                cellViewType: CellViewTypes.NUMBER,
+                headerContainerStyle: NUMBER_STYLE,
+                cellStyle: NUMBER_STYLE,
+            },
+            {
+                header: 'Ngày bắt đầu',
+                field: 'startedAt',
+                cellViewType: CellViewTypes.DATE,
+                headerContainerStyle: CENTER_STYLE,
+                cellStyle: CENTER_STYLE,
+                filter: { type: 'dateRange' },
+            },
+            {
+                header: 'Ngày kết thúc',
+                field: 'endedAt',
+                cellViewType: CellViewTypes.DATE,
+                headerContainerStyle: CENTER_STYLE,
+                cellStyle: CENTER_STYLE,
+                filter: { type: 'dateRange' },
+            },
+            { header: 'Người tạo', field: 'creatorName', filter: { type: 'text' } },
+            {
+                header: 'Trạng thái',
+                field: 'status',
+                cellViewType: CellViewTypes.BADGE,
+                headerContainerStyle: CENTER_STYLE,
+                cellStyle: CENTER_STYLE,
+                badge: (row) => getProjectStatusBadge(row.status),
+                filter: { type: 'select', options: PROJECT_STATUSES.map((status) => ({ label: status.label, value: status.value })) },
+            },
+            {
+                header: 'Thao tác',
+                key: 'actions',
+                cellViewType: CellViewTypes.ACTIONS,
+                locked: true,
+                frozen: 'right',
+                headerContainerStyle: 'width: 56px; text-align: center',
+                cellStyle: CENTER_STYLE,
+                actions: this.rowActions,
+            },
+        ];
+    }
+
+    private readViewMode(): ProjectViewMode {
+        try {
+            return localStorage.getItem(VIEW_MODE_STORAGE_KEY) === 'card' ? 'card' : 'table';
+        } catch {
+            return 'table';
+        }
+    }
+
     // Một dòng danh sách chỉ mang một metadata, cần GET {id} để có đủ documentTypeIds của dự án
     private openEditForm(projectId: number) {
         this._projectService
@@ -196,7 +382,7 @@ export class ProjectListComponent extends BaseComponent {
             });
     }
 
-    private confirmDeleteProject(project: ProjectPairRow) {
+    private confirmDeleteProject(project: IViewProjectPair) {
         this.confirmDelete(
             {
                 header: 'Xóa dự án',
@@ -213,9 +399,5 @@ export class ProjectListComponent extends BaseComponent {
                     });
             },
         );
-    }
-
-    private formatDay(date: string | null) {
-        return date ? formatDate(date, 'dd/MM/yyyy', this._locale) : '—';
     }
 }

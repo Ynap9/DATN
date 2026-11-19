@@ -1,0 +1,39 @@
+<i [class]="active() ? 'pi pi-filter-fill data-table-filter-icon is-active' : 'pi pi-filter data-table-filter-icon'"
+    [pTooltip]="(active() ? 'Đang lọc: ' : 'Lọc theo: ') + column().header" tooltipPosition="top" (click)="toggle($event)"></i>
+
+<p-popover #popover appendTo="body">
+    <div class="data-table-filter">
+        <div class="data-table-filter-title"><i class="pi pi-filter"></i>{{ column().header }}</div>
+
+        @switch (column().filter?.type) {
+            @case ('text') {
+                <div class="data-table-filter-search">
+                    <i class="pi pi-search"></i>
+                    <input pInputText placeholder="Nhập từ khoá..." [(ngModel)]="text" (keydown.enter)="applyDraft()" />
+                    @if (text) {
+                        <i class="pi pi-times data-table-filter-clear" (click)="text = ''"></i>
+                    }
+                </div>
+                <small class="data-table-filter-hint">Nhấn Enter hoặc bấm Áp dụng</small>
+            }
+            @case ('select') {
+                <sh-select placeholder="Chọn giá trị" [options]="column().filter?.options ?? []" optionLabel="label" optionValue="value"
+                    [showClear]="true" [ngModel]="value()" (onChange)="emit($event)" />
+            }
+            @case ('dateRange') {
+                <sh-calendar label="Từ ngày" valueFormat="YYYY-MM-DD" [showClear]="true" [(ngModel)]="from" />
+                <sh-calendar label="Đến ngày" valueFormat="YYYY-MM-DD" [showClear]="true" [(ngModel)]="to" />
+                @if (invalidRange) {
+                    <small class="data-table-filter-error">Từ ngày phải trước hoặc bằng Đến ngày</small>
+                }
+            }
+        }
+
+        @if (column().filter?.type !== 'select') {
+            <div class="data-table-filter-actions">
+                <p-button label="Xoá" icon="pi pi-times" severity="secondary" [outlined]="true" size="small" (onClick)="emit(null)" />
+                <p-button label="Áp dụng" icon="pi pi-check" size="small" [disabled]="invalidRange" (onClick)="applyDraft()" />
+            </div>
+        }
+    </div>
+</p-popover>

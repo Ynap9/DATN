@@ -29,7 +29,7 @@ Người gọi không phải Admin, cũng không là Leader đang hoạt động
 
 `ProjectMemberDomainService.EnsureCanManageAsync` (Task 13–15 dùng lại), theo thứ tự: dự án không có `303` → loại văn bản không có
 `301` → chưa gắn vào dự án `312` (mã Construction) → dự án `DONE` / `EXPIRED` khi thêm / sửa / gỡ → `818`, **cả SuperAdmin** (xem vẫn
-được; `DEPLOYING` / `DOING` / `ACCEPTING` được) → Admin hay Leader (`805`). Trả `OperationAccess(Project, DocumentType, IsAdmin,
+được; `DOING` / `ACCEPTING` được) → Admin hay Leader (`805`). Trả `OperationAccess(Project, DocumentType, IsAdmin,
 LeaderUserId)` để service khỏi đọc lại tên dự án / loại văn bản cho audit. `memberId` không có, đã gỡ, khác `projectId` trên route → `806`.
 
 ## Thêm hàng loạt (API 11, 12)
@@ -115,7 +115,7 @@ vừa xét (chữ ký cũ theo người không phân biệt được phiếu `DO
 
 ## Đã kiểm thực tế (2026-10-27)
 
-Gọi thật trên DB dev: dự án X (`DOING`) có loại A, B, dự án `DONE`, dự án `DEPLOYING`, Admin, SuperAdmin, 2 Leader, 4 Data, 2 QA (chép
+Gọi thật trên DB dev: dự án X (`DOING`) có loại A, B, dự án `DONE`, dự án `DEPLOYING` (trước Task 38), Admin, SuperAdmin, 2 Leader, 4 Data, 2 QA (chép
 password hash của `admin`), phiếu nhập liệu + dòng `SubmissionUser` chèn bằng SQL (Task 13 chưa có), phiếu QA giao bằng API 18C. Tạm cấp
 `AssignQa` cho Leader, `Qa` cho QA. Xoá sạch sau khi test. **48 ca: 45 đạt ngay, 3 ca báo sai do script** (2 lần so chuỗi sai thứ tự,
 1 sai đường dẫn `swagger/v1-operation/swagger.json`), số liệu in ra và kiểm lại tay đều đúng — đủ mục 11.11

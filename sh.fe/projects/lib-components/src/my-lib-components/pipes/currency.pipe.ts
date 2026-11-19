@@ -4,7 +4,7 @@ import { Pipe, PipeTransform } from '@angular/core';
   name: 'currency',})
 export class CurrencyPipe implements PipeTransform {
 
-    transform(value: string, ...args: any[]): string {
+    transform(value: string | number | null | undefined, ...args: any[]): string {
         if (value === '' || value === null || typeof value === 'undefined') {
           return '';
         }
