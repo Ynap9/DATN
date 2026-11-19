@@ -47,5 +47,14 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
             DeletedDate = deletedDate;
             DeletedBy = deletedBy;
         }
+
+        public void Restore(string? restoredBy, DateTime restoredDate)
+        {
+            Deleted = false;
+            DeletedDate = null;
+            DeletedBy = null;
+            ModifiedBy = restoredBy;
+            ModifiedDate = restoredDate;
+        }
     }
 }

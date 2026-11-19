@@ -6,8 +6,8 @@ namespace sh.be.applications.Module.Construction.Interfaces.Queries
 {
     public interface IDocumentTypeQuery
     {
-        Task<List<GetListDocumentTypeDropDownDto>> GetDocumentTypeDropDown();
-        Task<BaseResponsePagingDto<GetListDocumentTypeDto>> FindPaging(FindPagingDocumentTypeDto dto);
+        Task<List<GetListDocumentTypeDropDownDto>> GetDocumentTypeDropDown(string userId, bool isAdmin);
+        Task<BaseResponsePagingDto<GetListDocumentTypeDto>> FindPaging(FindPagingDocumentTypeDto dto, string userId, bool isAdmin);
         Task<FindDocumentTypeByIdDto?> FindById(int id);
         Task<List<GetListDocumentFieldDto>> GetListDocumentField(int id);
         Task<List<string>> GetListTemplateHeader(int id);

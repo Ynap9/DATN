@@ -54,7 +54,7 @@
                             <p-tag [value]="get(row, col.field)" [severity]="col.statusSeverity?.(row)" [rounded]="true" />
                         }
                         @case (cellViewTypes.ACTIONS) {
-                            <app-tbl-action [actions]="col.actions" (action)="action.emit({ type: $event, row })" />
+                            <app-tbl-action [actions]="col.actions" [row]="row" (action)="action.emit({ type: $event, row })" />
                         }
                         @case (cellViewTypes.CUSTOM_COMP) {
                             <ng-container [ngComponentOutlet]="col.customComponent" [ngComponentOutletInjector]="customInjector"

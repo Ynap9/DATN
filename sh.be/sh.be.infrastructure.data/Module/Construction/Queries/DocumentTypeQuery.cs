@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using sh.be.applications.Module.Construction.Dtos.DocumentField;
 using sh.be.applications.Module.Construction.Dtos.DocumentType;
 using sh.be.applications.Module.Construction.Interfaces.Queries;
+using sh.be.domain.Module.Construction.DocumentTypes.Entities;
 using sh.be.infrastructure.data.Base;
 using sh.be.infrastructure.data.Persistence.Db;
 using sh.be.shared.HttpRequest.BaseRequest;
@@ -16,18 +17,19 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
         {
         }
 
-        public Task<List<GetListDocumentTypeDropDownDto>> GetDocumentTypeDropDown()
+        // Dropdown loại văn bản: Admin mọi loại, còn lại loại thuộc cặp dự án mình được phân
+        public Task<List<GetListDocumentTypeDropDownDto>> GetDocumentTypeDropDown(string userId, bool isAdmin)
         {
-            return _shDbContext.DocumentTypes
-                .AsNoTracking()
+            return FilterViewable(_shDbContext.DocumentTypes.AsNoTracking(), userId, isAdmin)
                 .OrderBy(d => d.Name)
                 .ProjectTo<GetListDocumentTypeDropDownDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
         }
 
-        public async Task<BaseResponsePagingDto<GetListDocumentTypeDto>> FindPaging(FindPagingDocumentTypeDto dto)
+        // Paging loại văn bản, cùng phạm vi xem với dropdown
+        public async Task<BaseResponsePagingDto<GetListDocumentTypeDto>> FindPaging(FindPagingDocumentTypeDto dto, string userId, bool isAdmin)
         {
-            var query = _shDbContext.DocumentTypes.AsNoTracking();
+            var query = FilterViewable(_shDbContext.DocumentTypes.AsNoTracking(), userId, isAdmin);
             if (!string.IsNullOrEmpty(dto.Keyword))
             {
                 query = query.Where(d => d.Name.Contains(dto.Keyword));
@@ -78,6 +80,13 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 .ThenBy(d => d.Id)
                 .Select(d => string.IsNullOrWhiteSpace(d.FieldImport) ? d.Name : d.FieldImport!)
                 .ToListAsync();
+        }
+
+        // Cùng luật DocumentTypeRepository.IsAssignedToUserAsync: thành viên chưa gỡ ở cặp dự án – loại văn bản đang gắn
+        private IQueryable<DocumentType> FilterViewable(IQueryable<DocumentType> query, string userId, bool isAdmin)
+        {
+            return query.Where(d => isAdmin || _shDbContext.ProjectDocumentTypes.Any(pd => pd.DocumentTypeId == d.Id
+                && _shDbContext.ProjectMembers.Any(m => m.ProjectId == pd.ProjectId && m.DocumentTypeId == pd.DocumentTypeId && m.UserId == userId)));
         }
     }
 }
