@@ -64,8 +64,10 @@ Ghi qua CRUD dự án (`documentTypeIds`), theo mẫu `User` – `UserRole`:
   xoá của loại đó vào `ProjectDocumentTypeDocumentField` (`ProjectDocumentType.AssignDocumentFields`): `FieldImport` lấy từ
   `DocumentField.FieldImport` (rỗng nếu null), `OrderFieldImport` đánh `1, 2, …` **riêng cho từng loại**, theo `OrderTableView` rồi `Id`.
 - Tạo: một transaction — lưu dự án lấy `Id`, rồi gắn loại văn bản + audit, lưu lần hai; lỗi → rollback và xoá file sheet.
-- Sửa: **so khác biệt** với danh sách cũ — loại bị bỏ thì xoá cứng (kể cả dòng đã xoá mềm) ở cả hai bảng; loại mới thì gắn như trên;
-  loại giữ nguyên **không đụng** (giữ `FieldImport` / thứ tự đã chỉnh, giữ `CreatedDate`). Tất cả trong một transaction.
+- Sửa: **so khác biệt** với danh sách cũ, một transaction. Loại giữ nguyên **không đụng** (giữ `FieldImport` / thứ tự đã chỉnh).
+  Loại bị bỏ (gỡ) thì **xoá mềm** ở cả hai bảng (Task 36, trước đó xoá cứng). Loại thêm vào mà từng gỡ thì **khôi phục** dòng cũ
+  (`ProjectDocumentType.Restore` + `RestoreDocumentFields`): giữ `FieldImport` / `OrderFieldImport` cũ, trường đã xoá trong lúc gỡ
+  vẫn xoá, trường thêm sau khi gỡ thì chép mới nối cuối thứ tự (`max + 1`, theo `OrderTableView`); loại chưa từng gắn thì gắn như trên.
 - Xoá dự án (API cũ): xoá mềm luôn các dòng ở cả hai bảng; API Admin xoá thêm 14 bảng khác ([25](25-xoa-du-an-danh-sach-cap.md)). `GET {id}` trả `documentTypeIds` đang gắn.
 - Xoá trường (`DELETE document-field/{id}` hoặc `quick-delete`) → xoá mềm dòng của trường đó ở mọi dự án
   (`DocumentFieldService.DeleteProjectDocumentFieldsAsync`); `OrderFieldImport` các trường còn lại **không đánh lại** (để hở,
@@ -76,8 +78,8 @@ Trường văn bản theo dự án: bảng `construction.ProjectDocumentTypeDocu
 index `IX_ProjectDocumentTypeDocumentField_DocumentFieldId`; migration `Add_ProjectDocumentTypeDocumentField`. Chưa có
 khoá ngoại; chưa có API riêng — chỉ được ghi qua CRUD dự án (xem trên).
 
-⚠️ Khoá ghép + xoá mềm (cả hai bảng): gán lại cặp đã xoá mềm bằng `Add` sẽ trùng khoá chính — phải xoá cứng trước
-(như `DeleteDocumentTypesAsync`) hoặc khôi phục dòng cũ (`IgnoreQueryFilters()`), đừng thêm dòng mới.
+⚠️ Khoá ghép + xoá mềm (cả hai bảng): gán lại cặp đã xoá mềm bằng `Add` sẽ trùng khoá chính — phải khôi phục dòng cũ
+(`GetDeletedDocumentTypesAsync` / `GetDeletedDocumentFieldsAsync` dùng `IgnoreQueryFilters()`), đừng thêm dòng mới, đừng quay lại xoá cứng.
 
 ## Trạng thái — `ProjectConst`
 

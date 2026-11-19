@@ -1,0 +1,28 @@
+<app-page-header title="Dự án" [breadcrumbs]="breadcrumbs">
+    @if (canCreate) {
+        <p-button icon="pi pi-plus" label="Tạo dự án" (onClick)="openForm()" />
+    }
+</app-page-header>
+
+<p-selectbutton class="mb-3" [formControl]="status" [options]="statusTabs" optionLabel="label" optionValue="value" [allowEmpty]="false" />
+
+<div class="flex flex-wrap items-center gap-3 mb-4">
+    <input pInputText class="w-full sm:w-80" placeholder="Tìm theo tên dự án" [formControl]="keyword" />
+    <sh-select class="w-full sm:w-64" placeholder="Tất cả metadata" [formControl]="documentTypeId" [options]="documentTypes" optionLabel="name"
+        optionValue="id" [filter]="true" [showClear]="true" />
+    <span class="text-sm text-muted-color">{{ totalRecords }} mục</span>
+</div>
+
+<app-data-table [columns]="columns" [data]="projects" [loading]="loading" [pageNumber]="pageNumber" [pageSize]="pageSize"
+    [total]="totalRecords" (pageChange)="onPageChange($event)" (action)="onAction($event)">
+    <div tableEmpty class="flex flex-col items-center gap-3 py-8">
+        @if (isFiltering) {
+            <span class="text-muted-color">Không tìm thấy dự án phù hợp.</span>
+        } @else {
+            <span class="text-muted-color">Chưa có dự án nào.</span>
+            @if (canCreate) {
+                <p-button label="Tạo dự án" (onClick)="openForm()" />
+            }
+        }
+    </div>
+</app-data-table>

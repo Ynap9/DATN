@@ -3,4 +3,5 @@ export class AuthConstants {
   static PKCE_CODE_CHALLENGE_METHOD = 'S256'
   static REDIRECT_URI_AFTER_LOGIN = 'redirect_uri_after_success'
   static SUPER_ADMIN_ROLE = "SuperAdmin"
+  static ADMIN_ROLE = "Admin"
 }

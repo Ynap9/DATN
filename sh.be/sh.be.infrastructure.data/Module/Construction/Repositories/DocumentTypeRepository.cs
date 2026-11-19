@@ -42,6 +42,13 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
                 && _shDbContext.Projects.Any(p => p.Id == pd.ProjectId));
         }
 
+        // Người dùng là thành viên chưa gỡ ở ít nhất một cặp dự án – loại văn bản đang gắn (dòng gắn chưa xoá)
+        public Task<bool> IsAssignedToUserAsync(int id, string userId)
+        {
+            return _shDbContext.ProjectDocumentTypes.AnyAsync(pd => pd.DocumentTypeId == id
+                && _shDbContext.ProjectMembers.Any(m => m.ProjectId == pd.ProjectId && m.DocumentTypeId == pd.DocumentTypeId && m.UserId == userId));
+        }
+
         public void Add(DocumentType documentType)
         {
             _shDbContext.DocumentTypes.Add(documentType);
