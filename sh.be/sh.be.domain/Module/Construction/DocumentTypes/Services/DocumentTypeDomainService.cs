@@ -37,5 +37,14 @@ namespace sh.be.domain.Module.Construction.DocumentTypes.Services
                 throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentTypeInUse);
             }
         }
+
+        // Admin xem mọi loại văn bản; người khác chỉ loại thuộc dự án mình được phân, ngoài phạm vi trả 301 như không tồn tại
+        public async Task EnsureViewableAsync(int id, string userId, bool isAdmin)
+        {
+            if (!isAdmin && !await _documentTypeRepository.IsAssignedToUserAsync(id, userId))
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentTypeNotFound);
+            }
+        }
     }
 }

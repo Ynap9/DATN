@@ -62,7 +62,8 @@ quá 6–7 file mới chia thư mục con (`components/`).
   (bấm phát `CELL_CLICK`, khoá bằng `disabled`). Không truyền thì bảng y như cũ. Dòng trống thay nội dung bằng phần tử con có
   thuộc tính `tableEmpty` (vd. câu hướng dẫn + nút thêm), không có thì hiện "Không có dữ liệu".
 - Cột thao tác: header `Thao tác`, `width: 100px; text-align: center`. `TblAction` là nút ⋯ mở dropdown; mỗi `ITableAction` bắt buộc
-  có `icon`, thao tác xoá đặt `severity: 'danger'` (chữ đỏ).
+  có `icon`, thao tác xoá đặt `severity: 'danger'` (chữ đỏ); ẩn theo từng dòng bằng `visible: (row) => boolean` (vd. "Mở Google Sheet").
+- Cột `CUSTOM_COMP` luôn truyền `{ row, rowIndex, data }` — component ô phải khai đủ ba input, thiếu thì Angular báo lỗi console khi gán input không tồn tại.
 - Style: Tailwind cho bố cục; style riêng component dưới 8 kB.
 - Thông điệp người dùng tiếng Việt, lấy từ `SuccessMessage` / `ErrorMessage` khi có sẵn.
 

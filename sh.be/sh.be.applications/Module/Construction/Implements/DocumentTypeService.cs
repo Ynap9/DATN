@@ -11,6 +11,8 @@ using sh.be.applications.Module.Construction.Interfaces.Services;
 using sh.be.domain.Base;
 using sh.be.domain.Module.Construction.DocumentTypes.Entities;
 using sh.be.domain.Module.Construction.DocumentTypes.Repositories;
+using sh.be.domain.Module.Auth.Repositories;
+using sh.be.domain.Module.Auth.Services;
 using sh.be.domain.Module.Construction.DocumentTypes.Services;
 using sh.be.domain.Module.Core.Repositories;
 using sh.be.shared.Constants.Core;
@@ -27,47 +29,68 @@ namespace sh.be.applications.Module.Construction.Implements
         private readonly IDocumentTypeQuery _documentTypeQuery;
         private readonly DocumentTypeDomainService _documentTypeDomainService;
         private readonly IExcelExternal _excelExternal;
+        private readonly IRoleRepository _roleRepository;
 
         public DocumentTypeService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<DocumentTypeService> logger, IRequestContext requestContext, TimeProvider timeProvider,
-            IDocumentTypeRepository documentTypeRepository, IDocumentTypeQuery documentTypeQuery, DocumentTypeDomainService documentTypeDomainService, IExcelExternal excelExternal
+            IDocumentTypeRepository documentTypeRepository, IDocumentTypeQuery documentTypeQuery, DocumentTypeDomainService documentTypeDomainService, IExcelExternal excelExternal,
+            IRoleRepository roleRepository
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _documentTypeRepository = documentTypeRepository;
             _documentTypeQuery = documentTypeQuery;
             _documentTypeDomainService = documentTypeDomainService;
             _excelExternal = excelExternal;
+            _roleRepository = roleRepository;
         }
 
+        // Dropdown loại văn bản: Admin / SuperAdmin mọi loại, còn lại loại thuộc dự án mình được phân
         public async Task<List<GetListDocumentTypeDropDownDto>> GetDocumentTypeDropDown()
         {
             _logger.LogInformation($"{nameof(GetDocumentTypeDropDown)}");
-            return await _documentTypeQuery.GetDocumentTypeDropDown();
+            var currentUserId = getCurrentUserId();
+            var isAdmin = PermissionDomainService.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            return await _documentTypeQuery.GetDocumentTypeDropDown(currentUserId, isAdmin);
         }
 
+        // Paging loại văn bản, cùng phạm vi xem với dropdown
         public async Task<BaseResponsePagingDto<GetListDocumentTypeDto>> FindPaging(FindPagingDocumentTypeDto dto)
         {
             _logger.LogInformation($"{nameof(FindPaging)}, dto={JsonSerializer.Serialize(dto)}");
-            return await _documentTypeQuery.FindPaging(dto);
+            var currentUserId = getCurrentUserId();
+            var isAdmin = PermissionDomainService.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            return await _documentTypeQuery.FindPaging(dto, currentUserId, isAdmin);
         }
 
+        // Chi tiết loại văn bản; ngoài phạm vi xem trả 301 như không tồn tại
         public async Task<FindDocumentTypeByIdDto> FindById(int id)
         {
             _logger.LogInformation($"{nameof(FindById)}, id={id}");
+            var currentUserId = getCurrentUserId();
+            var isAdmin = PermissionDomainService.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            await _documentTypeDomainService.EnsureViewableAsync(id, currentUserId, isAdmin);
             return await _documentTypeQuery.FindById(id)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentTypeNotFound);
         }
 
+        // Mọi trường chưa xoá của loại văn bản; ngoài phạm vi xem trả 301
         public async Task<List<GetListDocumentFieldDto>> GetListDocumentField(int id)
         {
             _logger.LogInformation($"{nameof(GetListDocumentField)}, id={id}");
             _ = await _documentTypeRepository.FindByIdAsync(id)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentTypeNotFound);
+            var currentUserId = getCurrentUserId();
+            var isAdmin = PermissionDomainService.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            await _documentTypeDomainService.EnsureViewableAsync(id, currentUserId, isAdmin);
             return await _documentTypeQuery.GetListDocumentField(id);
         }
 
+        // File template Excel nhập liệu của loại văn bản; ngoài phạm vi xem trả 301
         public async Task<ExportFileDto> ExportExcelTemplate(int id)
         {
             _logger.LogInformation($"{nameof(ExportExcelTemplate)}, id={id}");
+            var currentUserId = getCurrentUserId();
+            var isAdmin = PermissionDomainService.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            await _documentTypeDomainService.EnsureViewableAsync(id, currentUserId, isAdmin);
             var documentType = await _documentTypeQuery.FindById(id)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentTypeNotFound);
             var headers = await _documentTypeQuery.GetListTemplateHeader(id);

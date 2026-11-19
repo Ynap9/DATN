@@ -348,9 +348,20 @@ namespace sh.be.applications.Module.Construction.Implements
             try
             {
                 _projectRepository.Update(project);
-                await _projectRepository.DeleteDocumentFieldsAsync(id, removedDocumentTypeIds);
-                await _projectRepository.DeleteDocumentTypesAsync(id, removedDocumentTypeIds);
-                await AddDocumentTypesAsync(project, addedDocumentTypeIds, currentUserId, now);
+                await _projectRepository.DeleteDocumentFieldsAsync(id, removedDocumentTypeIds, currentUserId, now);
+                await _projectRepository.DeleteDocumentTypesAsync(id, removedDocumentTypeIds, currentUserId, now);
+
+                // Loại từng gỡ khỏi dự án thì khôi phục dòng cũ cùng cấu hình trường, loại chưa từng gắn thì gắn mới
+                var restoredDocumentTypes = await _projectRepository.GetDeletedDocumentTypesAsync(id, addedDocumentTypeIds);
+                var restoredDocumentTypeIds = restoredDocumentTypes.Select(pd => pd.DocumentTypeId).ToList();
+                var oldDocumentFields = await _projectRepository.GetDeletedDocumentFieldsAsync(id, restoredDocumentTypeIds);
+                var documentFields = await _documentFieldRepository.GetByDocumentTypeIdsAsync(restoredDocumentTypeIds);
+                foreach (var restoredDocumentType in restoredDocumentTypes)
+                {
+                    restoredDocumentType.Restore(currentUserId, now);
+                    _projectRepository.AddDocumentFields(restoredDocumentType.RestoreDocumentFields(oldDocumentFields, documentFields, currentUserId, now));
+                }
+                await AddDocumentTypesAsync(project, addedDocumentTypeIds.Except(restoredDocumentTypeIds).ToList(), currentUserId, now);
                 AddAuditLog(AuditLogConstants.ACTION_PROJECT_UPDATE, AuditLogConstants.ACTION_TYPE_UPDATE, $"Cập nhật dự án {project.Name}",
                     oldData, ToAuditData(project, documentTypeIds));
                 await _unitOfWork.SaveChangesAsync();

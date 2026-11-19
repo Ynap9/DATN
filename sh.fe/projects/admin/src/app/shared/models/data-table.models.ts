@@ -8,6 +8,7 @@ export interface ITableAction {
     label: string;
     icon: string;
     severity?: 'secondary' | 'danger';
+    visible?: (row: any) => boolean;
 }
 
 export interface ITableEvent<T = any> {

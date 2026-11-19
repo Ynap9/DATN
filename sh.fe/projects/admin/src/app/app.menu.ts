@@ -9,7 +9,7 @@ export const APP_MENU_ITEMS: MenuItem[] = [
     {
         label: 'Hồ sơ thi công',
         items: [
-            { label: 'Dự án', icon: 'pi pi-building', routerLink: ['/admin/construction/project'], permission: PermissionConstants.MENU_PROJECT },
+            { label: 'Dự án', icon: 'pi pi-building', routerLink: ['/admin/construction/project'], permission: PermissionConstants.FUNCTION_PROJECT_VIEW },
             {
                 label: 'Cấu hình dự án',
                 icon: 'pi pi-sliders-h',

@@ -11,6 +11,7 @@ import { ITableAction } from '@/shared/models/data-table.models';
 })
 export class TblAction {
     actions = input.required<ITableAction[]>();
+    row = input<unknown>();
 
     action = output<string>();
 
@@ -20,11 +21,13 @@ export class TblAction {
     };
 
     menuItems = computed<MenuItem[]>(() =>
-        this.actions().map((item) => ({
-            label: item.label,
-            icon: item.icon,
-            state: { danger: item.severity === 'danger' },
-            command: () => this.action.emit(item.type),
-        })),
+        this.actions()
+            .filter((item) => item.visible?.(this.row()) ?? true)
+            .map((item) => ({
+                label: item.label,
+                icon: item.icon,
+                state: { danger: item.severity === 'danger' },
+                command: () => this.action.emit(item.type),
+            })),
     );
 }

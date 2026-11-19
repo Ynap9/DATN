@@ -180,12 +180,20 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
             _shDbContext.ProjectDocumentTypes.AddRange(projectDocumentTypes);
         }
 
-        public Task DeleteDocumentTypesAsync(int projectId, IReadOnlyCollection<int> documentTypeIds)
+        // Gỡ loại văn bản khỏi dự án = xoá mềm dòng gắn, để chọn lại thì khôi phục được
+        public Task DeleteDocumentTypesAsync(int projectId, IReadOnlyCollection<int> documentTypeIds, string? deletedBy, DateTime deletedDate)
+        {
+            return SoftDeleteAsync(_shDbContext.ProjectDocumentTypes
+                .Where(pd => pd.ProjectId == projectId && documentTypeIds.Contains(pd.DocumentTypeId)), deletedBy, deletedDate);
+        }
+
+        // Dòng gắn đã gỡ (xoá mềm) của các loại văn bản, có theo dõi để khôi phục
+        public Task<List<ProjectDocumentType>> GetDeletedDocumentTypesAsync(int projectId, IReadOnlyCollection<int> documentTypeIds)
         {
             return _shDbContext.ProjectDocumentTypes
                 .IgnoreQueryFilters()
-                .Where(pd => pd.ProjectId == projectId && documentTypeIds.Contains(pd.DocumentTypeId))
-                .ExecuteDeleteAsync();
+                .Where(pd => pd.Deleted && pd.ProjectId == projectId && documentTypeIds.Contains(pd.DocumentTypeId))
+                .ToListAsync();
         }
 
         public Task<List<ProjectDocumentTypeDocumentField>> GetDocumentFieldsAsync(int projectId)
@@ -215,12 +223,20 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
             _shDbContext.ProjectDocumentTypeDocumentFields.AddRange(projectDocumentFields);
         }
 
-        public Task DeleteDocumentFieldsAsync(int projectId, IReadOnlyCollection<int> documentTypeIds)
+        // Xoá mềm cấu hình trường của các loại văn bản bị gỡ khỏi dự án; dòng đã xoá từ trước giữ mốc xoá cũ
+        public Task DeleteDocumentFieldsAsync(int projectId, IReadOnlyCollection<int> documentTypeIds, string? deletedBy, DateTime deletedDate)
+        {
+            return SoftDeleteAsync(_shDbContext.ProjectDocumentTypeDocumentFields
+                .Where(pf => pf.ProjectId == projectId && documentTypeIds.Contains(pf.DocumentTypeId)), deletedBy, deletedDate);
+        }
+
+        // Cấu hình trường đã xoá mềm của các loại văn bản, có theo dõi để khôi phục khi chọn lại loại
+        public Task<List<ProjectDocumentTypeDocumentField>> GetDeletedDocumentFieldsAsync(int projectId, IReadOnlyCollection<int> documentTypeIds)
         {
             return _shDbContext.ProjectDocumentTypeDocumentFields
                 .IgnoreQueryFilters()
-                .Where(pf => pf.ProjectId == projectId && documentTypeIds.Contains(pf.DocumentTypeId))
-                .ExecuteDeleteAsync();
+                .Where(pf => pf.Deleted && pf.ProjectId == projectId && documentTypeIds.Contains(pf.DocumentTypeId))
+                .ToListAsync();
         }
 
         // Đánh dấu xoá các dòng chưa xoá (query filter bỏ dòng đã xoá từ trước, giữ mốc xoá cũ) với cùng người và mốc xoá
