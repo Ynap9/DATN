@@ -6,6 +6,9 @@ export interface IViewDocumentType {
     id: number;
     name: string;
     defaultView: number;
+    fieldCount: number;
+    projectCount: number;
+    createdDate: string | null;
 }
 
 export interface IDocumentTypeDropdown {

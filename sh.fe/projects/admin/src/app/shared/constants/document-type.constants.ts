@@ -1,4 +1,4 @@
-export const METADATA_URL = '/admin/construction/project-config/metadata';
+export const METADATA_URL = '/admin/construction/metadata';
 
 export const DOCUMENT_TYPE_VIEW_TABLE = 1;
 export const DOCUMENT_TYPE_VIEW_LIST = 2;
