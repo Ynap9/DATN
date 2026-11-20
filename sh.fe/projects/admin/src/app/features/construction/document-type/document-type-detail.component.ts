@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl } from '@angular/forms';
 import { Utils } from '@sh/ui';
 import { MenuItem } from 'primeng/api';
+import { DialogModule } from 'primeng/dialog';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { finalize } from 'rxjs';
 import { DownloadService } from '@/core/http/download.service';
@@ -33,9 +34,12 @@ const DOCUMENT_FIELD_ACTIONS = {
 type DocumentFieldRow = IViewDocumentField & { order: number; ocrLabel?: string };
 type DocumentFieldSetting = 'isShow' | 'isChargeable';
 
+// Cột ngắn căn giữa cả tiêu đề lẫn ô; hai cột tên để căn trái cho dễ đọc khi tên dài
+const CENTER = 'text-align: center';
+
 @Component({
     selector: 'app-document-type-detail',
-    imports: [SharedImports, SelectButtonModule, DataTable, PageHeader],
+    imports: [SharedImports, DialogModule, SelectButtonModule, DataTable, PageHeader],
     templateUrl: './document-type-detail.component.html',
     styleUrl: './document-type-detail.component.scss',
 })
@@ -56,13 +60,14 @@ export class DocumentTypeDetailComponent extends BaseComponent {
     readonly views = DOCUMENT_TYPE_VIEWS;
 
     documentType?: IViewDocumentType;
-    defaultViewLabel?: string;
     breadcrumbs: MenuItem[] = [];
     keyword = new FormControl('', { nonNullable: true });
     orderView = new FormControl(DOCUMENT_TYPE_VIEW_TABLE, { nonNullable: true });
     fields: DocumentFieldRow[] = [];
     filteredFields: DocumentFieldRow[] = [];
     selectedFields: DocumentFieldRow[] = [];
+    viewHelpVisible = false;
+    downloadingTemplate = false;
 
     private readonly _fieldActions: ITableAction[] = [
         ...(this.canUpdateField ? [{ type: DOCUMENT_FIELD_ACTIONS.EDIT, label: 'Sửa', icon: 'pi pi-pencil' }] : []),
@@ -70,14 +75,28 @@ export class DocumentTypeDetailComponent extends BaseComponent {
     ];
 
     readonly columns: IColumn<DocumentFieldRow>[] = [
-        { header: 'Thứ tự', field: 'order', headerContainerStyle: 'width: 88px' },
+        { header: 'Thứ tự', field: 'order', headerContainerStyle: `width: 88px; ${CENTER}`, cellStyle: CENTER },
         { header: 'Tên trường', field: 'name' },
         { header: 'Tên cột import', field: 'fieldImport' },
-        { header: 'Hiển thị', field: 'isShow', cellViewType: CellViewTypes.SWITCH, headerContainerStyle: 'width: 110px', disabled: () => !this.canUpdateField },
-        { header: 'Tính tiền', field: 'isChargeable', cellViewType: CellViewTypes.SWITCH, headerContainerStyle: 'width: 110px', disabled: () => !this.canUpdateField },
-        { header: 'OCR', field: 'ocrLabel' },
+        {
+            header: 'Hiển thị',
+            field: 'isShow',
+            cellViewType: CellViewTypes.SWITCH,
+            headerContainerStyle: `width: 110px; ${CENTER}`,
+            cellStyle: CENTER,
+            disabled: () => !this.canUpdateField,
+        },
+        {
+            header: 'Tính tiền',
+            field: 'isChargeable',
+            cellViewType: CellViewTypes.SWITCH,
+            headerContainerStyle: `width: 110px; ${CENTER}`,
+            cellStyle: CENTER,
+            disabled: () => !this.canUpdateField,
+        },
+        { header: 'OCR', field: 'ocrLabel', headerContainerStyle: CENTER, cellStyle: CENTER },
         ...(this._fieldActions.length
-            ? [{ header: 'Thao tác', cellViewType: CellViewTypes.ACTIONS, headerContainerStyle: 'width: 100px; text-align: center', actions: this._fieldActions }]
+            ? [{ header: 'Thao tác', cellViewType: CellViewTypes.ACTIONS, headerContainerStyle: `width: 100px; ${CENTER}`, cellStyle: CENTER, actions: this._fieldActions }]
             : []),
     ];
 
@@ -87,10 +106,6 @@ export class DocumentTypeDetailComponent extends BaseComponent {
 
     get ocrCount(): number {
         return this.fields.filter((field) => field.isFieldOcr).length;
-    }
-
-    get orderViewHint(): string | undefined {
-        return this.views.find((view) => view.value === this.orderView.value)?.hint;
     }
 
     // Đang lọc thì vị trí trên bảng không còn là thứ tự thật nên tắt kéo thả
@@ -114,7 +129,6 @@ export class DocumentTypeDetailComponent extends BaseComponent {
                     return;
                 }
                 this.documentType = res.data;
-                this.defaultViewLabel = DOCUMENT_TYPE_VIEWS.find((view) => view.value === res.data.defaultView)?.label;
                 this.breadcrumbs = [{ label: 'Hồ sơ thi công' }, { label: 'Metadata', routerLink: METADATA_URL }, { label: res.data.name }];
                 this.loadFields();
             });
@@ -219,9 +233,13 @@ export class DocumentTypeDetailComponent extends BaseComponent {
 
     downloadTemplate() {
         const url = this._documentTypeService.excelTemplateUrl(this._documentTypeId);
+        this.downloadingTemplate = true;
         this._downloadService
             .get(url)
-            .pipe(takeUntilDestroyed(this._destroyRef))
+            .pipe(
+                finalize(() => (this.downloadingTemplate = false)),
+                takeUntilDestroyed(this._destroyRef),
+            )
             .subscribe(async (response) => {
                 const error = await readErrorResponse(response);
                 if (error) {
