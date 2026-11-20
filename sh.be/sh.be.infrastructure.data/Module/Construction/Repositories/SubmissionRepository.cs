@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using sh.be.domain.Module.Construction.Submissions.Entities;
 using sh.be.domain.Module.Construction.Submissions.Repositories;
 using sh.be.domain.Module.Construction.Submissions.Services;
+using sh.be.infrastructure.data.Module.Operation.Repositories;
 using sh.be.infrastructure.data.Persistence.Db;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.HttpRequest.Error;
@@ -46,9 +47,19 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
             return _shDbContext.Submissions.FirstOrDefaultAsync(s => s.Id == id);
         }
 
-        public Task<List<Submission>> GetByIdsAsync(IReadOnlyCollection<int> ids)
+        // Đọc 1 văn bản kèm UPDLOCK giữ tới hết transaction: Check / QA / Xoá cùng văn bản chạy lần lượt, request sau đọc trạng thái đã commit
+        public Task<Submission?> FindByIdForUpdateAsync(int id)
         {
             return _shDbContext.Submissions
+                .FromSqlRaw(AssignmentRepository.LockSubmissionsSql)
+                .FirstOrDefaultAsync(s => s.Id == id);
+        }
+
+        // Đọc nhiều văn bản kèm UPDLOCK như FindByIdForUpdateAsync
+        public Task<List<Submission>> GetByIdsForUpdateAsync(List<int> ids)
+        {
+            return _shDbContext.Submissions
+                .FromSqlRaw(AssignmentRepository.LockSubmissionsSql)
                 .Where(s => ids.Contains(s.Id))
                 .ToListAsync();
         }

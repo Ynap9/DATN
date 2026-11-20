@@ -1,3 +1,4 @@
+using sh.be.domain.Module.Construction.Projects.Entities;
 using sh.be.domain.Module.Construction.Submissions.Entities;
 
 namespace sh.be.applications.Module.Construction.Interfaces.Services
@@ -9,6 +10,8 @@ namespace sh.be.applications.Module.Construction.Interfaces.Services
         Task<string?> ResolveRestrictedUserIdAsync(int projectId, int documentTypeId, string userId);
         Task EnsureCanViewAsync(Submission submission, string userId);
         Task EnsureCanCheckAsync(Submission submission, string userId);
+        // Gọi đầu transaction Check / chấm QA, trước khi khoá dòng văn bản
+        Task LockPairBeforeSubmissionAsync(Project project, int documentTypeId);
         Task AssignCheckedToQaAsync(Submission submission, string userId, DateTime now);
         Task ApplyQaResultToAssignmentAsync(Submission submission, int newStatusQa, string userId, DateTime now);
         Task ReleaseDeletedSubmissionsAsync(List<Submission> submissions, string userId, DateTime now);

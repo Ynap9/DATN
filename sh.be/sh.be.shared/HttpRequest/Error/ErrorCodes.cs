@@ -14,6 +14,7 @@ namespace sh.be.shared.HttpRequest.Error
         public const int Unauthorized = 401;
         public const int NotFound = 404;
         public const int Found = 409;
+        public const int ConcurrencyConflict = 423;
         public const int InternalServerError = 500;
 
         //Authentication
@@ -86,6 +87,7 @@ namespace sh.be.shared.HttpRequest.Error
         public const int ConstructionErrorImportJobNotFound = 344;
         public const int ConstructionErrorProjectQaDisabled = 345;
         public const int ConstructionErrorDocumentTypeInUse = 346;
+        public const int ConstructionErrorDocumentTypeHasSubmissions = 347;
 
         public const int DigitalSignatureErrorTemplateNotFound = 601;
         public const int DigitalSignatureErrorInvalidTemplatePositionKind = 602;

@@ -15,6 +15,7 @@ namespace sh.be.shared.HttpRequest.Error
             { ErrorCodes.Unauthorized, "Unauthorized" },
             { ErrorCodes.NotFound, "Not found" },
             { ErrorCodes.Found, "Found" },
+            { ErrorCodes.ConcurrencyConflict, "Thao tác đang trùng với người khác, vui lòng thử lại" },
             { ErrorCodes.InternalServerError, "Internal server error" },
 
 
@@ -86,6 +87,7 @@ namespace sh.be.shared.HttpRequest.Error
             { ErrorCodes.ConstructionErrorImportJobNotFound, "Không tìm thấy yêu cầu import hoặc yêu cầu đã hết hạn" },
             { ErrorCodes.ConstructionErrorProjectQaDisabled, "Dự án không bật QA" },
             { ErrorCodes.ConstructionErrorDocumentTypeInUse, "Loại văn bản đang được dự án sử dụng, không thể xoá" },
+            { ErrorCodes.ConstructionErrorDocumentTypeHasSubmissions, "Metadata đã có văn bản trong dự án, không gỡ được" },
             { ErrorCodes.DigitalSignatureErrorTemplateNotFound, "Mẫu chữ ký không tồn tại" },
             { ErrorCodes.DigitalSignatureErrorInvalidTemplatePositionKind, "Loại khối chữ ký không hợp lệ" },
             { ErrorCodes.DigitalSignatureErrorTemplatePositionOutOfPage, "Tọa độ khối chữ ký nằm ngoài trang hoặc có kích thước bằng 0" },

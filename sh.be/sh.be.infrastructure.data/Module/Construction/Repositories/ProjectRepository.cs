@@ -175,6 +175,17 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
                 && _shDbContext.DocumentTypes.Any(d => d.Id == documentTypeId));
         }
 
+        // Tên các loại văn bản (trong danh sách cho trước) đã có văn bản chưa xoá trong dự án
+        public Task<List<string>> GetDocumentTypeNamesHavingSubmissionsAsync(int projectId, List<int> documentTypeIds)
+        {
+            return _shDbContext.DocumentTypes
+                .Where(d => documentTypeIds.Contains(d.Id)
+                    && _shDbContext.Submissions.Any(s => s.ProjectId == projectId && s.DocumentTypeId == d.Id))
+                .OrderBy(d => d.Name)
+                .Select(d => d.Name)
+                .ToListAsync();
+        }
+
         public void AddDocumentTypes(IEnumerable<ProjectDocumentType> projectDocumentTypes)
         {
             _shDbContext.ProjectDocumentTypes.AddRange(projectDocumentTypes);
