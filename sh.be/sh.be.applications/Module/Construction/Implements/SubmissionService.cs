@@ -252,6 +252,7 @@ namespace sh.be.applications.Module.Construction.Implements
                 throw new UserFriendlyException(ErrorCodes.BadRequest, $"pageSize phải từ 1 đến {SubmissionConst.MAX_PAGE_SIZE}");
             }
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            EnsureFieldFilterValid(dto);
             await EnsureQaTicketFilterVisibleAsync(dto);
             var restrictedUserId = await _submissionAssignmentService.ResolveRestrictedUserIdAsync(dto.ProjectId, dto.DocumentTypeId, getCurrentUserId());
             return await _submissionQuery.FindPaging(dto, restrictedUserId);
@@ -262,6 +263,7 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             _logger.LogInformation($"{nameof(FindById)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            EnsureFieldFilterValid(dto);
             await EnsureQaTicketFilterVisibleAsync(dto);
             var currentUserId = getCurrentUserId();
             await _submissionAssignmentService.EnsureCanViewAsync(await _submissionDomainService.EnsureSubmissionExistsAsync(id), currentUserId);
@@ -280,6 +282,7 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             _logger.LogInformation($"{nameof(FindNext)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            EnsureFieldFilterValid(dto);
             await EnsureQaTicketFilterVisibleAsync(dto);
             var restrictedUserId = await _submissionAssignmentService.ResolveRestrictedUserIdAsync(dto.ProjectId, dto.DocumentTypeId, getCurrentUserId());
             var nextId = await _submissionQuery.FindNextId(id, dto, restrictedUserId)
@@ -293,6 +296,7 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             _logger.LogInformation($"{nameof(FindPrevious)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            EnsureFieldFilterValid(dto);
             await EnsureQaTicketFilterVisibleAsync(dto);
             var restrictedUserId = await _submissionAssignmentService.ResolveRestrictedUserIdAsync(dto.ProjectId, dto.DocumentTypeId, getCurrentUserId());
             var previousId = await _submissionQuery.FindPreviousId(id, dto, restrictedUserId)
@@ -306,9 +310,25 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             _logger.LogInformation($"{nameof(Count)}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            EnsureFieldFilterValid(dto);
             await EnsureQaTicketFilterVisibleAsync(dto);
             var restrictedUserId = await _submissionAssignmentService.ResolveRestrictedUserIdAsync(dto.ProjectId, dto.DocumentTypeId, getCurrentUserId());
             return await _submissionQuery.Count(dto, restrictedUserId);
+        }
+
+        // Tìm văn bản người gọi lưu (CHECK) / chấm QA (QA) gần nhất trong cặp mà còn mở được; chưa có thì trả null
+        public async Task<ViewLatestWorkingSubmissionDto?> FindLatestWorking(FindLatestWorkingSubmissionDto dto)
+        {
+            _logger.LogInformation($"{nameof(FindLatestWorking)}, dto={JsonSerializer.Serialize(dto)}");
+            var type = dto.Type?.Trim().ToUpperInvariant() ?? String.Empty;
+            if (!SubmissionConst.LATEST_WORKING_TYPES.Contains(type))
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "type chỉ nhận CHECK hoặc QA");
+            }
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            var currentUserId = getCurrentUserId();
+            var restrictedUserId = await _submissionAssignmentService.ResolveRestrictedUserIdAsync(dto.ProjectId, dto.DocumentTypeId, currentUserId);
+            return await _submissionQuery.FindLatestWorking(dto.ProjectId, dto.DocumentTypeId, type, currentUserId, restrictedUserId);
         }
 
         // Kiểm tra hồ sơ: lưu dữ liệu sửa + log + audit, chuyển văn bản vừa kiểm cho QA phụ trách; dự án không QA thì tự vào nghiệm thu
@@ -389,6 +409,7 @@ namespace sh.be.applications.Module.Construction.Implements
                 throw new UserFriendlyException(ErrorCodes.BadRequest, $"pageSize phải từ 1 đến {SubmissionConst.MAX_PAGE_SIZE}");
             }
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            EnsureFieldFilterValid(dto);
             await EnsureQaTicketFilterVisibleAsync(dto);
             var restrictedUserId = await _submissionAssignmentService.ResolveRestrictedUserIdAsync(dto.ProjectId, dto.DocumentTypeId, getCurrentUserId());
             return await _submissionQuery.FindQaPaging(dto, restrictedUserId);
@@ -399,6 +420,7 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             _logger.LogInformation($"{nameof(FindQaById)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            EnsureFieldFilterValid(dto);
             await EnsureQaTicketFilterVisibleAsync(dto);
             var currentUserId = getCurrentUserId();
             await _submissionAssignmentService.EnsureCanViewAsync(await _submissionDomainService.EnsureSubmissionExistsAsync(id), currentUserId);
@@ -498,6 +520,7 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             _logger.LogInformation($"{nameof(FindFieldValues)}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            EnsureFieldFilterValid(dto);
             await EnsureQaTicketFilterVisibleAsync(dto);
             await _submissionDomainService.EnsureDocumentFieldInProjectAsync(dto.ProjectId, dto.DocumentTypeId, dto.DocumentFieldId);
             var restrictedUserId = await _submissionAssignmentService.ResolveRestrictedUserIdAsync(dto.ProjectId, dto.DocumentTypeId, getCurrentUserId());
@@ -509,6 +532,7 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             _logger.LogInformation($"{nameof(FindTree)}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            EnsureFieldFilterValid(dto);
             await EnsureQaTicketFilterVisibleAsync(dto);
             var restrictedUserId = await _submissionAssignmentService.ResolveRestrictedUserIdAsync(dto.ProjectId, dto.DocumentTypeId, getCurrentUserId());
             return await _submissionQuery.FindTree(dto, restrictedUserId);
@@ -643,6 +667,7 @@ namespace sh.be.applications.Module.Construction.Implements
             _logger.LogInformation($"{nameof(ExportExcel)}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
             await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
+            EnsureFieldFilterValid(dto);
             await EnsureQaTicketFilterVisibleAsync(dto);
             dto.Columns = SubmissionDomainService.NormalizeExportColumns(dto.Columns);
             var table = await _submissionQuery.FindExportTable(dto);
@@ -666,6 +691,7 @@ namespace sh.be.applications.Module.Construction.Implements
             _logger.LogInformation($"{nameof(CreateExportJob)}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
             await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
+            EnsureFieldFilterValid(dto);
             await EnsureQaTicketFilterVisibleAsync(dto);
             dto.Columns = SubmissionDomainService.NormalizeExportColumns(dto.Columns);
             var names = await _submissionQuery.FindExportName(dto.ProjectId, dto.DocumentTypeId)
@@ -719,6 +745,28 @@ namespace sh.be.applications.Module.Construction.Implements
                     : null,
                 ErrorMessage = job.Status == BackgroundJobConst.STATUS_FAILED ? job.ErrorMessage ?? SubmissionConst.EXPORT_FAILED_MESSAGE : null,
             });
+        }
+
+        // Lọc trường trống phải chọn trường và không gửi kèm giá trị lọc của cùng trường đó
+        private static void EnsureFieldFilterValid(ISubmissionFilter filter)
+        {
+            var fieldFilters = new[]
+            {
+                (Index: 1, DocumentFieldId: filter.DocumentFieldId1, FieldValue: filter.FieldValue1, IsEmpty: filter.IsEmpty1),
+                (Index: 2, DocumentFieldId: filter.DocumentFieldId2, FieldValue: filter.FieldValue2, IsEmpty: filter.IsEmpty2),
+            };
+            foreach (var fieldFilter in fieldFilters.Where(f => f.IsEmpty == true))
+            {
+                if (!fieldFilter.DocumentFieldId.HasValue)
+                {
+                    throw new UserFriendlyException(ErrorCodes.BadRequest, $"Lọc trường trống cần chọn trường (documentFieldId{fieldFilter.Index})");
+                }
+                if (!string.IsNullOrWhiteSpace(fieldFilter.FieldValue))
+                {
+                    throw new UserFriendlyException(ErrorCodes.BadRequest,
+                        $"Không gửi cùng lúc giá trị lọc và lọc trường trống cho cùng một trường (fieldValue{fieldFilter.Index}, isEmpty{fieldFilter.Index})");
+                }
+            }
         }
 
         private async Task EnsureQaTicketFilterVisibleAsync(ISubmissionFilter filter)
