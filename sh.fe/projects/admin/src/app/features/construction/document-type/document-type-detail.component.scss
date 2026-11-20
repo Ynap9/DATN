@@ -1,4 +1,301 @@
-:host ::ng-deep .order-view .p-togglebutton-checked .p-togglebutton-content {
-    background: var(--app-accent);
-    color: #fff;
+// Tiêu đề tách khỏi nội dung bằng đường kẻ; nút đầu trang hạ xuống ngang đáy tiêu đề
+.metadata-header {
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--app-line);
+}
+
+:host ::ng-deep .metadata-header .page-header-row {
+    align-items: flex-end;
+}
+
+// Thanh nút đầu trang: xuống dòng được trên màn hẹp (page-header không cho wrap)
+.metadata-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.metadata-actions-divider {
+    width: 1px;
+    height: 24px;
+    margin: 0 4px;
+    background: var(--app-line-strong);
+
+    @media (max-width: 575px) {
+        display: none;
+    }
+}
+
+// Hàng công cụ (ô tìm, chọn dạng, nút xoá) cao bằng nhau; nút đầu trang nhỏ hơn một bậc để không lấn tiêu đề
+$control-h: 38px;
+$header-btn-h: 32px;
+
+// Thứ bậc nút: phụ (nền trắng, viền xám) < Thêm nhanh (viền + chữ màu chủ đạo) < Thêm trường (nền đặc)
+:host ::ng-deep {
+    .metadata-btn-secondary.p-button,
+    .metadata-btn-quick.p-button,
+    .metadata-btn-primary.p-button {
+        height: $header-btn-h;
+        padding: 0 12px;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 500;
+
+        .p-button-icon {
+            font-size: 13px;
+        }
+    }
+
+    .metadata-btn-danger.p-button {
+        height: $control-h;
+        padding: 0 14px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .metadata-btn-secondary.p-button {
+        border-color: var(--app-line-strong);
+        background: var(--app-surface);
+        color: var(--app-ink);
+
+        .p-button-icon {
+            color: var(--app-muted);
+        }
+
+        &:not(:disabled):hover {
+            border-color: var(--app-faint);
+            background: var(--app-bg);
+            color: var(--app-ink);
+        }
+    }
+
+    .metadata-btn-quick.p-button {
+        border-color: var(--app-accent);
+        background: var(--app-surface);
+        color: var(--app-accent);
+
+        &:not(:disabled):hover {
+            border-color: var(--app-accent-700);
+            background: var(--app-accent-soft);
+            color: var(--app-accent-700);
+        }
+    }
+
+    .metadata-btn-danger.p-button {
+        background: var(--app-surface);
+    }
+}
+
+// Ô tìm rộng vừa phải bên trái; nhóm "Thứ tự theo" dồn sang phải
+.field-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1rem;
+}
+
+.field-search {
+    position: relative;
+    flex: 0 1 360px;
+
+    .pi-search {
+        position: absolute;
+        top: 50%;
+        left: 12px;
+        transform: translateY(-50%);
+        font-size: 13px;
+        color: var(--app-faint);
+    }
+
+    input {
+        width: 100%;
+        height: $control-h;
+        padding-left: 34px;
+        background: var(--app-surface);
+    }
+}
+
+.field-order {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+// Chỉ icon ? khoanh tròn, không khung nút
+.view-help-trigger {
+    display: inline-flex;
+    padding: 2px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--app-faint);
+    cursor: pointer;
+
+    .pi {
+        font-size: 18px;
+    }
+
+    &:hover,
+    &:focus-visible {
+        color: var(--app-accent);
+    }
+}
+
+.field-order-label {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    color: var(--app-muted);
+}
+
+// Nhóm chọn dạng: khung xám, mục đang chọn nổi nền trắng — cao bằng ô tìm
+:host ::ng-deep .order-view {
+    display: inline-flex;
+    gap: 2px;
+    height: $control-h;
+    padding: 3px;
+    border: 1px solid var(--app-line-strong);
+    border-radius: 8px;
+    background: var(--app-bg);
+
+    .p-togglebutton {
+        height: 100%;
+        padding: 0;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+    }
+
+    .p-togglebutton-content {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 100%;
+        padding: 0 12px;
+        border-radius: 6px;
+        background: transparent;
+        box-shadow: none;
+        font-size: 13.5px;
+        font-weight: 500;
+        white-space: nowrap;
+        color: var(--app-muted);
+    }
+
+    .p-togglebutton-checked .p-togglebutton-content {
+        background: var(--app-surface);
+        box-shadow: var(--app-shadow);
+        color: var(--app-accent);
+    }
+}
+
+// Popup giải thích hai dạng
+.view-help-intro,
+.view-help-tip {
+    margin: 0;
+    font-size: 14px;
+    color: var(--app-muted);
+}
+
+.view-help-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+}
+
+.view-help-card {
+    padding: 14px 16px;
+    border: 1px solid var(--app-line);
+    border-radius: 10px;
+    background: var(--app-bg);
+}
+
+.view-help-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--app-ink);
+}
+
+.view-help-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--app-accent-soft);
+    color: var(--app-accent);
+}
+
+.view-help-default {
+    margin-left: auto;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--app-accent-soft);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--app-accent);
+}
+
+.view-help-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 10px 0 0;
+    padding-left: 18px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--app-ink);
+}
+
+// Màn hẹp: ô tìm chiếm một hàng, nhóm chọn thứ tự xuống hàng dưới, sát trái
+@media (max-width: 767px) {
+    .field-search {
+        flex-basis: 100%;
+    }
+
+    .field-order {
+        flex-basis: 100%;
+        margin-left: 0;
+    }
+
+    :host ::ng-deep .order-view {
+        flex: 1;
+
+        .p-togglebutton {
+            flex: 1;
+        }
+
+        .p-togglebutton-content {
+            justify-content: center;
+            width: 100%;
+        }
+    }
+}
+
+// Điện thoại: 4 nút đầu trang chia lưới 2 cột đều nhau
+@media (max-width: 575px) {
+    .metadata-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+    }
+
+    :host ::ng-deep .metadata-actions .p-button {
+        justify-content: center;
+        width: 100%;
+        min-width: 0;
+        padding: 0 8px;
+
+        .p-button-label {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+    }
 }

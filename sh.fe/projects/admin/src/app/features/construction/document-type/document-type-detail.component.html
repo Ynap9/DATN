@@ -1,43 +1,42 @@
 @if (documentType) {
-    <app-page-header [title]="documentType.name" [breadcrumbs]="breadcrumbs">
-        @if (canCreateField) {
-            <p-button label="Kiểm tra với Google Sheet" icon="pi pi-check-circle" [outlined]="true" (onClick)="openSheetCheck()" />
-        }
-        <p-button label="Tải template Excel" icon="pi pi-file-excel" (onClick)="downloadTemplate()" />
+    <app-page-header class="metadata-header" [title]="documentType.name" [breadcrumbs]="breadcrumbs">
+        <!-- Nút phụ bên trái, vạch ngăn, nút thêm bên phải; Thêm trường là thao tác chính -->
+        <div class="metadata-actions">
+            @if (canCreateField) {
+                <p-button label="Kiểm tra Google Sheet" icon="pi pi-check-circle" [outlined]="true" styleClass="metadata-btn-secondary" (onClick)="openSheetCheck()" />
+            }
+            <p-button label="Tải template Excel" icon="pi pi-download" [outlined]="true" [loading]="downloadingTemplate" styleClass="metadata-btn-secondary"
+                (onClick)="downloadTemplate()" />
+            @if (canCreateField) {
+                <span class="metadata-actions-divider"></span>
+                <p-button label="Thêm nhanh" icon="pi pi-bolt" [outlined]="true" styleClass="metadata-btn-quick" (onClick)="openQuickCreate()" />
+                <p-button label="Thêm trường" icon="pi pi-plus" styleClass="metadata-btn-primary" (onClick)="openFieldForm()" />
+            }
+        </div>
     </app-page-header>
 
-    <div class="flex items-center gap-2 mb-5 text-sm text-muted-color">
-        <span>Kiểu xem mặc định: {{ defaultViewLabel ?? '—' }}</span>
-        @if (canUpdateDocumentType) {
-            <p-button label="Sửa" [link]="true" size="small" (onClick)="openDocumentTypeForm()" />
+    <div class="field-toolbar">
+        <div class="field-search">
+            <i class="pi pi-search"></i>
+            <input pInputText placeholder="Tìm theo tên trường..." [formControl]="keyword" />
+        </div>
+        @if (canDeleteField && selectedFields.length) {
+            <p-button [label]="'Xóa ' + selectedFields.length + ' trường'" icon="pi pi-trash" severity="danger" [outlined]="true" styleClass="metadata-btn-danger" (onClick)="confirmQuickDelete()" />
         }
-    </div>
-
-    <div class="flex flex-wrap items-center gap-3 mb-4">
-        <input pInputText class="w-full sm:w-80" placeholder="Tìm trường" [formControl]="keyword" />
-        <div class="flex items-center gap-2">
-            <span class="text-sm font-medium">Thứ tự theo</span>
+        <div class="field-order">
+            <span class="field-order-label">Thứ tự theo</span>
             <p-selectbutton class="order-view" [formControl]="orderView" [options]="views" optionLabel="label" optionValue="value" [allowEmpty]="false">
                 <ng-template #item let-view>
                     <span [class]="view.icon"></span>
                     <span>{{ view.label }}</span>
                 </ng-template>
             </p-selectbutton>
+            <button type="button" class="view-help-trigger" aria-label="Hai dạng khác nhau thế nào?" pTooltip="Hai dạng khác nhau thế nào?"
+                tooltipPosition="top" (click)="viewHelpVisible = true">
+                <i class="pi pi-question-circle"></i>
+            </button>
         </div>
-        @if (fields.length) {
-            <div class="flex flex-wrap gap-2 ml-auto">
-                @if (canDeleteField && selectedFields.length) {
-                    <p-button [label]="'Xóa ' + selectedFields.length + ' trường'" severity="danger" [outlined]="true" (onClick)="confirmQuickDelete()" />
-                }
-                @if (canCreateField) {
-                    <p-button label="Thêm nhanh" severity="secondary" [outlined]="true" (onClick)="openQuickCreate()" />
-                    <p-button icon="pi pi-plus" label="Thêm trường" (onClick)="openFieldForm()" />
-                }
-            </div>
-        }
     </div>
-
-    <p class="-mt-2 mb-3 text-[13px] text-muted-color">{{ orderViewHint }}</p>
 
     <app-data-table [columns]="columns" [data]="filteredFields" [loading]="loading" [paginator]="false" [selectable]="canDeleteField"
         [reorderable]="canReorder" [(selection)]="selectedFields" (action)="onAction($event)" (rowReorder)="onRowReorder($event)">
@@ -48,7 +47,7 @@
                 <span>Metadata này chưa có trường.</span>
                 @if (canCreateField) {
                     <div class="flex gap-2">
-                        <p-button label="Thêm nhanh" severity="secondary" [outlined]="true" (onClick)="openQuickCreate()" />
+                        <p-button label="Thêm nhanh" icon="pi pi-bolt" [outlined]="true" styleClass="metadata-btn-quick" (onClick)="openQuickCreate()" />
                         <p-button icon="pi pi-plus" label="Thêm trường" (onClick)="openFieldForm()" />
                     </div>
                 }
@@ -59,4 +58,34 @@
     @if (fields.length) {
         <p class="mt-3 text-[13px] text-muted-color">Tổng {{ fields.length }} trường · {{ chargeableCount }} tính tiền · {{ ocrCount }} OCR</p>
     }
+
+    <p-dialog header="Dạng bảng và dạng danh sách" [(visible)]="viewHelpVisible" [modal]="true" [draggable]="false" [dismissableMask]="true"
+        [style]="{ width: '44rem' }" [breakpoints]="{ '640px': '95vw' }">
+        <p class="view-help-intro">Mỗi metadata có hai thứ tự trường độc lập, dùng ở màn nhập liệu. Đổi thứ tự dạng này không ảnh hưởng dạng kia.</p>
+        <div class="view-help-grid">
+            @for (view of views; track view.value) {
+                <div class="view-help-card">
+                    <div class="view-help-title">
+                        <span class="view-help-icon"><i [class]="view.icon"></i></span>
+                        <span>{{ view.label }}</span>
+                        @if (view.value === documentType.defaultView) {
+                            <span class="view-help-default">Mặc định</span>
+                        }
+                    </div>
+                    <ul class="view-help-list">
+                        @for (line of view.description; track line) {
+                            <li>{{ line }}</li>
+                        }
+                    </ul>
+                </div>
+            }
+        </div>
+        <p class="view-help-tip">Chọn dạng ở "Thứ tự theo" rồi kéo biểu tượng ≡ trên bảng để đổi thứ tự của dạng đó.</p>
+        <ng-template #footer>
+            @if (canUpdateDocumentType) {
+                <p-button label="Đổi dạng mặc định" severity="secondary" [text]="true" (onClick)="viewHelpVisible = false; openDocumentTypeForm()" />
+            }
+            <p-button label="Đã hiểu" (onClick)="viewHelpVisible = false" />
+        </ng-template>
+    </p-dialog>
 }
