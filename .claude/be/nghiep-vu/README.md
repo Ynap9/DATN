@@ -2,7 +2,7 @@
 
 > Chức năng và luật nghiệp vụ của module `Auth` (người dùng, vai trò, quyền), `Core` (nhật ký hệ thống) và
 > `Construction` (loại văn bản, dự án, hồ sơ), `DigitalSignature` (mẫu chữ ký, lô ký), `Packaging` (cấu hình đóng gói TT05), `Operation` (vận hành — nền móng
-> Task 9, nhóm nhân viên Task 10, thành viên dự án Task 11, đơn giá và thống kê tiền công Task 12, chia phiếu Task 13, plan ở [../plans/van-hanh/README.md](../plans/van-hanh/README.md)) và `Ai` (cửa gọi AI — nhà cung cấp Task 19).
+> Task 9, nhóm nhân viên Task 10, thành viên dự án Task 11, đơn giá và thống kê tiền công Task 12, chia phiếu Task 13, plan ở [../plans/van-hanh/README.md](../plans/van-hanh/README.md)) và `Ai` (cửa gọi AI — nhà cung cấp Task 19, prompt OCR Task 21).
 > Đối chiếu với code `sh.be` ngày 2026-10-19. Kiến trúc và quy ước code nằm ở [../architecture/README.md](../architecture/README.md).
 
 ## Mục lục
@@ -35,6 +35,7 @@
 | [24-don-gia-tien-cong.md](24-don-gia-tien-cong.md) | Đơn giá trên thành viên (công ty / thực nhận, Admin và Leader), thống kê tiền công Data / QA, ai thấy giá nào, cache khối lượng 60 giây |
 | [25-xoa-du-an-danh-sach-cap.md](25-xoa-du-an-danh-sach-cap.md) | Admin xoá mềm dự án kèm 16 bảng phụ thuộc (cùng mốc, đổi tên Google Sheet), chặn xoá loại văn bản đang dùng `346`, paging theo cặp dự án – loại văn bản theo vai trò người gọi |
 | [26-thu-hoi-chuyen-phieu.md](26-thu-hoi-chuyen-phieu.md) | Thu hồi / chuyển phiếu nhập liệu (chỉ văn bản chưa kiểm) và phụ trách QA (văn bản chưa đạt, gộp vào phụ trách sẵn có), chống đua `UPDLOCK`, danh sách phiếu, chặn QA dự án không QA `345` |
+| [27-ai-prompt.md](27-ai-prompt.md) | Prompt OCR theo metadata (Ai): prompt chung + từng trường OCR, nháp → xuất bản → lưu trữ, khôi phục thành nháp mới, cảnh báo trường lệch, khuôn ghép prompt, 7 API, lỗi `908`–`913` |
 
 ## Thuật ngữ
 
@@ -53,7 +54,7 @@
 ## Ba quy tắc xuyên suốt
 
 - Mọi thao tác ghi đều tạo `AuditLog` **trong cùng transaction** với thay đổi dữ liệu (xem [04-nhat-ky-he-thong.md](04-nhat-ky-he-thong.md)).
-- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`109` (Auth), `201`–`211` (Core), `301`–`346` (Construction), `601`–`635` (DigitalSignature), `701`–`703` (Packaging), `801`–`826` (Operation, bỏ `814`) hoặc `901`–`907` (Ai).
+- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`109` (Auth), `201`–`211` (Core), `301`–`346` (Construction), `601`–`635` (DigitalSignature), `701`–`703` (Packaging), `801`–`826` (Operation, bỏ `814`) hoặc `901`–`913` (Ai).
 - Thời gian thao tác lấy theo giờ Việt Nam, người thao tác lấy từ token đăng nhập.
 
 Route trong các file nghiệp vụ viết rút gọn `api/<module>/...`; route thật có version: `api/v1/<module>/...` (từ 2026-10-20,

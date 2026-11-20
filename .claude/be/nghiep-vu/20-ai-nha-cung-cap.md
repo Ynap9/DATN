@@ -12,13 +12,13 @@ code chỉ biết vài giao thức gọi; dữ liệu cơ quan không gửi ra A
 |---|---|---|
 | `AiProvider` | Một điểm gọi: endpoint + key + giao thức + phạm vi; một nhà cung cấp chạy nhiều model | Đủ hành vi + 8 API |
 | `AiModel` | Model thuộc một nhà cung cấp (`ProviderId`), `Code` duy nhất toàn hệ thống | Chỉ `Create`, `Delete` |
-| `PromptTemplate` | Prompt có phiên bản theo loại văn bản; `Create` luôn `DRAFT`, đổi trạng thái để Task 21 | Chỉ `Create`, `Delete` |
-| `PromptFieldConfig` | Cấu hình từng trường trong prompt (`OutputKey`, `NormalizeRule`) | Chỉ `Create`, `Delete` |
+| `PromptTemplate` | Prompt có phiên bản theo loại văn bản; `Create` luôn `DRAFT` | Task 21 thêm nháp / xuất bản / lưu trữ + 7 API ([27](27-ai-prompt.md)) |
+| `PromptFieldConfig` | Cấu hình từng trường trong prompt (`OutputKey`, `NormalizeRule`) | Task 21 thêm `Update`; `OutputKey` nới lên `nvarchar(450)` ([27](27-ai-prompt.md)) |
 | `ProjectAiConfig` | AI của dự án + loại văn bản: model chính / dự phòng, prompt | Chỉ `Create`, `Delete` |
 
 DB tự chặn: `(DocumentTypeId, Version)` của prompt **không** filter (số phiên bản không dùng lại, kể cả bản đã xoá); mỗi loại văn bản tối đa
 một prompt `PUBLISHED` (filter `[Status] = 'PUBLISHED' AND [Deleted] = 0`). FK sang `construction` là `Restrict`, nhưng `Project`, `DocumentType`,
-`DocumentField` đều xoá mềm nên FK **không** chặn xoá trên ứng dụng — chặn / bỏ qua trường đã xoá là việc của Task 21, 22.
+`DocumentField` đều xoá mềm nên FK **không** chặn xoá trên ứng dụng — chặn / bỏ qua trường đã xoá là việc của [27](27-ai-prompt.md) và Task 22.
 
 ## Luật nhà cung cấp
 
@@ -86,7 +86,7 @@ rồi mới dựng audit) — ⚠️ `AddAuditLog` serialize `newData` ngay lúc
 | `906` | `AiErrorProviderApiKeyMissing` | Tải key khi chưa có key (`AiProvider.GetApiKeyEncrypted`) |
 | `907` | `AiErrorProviderApiKeyUnreadable` | Giải mã lỗi (khoá DataProtection đã đổi, dữ liệu rác) |
 
-Task 20–22 thêm tiếp từ `908`.
+Prompt (Task 21) dùng `908`–`913` ([27](27-ai-prompt.md)); Task 20, 22 thêm tiếp từ `914`.
 
 ## Code
 

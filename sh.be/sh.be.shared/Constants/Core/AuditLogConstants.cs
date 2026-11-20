@@ -99,6 +99,11 @@ namespace sh.be.shared.Constants.Core
         public const string ACTION_AI_PROVIDER_API_KEY = "Cập nhật API key nhà cung cấp AI";
         public const string ACTION_AI_PROVIDER_API_KEY_DOWNLOAD = "Tải API key nhà cung cấp AI";
 
+        public const string ACTION_PROMPT_TEMPLATE_SAVE_DRAFT = "Lưu nháp prompt OCR";
+        public const string ACTION_PROMPT_TEMPLATE_PUBLISH = "Xuất bản prompt OCR";
+        public const string ACTION_PROMPT_TEMPLATE_RESTORE = "Khôi phục prompt OCR thành nháp";
+        public const string ACTION_PROMPT_TEMPLATE_DISCARD = "Bỏ nháp prompt OCR";
+
         public const string ACTION_SEED_ROLE ="Khởi tạo vai trò mặc định";
         public const string ACTION_SEED_PERMISSION = "Đồng bộ danh sách quyền";
         public const string ACTION_SEED_USER = "Khởi tạo tài khoản quản trị mặc định";

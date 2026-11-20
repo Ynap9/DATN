@@ -117,6 +117,11 @@ namespace sh.be.infrastructure.data.Persistence.Seeder
             Permission.Create(PermissionConstants.FUNCTION_AI_PROVIDER_UPDATE, "Cập nhật nhà cung cấp AI và API key", PermissionConstants.MENU_AI_PROVIDER, PermissionConstants.MODULE_AI, null),
             Permission.Create(PermissionConstants.FUNCTION_AI_PROVIDER_DELETE, "Xóa nhà cung cấp AI", PermissionConstants.MENU_AI_PROVIDER, PermissionConstants.MODULE_AI, null),
             Permission.Create(PermissionConstants.FUNCTION_AI_PROVIDER_DOWNLOAD_API_KEY, "Tải API key nhà cung cấp AI", PermissionConstants.MENU_AI_PROVIDER, PermissionConstants.MODULE_AI, null),
+
+            Permission.Create(PermissionConstants.MENU_AI_PROMPT_TEMPLATE, "Menu prompt OCR", PermissionConstants.MENU_AI, PermissionConstants.MODULE_AI, null),
+            Permission.Create(PermissionConstants.FUNCTION_AI_PROMPT_TEMPLATE_VIEW, "Xem prompt OCR", PermissionConstants.MENU_AI_PROMPT_TEMPLATE, PermissionConstants.MODULE_AI, null),
+            Permission.Create(PermissionConstants.FUNCTION_AI_PROMPT_TEMPLATE_UPDATE, "Sửa nháp prompt OCR", PermissionConstants.MENU_AI_PROMPT_TEMPLATE, PermissionConstants.MODULE_AI, null),
+            Permission.Create(PermissionConstants.FUNCTION_AI_PROMPT_TEMPLATE_PUBLISH, "Xuất bản prompt OCR", PermissionConstants.MENU_AI_PROMPT_TEMPLATE, PermissionConstants.MODULE_AI, null),
         ];
 
         public static async Task SeedAsync(ShDbContext dbContext)

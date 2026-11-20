@@ -1,6 +1,6 @@
 # Xoá dự án kèm dữ liệu và danh sách cặp dự án – loại văn bản
 
-> **Phần 25/26** · trước: [24-don-gia-tien-cong.md](24-don-gia-tien-cong.md) · mục lục: [README.md](README.md)
+> **Phần 25/27** · trước: [24-don-gia-tien-cong.md](24-don-gia-tien-cong.md) · mục lục: [README.md](README.md)
 
 Task 29 (2026-11-13). Phần CRUD dự án gốc ở [07-du-an.md](07-du-an.md).
 
