@@ -441,11 +441,16 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             };
         }
 
-        public async Task<BaseResponsePagingDto<GetListProjectSubmissionLogDto>> FindProjectLogPaging(FindPagingProjectSubmissionLogDto dto)
+        public async Task<BaseResponsePagingDto<GetListProjectSubmissionLogDto>> FindProjectLogPaging(FindPagingProjectSubmissionLogDto dto, string? restrictedUserId = null)
         {
             var query = _shDbContext.SubmissionLogs
                 .AsNoTracking()
                 .Where(l => l.ProjectId == dto.ProjectId && l.DocumentTypeId == dto.DocumentTypeId);
+
+            if (restrictedUserId != null)
+            {
+                query = query.Where(l => _shDbContext.SubmissionUsers.Any(u => u.SubmissionId == l.SubmissionId && u.UserId == restrictedUserId));
+            }
 
             var userId = dto.UserId?.Trim();
             if (!string.IsNullOrEmpty(userId))
@@ -496,11 +501,17 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             };
         }
 
-        public async Task<ViewSubmissionSummaryDto> FindSummary(int projectId, int documentTypeId)
+        public async Task<ViewSubmissionSummaryDto> FindSummary(int projectId, int documentTypeId, string? restrictedUserId = null)
         {
-            var summary = await _shDbContext.Submissions
+            var submissions = _shDbContext.Submissions
                 .AsNoTracking()
-                .Where(s => s.ProjectId == projectId && s.DocumentTypeId == documentTypeId)
+                .Where(s => s.ProjectId == projectId && s.DocumentTypeId == documentTypeId);
+            if (restrictedUserId != null)
+            {
+                submissions = submissions.Where(s => _shDbContext.SubmissionUsers.Any(u => u.SubmissionId == s.Id && u.UserId == restrictedUserId));
+            }
+
+            var summary = await submissions
                 .GroupBy(_ => 1)
                 .Select(g => new ViewSubmissionSummaryDto
                 {
@@ -521,8 +532,7 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 .ToDictionaryAsync(d => d.Id, d => d.IsChargeable);
 
             var filledCellCounts = await (from sd in _shDbContext.SubmissionDatas.AsNoTracking()
-                                          join s in _shDbContext.Submissions.AsNoTracking().Where(s => s.ProjectId == projectId && s.DocumentTypeId == documentTypeId)
-                                              on sd.SubmissionId equals s.Id
+                                          join s in submissions on sd.SubmissionId equals s.Id
                                           where sd.ProjectId == projectId && sd.DocumentTypeId == documentTypeId && sd.Data != String.Empty
                                           group sd by new { sd.DocumentFieldId, s.StatusCheck } into g
                                           select new { g.Key.DocumentFieldId, g.Key.StatusCheck, FilledCells = g.Count() })
@@ -539,9 +549,9 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             return summary;
         }
 
-        public async Task<ViewQaStatsSummaryDto> FindQaStatsSummary(FindQaStatsDto dto, DateTime fromDate, DateTime toDateExclusive)
+        public async Task<ViewQaStatsSummaryDto> FindQaStatsSummary(FindQaStatsDto dto, DateTime fromDate, DateTime toDateExclusive, string? restrictedUserId = null)
         {
-            var reviews = await FindQaReviewsAsync(dto.ProjectId, dto.DocumentTypeId, fromDate, toDateExclusive);
+            var reviews = await FindQaReviewsAsync(dto.ProjectId, dto.DocumentTypeId, fromDate, toDateExclusive, restrictedUserId);
             var chargeableFieldIds = await FindConfiguredFieldIdsAsync(dto.ProjectId, dto.DocumentTypeId, true);
 
             var entryUserId = dto.EntryUserId?.Trim();
@@ -554,10 +564,10 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             return summary;
         }
 
-        public async Task<List<GetListQaFieldStatsDto>> FindQaFieldStats(FindQaStatsDto dto, DateTime fromDate, DateTime toDateExclusive)
+        public async Task<List<GetListQaFieldStatsDto>> FindQaFieldStats(FindQaStatsDto dto, DateTime fromDate, DateTime toDateExclusive, string? restrictedUserId = null)
         {
             var entryUserId = dto.EntryUserId?.Trim();
-            var reviews = (await FindQaReviewsAsync(dto.ProjectId, dto.DocumentTypeId, fromDate, toDateExclusive))
+            var reviews = (await FindQaReviewsAsync(dto.ProjectId, dto.DocumentTypeId, fromDate, toDateExclusive, restrictedUserId))
                 .Where(r => string.IsNullOrEmpty(entryUserId) || r.EntryUserId == entryUserId)
                 .ToList();
             var configuredFieldIds = await FindConfiguredFieldIdsAsync(dto.ProjectId, dto.DocumentTypeId, false);
@@ -598,9 +608,9 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
         }
 
         public async Task<BaseResponsePagingDto<GetListQaEntryUserStatsDto>> FindQaEntryUserStatsPaging(FindPagingQaEntryUserStatsDto dto, DateTime fromDate,
-            DateTime toDateExclusive)
+            DateTime toDateExclusive, string? restrictedUserId = null)
         {
-            var reviews = await FindQaReviewsAsync(dto.ProjectId, dto.DocumentTypeId, fromDate, toDateExclusive);
+            var reviews = await FindQaReviewsAsync(dto.ProjectId, dto.DocumentTypeId, fromDate, toDateExclusive, restrictedUserId);
             var chargeableFieldIds = await FindConfiguredFieldIdsAsync(dto.ProjectId, dto.DocumentTypeId, true);
 
             var entryUserIds = reviews.Select(r => r.EntryUserId)
@@ -853,11 +863,14 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 .FirstOrDefaultAsync();
         }
 
-        private async Task<List<QaReview>> FindQaReviewsAsync(int projectId, int documentTypeId, DateTime fromDate, DateTime toDateExclusive)
+        // restrictedUserId khác null thì chỉ lấy lượt chấm trên văn bản người đó đang giữ (như ApplyFilter)
+        private async Task<List<QaReview>> FindQaReviewsAsync(int projectId, int documentTypeId, DateTime fromDate, DateTime toDateExclusive,
+            string? restrictedUserId)
         {
             var qaLogs = from q in _shDbContext.SubmissionQaLogs.AsNoTracking()
                          join s in _shDbContext.Submissions.AsNoTracking() on q.SubmissionId equals s.Id
                          where q.ProjectId == projectId && q.DocumentTypeId == documentTypeId && q.CreatedDate >= fromDate && q.CreatedDate < toDateExclusive
+                             && (restrictedUserId == null || _shDbContext.SubmissionUsers.Any(u => u.SubmissionId == s.Id && u.UserId == restrictedUserId))
                          select q;
 
             var reviewLogs = await (from q in qaLogs

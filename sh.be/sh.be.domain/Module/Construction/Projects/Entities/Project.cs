@@ -126,6 +126,23 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
             }
         }
 
+        // Đang nghiệm thu / đã xong thì số liệu nghiệm thu đã chốt theo danh sách metadata hiện tại, không cho thêm / gỡ
+        public void EnsureDocumentTypesChangeable(List<int> removedDocumentTypeIds, List<int> addedDocumentTypeIds)
+        {
+            if (removedDocumentTypeIds.Count == 0 && addedDocumentTypeIds.Count == 0)
+            {
+                return;
+            }
+            if (Status == ProjectConst.ACCEPTING)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectAccepting, "Dự án đang nghiệm thu, không đổi được metadata");
+            }
+            if (Status == ProjectConst.DONE)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectDone, "Dự án đã hoàn thành, không đổi được metadata");
+            }
+        }
+
         public void EnsureEditable(bool isSuperAdmin)
         {
             if (Status == ProjectConst.DONE && !isSuperAdmin)

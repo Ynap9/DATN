@@ -58,14 +58,20 @@ Bảng nối `construction.ProjectDocumentType` (`ProjectId`, `DocumentTypeId`, 
 Chưa có khoá ngoại sang `Project` / `DocumentType` (giống `DocumentField`).
 Ghi qua CRUD dự án (`documentTypeIds`), theo mẫu `User` – `UserRole`:
 
-- `documentTypeIds` bỏ trùng; được rỗng; id không tồn tại hoặc đã xoá → `301` "Loại văn bản không tồn tại"
-  (`DocumentTypeDomainService.EnsureAllExistAsync`), kiểm **trước** khi gọi Google.
+- `documentTypeIds` bỏ trùng; rỗng → `400` "Chọn ít nhất 1 metadata" (Task 40, `ProjectDomainService.EnsureHasDocumentTypes`, cả tạo
+  lẫn sửa); id không tồn tại hoặc đã xoá → `301` "Loại văn bản không tồn tại" (`DocumentTypeDomainService.EnsureAllExistAsync`),
+  kiểm **trước** khi gọi Google.
+- Sửa mà danh sách metadata đổi (thêm hoặc gỡ) khi dự án `ACCEPTING` → `341`, `DONE` → `313`, kèm câu "… không đổi được metadata"
+  (Task 40, `Project.EnsureDocumentTypesChangeable`, kiểm trước khi gọi Google); sửa tên / ngày giữ nguyên danh sách thì vẫn được.
+- Gỡ loại mà cặp (dự án, loại) còn ≥ 1 văn bản chưa xoá → `347` "Metadata đã có văn bản trong dự án, không gỡ được: <tên>" (Task 40,
+  `ProjectDomainService.EnsureDocumentTypesRemovableAsync`). Trong transaction sửa, **khoá import** từng cặp sắp gỡ (như import, đang
+  import → `310`) rồi mới đếm, để import không chen văn bản sau lúc đếm. Muốn gỡ thì Admin xoá hết văn bản của cặp trước.
 - Gắn một loại văn bản (`ProjectService.AddDocumentTypesAsync`) = thêm dòng `ProjectDocumentType` **và** chép mọi trường chưa
   xoá của loại đó vào `ProjectDocumentTypeDocumentField` (`ProjectDocumentType.AssignDocumentFields`): `FieldImport` lấy từ
   `DocumentField.FieldImport` (rỗng nếu null), `OrderFieldImport` đánh `1, 2, …` **riêng cho từng loại**, theo `OrderTableView` rồi `Id`.
 - Tạo: một transaction — lưu dự án lấy `Id`, rồi gắn loại văn bản + audit, lưu lần hai; lỗi → rollback và xoá file sheet.
 - Sửa: **so khác biệt** với danh sách cũ, một transaction. Loại giữ nguyên **không đụng** (giữ `FieldImport` / thứ tự đã chỉnh).
-  Loại bị bỏ (gỡ) thì **xoá mềm** ở cả hai bảng (Task 36, trước đó xoá cứng). Loại thêm vào mà từng gỡ thì **khôi phục** dòng cũ
+  Loại bị bỏ (gỡ, chỉ khi chưa có văn bản) thì **xoá mềm** ở cả hai bảng (Task 36, trước đó xoá cứng). Loại thêm vào mà từng gỡ thì **khôi phục** dòng cũ
   (`ProjectDocumentType.Restore` + `RestoreDocumentFields`): giữ `FieldImport` / `OrderFieldImport` cũ, trường đã xoá trong lúc gỡ
   vẫn xoá, trường thêm sau khi gỡ thì chép mới nối cuối thứ tự (`max + 1`, theo `OrderTableView`); loại chưa từng gắn thì gắn như trên.
 - Xoá dự án (API cũ): xoá mềm luôn các dòng ở cả hai bảng; API Admin xoá thêm 14 bảng khác ([25](25-xoa-du-an-danh-sach-cap.md)). `GET {id}` trả `documentTypeIds` đang gắn.

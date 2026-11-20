@@ -37,6 +37,9 @@ Luật:
   ([18-qa-cham-mau.md](18-qa-cham-mau.md#18c--phiếu-qa), R8) hồ sơ **trả lại** (`2`) và hồ sơ trong phiếu QA chưa chốt không ai xoá được.
 - Một lần xoá là một transaction. Trước khi đọc hồ sơ, lệnh khoá dòng `ProjectDocumentType` như import
   ([11-ho-so-import.md](11-ho-so-import.md#ghi-dữ-liệu--một-transaction)), nên xoá và import cùng loại văn bản không chạy song song.
+  Task 40: đọc văn bản `WITH (UPDLOCK, ROWLOCK)` (`GetByIdsForUpdateAsync`), nên Check / QA đang ghi dở thì chờ nó commit rồi mới xét
+  `325` / `336` trên trạng thái mới — hết hở xoá nhầm văn bản vừa kiểm. Thứ tự khoá cặp → văn bản; Check / QA cũng theo thứ tự
+  này để không deadlock ([12](12-ho-so-kiem-tra.md)).
 - Xoá mềm hồ sơ (`Deleted`, `DeletedBy`, `DeletedDate`) và toàn bộ `SubmissionData` của chúng. `SubmissionLog` và
   `SubmissionQaLog` giữ nguyên.
 - Ghi `AuditLog` action `Xóa hồ sơ`, type `Delete`, mô tả `Xóa N hồ sơ của dự án …, loại văn bản Id = …`. Giá trị cũ là danh sách
