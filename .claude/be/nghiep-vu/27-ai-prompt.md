@@ -1,6 +1,6 @@
 # Prompt OCR theo metadata (module Ai)
 
-> **Phần 27/27** · trước: [26-thu-hoi-chuyen-phieu.md](26-thu-hoi-chuyen-phieu.md) · mục lục: [README.md](README.md)
+> **Phần 27/28** · trước: [26-thu-hoi-chuyen-phieu.md](26-thu-hoi-chuyen-phieu.md) · mục lục: [README.md](README.md)
 
 OCR bằng AI cần biết "trích cái gì, trả về dạng gì". Mỗi metadata (`DocumentType`) có **một chuỗi phiên bản prompt**: prompt chung + prompt
 từng trường OCR. Có phiên bản để sửa prompt mà không ảnh hưởng lúc đang OCR và quay lại được bản cũ khi bản mới cho kết quả kém. Task 21,
@@ -119,4 +119,4 @@ Bổ sung cùng ngày **6/6 đạt**: user tạm **chỉ role Admin** (không Su
 ⚠️ User `admin` của DB dev có cả role `SuperAdmin` (bỏ qua kiểm quyền) — test quyền phải dùng user chỉ có role cần kiểm. DB dev dùng chung:
 máy chạy code chưa có 4 key prompt khởi động là `SeedPermission` xoá key + quyền đã gán (gặp lúc test, [02](02-phan-quyen.md#đừng-đổi-tên-key-đã-seed)).
 
-> **Tiếp:** hết — quay lại [README.md](README.md).
+> **Tiếp:** [28-van-ban-dang-lam.md](28-van-ban-dang-lam.md) — văn bản đang làm gần nhất và lọc trường trống (Task 42A).

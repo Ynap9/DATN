@@ -1,6 +1,6 @@
 # Thêm một màn hình gọi API BE
 
-> **Phần 6/6** · trước: [05-conventions.md](05-conventions.md) · mục lục: [README.md](README.md)
+> **Phần 6/7** · trước: [05-conventions.md](05-conventions.md) · mục lục: [README.md](README.md)
 
 ⚠️ `PUT api/v1/auth/user` chỉ sửa chính người đang đăng nhập (`UpdateUserDto` không có id), nên màn Người dùng không có nút Sửa.
 
@@ -53,7 +53,7 @@ export class RoleService {
 |---|---|---|
 | `auth` | **Người dùng**, **vai trò**, quyền | `api/v1/auth/user`, `.../role`, `.../permission` |
 | `core` | **Nhật ký**, job nền | `api/v1/core/audit-log`, `.../background-job` |
-| `construction` | **Loại / trường văn bản**, dự án, cấu hình dự án, hồ sơ, giao QA | `api/v1/construction/...` |
+| `construction` | **Loại / trường văn bản**, **dự án**, cấu hình dự án, **danh sách văn bản**, giao QA | `api/v1/construction/...` |
 | `digital-signature` | Mẫu chữ ký, lô ký, plugin | `api/v1/digital-signature/...` |
 | `packaging` | Cấu hình đóng gói TT05 | `api/v1/packaging/...` |
 | `operation` | Nhóm nhân viên, thành viên dự án | `api/v1/operation/...` |
@@ -62,34 +62,7 @@ export class RoleService {
 Route và quyền chi tiết của từng action: controller trong `sh.be/sh.be.api/Controllers/Module/` và nghiệp vụ ở
 [../../be/nghiep-vu/README.md](../../be/nghiep-vu/README.md).
 
-Loại / trường văn bản, giao diện gọi là **Metadata**, là mục menu riêng **Metadata** ngay dưới "Dự án" trong nhóm Hồ sơ thi công
-(`/admin/construction/metadata`, `.../metadata/:id`; hằng `METADATA_URL`, Task 39). Đường `project-config` để dành cho màn Cấu hình dự án sau này. Menu không có mục "Hồ sơ".
-
-- Danh sách có Số trường, Số dự án đang dùng, Ngày tạo; "Xóa" ẩn khi `projectCount > 0` (BE vẫn chặn `346`).
-- Chi tiết: tiêu đề có đường kẻ tách nội dung; 4 nút 32px ở đầu trang — Kiểm tra Google Sheet, Tải template (nền trắng viền xám, tải có
-  vòng xoay) | Thêm nhanh (viền + chữ màu chủ đạo), Thêm trường (đặc); điện thoại chia lưới 2 cột. Hàng công cụ cao 38px: ô tìm 360px bên trái |
-  "Thứ tự theo" dạng bảng / danh sách bên phải + icon `?` (không khung nút) mở popup giải thích hai dạng (nội dung lấy từ
-  `DOCUMENT_TYPE_VIEWS[].description`, có nhãn Mặc định và lối "Đổi dạng mặc định"). Bảng trường căn giữa mọi cột trừ Tên trường, Tên cột import.
-
-- Route nhận `Menu.Construction.DocumentType` **hoặc** `Function.Construction.DocumentType.View`; menu theo View, vì tích một Function con
-  không cấp key Menu cha.
-- Form trường không có ô mã: FE gửi `field = name` (mã trường BE không dùng ở luồng nào); tên cột import để trống thì gửi bằng tên.
-- Kéo thả gửi `targetOrder` = thứ tự đang đứng ở vị trí thả; tắt khi đang tìm kiếm vì danh sách lọc không liền thứ tự.
-- Tab "Trường" | "Prompt OCR" (Task 21B): tab Prompt chỉ hiện khi có `Function.Ai.PromptTemplate.View`, giữ ở `?tab=prompt` (`replaceUrl`),
-  4 nút đầu trang chỉ thuộc tab Trường; component tab dựng lại mỗi lần mở để thấy ngay trường vừa tắt OCR. Xuất bản khi form đang sửa
-  hoặc chưa có nháp (hay ghi chú trong dialog khác form — BE publish giữ note cũ khi rỗng) thì hỏi trước rồi lưu nháp + publish (Huỷ
-  không tạo nháp); lỗi 909 / 910 chỉ báo, không tự tải lại. Rời tab / trang
-  khi form dirty hỏi qua `confirmDiscardPrompt` (Promise có nhánh từ chối — `confirmAction` không có) + `CanDeactivateFn` ở route `metadata/:id`.
-  ⚠️ Lưới trường dựng lại `FormArray` mỗi lần tải editor: `@for` phải `track group` (đối tượng), đừng track `documentFieldId` —
-  DOM được giữ lại nên `formControlName` vẫn gắn control cũ, bấm vào form không ghi nhận và lưu gửi giá trị cũ.
-
-**Dự án** (Task 36, `/admin/construction/project`, `.../project/:id`; hằng `PROJECT_URL`, `PROJECT_STATUSES`):
-
-- Danh sách đọc `GET project/paging` — mỗi dòng một cặp dự án – metadata, số liệu theo vai trò người xem; dự án 0 metadata không hiện
-  nên form bắt chọn ≥ 1 metadata. Sửa từ danh sách gọi `GET {id}` trước để có đủ `documentTypeIds`.
-- Ngày gửi chuỗi local `YYYY-MM-DDT00:00:00` của `sh-calendar`, **không** `toISOString` (lệch UTC lùi 1 ngày).
-- Xoá dùng `DELETE admin/delete/{id}` (kèm dữ liệu), chỉ Admin / SuperAdmin có quyền Delete; không gọi `DELETE {id}` cũ.
-- Nghiệm thu: `a` = tổng − đã kiểm, `b` = đã kiểm − QA đạt (khớp `340` của BE); sau mỗi lần chuyển gán dữ liệu trả về rồi tải lại `GET {id}`.
+Ghi chú riêng của từng màn module `construction` (Metadata, Dự án, Danh sách văn bản): [07-man-construction.md](07-man-construction.md).
 
 ## Checklist
 
@@ -98,3 +71,5 @@ Loại / trường văn bản, giao diện gọi là **Metadata**, là mục men
 3. Component standalone kế thừa `BaseComponent`, dùng `DataTable`, nút ghi có `submitting`, route gắn vào `<MODULE>_ROUTES`?
 4. Không tự toast lỗi HTTP, không tự gắn token? Menu ẩn/hiện đúng key quyền?
 5. Build sạch, đã thử với BE thật? Tài liệu `.claude/fe/` nào cần cập nhật?
+
+> **Tiếp:** [07-man-construction.md](07-man-construction.md) — ghi chú từng màn module `construction`.

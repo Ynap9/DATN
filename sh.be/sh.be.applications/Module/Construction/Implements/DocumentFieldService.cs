@@ -81,6 +81,7 @@ namespace sh.be.applications.Module.Construction.Implements
             return fieldImports;
         }
 
+        // Tạo một trường cho loại văn bản (thứ tự tự tăng) và gắn luôn vào cấu hình các dự án đang dùng loại đó
         public async Task Create(CreateDocumentFieldDto dto)
         {
             _logger.LogInformation($"{nameof(Create)}, dto={JsonSerializer.Serialize(dto)}");
@@ -100,6 +101,8 @@ namespace sh.be.applications.Module.Construction.Implements
                 AddAuditLog(AuditLogConstants.ACTION_DOCUMENT_FIELD_CREATE, AuditLogConstants.ACTION_TYPE_CREATE, $"Tạo trường {documentField.Name} của loại văn bản có Id = {documentField.DocumentTypeId}",
                     null, ToAuditData(documentField));
                 await _unitOfWork.SaveChangesAsync();
+                await AddProjectDocumentFieldsAsync(dto.DocumentTypeId, [documentField], documentField.CreatedBy, documentField.CreatedDate);
+                await _unitOfWork.SaveChangesAsync();
                 await transaction.CommitAsync();
             }
             catch (Exception ex)
@@ -110,6 +113,7 @@ namespace sh.be.applications.Module.Construction.Implements
             }
         }
 
+        // Thêm nhanh nhiều trường theo danh sách tên và gắn luôn vào cấu hình các dự án đang dùng loại văn bản
         public async Task QuickCreate(QuickCreateDocumentFieldDto dto)
         {
             _logger.LogInformation($"{nameof(QuickCreate)}, dto={JsonSerializer.Serialize(dto)}");
@@ -134,6 +138,8 @@ namespace sh.be.applications.Module.Construction.Implements
                 _documentFieldRepository.AddRange(documentFields);
                 AddAuditLog(AuditLogConstants.ACTION_DOCUMENT_FIELD_QUICK_CREATE, AuditLogConstants.ACTION_TYPE_CREATE, $"Thêm nhanh {documentFields.Count} trường của loại văn bản có Id = {dto.DocumentTypeId}",
                     null, documentFields.Select(ToAuditData).ToList());
+                await _unitOfWork.SaveChangesAsync();
+                await AddProjectDocumentFieldsAsync(dto.DocumentTypeId, documentFields, currentUserId, now);
                 await _unitOfWork.SaveChangesAsync();
                 await transaction.CommitAsync();
             }
@@ -304,6 +310,15 @@ namespace sh.be.applications.Module.Construction.Implements
                 await transaction.RollbackAsync();
                 throw;
             }
+        }
+
+        // Gắn trường vừa tạo (đã có Id) vào cấu hình mọi dự án đang dùng loại văn bản, nối cuối thứ tự import của từng dự án
+        private async Task AddProjectDocumentFieldsAsync(int documentTypeId, List<DocumentField> documentFields, string? createdBy, DateTime? createdDate)
+        {
+            var projectDocumentTypes = await _projectRepository.GetDocumentTypesByDocumentTypeIdAsync(documentTypeId);
+            var lastOrderFieldImports = await _projectRepository.GetLastOrderFieldImportsAsync(documentTypeId);
+            _projectRepository.AddDocumentFields(projectDocumentTypes.SelectMany(projectDocumentType => projectDocumentType.AppendDocumentFields(documentFields,
+                lastOrderFieldImports.GetValueOrDefault(projectDocumentType.ProjectId), createdBy, createdDate)));
         }
 
         private async Task DeleteProjectDocumentFieldsAsync(IReadOnlyCollection<int> documentFieldIds, string? deletedBy, DateTime deletedDate)

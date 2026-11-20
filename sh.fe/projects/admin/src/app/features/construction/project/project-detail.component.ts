@@ -1,5 +1,6 @@
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 import { Utils } from '@sh/ui';
 import { MenuItem } from 'primeng/api';
 import { TagModule } from 'primeng/tag';
@@ -17,7 +18,7 @@ import { CellViewTypes } from '@/shared/constants/data-table.constants';
 import { PermissionConstants } from '@/shared/constants/permission.constants';
 import { PROJECT_STATUS, PROJECT_STATUSES, PROJECT_URL } from '@/shared/constants/project.constants';
 import { IBaseResponseWithData } from '@/shared/models/request-paging.base.models';
-import { IColumn } from '@/shared/models/data-table.models';
+import { IColumn, ITableEvent } from '@/shared/models/data-table.models';
 import { SharedImports } from '@/shared/import.shared';
 import { readErrorResponse } from '@/shared/utils/file-response';
 import { AcceptanceReasonComponent } from './acceptance-reason/acceptance-reason.component';
@@ -27,11 +28,17 @@ import { ProjectProgressCellComponent } from './project-progress-cell/project-pr
 const ACCEPTANCE_START_STATUSES: number[] = [PROJECT_STATUS.DOING];
 const ACCEPTANCE_REPORT_STATUSES: number[] = [PROJECT_STATUS.ACCEPTING, PROJECT_STATUS.DONE];
 
+const PROGRESS_ACTIONS = {
+    OPEN_SUBMISSIONS: 'openSubmissions',
+} as const;
+
 type AcceptanceRow = IProjectAcceptanceSummary & { documentTypeLabel: string };
+// link = null: tag chữ thường như cũ
+type DocumentTypeTag = { id: number; name: string; link: (string | number)[] | null };
 
 @Component({
     selector: 'app-project-detail',
-    imports: [SharedImports, TagModule, DataTable, PageHeader],
+    imports: [SharedImports, TagModule, DataTable, PageHeader, RouterLink],
     templateUrl: './project-detail.component.html',
 })
 export class ProjectDetailComponent extends BaseComponent {
@@ -45,12 +52,13 @@ export class ProjectDetailComponent extends BaseComponent {
 
     readonly canUpdate = this._sharedService.isGranted(PermissionConstants.FUNCTION_PROJECT_UPDATE);
     readonly canAccept = this._sharedService.isGranted(PermissionConstants.FUNCTION_PROJECT_ACCEPT);
+    readonly canViewSubmissions = this._sharedService.isGranted(PermissionConstants.FUNCTION_SUBMISSION_VIEW);
 
     project?: IViewProject;
     status?: (typeof PROJECT_STATUSES)[number];
     breadcrumbs: MenuItem[] = [];
     documentTypes: IDocumentTypeDropdown[] = [];
-    documentTypeNames: string[] = [];
+    documentTypeTags: DocumentTypeTag[] = [];
     acceptance?: IViewProjectAcceptance;
     acceptanceRows: AcceptanceRow[] = [];
     acceptanceColumns: IColumn<AcceptanceRow>[] = [];
@@ -64,6 +72,18 @@ export class ProjectDetailComponent extends BaseComponent {
         { header: 'Văn bản', field: 'totalSubmission', headerContainerStyle: 'width: 90px' },
         { header: 'Tiến độ', cellViewType: CellViewTypes.CUSTOM_COMP, customComponent: ProjectProgressCellComponent, headerContainerStyle: 'width: 190px' },
         { header: 'Ô đã nhập', field: 'filledFieldCount', headerContainerStyle: 'width: 110px' },
+        ...(this.canViewSubmissions
+            ? [
+                  {
+                      header: 'Thao tác',
+                      key: 'actions',
+                      cellViewType: CellViewTypes.ACTIONS,
+                      headerContainerStyle: 'width: 56px; text-align: center',
+                      cellStyle: 'text-align: center',
+                      actions: [{ type: PROGRESS_ACTIONS.OPEN_SUBMISSIONS, label: 'Mở văn bản', icon: 'pi pi-file' }],
+                  },
+              ]
+            : []),
     ];
 
     get canStart() {
@@ -99,7 +119,7 @@ export class ProjectDetailComponent extends BaseComponent {
             .subscribe((res) => {
                 if (this.isResponseSucceed(res)) {
                     this.documentTypes = res.data;
-                    this.mapDocumentTypeNames();
+                    this.mapDocumentTypeTags();
                 }
             });
         this.load();
@@ -117,11 +137,17 @@ export class ProjectDetailComponent extends BaseComponent {
                 this.project = res.data;
                 this.status = PROJECT_STATUSES.find((status) => status.value === res.data.status);
                 this.breadcrumbs = [{ label: 'Hồ sơ thi công' }, { label: 'Dự án', routerLink: PROJECT_URL }, { label: res.data.name }];
-                this.mapDocumentTypeNames();
+                this.mapDocumentTypeTags();
                 if (!this.acceptance) {
                     this.loadAcceptance();
                 }
             });
+    }
+
+    onProgressAction(event: ITableEvent<IProjectMyProgress>) {
+        if (event.type === PROGRESS_ACTIONS.OPEN_SUBMISSIONS) {
+            this.router.navigate(this.submissionLink(event.row!.documentTypeId));
+        }
     }
 
     openSheet() {
@@ -247,9 +273,24 @@ export class ProjectDetailComponent extends BaseComponent {
         ];
     }
 
-    // Dropdown và chi tiết tải song song; người không phải Admin chỉ thấy tên metadata mình được phân
-    private mapDocumentTypeNames() {
+    // Đường tới màn danh sách văn bản của một metadata trong dự án
+    private submissionLink(documentTypeId: number) {
+        return [PROJECT_URL, this._projectId, 'metadata', documentTypeId];
+    }
+
+    // Dropdown và chi tiết tải song song; người không phải Admin chỉ thấy tên metadata mình được phân.
+    // Người xem hết (myProgresses = null) mở văn bản qua tag ở metadata mình có vai trò; Data / QA mở qua bảng Tiến độ của tôi
+    private mapDocumentTypeTags() {
         const ids = this.project?.documentTypeIds ?? [];
-        this.documentTypeNames = this.documentTypes.filter((documentType) => ids.includes(documentType.id)).map((documentType) => documentType.name);
+        const linkedIds = this.canViewSubmissions && this.project && !this.project.myProgresses
+            ? this.project.viewerRoles.map((viewerRole) => viewerRole.documentTypeId)
+            : [];
+        this.documentTypeTags = this.documentTypes
+            .filter((documentType) => ids.includes(documentType.id))
+            .map((documentType) => ({
+                id: documentType.id,
+                name: documentType.name,
+                link: linkedIds.includes(documentType.id) ? this.submissionLink(documentType.id) : null,
+            }));
     }
 }

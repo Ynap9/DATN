@@ -19,6 +19,7 @@ export const PermissionConstants = {
     FUNCTION_PROJECT_ACCEPT: 'Function.Construction.Project.Accept',
     MENU_PROJECT_CONFIG: 'Menu.Construction.ProjectConfig',
     MENU_SUBMISSION: 'Menu.Construction.Submission',
+    FUNCTION_SUBMISSION_VIEW: 'Function.Construction.Submission.View',
     MENU_TEMPLATE: 'Menu.DigitalSignature.Template',
     MENU_SIGNING_BATCH: 'Menu.DigitalSignature.SigningBatch',
     MENU_PACKAGE_CONFIG: 'Menu.Packaging.Config',

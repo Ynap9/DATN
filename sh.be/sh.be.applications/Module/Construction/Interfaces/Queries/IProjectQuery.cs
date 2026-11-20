@@ -10,6 +10,7 @@ namespace sh.be.applications.Module.Construction.Interfaces.Queries
         Task<BaseResponsePagingDto<GetListProjectPairDto>> FindPaging(FindPagingProjectDto dto, string userId, bool isAdmin);
         Task<FindProjectByIdDto?> FindById(int id);
         Task<List<GetListProjectMyProgressDto>> FindMyProgresses(int projectId, string userId);
+        Task<List<GetListProjectViewerRoleDto>> FindViewerRoles(int projectId, string userId, bool isAdmin);
         Task<ViewProjectAcceptanceDto> FindAcceptanceSummary(int projectId);
         Task<Dictionary<int, int>> FindAcceptanceFilledFieldCounts(int projectId);
         Task<ViewProjectAcceptanceTransitionDto?> FindLastAcceptanceTransition(int projectId);
