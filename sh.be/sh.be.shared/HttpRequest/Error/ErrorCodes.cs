@@ -158,6 +158,12 @@ namespace sh.be.shared.HttpRequest.Error
         public const int AiErrorProviderInUse = 905;
         public const int AiErrorProviderApiKeyMissing = 906;
         public const int AiErrorProviderApiKeyUnreadable = 907;
+        public const int AiErrorPromptTemplateNotFound = 908;
+        public const int AiErrorPromptTemplateNotDraft = 909;
+        public const int AiErrorPromptTemplateDraftExists = 910;
+        public const int AiErrorPromptFieldInvalid = 911;
+        public const int AiErrorPromptOutputKeyInvalid = 912;
+        public const int AiErrorPromptNoActiveField = 913;
 
     }
 }

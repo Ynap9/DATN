@@ -68,6 +68,8 @@ using sh.be.domain.Module.Operation.ProjectMembers.Repositories;
 using sh.be.domain.Module.Operation.ProjectMembers.Services;
 using sh.be.domain.Module.Operation.StaffGroups.Repositories;
 using sh.be.domain.Module.Operation.StaffGroups.Services;
+using sh.be.domain.Module.Ai.Prompts.Repositories;
+using sh.be.domain.Module.Ai.Prompts.Services;
 using sh.be.domain.Module.Ai.Providers.Repositories;
 using sh.be.domain.Module.Ai.Providers.Services;
 using sh.be.infrastructure.data.Base;
@@ -338,6 +340,8 @@ builder.Services.AddScoped<IStaffGroupRepository, StaffGroupRepository>();
 builder.Services.AddScoped<IProjectMemberRepository, ProjectMemberRepository>();
 builder.Services.AddScoped<IAssignmentRepository, AssignmentRepository>();
 builder.Services.AddScoped<IAiProviderRepository, AiProviderRepository>();
+builder.Services.AddScoped<IPromptTemplateRepository, PromptTemplateRepository>();
+builder.Services.AddScoped<IPromptFieldConfigRepository, PromptFieldConfigRepository>();
 
 // queries
 builder.Services.AddScoped<IRoleQuery, RoleQuery>();
@@ -359,6 +363,7 @@ builder.Services.AddScoped<IWageQuery, WageQuery>();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IAssignmentQuery, AssignmentQuery>();
 builder.Services.AddScoped<IAiProviderQuery, AiProviderQuery>();
+builder.Services.AddScoped<IPromptTemplateQuery, PromptTemplateQuery>();
 
 // domain services
 builder.Services.AddScoped<RoleDomainService>();
@@ -373,6 +378,7 @@ builder.Services.AddScoped<StaffGroupDomainService>();
 builder.Services.AddScoped<ProjectMemberDomainService>();
 builder.Services.AddScoped<AssignmentDomainService>();
 builder.Services.AddScoped<AiProviderDomainService>();
+builder.Services.AddScoped<PromptTemplateDomainService>();
 
 // application services
 builder.Services.AddScoped<IUserService, UserService>();
@@ -399,6 +405,7 @@ builder.Services.AddScoped<IWageService, WageService>();
 builder.Services.AddScoped<IAssignmentService, AssignmentService>();
 builder.Services.AddScoped<ISubmissionAssignmentService, SubmissionAssignmentService>();
 builder.Services.AddScoped<IAiProviderService, AiProviderService>();
+builder.Services.AddScoped<IPromptTemplateService, PromptTemplateService>();
 builder.Services.AddSingleton<ISigningRunner, SigningRunner>();
 
 // jobs

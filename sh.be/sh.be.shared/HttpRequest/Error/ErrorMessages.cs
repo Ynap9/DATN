@@ -154,6 +154,12 @@ namespace sh.be.shared.HttpRequest.Error
             { ErrorCodes.AiErrorProviderInUse, "Nhà cung cấp AI đang được dự án sử dụng, không tắt được" },
             { ErrorCodes.AiErrorProviderApiKeyMissing, "Nhà cung cấp AI chưa có API key" },
             { ErrorCodes.AiErrorProviderApiKeyUnreadable, "API key không giải mã được, hãy nhập lại key" },
+            { ErrorCodes.AiErrorPromptTemplateNotFound, "Không tìm thấy bản prompt" },
+            { ErrorCodes.AiErrorPromptTemplateNotDraft, "Chỉ sửa, xuất bản hoặc bỏ được bản nháp" },
+            { ErrorCodes.AiErrorPromptTemplateDraftExists, "Đang có bản nháp, hãy bỏ nháp hoặc xuất bản trước" },
+            { ErrorCodes.AiErrorPromptFieldInvalid, "Trường không thuộc metadata, đã xoá hoặc chưa bật OCR" },
+            { ErrorCodes.AiErrorPromptOutputKeyInvalid, "Trường chưa có tên trường OCR, tên quá dài hoặc trùng tên trường OCR với trường khác" },
+            { ErrorCodes.AiErrorPromptNoActiveField, "Bản prompt cần ít nhất một trường đang dùng" },
         };
         public static string GetMessage(int code)
         {

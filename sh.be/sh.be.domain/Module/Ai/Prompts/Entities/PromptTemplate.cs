@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using sh.be.shared.Constants.Ai;
 using sh.be.shared.Constants.Db;
+using sh.be.shared.HttpRequest.Error;
+using sh.be.shared.HttpRequest.Exception;
 using sh.be.shared.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -58,11 +60,64 @@ namespace sh.be.domain.Module.Ai.Prompts.Entities
             };
         }
 
+        public void EnsureDraft()
+        {
+            if (Status != PromptTemplateConst.STATUS_DRAFT)
+            {
+                throw new UserFriendlyException(ErrorCodes.AiErrorPromptTemplateNotDraft);
+            }
+        }
+
+        public void UpdateDraft(string systemPrompt, string instructionPrompt, string? note, string? modifiedBy, DateTime modifiedDate)
+        {
+            EnsureDraft();
+            var trimmedSystemPrompt = systemPrompt.Trim();
+            var trimmedInstructionPrompt = instructionPrompt.Trim();
+            if (trimmedSystemPrompt.Length > PromptTemplateConst.PROMPT_MAX_LENGTH || trimmedInstructionPrompt.Length > PromptTemplateConst.PROMPT_MAX_LENGTH)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, $"Prompt chung và hướng dẫn trích xuất tối đa {PromptTemplateConst.PROMPT_MAX_LENGTH} ký tự");
+            }
+
+            SystemPrompt = trimmedSystemPrompt;
+            InstructionPrompt = trimmedInstructionPrompt;
+            Note = NormalizeNote(note);
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
+        }
+
+        public void Publish(string? note, string? publishedBy, DateTime publishedDate)
+        {
+            EnsureDraft();
+            Note = NormalizeNote(note) ?? Note;
+            Status = PromptTemplateConst.STATUS_PUBLISHED;
+            PublishedBy = publishedBy;
+            PublishedDate = publishedDate;
+            ModifiedBy = publishedBy;
+            ModifiedDate = publishedDate;
+        }
+
+        public void Archive(string? modifiedBy, DateTime modifiedDate)
+        {
+            Status = PromptTemplateConst.STATUS_ARCHIVED;
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
+        }
+
         public void Delete(string? deletedBy, DateTime deletedDate)
         {
             Deleted = true;
             DeletedDate = deletedDate;
             DeletedBy = deletedBy;
+        }
+
+        private static string? NormalizeNote(string? note)
+        {
+            var trimmedNote = note?.Trim();
+            if (trimmedNote?.Length > PromptTemplateConst.NOTE_MAX_LENGTH)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, $"Ghi chú phiên bản tối đa {PromptTemplateConst.NOTE_MAX_LENGTH} ký tự");
+            }
+            return String.IsNullOrEmpty(trimmedNote) ? null : trimmedNote;
         }
     }
 }
