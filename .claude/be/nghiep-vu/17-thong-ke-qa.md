@@ -16,8 +16,10 @@ không transaction, không audit, không đổi schema. Luồng QA tạo ra dữ
 | `GET {id:int}/timeline` | `Function.Construction.Submission.View` | Một trục thời gian gộp các lần kiểm tra và QA của một văn bản |
 
 Ba API thống kê nhận `projectId`, `documentTypeId` (bắt buộc), `fromDate`, `toDate`. Key quyền `QaStats` là key mới.
-`SeedRolePermission` tự cấp key này cho `Admin`; các vai trò khác phải gán tay. Không lọc theo người đang đăng nhập: Data / QA xem
-số của chính mình để làm cùng dashboard.
+`SeedRolePermission` tự cấp key này cho `Admin`; các vai trò khác phải gán tay. Phạm vi (Task 40, chốt 14/11): Admin và Leader có
+`Assignment.ViewAllSubmission` thấy cả cặp; người khác (Data / QA) chỉ tính lượt chấm trên văn bản mình **đang giữ**
+(`ResolveRestrictedUserIdAsync`, cùng bộ lọc với `paging`), không là thành viên cặp → `820`. Văn bản về pool / đã gỡ người giữ thì
+lượt chấm cũ không còn trong số của người đó.
 
 ## Phạm vi và đơn vị đếm
 

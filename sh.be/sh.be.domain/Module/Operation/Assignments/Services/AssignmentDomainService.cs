@@ -1,5 +1,6 @@
 using sh.be.domain.Module.Auth.Repositories;
 using sh.be.domain.Module.Auth.Services;
+using sh.be.domain.Module.Construction.Projects.Entities;
 using sh.be.domain.Module.Construction.Submissions.Entities;
 using sh.be.domain.Module.Operation.Assignments.Entities;
 using sh.be.domain.Module.Operation.Assignments.Repositories;
@@ -331,6 +332,13 @@ namespace sh.be.domain.Module.Operation.Assignments.Services
             {
                 throw new UserFriendlyException(ErrorCodes.OperationErrorSubmissionQaPassedLocked);
             }
+        }
+
+        // Thứ tự khoá chung là cặp rồi mới văn bản (như Xoá / import / giao việc). Chỉ dự án có QA mới khoá cặp ở bước giao QA / trả việc,
+        // nên Check / chấm QA khoá cặp sớm khi đó; dự án không QA giữ nguyên, kiểm tra không phải chờ import
+        public Task LockPairBeforeSubmissionAsync(Project project, int documentTypeId)
+        {
+            return project.IsQaEnabled ? _assignmentRepository.LockPairAsync(project.Id, documentTypeId) : Task.CompletedTask;
         }
 
         public async Task<QaOwnership?> ResolveQaOwnerForCheckedAsync(Submission submission)

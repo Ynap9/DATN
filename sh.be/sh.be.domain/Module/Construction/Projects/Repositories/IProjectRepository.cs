@@ -22,6 +22,7 @@ namespace sh.be.domain.Module.Construction.Projects.Repositories
         Task<List<int>> GetDocumentTypeIdsAsync(int projectId);
         Task<bool> ExistsDocumentTypeAsync(int projectId, int documentTypeId);
         Task<bool> ExistsActiveDocumentTypeAsync(int projectId, int documentTypeId);
+        Task<List<string>> GetDocumentTypeNamesHavingSubmissionsAsync(int projectId, List<int> documentTypeIds);
         void AddDocumentTypes(IEnumerable<ProjectDocumentType> projectDocumentTypes);
         Task DeleteDocumentTypesAsync(int projectId, IReadOnlyCollection<int> documentTypeIds, string? deletedBy, DateTime deletedDate);
         Task<List<ProjectDocumentType>> GetDeletedDocumentTypesAsync(int projectId, IReadOnlyCollection<int> documentTypeIds);

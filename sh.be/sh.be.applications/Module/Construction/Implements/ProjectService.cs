@@ -286,6 +286,7 @@ namespace sh.be.applications.Module.Construction.Implements
             await _projectDomainService.EnsureUniqueNameAsync(dto.Name);
 
             var documentTypeIds = dto.DocumentTypeIds.Distinct().ToList();
+            ProjectDomainService.EnsureHasDocumentTypes(documentTypeIds);
             await _documentTypeDomainService.EnsureAllExistAsync(documentTypeIds);
 
             var project = Project.Create(dto.Name, dto.StartedAt, dto.EndedAt, dto.IsQaEnabled, currentUserId, now);
@@ -319,6 +320,7 @@ namespace sh.be.applications.Module.Construction.Implements
             return data;
         }
 
+        // Sửa tên, ngày, trạng thái và danh sách metadata (gỡ khi chưa có văn bản, gắn lại thì khôi phục cấu hình cũ), đổi tên Google Sheet
         public async Task Update(int id, UpdateProjectDto dto)
         {
             _logger.LogInformation($"{nameof(Update)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
@@ -332,9 +334,11 @@ namespace sh.be.applications.Module.Construction.Implements
 
             await _projectDomainService.EnsureUniqueNameAsync(dto.Name, id);
             var documentTypeIds = dto.DocumentTypeIds.Distinct().ToList();
+            ProjectDomainService.EnsureHasDocumentTypes(documentTypeIds);
             await _documentTypeDomainService.EnsureAllExistAsync(documentTypeIds);
             var removedDocumentTypeIds = oldDocumentTypeIds.Except(documentTypeIds).ToList();
             var addedDocumentTypeIds = documentTypeIds.Except(oldDocumentTypeIds).ToList();
+            project.EnsureDocumentTypesChangeable(removedDocumentTypeIds, addedDocumentTypeIds);
             project.Update(dto.Name, dto.StartedAt, dto.EndedAt, dto.Status, currentUserId, now);
 
             SpreadsheetAccountDto? renamedAccount = null;
@@ -348,6 +352,7 @@ namespace sh.be.applications.Module.Construction.Implements
             try
             {
                 _projectRepository.Update(project);
+                await _projectDomainService.EnsureDocumentTypesRemovableAsync(id, removedDocumentTypeIds);
                 await _projectRepository.DeleteDocumentFieldsAsync(id, removedDocumentTypeIds, currentUserId, now);
                 await _projectRepository.DeleteDocumentTypesAsync(id, removedDocumentTypeIds, currentUserId, now);
 
