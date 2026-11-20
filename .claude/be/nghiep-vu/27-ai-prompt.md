@@ -59,7 +59,7 @@ Không tìm thấy bản (kể cả đã xoá) → `908`; metadata không có / 
 <InstructionPrompt>                         ← rỗng thì bỏ cả dòng này lẫn dòng trống sau
 
 Trích xuất các trường sau và trả về DUY NHẤT một JSON object, không giải thích thêm:
-- "<OutputKey>" (<Tên trường>)[, bắt buộc][: <Description>][ Ví dụ: <Example>][ Định dạng: <mô tả rule>]
+- "<OutputKey>" (<Tên trường>)[, bắt buộc][: <Description> | Ví dụ: <Example> | Định dạng: <mô tả rule>]   (chỉ ghép phần có giá trị)
 Trường không tìm thấy trong văn bản thì để chuỗi rỗng "".
 ```
 

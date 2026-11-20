@@ -1,5 +1,11 @@
 export const METADATA_URL = '/admin/construction/metadata';
 
+// Tab của màn chi tiết Metadata, giữ ở query ?tab= (tab Trường là mặc định nên không ghi lên URL)
+export const METADATA_TAB = {
+    FIELDS: 'fields',
+    PROMPT: 'prompt',
+} as const;
+
 export const DOCUMENT_TYPE_VIEW_TABLE = 1;
 export const DOCUMENT_TYPE_VIEW_LIST = 2;
 

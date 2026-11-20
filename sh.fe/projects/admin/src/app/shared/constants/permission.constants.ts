@@ -26,4 +26,8 @@ export const PermissionConstants = {
     MENU_OPERATION_PROJECT_MEMBER: 'Menu.Operation.ProjectMember',
     MENU_OPERATION_ASSIGNMENT: 'Menu.Operation.Assignment',
     MENU_AI_PROVIDER: 'Menu.Ai.Provider',
+    MENU_AI_PROMPT_TEMPLATE: 'Menu.Ai.PromptTemplate',
+    FUNCTION_AI_PROMPT_TEMPLATE_VIEW: 'Function.Ai.PromptTemplate.View',
+    FUNCTION_AI_PROMPT_TEMPLATE_UPDATE: 'Function.Ai.PromptTemplate.Update',
+    FUNCTION_AI_PROMPT_TEMPLATE_PUBLISH: 'Function.Ai.PromptTemplate.Publish',
 } as const;
