@@ -75,20 +75,27 @@ Body: `{ id, projectId, documentTypeId, datas: [{ documentFieldId, data }], note
 - Lỗi, không ghi gì: hồ sơ không tồn tại `305`; sai dự án / loại văn bản `319`; dự án không tồn tại `303`; dự án `DONE` `316`, hết hạn `323`
   (**trừ SuperAdmin**); trường gửi trùng `318`; trường không thuộc cấu hình dự án + loại văn bản `311`; ghi chú quá 1000 ký tự `400`.
 - `changedDataCount` = số ô sửa + số ô thêm. Audit `Kiểm tra hồ sơ`, `Update`, lưu `StatusCheck` và giá trị cũ / mới từng trường.
+- Task 40: mở transaction **trước** mọi luật, đọc văn bản `WITH (UPDLOCK, ROWLOCK)` (`EnsureSubmissionExistsForUpdateAsync`) giữ tới commit —
+  Check / QA / Xoá cùng văn bản chạy lần lượt, request sau xét trên trạng thái đã commit (không còn ghi vào văn bản vừa bị xoá).
+- Thứ tự khoá chung **cặp `ProjectDocumentType` → văn bản** (như Xoá / import / giao việc): dự án có QA thì Check gọi
+  `LockPairBeforeSubmissionAsync` trước khi khoá dòng văn bản (timeout 5 giây → `812`); dự án không QA không khoá cặp.
+- ⚠️ Check khoá văn bản trước rồi mới khoá cặp ở `AssignCheckedToQaAsync` → đua với Xoá (khoá cặp trước) thành deadlock, Xoá nhận
+  500 ở 10/10 vòng → nguyên nhân: hai luồng khoá ngược chiều → mọi thao tác cần cả hai khoá phải lấy cặp trước, văn bản sau
+  (kiểm thật 20/11: 0/28 vòng lỗi sau khi sửa). Deadlock còn sót ở chỗ khác trả `423`, xem [06-shared](../architecture/06-shared.md).
 - Một transaction (Task 25): lưu `Submission`, `SubmissionData`, `SubmissionLog`, `AuditLog` → `AssignCheckedToQaAsync` (kiểm lại người giữ `820`; dự án không QA thì xét `DONE` phiếu Data, không giao QA) → lưu → (dự án không QA, Task 28: tự vào nghiệm thu khi văn bản cuối được kiểm, [22](22-nghiem-thu-du-an.md#tự-chuyển-trong-reviewqa--check--delete)) → commit; lỗi ở đâu cũng không ghi gì.
 - Sau khi kiểm, import overwrite với `overwriteChecked = false` bỏ qua hồ sơ này.
 
 ## Phạm vi và phân việc
 
 Luật phân việc thuộc Operation: Thi công chỉ gọi `ISubmissionAssignmentService` (implement `SubmissionAssignmentService`, Task 25, thân
-Task 15); implement được `SaveChanges`, không mở / commit transaction. Không gọi ở `summary`, `logs` dự án, thống kê QA, xuất Excel.
+Task 15); implement được `SaveChanges`, không mở / commit transaction. Không gọi ở xuất Excel (chỉ Admin / Leader dự án).
 Lỗi: `820` không giữ văn bản / đã bị gỡ khỏi cặp, `826` người nhập kiểm lại văn bản đã QA đạt, `812` chờ khoá cặp quá 5 giây. Luật đủ ở
 [23-chia-phieu.md](23-chia-phieu.md#nối-vào-luồng-kiểm-tra--qa). `SubmissionUser` có cờ xoá mềm từ Task 29 nhưng chỉ bật khi Admin
 xoá dự án ([25](25-xoa-du-an-danh-sach-cap.md)); về pool / gỡ thành viên vẫn xoá cứng dòng người giữ.
 
 | Method | Gọi ở |
 |---|---|
-| `ResolveRestrictedUserIdAsync` (khác `null` = chỉ văn bản có `SubmissionUser.UserId` này) | `paging`, `count`, `next` / `previous`, `tree`, `field-values`, `qa/paging`, vị trí ở `{id}` / `{id}/qa` |
+| `ResolveRestrictedUserIdAsync` (khác `null` = chỉ văn bản có `SubmissionUser.UserId` này) | `paging`, `count`, `next` / `previous`, `tree`, `field-values`, `qa/paging`, vị trí ở `{id}` / `{id}/qa`; Task 40 (chốt 14/11): `logs` dự án, `summary`, `qa-stats/summary`, `qa-stats/fields`, `qa-stats/entry-users` — Data / QA chỉ tính văn bản mình đang giữ ([17](17-thong-ke-qa.md)) |
 | `EnsureCanViewAsync` (nạp hồ sơ trước) | `{id}`, `{id}/qa`, `{id}/logs`, `{id}/qa-logs`, `{id}/timeline` |
 | `EnsureCanCheckAsync` · `AssignCheckedToQaAsync` | `check`: trước khi dựng kế hoạch · sau lần lưu đầu, trong transaction |
 | `ApplyQaResultToAssignmentAsync` | `qa`: sau lưu log QA + trường sai, trước chốt phiếu FULL và tự nghiệm thu ([13](13-ho-so-qa.md)) |

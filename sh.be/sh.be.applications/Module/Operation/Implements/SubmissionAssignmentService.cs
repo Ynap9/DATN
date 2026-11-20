@@ -5,6 +5,7 @@ using sh.be.applications.Base.Interfaces.Api;
 using sh.be.applications.Module.Construction.Interfaces.Services;
 using sh.be.applications.Module.Operation.Interfaces.Queries;
 using sh.be.domain.Base;
+using sh.be.domain.Module.Construction.Projects.Entities;
 using sh.be.domain.Module.Construction.QaAssignments.Entities;
 using sh.be.domain.Module.Construction.Submissions.Entities;
 using sh.be.domain.Module.Core.Repositories;
@@ -59,6 +60,13 @@ namespace sh.be.applications.Module.Operation.Implements
         {
             _logger.LogInformation($"{nameof(EnsureCanCheckAsync)}, submissionId={submission.Id}, userId={userId}");
             return _assignmentDomainService.EnsureCanCheckAsync(submission, userId);
+        }
+
+        // Khoá cặp trước khoá dòng văn bản để Check / chấm QA cùng chiều khoá với Xoá / import / giao việc, tránh deadlock
+        public Task LockPairBeforeSubmissionAsync(Project project, int documentTypeId)
+        {
+            _logger.LogInformation($"{nameof(LockPairBeforeSubmissionAsync)}, projectId={project.Id}, documentTypeId={documentTypeId}");
+            return _assignmentDomainService.LockPairBeforeSubmissionAsync(project, documentTypeId);
         }
 
         // Đưa văn bản vừa kiểm xong vào đợt QA của QA phụ trách nút, chưa có đợt mở thì tạo đợt mới; dự án không QA thì chỉ xét chốt phiếu nhập liệu

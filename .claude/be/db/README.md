@@ -3,7 +3,7 @@
 > Chạy ở thư mục gốc repo. Đổi schema phải hỏi trước (skill `task-workflow`). Chi tiết: [architecture/04-infrastructure-data.md](../architecture/04-infrastructure-data.md).
 
 ```bash
-dotnet ef migrations add <Ten> --project sh.be/sh.be.infrastructure.data --startup-project sh.be/sh.be.api --output-dir Migrations/<Auth|Core|Construction|DigitalSignature|Packaging|Operation>
+dotnet ef migrations add <Ten> --project sh.be/sh.be.infrastructure.data --startup-project sh.be/sh.be.api --output-dir Migrations/<Auth|Core|Construction|DigitalSignature|Packaging|Operation|Ai>
 dotnet ef migrations has-pending-model-changes --project sh.be/sh.be.infrastructure.data --startup-project sh.be/sh.be.api
 dotnet ef database update --project sh.be/sh.be.infrastructure.data --startup-project sh.be/sh.be.api
 dotnet ef migrations remove --project sh.be/sh.be.infrastructure.data --startup-project sh.be/sh.be.api
@@ -23,6 +23,9 @@ Hồ sơ cũ không có dòng `SubmissionUser` = chưa giao, không cần script
 `Add_SoftDelete_ProjectDependents` (`Migrations/Construction/`, Task 29) chạy sau `Update_ProjectMember_Price`: thêm `Deleted` (mặc định `0`) /
 `DeletedBy` / `DeletedDate` cho `SubmissionUser`, `ProjectDeadlineNotification`, `AssignmentTicket`, `AssignmentTicketItem`; index unique
 `SubmissionUser (SubmissionId, Role)` và index mail đã gửi lọc thêm `[Deleted] = 0`. Dòng cũ nhận `Deleted = 0`, không cần script dữ liệu.
+
+`Update_PromptFieldConfig_OutputKey` (`Migrations/Ai/`, Task 21) chạy sau `Add_AiModule`: nới `ai.PromptFieldConfig.OutputKey` từ `nvarchar(100)`
+lên `nvarchar(450)` (trần khoá index SQL Server), EF xoá rồi tạo lại index unique `(PromptTemplateId, OutputKey)`. Không mất dữ liệu; `Down` thu hẹp lại thì có thể cắt chữ.
 
 ## Dữ liệu test hồ sơ (DB dev)
 

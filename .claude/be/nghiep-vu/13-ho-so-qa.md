@@ -75,6 +75,9 @@ Thống kê QA theo trường, theo người nhập và dòng thời gian một 
   (migration `Add_SubmissionQaLogField`), **một** `AuditLog` `QA hồ sơ`, `Update` (có `WrongDocumentFieldIds`).
 - Hai lần `SaveChanges` trong **một** transaction: lưu log lấy `Id` rồi mới dựng trường sai (`SubmissionQaLog.CreateWrongFields`),
   vì entity không có navigation; lỗi ở bất kỳ bước nào → rollback cả hồ sơ, log, trường sai, audit.
+- Task 40: transaction mở **trước** mọi luật, đọc văn bản `WITH (UPDLOCK, ROWLOCK)` như Check — 2 lượt chấm / Xoá cùng văn bản chạy
+  lần lượt, lượt sau xét trên trạng thái đã commit. Khoá cặp (`LockPairBeforeSubmissionAsync`) **trước** khoá văn bản, cùng thứ tự
+  với Xoá / giao việc; ngược lại thì chấm Không đạt đua Xoá thành deadlock (bẫy ghi ở [12](12-ho-so-kiem-tra.md)).
 - Dự án `ACCEPTING` vẫn QA được. Chấm **Đạt** trên dự án `DOING` mà mọi văn bản đã `CHECKED` + `QA_PASSED` → dự án **tự**
   sang `ACCEPTING` trong cùng transaction, sau khối chốt phiếu FULL, kèm audit `Bắt đầu nghiệm thu` `IsAutomatic = true`
   ([22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md#tự-chuyển-trong-reviewqa--check--delete)).

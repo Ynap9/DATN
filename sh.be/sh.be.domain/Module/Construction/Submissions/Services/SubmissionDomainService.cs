@@ -43,6 +43,13 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionNotFound);
         }
 
+        // Gọi trong transaction: khoá dòng văn bản tới khi commit để Check / QA / Xoá cùng văn bản không ghi đè nhau
+        public async Task<Submission> EnsureSubmissionExistsForUpdateAsync(int submissionId)
+        {
+            return await _submissionRepository.FindByIdForUpdateAsync(submissionId)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionNotFound);
+        }
+
         public async Task<List<Submission>> GetSubmissionsToDeleteAsync(int projectId, int documentTypeId, List<int> ids)
         {
             var distinctIds = ids.Distinct().ToList();
@@ -55,7 +62,7 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
                 throw new UserFriendlyException(ErrorCodes.BadRequest, $"Tối đa {SubmissionConst.DELETE_MAX_ITEMS} hồ sơ mỗi lần");
             }
 
-            var submissions = await _submissionRepository.GetByIdsAsync(distinctIds);
+            var submissions = await _submissionRepository.GetByIdsForUpdateAsync(distinctIds);
             var missingIds = distinctIds.Except(submissions.Select(submission => submission.Id)).ToList();
             if (missingIds.Count > 0)
             {

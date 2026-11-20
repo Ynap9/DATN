@@ -1,6 +1,6 @@
 # Thu hồi, chuyển phiếu và danh sách phiếu (Operation)
 
-> **Phần 26/26** · trước: [25-xoa-du-an-danh-sach-cap.md](25-xoa-du-an-danh-sach-cap.md) · mục lục: [README.md](README.md)
+> **Phần 26/27** · trước: [25-xoa-du-an-danh-sach-cap.md](25-xoa-du-an-danh-sach-cap.md) · mục lục: [README.md](README.md)
 
 Task 14, 2026-11-13. Leader / Admin lấy lại hoặc chuyển việc **đang dở** của một người mà không gỡ họ khỏi dự án: phiếu nhập liệu
 (Data) và phụ trách nút QA. Nối tiếp giao phiếu ở [23-chia-phieu.md](23-chia-phieu.md). Không đổi schema, không mã lỗi mới, không tổng
@@ -98,3 +98,5 @@ Chưa kiểm thực tế: trần `329` (cần > 5000 văn bản chưa đạt). C
 
 Test API thật (DB dev, tag `ZZTEST14`, dọn sạch sau test): chặn QA 15/15, thu hồi 25/25, chuyển 17/17, phụ trách QA 30/30, danh sách
 16/16, gồm các vòng đua Kiểm tra ↔ thu hồi / chuyển ra đủ các kết quả hợp lệ.
+
+> **Tiếp:** [27-ai-prompt.md](27-ai-prompt.md) — prompt OCR theo metadata: nháp / xuất bản / lưu trữ / khôi phục, ghép prompt gửi AI.

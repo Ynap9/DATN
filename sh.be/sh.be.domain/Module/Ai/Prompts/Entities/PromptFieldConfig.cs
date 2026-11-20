@@ -62,6 +62,20 @@ namespace sh.be.domain.Module.Ai.Prompts.Entities
             };
         }
 
+        public void Update(string outputKey, string description, string? example, string normalizeRule, bool isRequired, int order, bool isActive,
+            string? modifiedBy, DateTime modifiedDate)
+        {
+            OutputKey = outputKey;
+            Description = description;
+            Example = example;
+            NormalizeRule = normalizeRule;
+            IsRequired = isRequired;
+            Order = order;
+            IsActive = isActive;
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
+        }
+
         public void Delete(string? deletedBy, DateTime deletedDate)
         {
             Deleted = true;

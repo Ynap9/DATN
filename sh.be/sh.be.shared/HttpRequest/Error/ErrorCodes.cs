@@ -14,6 +14,7 @@ namespace sh.be.shared.HttpRequest.Error
         public const int Unauthorized = 401;
         public const int NotFound = 404;
         public const int Found = 409;
+        public const int ConcurrencyConflict = 423;
         public const int InternalServerError = 500;
 
         //Authentication
@@ -86,6 +87,7 @@ namespace sh.be.shared.HttpRequest.Error
         public const int ConstructionErrorImportJobNotFound = 344;
         public const int ConstructionErrorProjectQaDisabled = 345;
         public const int ConstructionErrorDocumentTypeInUse = 346;
+        public const int ConstructionErrorDocumentTypeHasSubmissions = 347;
 
         public const int DigitalSignatureErrorTemplateNotFound = 601;
         public const int DigitalSignatureErrorInvalidTemplatePositionKind = 602;
@@ -158,6 +160,12 @@ namespace sh.be.shared.HttpRequest.Error
         public const int AiErrorProviderInUse = 905;
         public const int AiErrorProviderApiKeyMissing = 906;
         public const int AiErrorProviderApiKeyUnreadable = 907;
+        public const int AiErrorPromptTemplateNotFound = 908;
+        public const int AiErrorPromptTemplateNotDraft = 909;
+        public const int AiErrorPromptTemplateDraftExists = 910;
+        public const int AiErrorPromptFieldInvalid = 911;
+        public const int AiErrorPromptOutputKeyInvalid = 912;
+        public const int AiErrorPromptNoActiveField = 913;
 
     }
 }

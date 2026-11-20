@@ -530,8 +530,8 @@ namespace sh.be.infrastructure.data.Migrations
 
                     b.Property<string>("OutputKey")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("PromptTemplateId")
                         .HasColumnType("int");

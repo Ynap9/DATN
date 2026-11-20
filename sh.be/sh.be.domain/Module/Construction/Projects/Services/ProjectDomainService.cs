@@ -1,5 +1,6 @@
 using sh.be.domain.Module.Construction.Projects.Entities;
 using sh.be.domain.Module.Construction.Projects.Repositories;
+using sh.be.domain.Module.Construction.Submissions.Repositories;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.HttpRequest.Error;
@@ -10,10 +11,12 @@ namespace sh.be.domain.Module.Construction.Projects.Services
     public class ProjectDomainService
     {
         private readonly IProjectRepository _projectRepository;
+        private readonly ISubmissionRepository _submissionRepository;
 
-        public ProjectDomainService(IProjectRepository projectRepository)
+        public ProjectDomainService(IProjectRepository projectRepository, ISubmissionRepository submissionRepository)
         {
             _projectRepository = projectRepository;
+            _submissionRepository = submissionRepository;
         }
 
         public async Task EnsureUniqueNameAsync(string name, int? excludedId = null)
@@ -21,6 +24,33 @@ namespace sh.be.domain.Module.Construction.Projects.Services
             if (await _projectRepository.ExistsByNameAsync(name, excludedId))
             {
                 throw new UserFriendlyException(ErrorCodes.Found, "Tên dự án đã tồn tại");
+            }
+        }
+
+        public static void EnsureHasDocumentTypes(List<int> documentTypeIds)
+        {
+            if (documentTypeIds.Count == 0)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Chọn ít nhất 1 metadata");
+            }
+        }
+
+        // Khoá import từng cặp sắp gỡ (đang import → 310) rồi mới đếm văn bản, để import không chen thêm văn bản sau lúc đếm
+        public async Task EnsureDocumentTypesRemovableAsync(int projectId, List<int> removedDocumentTypeIds)
+        {
+            if (removedDocumentTypeIds.Count == 0)
+            {
+                return;
+            }
+            foreach (var documentTypeId in removedDocumentTypeIds.Order())
+            {
+                await _submissionRepository.LockImportAsync(projectId, documentTypeId);
+            }
+            var documentTypeNames = await _projectRepository.GetDocumentTypeNamesHavingSubmissionsAsync(projectId, removedDocumentTypeIds);
+            if (documentTypeNames.Count > 0)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentTypeHasSubmissions,
+                    $"Metadata đã có văn bản trong dự án, không gỡ được: {string.Join(", ", documentTypeNames)}");
             }
         }
 

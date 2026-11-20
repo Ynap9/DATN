@@ -15,6 +15,7 @@ namespace sh.be.shared.HttpRequest.Error
             { ErrorCodes.Unauthorized, "Unauthorized" },
             { ErrorCodes.NotFound, "Not found" },
             { ErrorCodes.Found, "Found" },
+            { ErrorCodes.ConcurrencyConflict, "Thao tác đang trùng với người khác, vui lòng thử lại" },
             { ErrorCodes.InternalServerError, "Internal server error" },
 
 
@@ -86,6 +87,7 @@ namespace sh.be.shared.HttpRequest.Error
             { ErrorCodes.ConstructionErrorImportJobNotFound, "Không tìm thấy yêu cầu import hoặc yêu cầu đã hết hạn" },
             { ErrorCodes.ConstructionErrorProjectQaDisabled, "Dự án không bật QA" },
             { ErrorCodes.ConstructionErrorDocumentTypeInUse, "Loại văn bản đang được dự án sử dụng, không thể xoá" },
+            { ErrorCodes.ConstructionErrorDocumentTypeHasSubmissions, "Metadata đã có văn bản trong dự án, không gỡ được" },
             { ErrorCodes.DigitalSignatureErrorTemplateNotFound, "Mẫu chữ ký không tồn tại" },
             { ErrorCodes.DigitalSignatureErrorInvalidTemplatePositionKind, "Loại khối chữ ký không hợp lệ" },
             { ErrorCodes.DigitalSignatureErrorTemplatePositionOutOfPage, "Tọa độ khối chữ ký nằm ngoài trang hoặc có kích thước bằng 0" },
@@ -154,6 +156,12 @@ namespace sh.be.shared.HttpRequest.Error
             { ErrorCodes.AiErrorProviderInUse, "Nhà cung cấp AI đang được dự án sử dụng, không tắt được" },
             { ErrorCodes.AiErrorProviderApiKeyMissing, "Nhà cung cấp AI chưa có API key" },
             { ErrorCodes.AiErrorProviderApiKeyUnreadable, "API key không giải mã được, hãy nhập lại key" },
+            { ErrorCodes.AiErrorPromptTemplateNotFound, "Không tìm thấy bản prompt" },
+            { ErrorCodes.AiErrorPromptTemplateNotDraft, "Chỉ sửa, xuất bản hoặc bỏ được bản nháp" },
+            { ErrorCodes.AiErrorPromptTemplateDraftExists, "Đang có bản nháp, hãy bỏ nháp hoặc xuất bản trước" },
+            { ErrorCodes.AiErrorPromptFieldInvalid, "Trường không thuộc metadata, đã xoá hoặc chưa bật OCR" },
+            { ErrorCodes.AiErrorPromptOutputKeyInvalid, "Trường chưa có tên trường OCR, tên quá dài hoặc trùng tên trường OCR với trường khác" },
+            { ErrorCodes.AiErrorPromptNoActiveField, "Bản prompt cần ít nhất một trường đang dùng" },
         };
         public static string GetMessage(int code)
         {
