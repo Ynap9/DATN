@@ -66,6 +66,10 @@ Loại / trường văn bản, giao diện gọi là **Metadata**, là mục men
 (`/admin/construction/metadata`, `.../metadata/:id`; hằng `METADATA_URL`, Task 39). Đường `project-config` để dành cho màn Cấu hình dự án sau này. Menu không có mục "Hồ sơ".
 
 - Danh sách có Số trường, Số dự án đang dùng, Ngày tạo; "Xóa" ẩn khi `projectCount > 0` (BE vẫn chặn `346`).
+- Chi tiết: tiêu đề có đường kẻ tách nội dung; 4 nút 32px ở đầu trang — Kiểm tra Google Sheet, Tải template (nền trắng viền xám, tải có
+  vòng xoay) | Thêm nhanh (viền + chữ màu chủ đạo), Thêm trường (đặc); điện thoại chia lưới 2 cột. Hàng công cụ cao 38px: ô tìm 360px bên trái |
+  "Thứ tự theo" dạng bảng / danh sách bên phải + icon `?` (không khung nút) mở popup giải thích hai dạng (nội dung lấy từ
+  `DOCUMENT_TYPE_VIEWS[].description`, có nhãn Mặc định và lối "Đổi dạng mặc định"). Bảng trường căn giữa mọi cột trừ Tên trường, Tên cột import.
 
 - Route nhận `Menu.Construction.DocumentType` **hoặc** `Function.Construction.DocumentType.View`; menu theo View, vì tích một Function con
   không cấp key Menu cha.
