@@ -24,7 +24,7 @@ import { AcceptanceReasonComponent } from './acceptance-reason/acceptance-reason
 import { ProjectFormComponent } from './project-form/project-form.component';
 import { ProjectProgressCellComponent } from './project-progress-cell/project-progress-cell.component';
 
-const ACCEPTANCE_START_STATUSES: number[] = [PROJECT_STATUS.DEPLOYING, PROJECT_STATUS.DOING];
+const ACCEPTANCE_START_STATUSES: number[] = [PROJECT_STATUS.DOING];
 const ACCEPTANCE_REPORT_STATUSES: number[] = [PROJECT_STATUS.ACCEPTING, PROJECT_STATUS.DONE];
 
 type AcceptanceRow = IProjectAcceptanceSummary & { documentTypeLabel: string };
@@ -149,7 +149,7 @@ export class ProjectDetailComponent extends BaseComponent {
     }
 
     reopenAcceptance() {
-        this.openReasonDialog('Trả về đang làm', 'Trả dự án về đang làm để tiếp tục kiểm / QA.', true, (reason) =>
+        this.openReasonDialog('Trả về đang triển khai', 'Trả dự án về đang triển khai để tiếp tục kiểm / QA.', true, (reason) =>
             this.transition(this._projectService.reopenAcceptance(this._projectId, { reason })),
         );
     }

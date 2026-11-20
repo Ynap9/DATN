@@ -1,23 +1,22 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { provideRouter } from '@angular/router';
 import { AppMenuitem } from './app-menuitem';
 
 describe('AppMenuitem', () => {
-  let component: AppMenuitem;
-  let fixture: ComponentFixture<AppMenuitem>;
+    let fixture: ComponentFixture<AppMenuitem>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      declarations: [AppMenuitem]
-    })
-    .compileComponents();
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            imports: [AppMenuitem],
+            providers: [provideRouter([])],
+        }).compileComponents();
 
-    fixture = TestBed.createComponent(AppMenuitem);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+        fixture = TestBed.createComponent(AppMenuitem);
+        fixture.componentRef.setInput('item', { label: 'Dự án', routerLink: ['/admin/construction/project'] });
+        fixture.detectChanges();
+    });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    it('should create', () => {
+        expect(fixture.componentInstance).toBeTruthy();
+    });
 });

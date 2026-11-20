@@ -40,7 +40,7 @@ export class DocumentTypeListComponent extends BaseComponent {
     private readonly _sharedService = inject(SharedService);
     private readonly _destroyRef = inject(DestroyRef);
 
-    readonly breadcrumbs: MenuItem[] = [{ label: 'Cấu hình dự án' }, { label: 'Metadata' }];
+    readonly breadcrumbs: MenuItem[] = [{ label: 'Hồ sơ thi công' }, { label: 'Metadata' }];
     readonly canCreate = this._sharedService.isGranted(PermissionConstants.FUNCTION_DOCUMENT_TYPE_CREATE);
 
     keyword = new FormControl('', { nonNullable: true });
@@ -52,7 +52,10 @@ export class DocumentTypeListComponent extends BaseComponent {
     readonly columns: IColumn<DocumentTypeRow>[] = [
         { header: 'STT', cellViewType: CellViewTypes.INDEX, headerContainerStyle: 'width: 72px' },
         { header: 'Tên metadata', field: 'name', clickable: true },
-        { header: 'Kiểu xem mặc định', field: 'defaultViewLabel', headerContainerStyle: 'width: 200px' },
+        { header: 'Số trường', field: 'fieldCount', headerContainerStyle: 'width: 110px; text-align: right', cellStyle: 'text-align: right' },
+        { header: 'Số dự án đang dùng', field: 'projectCount', headerContainerStyle: 'width: 160px; text-align: right', cellStyle: 'text-align: right' },
+        { header: 'Kiểu xem mặc định', field: 'defaultViewLabel', headerContainerStyle: 'width: 180px' },
+        { header: 'Ngày tạo', field: 'createdDate', cellViewType: CellViewTypes.DATE, headerContainerStyle: 'width: 120px; text-align: center', cellStyle: 'text-align: center' },
         {
             header: 'Thao tác',
             cellViewType: CellViewTypes.ACTIONS,
@@ -66,6 +69,7 @@ export class DocumentTypeListComponent extends BaseComponent {
                     label: 'Xóa',
                     icon: 'pi pi-trash',
                     severity: 'danger',
+                    visible: (row: DocumentTypeRow) => row.projectCount === 0,
                 }),
             ],
         },

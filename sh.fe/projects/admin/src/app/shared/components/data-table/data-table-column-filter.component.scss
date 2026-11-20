@@ -1,0 +1,78 @@
+:host {
+    display: inline-flex;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.data-table-filter-icon {
+    font-size: 12px;
+    color: var(--app-faint);
+    cursor: pointer;
+
+    &:hover,
+    &.is-active {
+        color: var(--app-accent);
+    }
+}
+
+.data-table-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 260px;
+}
+
+.data-table-filter-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--app-line);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--app-ink);
+}
+
+.data-table-filter-search {
+    position: relative;
+
+    input {
+        width: 100%;
+        padding-left: 32px;
+        padding-right: 32px;
+    }
+
+    .pi {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 13px;
+        color: var(--app-faint);
+    }
+
+    .pi-search {
+        left: 12px;
+    }
+}
+
+.data-table-filter-clear {
+    right: 12px;
+    cursor: pointer;
+}
+
+.data-table-filter-hint {
+    margin-top: -6px;
+    font-size: 11px;
+    color: var(--app-faint);
+}
+
+.data-table-filter-error {
+    font-size: 11px;
+    color: var(--app-red);
+}
+
+.data-table-filter-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}

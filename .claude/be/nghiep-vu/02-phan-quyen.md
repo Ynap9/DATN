@@ -44,7 +44,7 @@ Menu.Construction                  Menu nghiệp vụ xây dựng
 │   ├── Function.Construction.Project.Update
 │   ├── Function.Construction.Project.Delete
 │   ├── Function.Construction.Project.Deadline  (hạn dự án, chạy job kiểm tra hạn, lịch sử mail)
-│   └── Function.Construction.Project.Accept    (bắt đầu / hoàn tất nghiệm thu, trả về đang làm — Task 23)
+│   └── Function.Construction.Project.Accept    (bắt đầu / hoàn tất nghiệm thu, trả về đang triển khai — Task 23)
 ├── Menu.Construction.ProjectConfig Menu cấu hình dự án
 │   ├── Function.Construction.ProjectConfig.View     (gồm xem cấu hình chấm mẫu và chế độ chấm QA)
 │   ├── Function.Construction.ProjectConfig.Create

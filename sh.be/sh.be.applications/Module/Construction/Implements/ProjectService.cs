@@ -190,7 +190,7 @@ namespace sh.be.applications.Module.Construction.Implements
             var summary = await _projectQuery.FindAcceptanceSummary(id);
 
             _projectRepository.Update(project);
-            AddAuditLog(AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_REOPEN, AuditLogConstants.ACTION_TYPE_UPDATE, $"Trả dự án {project.Name} về đang làm",
+            AddAuditLog(AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_REOPEN, AuditLogConstants.ACTION_TYPE_UPDATE, $"Trả dự án {project.Name} về đang triển khai",
                 new { ProjectId = id, Status = oldStatus },
                 new { ProjectId = id, project.Status, IsForced = false, IsAutomatic = false, Reason = reason, Summary = summary.Total });
             await _unitOfWork.SaveChangesAsync();
@@ -237,7 +237,7 @@ namespace sh.be.applications.Module.Construction.Implements
             documentTypeRows.Add(ToDocumentTypeCells("Tổng", summary.Total,
                 summary.DocumentTypes.Sum(row => filledFieldCounts.GetValueOrDefault(row.DocumentTypeId!.Value))));
 
-            // Cách chuyển: tự động trước, trả về đang làm luôn do Admin, còn lại theo cờ cho phép khi chưa đủ
+            // Cách chuyển: tự động trước, trả về đang triển khai luôn do Admin, còn lại theo cờ cho phép khi chưa đủ
             var transitionRows = transitions
                 .Select(transition => new List<string>
                 {

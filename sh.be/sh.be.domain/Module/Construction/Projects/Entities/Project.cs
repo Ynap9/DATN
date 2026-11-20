@@ -44,7 +44,7 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
                 Name = name,
                 StartedAt = startedAt,
                 EndedAt = endedAt,
-                Status = ProjectConst.DEPLOYING,
+                Status = ProjectConst.DOING,
                 GoogleSheetName = name,
                 IsQaEnabled = isQaEnabled,
                 CreatedBy = createdBy,

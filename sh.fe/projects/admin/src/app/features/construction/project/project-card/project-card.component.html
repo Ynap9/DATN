@@ -1,0 +1,46 @@
+<article class="project-card" tabindex="0" (click)="open.emit()" (keydown.enter)="open.emit()">
+    <header class="project-card-head">
+        <span class="project-card-icon"><i class="pi pi-folder"></i></span>
+        <div class="project-card-title">
+            <h3 [title]="project().projectName">{{ project().projectName }}</h3>
+            <span>{{ project().documentTypeName }}</span>
+        </div>
+        <app-tbl-action icon="pi pi-ellipsis-v" [actions]="actions()" [row]="project()" (action)="action.emit($event)"
+            (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" />
+    </header>
+
+    <div class="project-card-progress">
+        <div class="project-card-progress-label">
+            <span>Tiến độ xác nhận</span>
+            <strong>{{ progress() }}%</strong>
+        </div>
+        <div class="project-card-progress-track">
+            <div class="project-card-progress-fill" [style.width.%]="progress()"></div>
+        </div>
+    </div>
+
+    <dl class="project-card-stats">
+        <div>
+            <dd>{{ project().totalSubmission | currency }}</dd>
+            <dt>Văn bản</dt>
+        </div>
+        <div class="is-accent">
+            <dd>{{ project().checkedCount | currency }}</dd>
+            <dt>Đã xác nhận</dt>
+        </div>
+        <div class="is-blue">
+            <dd>{{ project().qaPassedCount === null ? '—' : (project().qaPassedCount | currency) }}</dd>
+            <dt>QA đạt</dt>
+        </div>
+        <div>
+            <dd>{{ project().memberCount | currency }}</dd>
+            <dt>Thành viên</dt>
+        </div>
+    </dl>
+
+    <footer class="project-card-foot">
+        <span class="project-card-period"><i class="pi pi-calendar"></i>{{ period() }}</span>
+        <span><i class="pi pi-user"></i>{{ project().creatorName || '—' }}</span>
+        <app-status-badge [badge]="statusBadge()" />
+    </footer>
+</article>

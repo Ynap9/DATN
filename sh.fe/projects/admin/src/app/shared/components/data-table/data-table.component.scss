@@ -46,6 +46,56 @@
     color: var(--app-muted) !important;
 }
 
+// Màn hẹp: cột dính trái thôi dính, nếu không STT + Tên + Thao tác chiếm hết bề ngang và không còn chỗ cuộn cột giữa
+@media (max-width: 767px) {
+    :host ::ng-deep .p-datatable .data-table-frozen-left {
+        position: static;
+    }
+}
+
+.data-table-empty-value {
+    color: var(--app-faint);
+}
+
+.data-table-settings-icon {
+    font-size: 16px;
+    color: var(--app-muted);
+    cursor: pointer;
+
+    &:hover {
+        color: var(--app-accent);
+    }
+}
+
+.data-table-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 140px;
+}
+
+.data-table-progress-track {
+    flex: 1;
+    height: 6px;
+    overflow: hidden;
+    background: var(--app-line);
+    border-radius: 4px;
+}
+
+.data-table-progress-fill {
+    height: 100%;
+    background: var(--app-accent);
+    border-radius: 4px;
+    transition: width 0.2s;
+}
+
+.data-table-progress-value {
+    min-width: 36px;
+    text-align: right;
+    font-size: 12px;
+    font-weight: 600;
+}
+
 .data-table-footer {
     display: flex;
     flex-wrap: wrap;

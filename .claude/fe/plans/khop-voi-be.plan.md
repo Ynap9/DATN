@@ -45,6 +45,20 @@
 Đăng nhập bằng `admin` vào được `/admin`, menu hiện đúng theo quyền, toast hiển thị đúng message lỗi nghiệp vụ
 từ BE; sẵn sàng làm màn hình theo [../architecture/06-them-man-hinh.md](../architecture/06-them-man-hinh.md).
 
+## Còn thiếu API
+
+🔬 Ghi từ Task 38 (2026-11-19, danh sách dự án V2). FE đã chừa chỗ: BE trả đúng tên field là cột tự hiện số, không sửa giao diện.
+
+| Việc | BE cần làm | FE đang hiện |
+|---|---|---|
+| Số trang | Nơi lưu số trang mỗi văn bản (`Submission` chưa có) — hỏi chủ đồ án về schema, rồi paging trả `totalPages` | Cột "Số trang" = "—" |
+| Đã OCR / Chưa OCR | Chờ module AI ghi kết quả OCR theo văn bản; paging trả `ocrDoneCount` / `ocrPendingCount` | Hai cột = "—", không lên thẻ |
+| Số đếm trên tab trạng thái | API đếm theo `status` (1 câu `GROUP BY`), cùng phạm vi xem với paging | Tab không có số |
+| Sort dữ liệu theo cột | Paging nhận tham số sort | "Sắp xếp" chỉ là thứ tự cột trong dialog ⚙ |
+
+⚠️ `ocrDoneCount` đếm **văn bản** đã OCR xong, không đếm số lần gọi OCR — dự án tham chiếu từng đếm cả lần OCR lại nên
+"Đã OCR" lớn hơn "Số văn bản". Đừng lấy số dòng log gọi AI làm số này.
+
 ## Điểm cần chú ý
 
 - Không đổi BE để chiều FE; nếu thấy hợp đồng BE bất hợp lý thì hỏi trước (skill `task-workflow`).

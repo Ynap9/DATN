@@ -1,0 +1,164 @@
+:host {
+    display: block;
+}
+
+.project-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+    padding: 16px;
+    background: var(--app-surface);
+    border: 1px solid var(--app-line);
+    border-radius: 14px;
+    box-shadow: var(--app-shadow);
+    cursor: pointer;
+    transition:
+        transform 0.15s,
+        box-shadow 0.15s,
+        border-color 0.15s;
+
+    &:hover,
+    &:focus-visible {
+        transform: translateY(-2px);
+        border-color: var(--app-line-strong);
+        box-shadow: var(--app-shadow-lg);
+        outline: none;
+    }
+}
+
+.project-card-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.project-card-icon {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--app-accent-soft);
+    color: var(--app-accent-700);
+}
+
+.project-card-title {
+    flex: 1;
+    min-width: 0;
+
+    h3 {
+        margin: 0;
+        overflow: hidden;
+        font-size: 15px;
+        font-weight: 600;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        color: var(--app-ink);
+    }
+
+    span {
+        font-size: 12px;
+        color: var(--app-muted);
+    }
+}
+
+.project-card-progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: var(--app-faint);
+
+    strong {
+        font-size: 13px;
+        color: var(--app-muted);
+    }
+}
+
+.project-card-progress-track {
+    height: 6px;
+    overflow: hidden;
+    border-radius: 20px;
+    background: var(--app-bg);
+}
+
+.project-card-progress-fill {
+    height: 100%;
+    border-radius: 20px;
+    background: linear-gradient(90deg, var(--app-accent), var(--app-accent-700));
+    transition: width 0.2s;
+}
+
+.project-card-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    margin: 0;
+    border: 1px solid var(--app-line);
+    border-radius: 10px;
+
+    > div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        padding: 10px 4px;
+
+        &:not(:last-child) {
+            border-right: 1px solid var(--app-line);
+        }
+    }
+
+    dd {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--app-ink);
+    }
+
+    dt {
+        font-size: 10px;
+        color: var(--app-faint);
+        white-space: nowrap;
+    }
+
+    .is-accent dd {
+        color: var(--app-accent-700);
+    }
+
+    .is-blue dd {
+        color: var(--app-blue);
+    }
+}
+
+.project-card-foot {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    font-size: 12px;
+    color: var(--app-muted);
+
+    > span {
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .project-card-period {
+        flex: none;
+    }
+
+    i {
+        margin-right: 4px;
+        font-size: 12px;
+        color: var(--app-faint);
+    }
+
+    app-status-badge {
+        margin-left: auto;
+    }
+}

@@ -115,7 +115,7 @@ export class DocumentTypeDetailComponent extends BaseComponent {
                 }
                 this.documentType = res.data;
                 this.defaultViewLabel = DOCUMENT_TYPE_VIEWS.find((view) => view.value === res.data.defaultView)?.label;
-                this.breadcrumbs = [{ label: 'Cấu hình dự án' }, { label: 'Metadata', routerLink: METADATA_URL }, { label: res.data.name }];
+                this.breadcrumbs = [{ label: 'Hồ sơ thi công' }, { label: 'Metadata', routerLink: METADATA_URL }, { label: res.data.name }];
                 this.loadFields();
             });
     }

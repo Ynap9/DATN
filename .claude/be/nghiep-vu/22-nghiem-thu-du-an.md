@@ -2,7 +2,7 @@
 
 > **Phần 22/22** · trước: [21-thanh-vien-du-an.md](21-thanh-vien-du-an.md) · mục lục: [README.md](README.md)
 
-Task 23 (2026-11-11): dự án đi `DEPLOYING` / `DOING` → `ACCEPTING` (đang nghiệm thu) → `DONE`. Tự vào nghiệm thu khi văn bản
+Task 23 (2026-11-11): dự án đi `DOING` (đang triển khai; `DEPLOYING` gộp vào từ Task 38) → `ACCEPTING` (đang nghiệm thu) → `DONE`. Tự vào nghiệm thu khi văn bản
 cuối cùng QA đạt — dự án không QA (Task 28, `Project.IsQaEnabled`, [07](07-du-an.md#có--không-qa--isqaenabled)): khi văn bản cuối
 được kiểm; Admin cho qua khi chưa đủ điều kiện (lý do tuỳ chọn). Đang nghiệm thu thì khoá import. Bằng chứng nằm trong `AuditLog`.
 
@@ -24,10 +24,10 @@ cuối cùng QA đạt — dự án không QA (Task 28, `Project.IsQaEnabled`, [
 
 | Thao tác | Từ | Sang | Điều kiện |
 |---|---|---|---|
-| Tự chuyển (trong `PUT submission/qa`) — dự án có QA | `DEPLOYING`, `DOING` | `ACCEPTING` | Kết quả QA là Đạt và dự án đủ điều kiện |
-| Tự chuyển (trong `PUT submission/check`) — dự án không QA | `DEPLOYING`, `DOING` | `ACCEPTING` | Dự án đủ điều kiện sau lần kiểm |
-| Tự chuyển (trong `DELETE submission`, Task 32) — mọi dự án | `DEPLOYING`, `DOING` | `ACCEPTING` | Xoá đúng văn bản cuối còn chặn; xoá hết văn bản thì không |
-| `POST {id:int}/acceptance/start` | `DEPLOYING`, `DOING` | `ACCEPTING` | Đủ, hoặc Admin `isForced` (lý do tuỳ chọn) |
+| Tự chuyển (trong `PUT submission/qa`) — dự án có QA | `DOING` | `ACCEPTING` | Kết quả QA là Đạt và dự án đủ điều kiện |
+| Tự chuyển (trong `PUT submission/check`) — dự án không QA | `DOING` | `ACCEPTING` | Dự án đủ điều kiện sau lần kiểm |
+| Tự chuyển (trong `DELETE submission`, Task 32) — mọi dự án | `DOING` | `ACCEPTING` | Xoá đúng văn bản cuối còn chặn; xoá hết văn bản thì không |
+| `POST {id:int}/acceptance/start` | `DOING` | `ACCEPTING` | Đủ, hoặc Admin `isForced` (lý do tuỳ chọn) |
 | `POST {id:int}/acceptance/finish` | `ACCEPTING` | `DONE` | Đủ, hoặc Admin `isForced` (lý do tuỳ chọn) |
 | `POST {id:int}/acceptance/reopen` | `ACCEPTING` | `DOING` | Chỉ Admin, bắt buộc lý do |
 
@@ -61,7 +61,7 @@ của dự án xem **đủ như nhau** (cùng số liệu, chỉ `canForce` khá
 ## Luật và mã lỗi
 
 Thứ tự kiểm trong `ProjectService`: dự án không có `303` → người gọi (`EnsureCanAcceptAsync`: không phải Admin và không là Leader
-đang hoạt động của dự án → `337`; reopen `EnsureCanReopen`: không phải Admin → `400` "Chỉ Admin được trả dự án về đang làm") → sai
+đang hoạt động của dự án → `337`; reopen `EnsureCanReopen`: không phải Admin → `400` "Chỉ Admin được trả dự án về đang triển khai") → sai
 trạng thái nguồn `342` (entity `StartAcceptance` / `FinishAcceptance` / `ReopenFromAcceptance`) → đếm rồi `EnsureAcceptanceAllowed`:
 
 | Tình huống | Kết quả |
@@ -84,7 +84,7 @@ trạng thái nguồn `342` (entity `StartAcceptance` / `FinishAcceptance` / `Re
 `ReviewQa` (có QA): sau khối chốt phiếu FULL, chỉ khi kết quả là Đạt. `Check` (không QA, Task 28): sau `AssignCheckedToQaAsync` +
 `SaveChanges`, trước commit, chỉ khi `!project.IsQaEnabled`. `Delete` (Task 32): sau lưu xoá + `ReleaseDeletedSubmissionsAsync`, không
 điều kiện. Cả ba trong **cùng transaction**, gọi chung
-`ProjectDomainService.TryStartAcceptanceAsync` (đếm theo cờ của `project`) — dự án `DEPLOYING` / `DOING` → khoá dòng `Project`
+`ProjectDomainService.TryStartAcceptanceAsync` (đếm theo cờ của `project`) — dự án `DOING` → khoá dòng `Project`
 (`ProjectRepository.LockAsync`, `UPDLOCK, HOLDLOCK`) → đếm → đủ thì `TryStartAcceptanceAsync` (UPDATE có điều kiện trạng thái) trả `1`
 mới gọi `project.StartAcceptance`, rồi ghi audit `IsAutomatic = true`, người ghi = người vừa QA / kiểm / xoá. Khối này là private
 `SubmissionService.TryStartAcceptanceAutomaticallyAsync`, mỗi chỗ gọi giữ điều kiện riêng.
@@ -95,10 +95,14 @@ mới gọi `project.StartAcceptance`, rồi ghi audit `IsAutomatic = true`, ng�
 
 ## Audit — bằng chứng nghiệm thu
 
-Action `Bắt đầu nghiệm thu` / `Hoàn tất nghiệm thu` / `Trả dự án về đang làm` (`AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_*`), type
+Action `Bắt đầu nghiệm thu` / `Hoàn tất nghiệm thu` / `Trả dự án về đang triển khai` (`AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_*`), type
 `Update`. `oldData { ProjectId, Status }`; `newData { ProjectId, Status, IsForced, IsAutomatic, Reason, Summary }` — `IsForced = !IsReady`
 lúc chuyển, `Summary` = dòng tổng của `GET` lúc chuyển. `GET acceptance` đọc audit mới nhất để ra `lastTransition` (`action`,
 `createdDate`, `userName`, `fullName`, `oldStatus`, `newStatus`, `isForced`, `isAutomatic`, `reason`).
+
+⚠️ Lịch sử nghiệm thu (timeline + biên bản PDF) lọc audit theo **đúng chuỗi** `Action`. Task 38 đổi chữ reopen từ "Trả dự án về đang
+làm" sang "đang triển khai" ⇒ dòng cũ biến khỏi lịch sử. DB nào còn dòng cũ thì chạy tay `UPDATE core.AuditLog SET Action = N'Trả dự án
+về đang triển khai' WHERE Action = N'Trả dự án về đang làm'`; đừng thêm hằng chữ cũ vào code (chốt 2026-11-19).
 
 ⚠️ `AuditLog` không có cột `ProjectId`: lần chuyển gần nhất lọc `NewData LIKE '{"ProjectId":<id>,%'`. `ProjectId` **phải** là trường
 **đầu tiên** của `newData` (serializer PascalCase của `AuditLogUtils`); thêm trường lên trước là `lastTransition` thành `null`.
@@ -141,7 +145,7 @@ chuyển; 3/3 vòng kiểm song song hai văn bản cuối → đúng 1 audit; n
 Ngày 2026-11-14 (Task 32, `ZZTEST32` đã dọn): `Check` / `ReviewQa` sau khi gom khối vẫn chuyển đúng; `Delete` văn bản cuối còn chặn (có
 và không QA) → `ACCEPTING` + audit, `lastTransition` đúng; đang `ACCEPTING`, còn chặn, xoá hết văn bản → không đổi; `325` → không lưu gì.
 Ngày 2026-11-14 (Task 34, `ZZTEST34` đã dọn) — biên bản **36/36** (30 ca chạy thẳng + 6 ca bảng chuyển chạy lại sau khi sửa script so chữ bị
-xuống dòng trong ô): `DOING` / `DEPLOYING` / `EXPIRED` → `400`; dự án có QA đi force có lý do → reopen → QA văn bản cuối tự chuyển → hoàn tất
+xuống dòng trong ô): `DOING` / `EXPIRED` → `400`; dự án có QA đi force có lý do → reopen → QA văn bản cuối tự chuyển → hoàn tất
 đủ điều kiện, PDF `DONE` đúng 4 dòng chuyển, người / cách chuyển / lý do; bảng loại văn bản + Tổng khớp `GET acceptance`, số ô A 3 / B 2 /
 C (đã gỡ) 1 khớp đếm tay (loại ô trắng, trường không tính tiền, trường và văn bản đã xoá); Leader đang hoạt động xuất được, Leader tắt / Data
 / QA `337`, người ngoài `303` cùng thông báo id không có; dự án không QA không có cột QA, văn bản chưa kiểm không tính ô; 61 lần chuyển → 7
@@ -154,8 +158,8 @@ bản xen với ký số lô (người dùng bỏ qua, cần token).
 
 ⚠️ QA chế độ `SAMPLE` không QA hết văn bản nên dự án không tự vào nghiệm thu, phải Admin force — Task 18D quyết định lại "đủ điều kiện".
 
-⚠️ Khoá dòng dự án làm các lần QA đạt trên cùng dự án `DEPLOYING` / `DOING` xếp hàng ở bước cuối (khoá giữ tới commit, ngắn).
-Từ Task 28 khoá này **cũng chạy ở mỗi lần Check** của dự án không QA đang `DEPLOYING` / `DOING`. Thứ tự khoá ở `Check`: cặp dự án +
+⚠️ Khoá dòng dự án làm các lần QA đạt trên cùng dự án `DOING` xếp hàng ở bước cuối (khoá giữ tới commit, ngắn).
+Từ Task 28 khoá này **cũng chạy ở mỗi lần Check** của dự án không QA đang `DOING`. Thứ tự khoá ở `Check`: cặp dự án +
 loại văn bản (`AssignCheckedToQaAsync`, chỉ khi có QA phụ trách) rồi mới dự án; `Delete` cũng cặp (`LockImportAsync`) rồi dự án; `ReviewQa`
 nhánh Đạt chỉ khoá dự án — không ngược chiều.
 
