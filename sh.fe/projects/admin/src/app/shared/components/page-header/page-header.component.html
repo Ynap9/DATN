@@ -1,6 +1,11 @@
 <app-breadcrumb [home]="home" [items]="breadcrumbs()" />
 <div class="page-header-row">
-    <h1 class="page-header-title">{{ title() }}</h1>
+    <div>
+        <h1 class="page-header-title">{{ title() }}</h1>
+        @if (description()) {
+            <p class="page-header-description">{{ description() }}</p>
+        }
+    </div>
     <div class="page-header-actions">
         <ng-content />
     </div>

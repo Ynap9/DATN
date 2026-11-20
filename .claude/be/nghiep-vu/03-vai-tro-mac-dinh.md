@@ -22,7 +22,7 @@ Bốn vai trò `Leader`, `Data`, `QA`, `User` chưa có quyền nào sau khi see
 `PUT api/auth/role/permission`.
 
 `Function.Construction.Project.Accept` (nghiệm thu dự án, Task 23) chỉ Admin có qua seeder. Gán thêm cho Leader thì Leader bắt
-đầu / hoàn tất được khi **đủ** điều kiện và chỉ ở dự án mình đang là Leader (`337`); cho vào khi chưa đủ và trả dự án về đang làm vẫn
+đầu / hoàn tất được khi **đủ** điều kiện và chỉ ở dự án mình đang là Leader (`337`); cho vào khi chưa đủ và trả dự án về đang triển khai vẫn
 chỉ Admin / SuperAdmin (`400`, [22](22-nghiem-thu-du-an.md)).
 
 `Function.Construction.Project.View` gán cho Leader id 2, Data id 3, QA id 4 bằng `PUT api/auth/role/permission` trên DB dev ngày

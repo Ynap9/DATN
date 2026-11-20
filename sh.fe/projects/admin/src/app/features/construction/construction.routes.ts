@@ -12,7 +12,6 @@ const PROJECT_PERMISSIONS = [PermissionConstants.MENU_PROJECT, PermissionConstan
 export const CONSTRUCTION_ROUTES: Routes = [
     { path: 'project', component: ProjectListComponent, canActivate: [permissionGuard], data: { permissions: PROJECT_PERMISSIONS } },
     { path: 'project/:id', component: ProjectDetailComponent, canActivate: [permissionGuard], data: { permissions: PROJECT_PERMISSIONS } },
-    { path: 'project-config', redirectTo: 'project-config/metadata', pathMatch: 'full' },
-    { path: 'project-config/metadata', component: DocumentTypeListComponent, canActivate: [permissionGuard], data: { permissions: DOCUMENT_TYPE_PERMISSIONS } },
-    { path: 'project-config/metadata/:id', component: DocumentTypeDetailComponent, canActivate: [permissionGuard], data: { permissions: DOCUMENT_TYPE_PERMISSIONS } },
+    { path: 'metadata', component: DocumentTypeListComponent, canActivate: [permissionGuard], data: { permissions: DOCUMENT_TYPE_PERMISSIONS } },
+    { path: 'metadata/:id', component: DocumentTypeDetailComponent, canActivate: [permissionGuard], data: { permissions: DOCUMENT_TYPE_PERMISSIONS } },
 ];

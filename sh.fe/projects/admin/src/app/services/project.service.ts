@@ -12,7 +12,8 @@ export class ProjectService {
     http = inject(HttpClient);
 
     findPaging(query: IFindPagingProject) {
-        return this.http.get<IBaseResponsePaging<IViewProjectPair>>(`${this.api}/paging`, { params: { ...query } });
+        const params = Object.fromEntries(Object.entries(query).filter(([, value]) => value !== undefined && value !== null && value !== ''));
+        return this.http.get<IBaseResponsePaging<IViewProjectPair>>(`${this.api}/paging`, { params });
     }
 
     findById(id: number) {

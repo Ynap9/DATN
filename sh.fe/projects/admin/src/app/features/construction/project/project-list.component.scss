@@ -1,0 +1,212 @@
+:host {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+app-page-header {
+    margin-bottom: 0;
+}
+
+.project-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.project-view-toggle {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid var(--app-line);
+    border-radius: 8px;
+
+    button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--app-muted);
+        cursor: pointer;
+
+        &:hover {
+            color: var(--app-ink);
+        }
+
+        &.is-active {
+            background: var(--app-accent-soft);
+            color: var(--app-accent-700);
+        }
+    }
+}
+
+.project-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--app-line);
+}
+
+.project-tab {
+    position: relative;
+    padding: 10px 16px;
+    border: 0;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--app-muted);
+    cursor: pointer;
+
+    &:hover {
+        color: var(--app-ink);
+    }
+
+    &.is-active {
+        color: var(--app-accent-700);
+
+        &::after {
+            content: '';
+            position: absolute;
+            left: 12px;
+            right: 12px;
+            bottom: -1px;
+            height: 2px;
+            background: var(--app-accent);
+        }
+    }
+
+    @each $tone in 'amber', 'green', 'red' {
+        &.project-tab--#{$tone}.is-active {
+            color: var(--app-#{$tone});
+
+            &::after {
+                background: currentColor;
+            }
+        }
+    }
+}
+
+.project-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.project-search {
+    position: relative;
+    flex: 1 1 320px;
+    max-width: 320px;
+
+    .pi-search {
+        position: absolute;
+        top: 50%;
+        left: 12px;
+        transform: translateY(-50%);
+        font-size: 13px;
+        color: var(--app-faint);
+    }
+
+    input {
+        width: 100%;
+        height: 36px;
+        padding-left: 34px;
+        border-color: var(--app-line);
+        border-radius: 8px;
+
+        &:focus {
+            border-color: var(--app-accent);
+            box-shadow: 0 0 0 3px var(--app-accent-soft);
+        }
+    }
+}
+
+.project-metadata {
+    width: 220px;
+}
+
+.project-filter-summary {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--app-muted);
+}
+
+.project-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 16px;
+}
+
+.project-card-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background: var(--app-surface);
+    border: 1px solid var(--app-line);
+    border-radius: 14px;
+}
+
+.project-card-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--app-muted);
+
+    ::ng-deep .p-paginator {
+        background: transparent;
+    }
+}
+
+@media (max-width: 767px) {
+    .project-search,
+    .project-metadata {
+        flex-basis: 100%;
+        width: 100%;
+        max-width: none;
+    }
+}
+
+:host ::ng-deep .project-table .p-datatable {
+    .p-datatable-thead > tr > th {
+        background: var(--app-bg);
+        font-size: 12px;
+        letter-spacing: 0;
+        text-transform: none;
+    }
+
+    .p-datatable-tbody > tr > td {
+        padding: 10px 16px;
+    }
+
+    .p-datatable-tbody > tr:hover > td {
+        background: var(--app-bg);
+    }
+
+    .project-name-cell span {
+        font-weight: 500;
+        color: var(--app-ink);
+
+        &:hover {
+            color: var(--app-accent);
+            text-decoration: underline;
+        }
+    }
+
+    .project-ocr-done {
+        color: var(--app-accent-700);
+    }
+
+    .project-ocr-pending {
+        color: var(--app-amber);
+    }
+}

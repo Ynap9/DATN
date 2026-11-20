@@ -1,4 +1,4 @@
-<p-table [value]="data() || []" [dataKey]="dataKey()" [loading]="loading()" [rowHover]="true" [stripedRows]="true"
+<p-table [value]="data() || []" [dataKey]="dataKey()" [loading]="loading()" [rowHover]="true" [stripedRows]="true" [scrollable]="hasFrozen()"
     [resizableColumns]="true" columnResizeMode="expand" (onColResize)="onColumnResize($event)"
     [selection]="selection()" (selectionChange)="selection.set($event)"
     (onRowReorder)="rowReorder.emit({ dragIndex: $event.dragIndex!, dropIndex: $event.dropIndex! })">
@@ -10,12 +10,19 @@
             @if (reorderable()) {
                 <th style="width: 48px"></th>
             }
-            @for (col of columns(); track $index) {
-                <th [style]="col.headerContainerStyle" pResizableColumn>
+            @for (col of visibleColumns(); track getColumnKey(col)) {
+                <th [style]="col.headerContainerStyle" pResizableColumn [attr.data-col-key]="getColumnKey(col)"
+                    pFrozenColumn [frozen]="!!col.frozen" [alignFrozen]="col.frozen ?? 'left'"
+                    [class.data-table-frozen-left]="col.frozen === 'left'">
                     @if (col.cellViewType === cellViewTypes.CHECKBOX) {
                         <input type="checkbox" [checked]="isAllChecked(col.field)" (change)="onHeaderCheckbox(col)" />
+                    } @else if (columnSettings() && col.cellViewType === cellViewTypes.ACTIONS) {
+                        <i class="pi pi-cog data-table-settings-icon" pTooltip="Cấu hình cột" tooltipPosition="left" (click)="openColumnSettings()"></i>
                     } @else {
                         {{ col.header }}
+                        @if (col.filter) {
+                            <app-data-table-column-filter [column]="col" [value]="filterValues()[getColumnKey(col)]" (apply)="onFilterApply(col, $event)" />
+                        }
                     }
                 </th>
             }
@@ -29,8 +36,9 @@
             @if (reorderable()) {
                 <td><span class="pi pi-bars cursor-move text-muted-color" pReorderableRowHandle></span></td>
             }
-            @for (col of columns(); track $index) {
-                <td [style]="col.cellStyle" [class]="col.cellClass">
+            @for (col of visibleColumns(); track getColumnKey(col)) {
+                <td [style]="col.cellStyle" [class]="col.cellClass" pFrozenColumn [frozen]="!!col.frozen" [alignFrozen]="col.frozen ?? 'left'"
+                    [class.data-table-frozen-left]="col.frozen === 'left'">
                     @switch (col.cellViewType) {
                         @case (cellViewTypes.INDEX) {
                             {{ getIndex(rowIndex) }}
@@ -40,6 +48,14 @@
                         }
                         @case (cellViewTypes.CURRENCY) {
                             {{ get(row, col.field) | currency }}
+                        }
+                        @case (cellViewTypes.NUMBER) {
+                            @let number = get(row, col.field) | currency;
+                            @if (number) {
+                                {{ number }}
+                            } @else {
+                                <span class="data-table-empty-value">{{ emptyText }}</span>
+                            }
                         }
                         @case (cellViewTypes.CHECKBOX) {
                             <input type="checkbox" [checked]="get(row, col.field)" (change)="onCellClick(col, row)" />
@@ -55,6 +71,22 @@
                         }
                         @case (cellViewTypes.ACTIONS) {
                             <app-tbl-action [actions]="col.actions" [row]="row" (action)="action.emit({ type: $event, row })" />
+                        }
+                        @case (cellViewTypes.PROGRESS) {
+                            <div class="data-table-progress" [pTooltip]="col.progressTooltip?.(row) ?? ''" tooltipPosition="top">
+                                <div class="data-table-progress-track">
+                                    <div class="data-table-progress-fill" [style.width.%]="getProgress(row, col.field)"></div>
+                                </div>
+                                <span class="data-table-progress-value">{{ getProgress(row, col.field) }}%</span>
+                            </div>
+                        }
+                        @case (cellViewTypes.BADGE) {
+                            @let badge = col.badge?.(row);
+                            @if (badge) {
+                                <app-status-badge [badge]="badge" />
+                            } @else {
+                                {{ emptyText }}
+                            }
                         }
                         @case (cellViewTypes.CUSTOM_COMP) {
                             <ng-container [ngComponentOutlet]="col.customComponent" [ngComponentOutletInjector]="customInjector"
@@ -74,7 +106,7 @@
     </ng-template>
     <ng-template #emptymessage>
         <tr>
-            <td [attr.colspan]="columns().length + (selectable() ? 1 : 0) + (reorderable() ? 1 : 0)" class="data-table-empty">
+            <td [attr.colspan]="visibleColumns().length + (selectable() ? 1 : 0) + (reorderable() ? 1 : 0)" class="data-table-empty">
                 <ng-content select="[tableEmpty]">Không có dữ liệu</ng-content>
             </td>
         </tr>

@@ -18,10 +18,10 @@ Trường: `Name`, `StartedAt`, `EndedAt`, `Status`, `UrlGoogleSheetSync`, `Goog
 | Xoá | `DELETE api/construction/project/{id}` | `Function.Construction.Project.Delete` |
 | Xoá kèm dữ liệu phụ thuộc, chỉ Admin ([25](25-xoa-du-an-danh-sach-cap.md)) | `DELETE api/construction/project/admin/delete/{id:int}` | `Function.Construction.Project.Delete` |
 | Tổng hợp nghiệm thu, xuất PDF biên bản nghiệm thu ([22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md)) | `GET api/construction/project/{id:int}/acceptance`, `.../acceptance/report` | `Function.Construction.Project.View` |
-| Bắt đầu / hoàn tất nghiệm thu, trả về đang làm | `POST .../{id:int}/acceptance/start`, `.../finish`, `.../reopen` | `Function.Construction.Project.Accept` |
+| Bắt đầu / hoàn tất nghiệm thu, trả về đang triển khai | `POST .../{id:int}/acceptance/start`, `.../finish`, `.../reopen` | `Function.Construction.Project.Accept` |
 | Hạn dự án: danh sách, chạy job, trạng thái job, lịch sử mail ([15-han-du-an.md](15-han-du-an.md)) | `GET deadline`, `POST deadline-check/run`, `GET deadline-check/status`, `GET deadline-notification/paging` | `Function.Construction.Project.Deadline` |
 
-Body tạo: `{ "name", "startedAt", "endedAt", "isQaEnabled", "documentTypeIds": [] }` (`isQaEnabled` không gửi = `true`). Hệ thống tự gán `status = DEPLOYING` (đang triển khai)
+Body tạo: `{ "name", "startedAt", "endedAt", "isQaEnabled", "documentTypeIds": [] }` (`isQaEnabled` không gửi = `true`). Hệ thống tự gán `status = DOING` (đang triển khai)
 và `googleSheetName = name`; FE không gửi hai trường này. Tạo xong trả `data` cùng dạng `GET {id}` (`FindProjectByIdDto`:
 `id`, `name`, `startedAt`, `endedAt`, `status`, `urlGoogleSheetSync`, `googleSheetName`, `isQaEnabled`, `documentTypeIds`).
 Body sửa: `{ "name", "startedAt", "endedAt", "status", "documentTypeIds": [] }` — **không** sửa được `urlGoogleSheetSync`,
@@ -29,7 +29,7 @@ Body sửa: `{ "name", "startedAt", "endedAt", "status", "documentTypeIds": [] }
 
 Dropdown trả `[{ id, name }]` sắp theo `name`. Danh sách không phân trang (`GetListProjectDto`: `id`, `name`, `startedAt`,
 `endedAt`, `status`, `urlGoogleSheetSync`, `isQaEnabled`) sắp mới tạo trước (`CreatedDate` giảm dần, rồi `Id` giảm dần). Paging từ Task 29
-trả theo cặp dự án – loại văn bản ([25](25-xoa-du-an-danh-sach-cap.md#danh-sách-cặp--get-apiconstructionprojectpaging)).
+trả theo cặp dự án – loại văn bản, Task 38 thêm lọc `creatorKeyword` / khoảng ngày và trường `creatorName` ([25](25-xoa-du-an-danh-sach-cap.md#danh-sách-cặp--get-apiconstructionprojectpaging)).
 Cả ba API bỏ dự án đã xoá mềm và giới hạn theo người gọi ([Phạm vi xem](#phạm-vi-xem--task-30)).
 
 ## Phạm vi xem — Task 30
@@ -85,8 +85,7 @@ khoá ngoại; chưa có API riêng — chỉ được ghi qua CRUD dự án (xe
 
 | Hằng | Giá trị | Nghĩa |
 |---|---|---|
-| `DEPLOYING` | `1` | Đang triển khai (gán khi tạo) |
-| `DOING` | `2` | Đang làm |
+| `DOING` | `2` | Đang triển khai (gán khi tạo). Giá trị `1` (`DEPLOYING`) đã gộp vào đây từ Task 38 (`UPDATE` 1 → 2 chạy tay) |
 | `ACCEPTING` | `3` | Đang nghiệm thu: khoá import (`341`), kiểm tra / QA vẫn được |
 | `DONE` | `4` | Đã xong |
 
@@ -119,7 +118,7 @@ migration `Add_Project_IsQaEnabled`.
 
 Thứ tự trong `ProjectService.Create`:
 
-1. Kiểm tên trùng, dựng `Project.Create` (kiểm ngày, gán `DEPLOYING`, `GoogleSheetName = Name`) — lỗi ở đây thì **chưa** gọi Google.
+1. Kiểm tên trùng, dựng `Project.Create` (kiểm ngày, gán `DOING`, `GoogleSheetName = Name`) — lỗi ở đây thì **chưa** gọi Google.
 2. Đọc tài khoản Google từ bảng cấu hình ([08-cau-hinh-du-an.md](08-cau-hinh-du-an.md)); thiếu dòng nào → `304` nêu tên.
    `IGoogleSheetExternal.CreateSpreadsheetAsync(account, Name, GoogleSheetName)`: tạo file trong thư mục `GoogleFolderId`,
    tên file = `Name`, sheet đầu đổi tên = `GoogleSheetName`. Lỗi Google → `205`, không lưu gì.

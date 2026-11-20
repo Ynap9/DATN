@@ -13,7 +13,7 @@ import { BaseComponent } from '@/shared/base/base.component';
 import { PROJECT_STATUS, PROJECT_STATUSES } from '@/shared/constants/project.constants';
 import { SharedImports } from '@/shared/import.shared';
 
-const EDITABLE_STATUSES: number[] = [PROJECT_STATUS.DEPLOYING, PROJECT_STATUS.DOING, PROJECT_STATUS.EXPIRED];
+const EDITABLE_STATUSES: number[] = [PROJECT_STATUS.DOING, PROJECT_STATUS.EXPIRED];
 
 // Ngày là chuỗi local 'YYYY-MM-DDT00:00:00' của sh-calendar nên so chuỗi là đủ
 function dateRangeValidator(group: AbstractControl): ValidationErrors | null {
@@ -46,7 +46,7 @@ export class ProjectFormComponent extends BaseComponent {
             // Paging dự án dựa trên ProjectDocumentType: dự án không có metadata sẽ không hiện ở danh sách
             documentTypeIds: new FormControl<number[]>(this.project?.documentTypeIds ?? [], { nonNullable: true, validators: [Validators.required] }),
             isQaEnabled: new FormControl(this.project?.isQaEnabled ?? true, { nonNullable: true }),
-            status: new FormControl({ value: this.project?.status ?? PROJECT_STATUS.DEPLOYING, disabled: this.isStatusLocked }, { nonNullable: true }),
+            status: new FormControl({ value: this.project?.status ?? PROJECT_STATUS.DOING, disabled: this.isStatusLocked }, { nonNullable: true }),
         },
         { validators: dateRangeValidator },
     );

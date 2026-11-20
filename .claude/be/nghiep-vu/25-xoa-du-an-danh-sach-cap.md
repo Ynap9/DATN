@@ -44,7 +44,9 @@ Sau khi xoá: `GET {id}`, mở hồ sơ, `my-assignment`… của dự án đề
 Mỗi dòng là **một cặp (dự án, loại văn bản)** (`ProjectDocumentType`), không còn một dòng một dự án. Quyền vẫn
 `Function.Construction.Project.View` — Leader / Data / QA phải được gán tay ([03](03-vai-tro-mac-dinh.md)).
 
-Lọc: `pageNumber`, `pageSize`, `keyword` (tên dự án), `status`, `documentTypeId` (mới). Phạm vi: Admin / SuperAdmin thấy mọi cặp;
+Lọc: `pageNumber`, `pageSize`, `keyword` (tên dự án), `status`, `documentTypeId`; Task 38 thêm `creatorKeyword` (chứa trong
+UserName người tạo, subquery `Users` không kéo về RAM) và `startedFrom` / `startedTo` / `endedFrom` / `endedTo` (theo ngày, gồm
+hai đầu: `>= From.Date`, `< To.Date + 1`), kết hợp AND với nhau. Phạm vi: Admin / SuperAdmin thấy mọi cặp;
 người khác chỉ thấy cặp mình có dòng `ProjectMember` chưa gỡ (kể cả đang ngưng hoạt động). Sắp dự án mới tạo trước, trong dự án
 theo tên loại văn bản, loại đã xoá mềm xếp cuối nhưng **vẫn hiện** với tên cũ.
 
@@ -54,6 +56,7 @@ Item `GetListProjectPairDto`:
 |---|---|
 | `projectId`, `projectName`, `status`, `startedAt`, `endedAt`, `isQaEnabled` | Thông tin dự án |
 | `urlGoogleSheetSync` | Chỉ Admin / Leader; Data / QA nhận `null` |
+| `creatorName` | UserName người tạo (`Project.CreatedBy` → `Users`, Task 38); user không còn → `null` |
 | `documentTypeId`, `documentTypeName` | Loại văn bản của cặp |
 | `viewerRole` | `Admin` hoặc vai trò thành viên của người gọi trong cặp (`Leader` / `Data` / `QA`) |
 | `memberCount` | Mọi `ProjectMember` chưa gỡ của cặp, kể cả Leader và người ngưng hoạt động |

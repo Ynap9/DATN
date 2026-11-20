@@ -27,7 +27,8 @@ Body tạo / sửa: `{ "name": "...", "defaultView": 1 }`. Bỏ `defaultView` kh
 - So khớp tên **không phân biệt hoa thường** (theo collation mặc định của SQL Server).
 - Xoá là **xoá mềm**: bản ghi biến mất khỏi danh sách và chi tiết (lỗi `301`), tên được dùng lại. Còn dự án chưa xoá đang gắn
   loại này → `346` (Task 29, [25](25-xoa-du-an-danh-sach-cap.md#chặn-xoá-loại-văn-bản-đang-dùng--346)).
-- Danh sách lọc `keyword` theo `Name`, sắp mới tạo trước; `pageSize = -1` lấy tất cả.
+- Danh sách lọc `keyword` theo `Name`, sắp mới tạo trước; `pageSize = -1` lấy tất cả. Mỗi dòng có thêm số trường, số dự án đang
+  dùng, ngày tạo ([dưới](#danh-sách--số-trường-số-dự-án-đang-dùng--task-39)).
 - `{id}/document-fields` trả **mọi cột** (`GetListDocumentFieldDto`) của các trường chưa xoá thuộc loại văn bản, không phân
   trang, sắp theo `OrderTableView` rồi `Id`. Loại văn bản không tồn tại hoặc đã xoá → `301`; chưa có trường → `[]`. Nằm ở
   `DocumentTypeService` / `DocumentTypeQuery` (theo yêu cầu), không ở `DocumentFieldService`.
@@ -51,6 +52,27 @@ dự án – loại văn bản **đang gắn** (`ProjectDocumentType` chưa xoá
 - API ghi (tạo / sửa / xoá) không đổi — Leader / Data / QA không có quyền Create / Update / Delete.
 - Đã kiểm 2026-11-14 bằng API thật (bản build mới chạy cổng riêng, dữ liệu ZZTEST36 đã dọn): Admin / Leader / Data / QA / người ngoài
   ở cả năm API, gỡ rồi chọn lại loại — 46/46 cùng phần gỡ metadata ở [07](07-du-an.md#loại-văn-bản-của-dự-án--projectdocumenttype).
+
+## Danh sách — số trường, số dự án đang dùng — Task 39
+
+Task 39 (2026-11-20): `GET paging` trả thêm (chỉ thêm, trường cũ `id`, `name`, `defaultView` giữ nguyên) để Admin biết metadata nào
+đang dùng mà không mở từng cái. Đếm bằng subquery `COUNT` trong **một** câu SQL (`DocumentTypeQuery.FindPaging` chiếu `Select` tay).
+
+| Trường | Luật |
+|---|---|
+| `fieldCount` | Số `DocumentField` chưa xoá của loại |
+| `projectCount` | Số dự án **khác nhau** chưa xoá đang gắn loại (`ProjectDocumentType` chưa xoá), mọi trạng thái kể cả `DONE` / `EXPIRED` — cùng luật chặn xoá `IsUsedByProjectAsync`: `> 0` thì xoá trả `346`. Người khác Admin chỉ đếm dự án mình là thành viên chưa gỡ của đúng cặp đó (cùng điều kiện `FilterViewable`) |
+| `createdDate` | `DocumentType.CreatedDate`, có thể `null` |
+
+⚠️ Vì người khác Admin chỉ đếm trong phạm vi mình, metadata còn dự án khác dùng vẫn có thể ra `projectCount = 0` với họ. FE ẩn nút
+Xóa theo số này nên nếu sau này gán `DocumentType.Delete` cho Leader / Data / QA, họ thấy Xóa rồi nhận `346`. Hiện chỉ Admin có quyền
+Delete nên không gặp (chốt 2026-11-20 giữ đúng spec); đừng "sửa" bằng cách đếm mọi dự án cho người khác — lộ số dự án ngoài phạm vi.
+
+Đã kiểm 2026-11-20 bằng API thật (bản build mới chạy cổng riêng, dữ liệu ZZTEST39 tạo bằng API + SQL, đã dọn): 3 trường có trong
+response; xoá mềm 1 trường → `fieldCount` −1; gắn 2 dự án (`DOING` + `DONE`) → `projectCount` 2; Leader / Data chỉ là thành viên dự án
+đầu → chỉ thấy metadata đó, `projectCount` 1; `346` khi còn dự án; xoá mềm dự án → giảm; về 0 thì xoá được; số 3 metadata thật khớp SQL
+đếm tay và không đổi sau test. SQL log: một câu, nhánh Admin EF bỏ hẳn điều kiện thành viên. Trình duyệt cùng ngày (Admin / Leader /
+Data / User): menu, route mới, `project-config` → not found, 7 cột, ẩn / hiện "Xóa", User không thấy menu và bị guard chặn URL.
 
 ## Đã kiểm thực tế
 

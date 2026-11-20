@@ -3,6 +3,33 @@ import { CellViewType } from '@/shared/constants/data-table.constants';
 
 export type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast';
 
+export type BadgeTone = 'blue' | 'amber' | 'green' | 'red' | 'gray';
+
+export interface ITableBadge {
+    label: string;
+    tone: BadgeTone;
+}
+
+export interface IColumnFilter {
+    type: 'text' | 'select' | 'dateRange';
+    options?: { label: string; value: unknown }[];
+}
+
+export interface IDateRangeValue {
+    from?: string;
+    to?: string;
+}
+
+// key cột → giá trị lọc: chuỗi (text), giá trị option (select), IDateRangeValue (dateRange)
+export interface IColumnFilterValue {
+    [key: string]: unknown;
+}
+
+export interface IColumnSetting {
+    key: string;
+    visible: boolean;
+}
+
 export interface ITableAction {
     type: string;
     label: string;
@@ -20,6 +47,14 @@ export interface ITableEvent<T = any> {
 export interface IColumn<T = any> {
     header: string;
     field?: string;
+    // Khoá ổn định để nhớ độ rộng / cấu hình cột; mặc định = field, cột không field thì = header
+    key?: string;
+    frozen?: 'left' | 'right';
+    filter?: IColumnFilter;
+    // Luôn hiện, không kéo trong dialog cấu hình cột
+    locked?: boolean;
+    // Ẩn mặc định khi bật cấu hình cột
+    hidden?: boolean;
     headerContainerStyle?: string;
     cellClass?: string;
     cellStyle?: string;
@@ -30,6 +65,8 @@ export interface IColumn<T = any> {
     customComponent?: Type<unknown>;
     statusSeverity?: (row: T) => TagSeverity;
     disabled?: (row: T) => boolean;
+    progressTooltip?: (row: T) => string;
+    badge?: (row: T) => ITableBadge;
 }
 
 export interface ITableRowReorder {

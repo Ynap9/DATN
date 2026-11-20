@@ -9,6 +9,7 @@ namespace sh.be.applications.Module.Construction.Dtos.Project
         public DateTime? EndedAt { get; set; }
         public bool IsQaEnabled { get; set; }
         public string? UrlGoogleSheetSync { get; set; }
+        public string? CreatorName { get; set; }
         public int DocumentTypeId { get; set; }
         public string DocumentTypeName { get; set; } = String.Empty;
         public string ViewerRole { get; set; } = String.Empty;
