@@ -57,7 +57,7 @@ export class RoleService {
 | `digital-signature` | Mẫu chữ ký, lô ký, plugin | `api/v1/digital-signature/...` |
 | `packaging` | Cấu hình đóng gói TT05 | `api/v1/packaging/...` |
 | `operation` | Nhóm nhân viên, thành viên dự án | `api/v1/operation/...` |
-| `ai` | Nhà cung cấp AI | `api/v1/ai/...` |
+| `ai` | Nhà cung cấp AI, **Prompt OCR** (tab trong chi tiết Metadata) | `api/v1/ai/...` (`ai/prompt-template`) |
 
 Route và quyền chi tiết của từng action: controller trong `sh.be/sh.be.api/Controllers/Module/` và nghiệp vụ ở
 [../../be/nghiep-vu/README.md](../../be/nghiep-vu/README.md).
@@ -75,6 +75,13 @@ Loại / trường văn bản, giao diện gọi là **Metadata**, là mục men
   không cấp key Menu cha.
 - Form trường không có ô mã: FE gửi `field = name` (mã trường BE không dùng ở luồng nào); tên cột import để trống thì gửi bằng tên.
 - Kéo thả gửi `targetOrder` = thứ tự đang đứng ở vị trí thả; tắt khi đang tìm kiếm vì danh sách lọc không liền thứ tự.
+- Tab "Trường" | "Prompt OCR" (Task 21B): tab Prompt chỉ hiện khi có `Function.Ai.PromptTemplate.View`, giữ ở `?tab=prompt` (`replaceUrl`),
+  4 nút đầu trang chỉ thuộc tab Trường; component tab dựng lại mỗi lần mở để thấy ngay trường vừa tắt OCR. Xuất bản khi form đang sửa
+  hoặc chưa có nháp (hay ghi chú trong dialog khác form — BE publish giữ note cũ khi rỗng) thì hỏi trước rồi lưu nháp + publish (Huỷ
+  không tạo nháp); lỗi 909 / 910 chỉ báo, không tự tải lại. Rời tab / trang
+  khi form dirty hỏi qua `confirmDiscardPrompt` (Promise có nhánh từ chối — `confirmAction` không có) + `CanDeactivateFn` ở route `metadata/:id`.
+  ⚠️ Lưới trường dựng lại `FormArray` mỗi lần tải editor: `@for` phải `track group` (đối tượng), đừng track `documentFieldId` —
+  DOM được giữ lại nên `formControlName` vẫn gắn control cũ, bấm vào form không ghi nhận và lưu gửi giá trị cũ.
 
 **Dự án** (Task 36, `/admin/construction/project`, `.../project/:id`; hằng `PROJECT_URL`, `PROJECT_STATUSES`):
 
