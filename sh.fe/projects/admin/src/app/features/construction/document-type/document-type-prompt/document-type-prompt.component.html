@@ -1,0 +1,122 @@
+@if (editor) {
+    <form class="flex flex-col gap-4" [formGroup]="form">
+        <!-- Thanh trạng thái: bản đang xem bên trái, thao tác bên phải -->
+        <div class="prompt-status">
+            <div class="flex flex-col gap-1">
+                @if (editing && editingBadge) {
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="prompt-version">v{{ editing.version }}</span>
+                        <app-status-badge [badge]="editingBadge" />
+                        @if (editing.modifiedDate) {
+                            <span class="text-[13px] text-muted-color">
+                                Sửa lúc {{ editing.modifiedDate | date: 'dd/MM/yyyy HH:mm' }} bởi {{ editing.modifiedByName || '—' }}
+                            </span>
+                        }
+                    </div>
+                    @if (editor.draft && editor.published) {
+                        <span class="text-[12px] text-muted-color">Bản đang dùng: v{{ editor.published.version }}</span>
+                    }
+                } @else {
+                    <span class="text-[13px] text-muted-color">Metadata chưa có phiên bản prompt nào.</span>
+                }
+            </div>
+            <div class="prompt-actions">
+                <p-button label="Lịch sử" icon="pi pi-history" [outlined]="true" styleClass="metadata-btn-secondary" (onClick)="openHistoryDialog()" />
+                <p-button label="Xem prompt" icon="pi pi-eye" [outlined]="true" styleClass="metadata-btn-secondary" [disabled]="!editor.editingId"
+                    (onClick)="openPreviewDialog()" />
+                @if (canUpdate || canPublish) {
+                    <span class="prompt-actions-divider"></span>
+                }
+                @if (canUpdate) {
+                    <p-button label="Lưu nháp" icon="pi pi-save" [outlined]="true" styleClass="metadata-btn-quick" [loading]="submitting" [disabled]="publishing" (onClick)="saveDraft()" />
+                }
+                @if (canPublish) {
+                    <!-- Bọc span để tooltip vẫn hiện khi nút bị khoá -->
+                    <span [pTooltip]="hasPublishable ? '' : 'Không có bản nháp để xuất bản'" tooltipPosition="top">
+                        <p-button label="Xuất bản" icon="pi pi-send" styleClass="metadata-btn-primary" [loading]="publishing" [disabled]="!hasPublishable || submitting"
+                            (onClick)="openPublishDialog()" />
+                    </span>
+                }
+                @if (canUpdate && editor.draft) {
+                    <app-tbl-action [actions]="draftActions" (action)="confirmDiscard()" />
+                }
+            </div>
+        </div>
+
+        @if (editor.missingFields.length || editor.invalidFields.length) {
+            <div class="prompt-warning">
+                <i class="pi pi-exclamation-triangle"></i>
+                <div class="flex flex-col gap-1">
+                    @if (editor.missingFields.length) {
+                        <span>Chưa có trong bản này: {{ editor.missingFields.join(', ') }}</span>
+                    }
+                    @if (editor.invalidFields.length) {
+                        <span>Đã xoá hoặc tắt OCR: {{ editor.invalidFields.join(', ') }} — lưu lại nháp để bỏ</span>
+                    }
+                </div>
+            </div>
+        }
+
+        <section class="prompt-card">
+            <h3 class="prompt-card-title">Prompt chung</h3>
+            <div class="flex flex-col gap-1">
+                <sh-input-text label="Prompt hệ thống" formControlName="systemPrompt" [textarea]="true" [rows]="4" [autoResize]="true"
+                    [maxlength]="promptMaxLength.toString()" />
+                <small class="prompt-counter">{{ countLength(form.controls.systemPrompt.value) }} / {{ promptMaxLength }}</small>
+            </div>
+            <div class="flex flex-col gap-1">
+                <sh-input-text label="Hướng dẫn trích xuất" formControlName="instructionPrompt" [textarea]="true" [rows]="3" [autoResize]="true"
+                    [maxlength]="promptMaxLength.toString()" />
+                <small class="prompt-counter">{{ countLength(form.controls.instructionPrompt.value) }} / {{ promptMaxLength }}</small>
+            </div>
+            <sh-input-text label="Ghi chú phiên bản" formControlName="note" [maxlength]="noteMaxLength.toString()" />
+        </section>
+
+        @if (editor.fields.length) {
+            <section class="prompt-card">
+                <h3 class="prompt-card-title">Prompt theo trường</h3>
+                <div class="prompt-grid" formArrayName="fields">
+                    <div class="prompt-grid-head">
+                        <span class="prompt-cell-center">Dùng</span>
+                        <span>Trường</span>
+                        <span>Mô tả cho AI</span>
+                        <span>Ví dụ</span>
+                        <span>Định dạng</span>
+                        <span class="prompt-cell-center">Bắt buộc</span>
+                    </div>
+                    @for (group of form.controls.fields.controls; track group; let i = $index) {
+                        @let field = editor.fields[i];
+                        <div class="prompt-grid-row" [formGroupName]="i" [class.prompt-grid-row-inactive]="!group.controls.isActive.value">
+                            <div class="prompt-cell-center" data-label="Dùng">
+                                <p-toggleswitch formControlName="isActive" />
+                            </div>
+                            <div class="prompt-field-name">
+                                <span class="flex items-center gap-2">
+                                    {{ field.name }}
+                                    @if (!field.inTemplate) {
+                                        <span class="prompt-new-tag">Mới</span>
+                                    }
+                                </span>
+                                <code class="prompt-field-key">{{ field.outputKey }}</code>
+                            </div>
+                            <sh-input-text formControlName="description" placeholder="Mô tả cho AI" [textarea]="true" [rows]="2" [autoResize]="true"
+                                [maxlength]="descriptionMaxLength.toString()" />
+                            <sh-input-text formControlName="example" placeholder="Ví dụ" [maxlength]="exampleMaxLength.toString()" />
+                            <sh-select formControlName="normalizeRule" [options]="normalizeRules" optionLabel="label" optionValue="value" />
+                            <div class="prompt-cell-center" data-label="Bắt buộc">
+                                <p-checkbox formControlName="isRequired" [binary]="true" />
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+        } @else {
+            <section class="prompt-card items-center text-center">
+                <span class="text-muted-color">Metadata chưa có trường bật nhận dạng OCR.</span>
+                <p-button label="Sang tab Trường" icon="pi pi-arrow-left" [outlined]="true" styleClass="metadata-btn-secondary" (onClick)="openFieldsTab.emit()" />
+            </section>
+        }
+    </form>
+} @else if (loading) {
+    <div class="flex justify-center py-8"><i class="pi pi-spin pi-spinner text-2xl text-muted-color"></i></div>
+}

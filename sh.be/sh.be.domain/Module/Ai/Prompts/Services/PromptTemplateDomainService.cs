@@ -186,17 +186,23 @@ namespace sh.be.domain.Module.Ai.Prompts.Services
                 {
                     line += ", bắt buộc";
                 }
+                // Mô tả / ví dụ / định dạng tách bằng " | " để không dính vào nhau khi mô tả không kết thúc bằng dấu câu
+                var details = new List<string>();
                 if (config.Description.Length > 0)
                 {
-                    line += $": {config.Description}";
+                    details.Add(config.Description);
                 }
                 if (!String.IsNullOrEmpty(config.Example))
                 {
-                    line += $" Ví dụ: {config.Example}";
+                    details.Add($"Ví dụ: {config.Example}");
                 }
                 if (NormalizeRuleDescriptions.TryGetValue(config.NormalizeRule, out var ruleDescription))
                 {
-                    line += $" Định dạng: {ruleDescription}";
+                    details.Add($"Định dạng: {ruleDescription}");
+                }
+                if (details.Count > 0)
+                {
+                    line += $": {String.Join(" | ", details)}";
                 }
                 lines.Add(line);
             }

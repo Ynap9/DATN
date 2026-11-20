@@ -8,6 +8,24 @@
     align-items: flex-end;
 }
 
+// Có thanh tab thì đường kẻ dưới tab thay cho đường kẻ dưới tiêu đề; panel không đệm riêng để nội dung thẳng lề tiêu đề
+.metadata-header-tabbed {
+    padding-bottom: 8px;
+    border-bottom: none;
+}
+
+:host ::ng-deep .metadata-tabs {
+    .p-tablist,
+    .p-tablist-tab-list {
+        background: transparent;
+    }
+
+    .p-tabpanels {
+        padding: 16px 0 0;
+        background: transparent;
+    }
+}
+
 // Thanh nút đầu trang: xuống dòng được trên màn hẹp (page-header không cho wrap)
 .metadata-actions {
     display: flex;

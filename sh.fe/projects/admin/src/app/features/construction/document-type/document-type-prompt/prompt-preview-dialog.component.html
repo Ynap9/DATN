@@ -1,0 +1,18 @@
+@if (blocks.length) {
+    <div class="flex flex-col gap-4">
+        @if (isDirty) {
+            <small class="text-muted-color">Đang xem bản đã lưu, thay đổi chưa lưu không có ở đây.</small>
+        }
+        @for (block of blocks; track block.title) {
+            <section class="flex flex-col gap-2">
+                <div class="flex items-center justify-between">
+                    <span class="font-semibold">{{ block.title }}</span>
+                    <p-button icon="pi pi-copy" label="Sao chép" severity="secondary" [text]="true" size="small" [disabled]="!block.text" (onClick)="copy(block.text)" />
+                </div>
+                <pre class="m-0 max-h-80 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-[var(--app-bg)] p-3 font-mono text-[13px]">{{ block.text || '(trống)' }}</pre>
+            </section>
+        }
+    </div>
+} @else if (loading) {
+    <div class="flex justify-center py-8"><i class="pi pi-spin pi-spinner text-2xl text-muted-color"></i></div>
+}

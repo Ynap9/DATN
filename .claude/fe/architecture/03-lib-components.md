@@ -29,6 +29,9 @@ tooltip, thông báo lỗi để form nào cũng giống nhau.
 `CurrencyPipe` trong `CommonModule`. Đừng "gọn lại" bằng `CommonModule` ở component nào dùng `| currency`.
 ⚠️ Directive dạng thuộc tính trơn (`pRipple`, `pTemplate`, `pButton`) thiếu import thì Angular **bỏ qua im lặng**,
 build vẫn qua; thêm vào template thì thêm module PrimeNG tương ứng vào `imports`.
+⚠️ `sh-input-text` gửi `trim() || firstValue`; `firstValue` chỉ được gán khi giá trị đầu rỗng, nên xoá trắng ô **vốn có chữ**
+làm control nhận `undefined` → `.trim()` / `.length` ở màn lỗi, BE nhận `null` cho chuỗi bắt buộc (500). Đọc ô chữ qua hàm chuẩn hoá
+(vd. `toText` ở tab Prompt OCR); đừng sửa lib theo kiểu đổi `firstValue` vì màn cũ đang dựa vào nó.
 
 ## Pipe
 
