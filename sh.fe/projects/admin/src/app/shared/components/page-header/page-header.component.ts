@@ -11,6 +11,7 @@ import { Breadcrumb } from '../breadcrumb/breadcrumb.component';
 export class PageHeader {
     title = input.required<string>();
     breadcrumbs = input.required<MenuItem[]>();
+    description = input<string>();
 
     readonly home: MenuItem = { icon: 'pi pi-home', routerLink: '/admin' };
 }

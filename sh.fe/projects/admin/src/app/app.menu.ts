@@ -1,4 +1,5 @@
 import { MenuItem } from 'primeng/api';
+import { METADATA_URL } from '@/shared/constants/document-type.constants';
 import { PermissionConstants } from '@/shared/constants/permission.constants';
 
 export const APP_MENU_ITEMS: MenuItem[] = [
@@ -11,9 +12,9 @@ export const APP_MENU_ITEMS: MenuItem[] = [
         items: [
             { label: 'Dự án', icon: 'pi pi-building', routerLink: ['/admin/construction/project'], permission: PermissionConstants.FUNCTION_PROJECT_VIEW },
             {
-                label: 'Cấu hình dự án',
-                icon: 'pi pi-sliders-h',
-                routerLink: ['/admin/construction/project-config'],
+                label: 'Metadata',
+                icon: 'pi pi-table',
+                routerLink: [METADATA_URL],
                 routerLinkActiveOptions: { paths: 'subset', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' },
                 permission: PermissionConstants.FUNCTION_DOCUMENT_TYPE_VIEW,
             },

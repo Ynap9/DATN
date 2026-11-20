@@ -2,12 +2,15 @@ export const CellViewTypes = {
     INDEX: 'INDEX',
     DATE: 'DATE',
     CURRENCY: 'CURRENCY',
+    NUMBER: 'NUMBER',
     CHECKBOX: 'CHECKBOX',
     SWITCH: 'SWITCH',
     LINK_BLANK: 'LINK_BLANK',
     STATUS: 'STATUS',
     ACTIONS: 'ACTIONS',
     CUSTOM_COMP: 'CUSTOM_COMP',
+    PROGRESS: 'PROGRESS',
+    BADGE: 'BADGE',
 } as const;
 
 export type CellViewType = (typeof CellViewTypes)[keyof typeof CellViewTypes];

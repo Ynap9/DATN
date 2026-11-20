@@ -61,9 +61,25 @@ quá 6–7 file mới chia thư mục con (`components/`).
 - `DataTable` có thêm `paginator` (mặc định `true`), `reorderable` + output `rowReorder`, `selectable` + `[(selection)]`, cột `SWITCH`
   (bấm phát `CELL_CLICK`, khoá bằng `disabled`). Không truyền thì bảng y như cũ. Dòng trống thay nội dung bằng phần tử con có
   thuộc tính `tableEmpty` (vd. câu hướng dẫn + nút thêm), không có thì hiện "Không có dữ liệu".
+- Cột `PROGRESS` (giá trị 0..100, làm tròn, tooltip `progressTooltip(row)`), `BADGE` (`badge(row)` → `{ label, tone }`, tone
+  `blue` / `amber` / `green` / `red` / `gray` theo biến `--app-<tone>` / `--app-<tone>-soft`), `frozen: 'left' | 'right'` (có cột
+  frozen thì bảng tự bật cuộn ngang; dưới 768px cột `left` thôi dính để còn chỗ cuộn, cột `right` vẫn dính), `NUMBER` (số vi-VN 1.234, thiếu / null → "—" mờ; `CURRENCY` rỗng ra ô trống). Nhãn BADGE
+  là component `StatusBadge` (`shared/components/status-badge`) — chỗ khác cần cùng nhãn (vd. thẻ dự án) dùng lại nó. Task 38.
+- ⚠️ Độ rộng cột kéo xong lưu `tbl_col_widths_<tableKey>` **theo key cột**: `key` → `field` → `header`. Cột không `field` mà header
+  có thể trùng / đổi chữ thì khai `key`. Cache cũ khoá theo vị trí bị bỏ qua (người dùng kéo lại một lần).
+- ⚠️ Căn lề ô dùng `cellStyle: 'text-align: right'` (cùng chuỗi với `headerContainerStyle`), **không** `cellClass: 'text-right'`: CSS `td` của bảng đè mất class.
+- Lọc theo cột: cột khai `filter: { type: 'text' | 'select' | 'dateRange', options? }` thì tiêu đề có phễu + popover
+  (`DataTableColumnFilter`). Màn giữ state, truyền `[filterValues]` (key cột → giá trị; khoảng ngày `{ from?, to? }` dạng
+  `yyyy-MM-dd`), nhận `(filterChange)` = **toàn bộ** map sau mỗi lần Áp dụng / Xoá (key rỗng bị bỏ). Màn tự về trang 1 và tải lại.
+- Cấu hình cột: `[columnSettings]="true"` + `tableKey` → cột `ACTIONS` thay chữ bằng ⚙ mở dialog `DataTableColumnSettings`
+  (ẩn / hiện, kéo thứ tự, đặt lại). Cột `locked` luôn hiện, giữ chỗ cũ; `hidden` = ẩn mặc định. Lưu `tbl_cols_<tableKey>` =
+  `[{ key, visible }]` của các cột không khoá; tập key khác cột hiện tại thì về mặc định. Không bật thì `hidden` bị bỏ qua.
 - Cột thao tác: header `Thao tác`, `width: 100px; text-align: center`. `TblAction` là nút ⋯ mở dropdown; mỗi `ITableAction` bắt buộc
   có `icon`, thao tác xoá đặt `severity: 'danger'` (chữ đỏ); ẩn theo từng dòng bằng `visible: (row) => boolean` (vd. "Mở Google Sheet").
+  Ngoài bảng (vd. thẻ) dùng lại `TblAction` với cùng mảng `ITableAction`, đổi nút qua input `icon` (mặc định `pi pi-ellipsis-h`).
 - Cột `CUSTOM_COMP` luôn truyền `{ row, rowIndex, data }` — component ô phải khai đủ ba input, thiếu thì Angular báo lỗi console khi gán input không tồn tại.
+- ⚠️ `ng test` (Karma) **không** kiểm strict template như `ng build` / `ng serve`: truyền `number` vào pipe khai `string` vẫn
+  qua test nhưng build đỏ. Sửa template xong luôn chạy `npm run build:admin`, đừng chỉ chạy test.
 - Style: Tailwind cho bố cục; style riêng component dưới 8 kB.
 - Thông điệp người dùng tiếng Việt, lấy từ `SuccessMessage` / `ErrorMessage` khi có sẵn.
 

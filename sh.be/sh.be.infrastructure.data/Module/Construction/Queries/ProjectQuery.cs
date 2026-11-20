@@ -75,6 +75,31 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             {
                 query = query.Where(x => x.DocumentTypeId == dto.DocumentTypeId);
             }
+            if (!string.IsNullOrEmpty(dto.CreatorKeyword))
+            {
+                query = query.Where(x => _shDbContext.Users.Any(u => u.Id == x.Project.CreatedBy && u.UserName!.Contains(dto.CreatorKeyword)));
+            }
+            // Lọc ngày bao gồm hai đầu: cận trên là đầu ngày hôm sau; dự án không có ngày tự bị loại vì so sánh với NULL là sai
+            if (dto.StartedFrom.HasValue)
+            {
+                var startedFrom = dto.StartedFrom.Value.Date;
+                query = query.Where(x => x.Project.StartedAt >= startedFrom);
+            }
+            if (dto.StartedTo.HasValue)
+            {
+                var startedToExclusive = dto.StartedTo.Value.Date.AddDays(1);
+                query = query.Where(x => x.Project.StartedAt < startedToExclusive);
+            }
+            if (dto.EndedFrom.HasValue)
+            {
+                var endedFrom = dto.EndedFrom.Value.Date;
+                query = query.Where(x => x.Project.EndedAt >= endedFrom);
+            }
+            if (dto.EndedTo.HasValue)
+            {
+                var endedToExclusive = dto.EndedTo.Value.Date.AddDays(1);
+                query = query.Where(x => x.Project.EndedAt < endedToExclusive);
+            }
 
             var totalCount = await query.CountAsync();
 
@@ -94,6 +119,7 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                     EndedAt = x.Project.EndedAt,
                     IsQaEnabled = x.Project.IsQaEnabled,
                     UrlGoogleSheetSync = x.Project.UrlGoogleSheetSync,
+                    CreatorName = _shDbContext.Users.Where(u => u.Id == x.Project.CreatedBy).Select(u => u.UserName).FirstOrDefault(),
                     DocumentTypeId = x.DocumentTypeId,
                     ViewerRole = isAdmin
                         ? RoleConstants.ROLE_ADMIN

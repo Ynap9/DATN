@@ -1,0 +1,27 @@
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--app-muted);
+    background: var(--app-bg);
+
+    &::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+}
+
+@each $tone in 'blue', 'amber', 'green', 'red' {
+    .status-badge--#{$tone} {
+        color: var(--app-#{$tone});
+        background: var(--app-#{$tone}-soft);
+    }
+}

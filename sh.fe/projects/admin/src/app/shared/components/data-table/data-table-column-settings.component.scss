@@ -1,0 +1,58 @@
+.column-settings-all {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--app-line);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.column-settings-locked {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 8px;
+    font-size: 13px;
+    color: var(--app-faint);
+}
+
+.column-settings-list {
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+:host ::ng-deep .column-settings-list .p-datatable-tbody > tr {
+    &:hover {
+        background: var(--app-bg);
+    }
+
+    > td {
+        padding: 8px;
+        border: 0;
+    }
+}
+
+.column-settings-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    label {
+        cursor: pointer;
+    }
+}
+
+.column-settings-handle {
+    color: var(--app-faint);
+    cursor: move;
+}
+
+.column-settings-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--app-line);
+}

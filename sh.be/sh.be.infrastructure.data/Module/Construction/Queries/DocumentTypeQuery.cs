@@ -26,7 +26,7 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 .ToListAsync();
         }
 
-        // Paging loại văn bản, cùng phạm vi xem với dropdown
+        // Paging loại văn bản, cùng phạm vi xem với dropdown; kèm số trường và số dự án đang dùng (người khác Admin chỉ đếm dự án mình được phân)
         public async Task<BaseResponsePagingDto<GetListDocumentTypeDto>> FindPaging(FindPagingDocumentTypeDto dto, string userId, bool isAdmin)
         {
             var query = FilterViewable(_shDbContext.DocumentTypes.AsNoTracking(), userId, isAdmin);
@@ -41,7 +41,22 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 .OrderByDescending(d => d.CreatedDate)
                 .ThenByDescending(d => d.Id)
                 .Paging(dto)
-                .ProjectTo<GetListDocumentTypeDto>(_mapper.ConfigurationProvider)
+                .Select(d => new GetListDocumentTypeDto
+                {
+                    Id = d.Id,
+                    Name = d.Name,
+                    DefaultView = d.DefaultView,
+                    CreatedDate = d.CreatedDate,
+                    FieldCount = _shDbContext.DocumentFields.Count(f => f.DocumentTypeId == d.Id),
+                    // Cùng luật chặn xoá IsUsedByProjectAsync (dự án chưa xoá, mọi trạng thái); điều kiện thành viên khớp FilterViewable
+                    ProjectCount = _shDbContext.ProjectDocumentTypes
+                        .Where(pd => pd.DocumentTypeId == d.Id
+                            && _shDbContext.Projects.Any(p => p.Id == pd.ProjectId)
+                            && (isAdmin || _shDbContext.ProjectMembers.Any(m => m.ProjectId == pd.ProjectId && m.DocumentTypeId == pd.DocumentTypeId && m.UserId == userId)))
+                        .Select(pd => pd.ProjectId)
+                        .Distinct()
+                        .Count(),
+                })
                 .ToListAsync();
 
             return new BaseResponsePagingDto<GetListDocumentTypeDto>

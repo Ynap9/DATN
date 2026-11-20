@@ -56,7 +56,7 @@
                         <p-button label="Tải biên bản PDF" [outlined]="true" (onClick)="downloadReport()" />
                     }
                     @if (canFinish && acceptance.canForce) {
-                        <p-button label="Trả về đang làm" severity="secondary" [outlined]="true" [disabled]="submitting" (onClick)="reopenAcceptance()" />
+                        <p-button label="Trả về đang triển khai" severity="secondary" [outlined]="true" [disabled]="submitting" (onClick)="reopenAcceptance()" />
                     }
                     @if (canStart || canFinish) {
                         <span [pTooltip]="isTransitionBlocked ? blockerMessage : ''" tooltipPosition="top">

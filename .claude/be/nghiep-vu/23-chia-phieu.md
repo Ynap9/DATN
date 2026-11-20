@@ -30,7 +30,7 @@ chỉ dùng khi Admin xoá dự án ([25](25-xoa-du-an-danh-sach-cap.md)); về 
 ## Xem trước và lưu
 
 Nút gửi lên `{ box, profileRange? }`, `profileRange` null = cả hộp. Kiểm theo thứ tự: role `Data` / `QA` (`400`) → người giao là Admin
-hoặc Leader của cặp, dự án không `DONE` / `EXPIRED` (`805` / `818`, `DEPLOYING` được) → người nhận là `ProjectMember` đúng role, đang
+hoặc Leader của cặp, dự án không `DONE` / `EXPIRED` (`805` / `818`, `DOING` được) → người nhận là `ProjectMember` đúng role, đang
 hoạt động (`811`) → Leader chỉ giao người mình quản lý (`821`) → chuẩn hoá: trim, bỏ trùng, có "cả hộp" thì bỏ hồ sơ cùng hộp,
 ≤ 1000 nút (`400`).
 
@@ -112,7 +112,7 @@ nhập liệu quá 1000 văn bản.
 | B2 | Văn bản về pool từ D1, giao lại D1 | Cho, chỉ cảnh báo |
 | B3 | Nút / văn bản đã có QA khác | Chặn cả lần giao |
 | B4 | QA trùng người nhập | Chặn mọi người từng kiểm (`SubmissionLog`) + người đang giữ Data |
-| B5–B8 | Trần phiếu Data / sắp xếp / phân trang / `DEPLOYING` | 1000 / tự nhiên / 200 / cho giao |
+| B5–B8 | Trần phiếu Data / sắp xếp / phân trang / `DEPLOYING` (trước Task 38) | 1000 / tự nhiên / 200 / cho giao |
 | B9 | Phiếu của tôi | Mặc định đang làm, ẩn huỷ |
 | 2026-11-11 | Hộp / hồ sơ rỗng; "cả hộp" | Hiện và giao được; bung theo hồ sơ rồi văn bản, không lưu null |
 | 2026-11-11 | QA phụ trách lại / nút mới | Một phiếu phụ trách / QA / cặp, dồn vào phiếu cũ |
