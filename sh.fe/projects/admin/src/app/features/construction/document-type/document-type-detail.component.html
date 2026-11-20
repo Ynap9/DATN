@@ -1,63 +1,90 @@
 @if (documentType) {
-    <app-page-header class="metadata-header" [title]="documentType.name" [breadcrumbs]="breadcrumbs">
-        <!-- Nút phụ bên trái, vạch ngăn, nút thêm bên phải; Thêm trường là thao tác chính -->
-        <div class="metadata-actions">
-            @if (canCreateField) {
-                <p-button label="Kiểm tra Google Sheet" icon="pi pi-check-circle" [outlined]="true" styleClass="metadata-btn-secondary" (onClick)="openSheetCheck()" />
-            }
-            <p-button label="Tải template Excel" icon="pi pi-download" [outlined]="true" [loading]="downloadingTemplate" styleClass="metadata-btn-secondary"
-                (onClick)="downloadTemplate()" />
-            @if (canCreateField) {
-                <span class="metadata-actions-divider"></span>
-                <p-button label="Thêm nhanh" icon="pi pi-bolt" [outlined]="true" styleClass="metadata-btn-quick" (onClick)="openQuickCreate()" />
-                <p-button label="Thêm trường" icon="pi pi-plus" styleClass="metadata-btn-primary" (onClick)="openFieldForm()" />
-            }
-        </div>
+    <app-page-header class="metadata-header" [class.metadata-header-tabbed]="canViewPrompt" [title]="documentType.name" [breadcrumbs]="breadcrumbs">
+        <!-- Nút phụ bên trái, vạch ngăn, nút thêm bên phải; Thêm trường là thao tác chính. Chỉ thuộc tab Trường -->
+        @if (activeTab === tabs.FIELDS) {
+            <div class="metadata-actions">
+                @if (canCreateField) {
+                    <p-button label="Kiểm tra Google Sheet" icon="pi pi-check-circle" [outlined]="true" styleClass="metadata-btn-secondary" (onClick)="openSheetCheck()" />
+                }
+                <p-button label="Tải template Excel" icon="pi pi-download" [outlined]="true" [loading]="downloadingTemplate" styleClass="metadata-btn-secondary"
+                    (onClick)="downloadTemplate()" />
+                @if (canCreateField) {
+                    <span class="metadata-actions-divider"></span>
+                    <p-button label="Thêm nhanh" icon="pi pi-bolt" [outlined]="true" styleClass="metadata-btn-quick" (onClick)="openQuickCreate()" />
+                    <p-button label="Thêm trường" icon="pi pi-plus" styleClass="metadata-btn-primary" (onClick)="openFieldForm()" />
+                }
+            </div>
+        }
     </app-page-header>
 
-    <div class="field-toolbar">
-        <div class="field-search">
-            <i class="pi pi-search"></i>
-            <input pInputText placeholder="Tìm theo tên trường..." [formControl]="keyword" />
-        </div>
-        @if (canDeleteField && selectedFields.length) {
-            <p-button [label]="'Xóa ' + selectedFields.length + ' trường'" icon="pi pi-trash" severity="danger" [outlined]="true" styleClass="metadata-btn-danger" (onClick)="confirmQuickDelete()" />
-        }
-        <div class="field-order">
-            <span class="field-order-label">Thứ tự theo</span>
-            <p-selectbutton class="order-view" [formControl]="orderView" [options]="views" optionLabel="label" optionValue="value" [allowEmpty]="false">
-                <ng-template #item let-view>
-                    <span [class]="view.icon"></span>
-                    <span>{{ view.label }}</span>
-                </ng-template>
-            </p-selectbutton>
-            <button type="button" class="view-help-trigger" aria-label="Hai dạng khác nhau thế nào?" pTooltip="Hai dạng khác nhau thế nào?"
-                tooltipPosition="top" (click)="viewHelpVisible = true">
-                <i class="pi pi-question-circle"></i>
-            </button>
-        </div>
-    </div>
-
-    <app-data-table [columns]="columns" [data]="filteredFields" [loading]="loading" [paginator]="false" [selectable]="canDeleteField"
-        [reorderable]="canReorder" [(selection)]="selectedFields" (action)="onAction($event)" (rowReorder)="onRowReorder($event)">
-        <div tableEmpty class="flex flex-col items-center gap-3">
-            @if (fields.length) {
-                <span>Không tìm thấy trường phù hợp.</span>
-            } @else {
-                <span>Metadata này chưa có trường.</span>
-                @if (canCreateField) {
-                    <div class="flex gap-2">
-                        <p-button label="Thêm nhanh" icon="pi pi-bolt" [outlined]="true" styleClass="metadata-btn-quick" (onClick)="openQuickCreate()" />
-                        <p-button icon="pi pi-plus" label="Thêm trường" (onClick)="openFieldForm()" />
-                    </div>
-                }
-            }
-        </div>
-    </app-data-table>
-
-    @if (fields.length) {
-        <p class="mt-3 text-[13px] text-muted-color">Tổng {{ fields.length }} trường · {{ chargeableCount }} tính tiền · {{ ocrCount }} OCR</p>
+    <!-- Không có quyền xem prompt thì không hiện thanh tab, màn giữ nguyên như trước -->
+    @if (canViewPrompt) {
+        <p-tabs class="metadata-tabs" [value]="activeTab" (valueChange)="onTabChange($event)">
+            <p-tablist>
+                <p-tab [value]="tabs.FIELDS">Trường</p-tab>
+                <p-tab [value]="tabs.PROMPT">Prompt OCR</p-tab>
+            </p-tablist>
+            <p-tabpanels>
+                <p-tabpanel [value]="tabs.FIELDS">
+                    <ng-container [ngTemplateOutlet]="fieldsTab" />
+                </p-tabpanel>
+                <p-tabpanel [value]="tabs.PROMPT">
+                    <!-- Dựng lại mỗi lần mở tab để luôn thấy trạng thái mới nhất (vd. vừa tắt OCR ở tab Trường) -->
+                    @if (activeTab === tabs.PROMPT) {
+                        <app-document-type-prompt [documentTypeId]="documentType.id" (openFieldsTab)="onTabChange(tabs.FIELDS)" />
+                    }
+                </p-tabpanel>
+            </p-tabpanels>
+        </p-tabs>
+    } @else {
+        <ng-container [ngTemplateOutlet]="fieldsTab" />
     }
+
+    <ng-template #fieldsTab>
+        <div class="field-toolbar">
+            <div class="field-search">
+                <i class="pi pi-search"></i>
+                <input pInputText placeholder="Tìm theo tên trường..." [formControl]="keyword" />
+            </div>
+            @if (canDeleteField && selectedFields.length) {
+                <p-button [label]="'Xóa ' + selectedFields.length + ' trường'" icon="pi pi-trash" severity="danger" [outlined]="true" styleClass="metadata-btn-danger" (onClick)="confirmQuickDelete()" />
+            }
+            <div class="field-order">
+                <span class="field-order-label">Thứ tự theo</span>
+                <p-selectbutton class="order-view" [formControl]="orderView" [options]="views" optionLabel="label" optionValue="value" [allowEmpty]="false">
+                    <ng-template #item let-view>
+                        <span [class]="view.icon"></span>
+                        <span>{{ view.label }}</span>
+                    </ng-template>
+                </p-selectbutton>
+                <button type="button" class="view-help-trigger" aria-label="Hai dạng khác nhau thế nào?" pTooltip="Hai dạng khác nhau thế nào?"
+                    tooltipPosition="top" (click)="viewHelpVisible = true">
+                    <i class="pi pi-question-circle"></i>
+                </button>
+            </div>
+        </div>
+
+        <app-data-table [columns]="columns" [data]="filteredFields" [loading]="loading" [paginator]="false" [selectable]="canDeleteField"
+            [reorderable]="canReorder" [(selection)]="selectedFields" (action)="onAction($event)" (rowReorder)="onRowReorder($event)">
+            <div tableEmpty class="flex flex-col items-center gap-3">
+                @if (fields.length) {
+                    <span>Không tìm thấy trường phù hợp.</span>
+                } @else {
+                    <span>Metadata này chưa có trường.</span>
+                    @if (canCreateField) {
+                        <div class="flex gap-2">
+                            <p-button label="Thêm nhanh" icon="pi pi-bolt" [outlined]="true" styleClass="metadata-btn-quick" (onClick)="openQuickCreate()" />
+                            <p-button icon="pi pi-plus" label="Thêm trường" (onClick)="openFieldForm()" />
+                        </div>
+                    }
+                }
+            </div>
+        </app-data-table>
+
+        @if (fields.length) {
+            <p class="mt-3 text-[13px] text-muted-color">Tổng {{ fields.length }} trường · {{ chargeableCount }} tính tiền · {{ ocrCount }} OCR</p>
+        }
+    </ng-template>
 
     <p-dialog header="Dạng bảng và dạng danh sách" [(visible)]="viewHelpVisible" [modal]="true" [draggable]="false" [dismissableMask]="true"
         [style]="{ width: '44rem' }" [breakpoints]="{ '640px': '95vw' }">

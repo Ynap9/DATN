@@ -1,0 +1,159 @@
+// Thanh trạng thái: thông tin phiên bản bên trái, nút bên phải; xuống dòng trên màn hẹp
+.prompt-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.prompt-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.prompt-actions-divider {
+    width: 1px;
+    height: 24px;
+    margin: 0 4px;
+    background: var(--app-line-strong);
+}
+
+.prompt-version {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--app-ink);
+}
+
+.prompt-warning {
+    display: flex;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: var(--app-amber-soft);
+    color: var(--app-ink);
+    font-size: 13px;
+
+    .pi {
+        margin-top: 2px;
+        color: var(--app-amber);
+    }
+}
+
+.prompt-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--app-line);
+    border-radius: 10px;
+    background: var(--app-surface);
+}
+
+.prompt-card-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.prompt-counter {
+    align-self: flex-end;
+    font-size: 12px;
+    color: var(--app-muted);
+}
+
+// Lưới trường: cột Dùng / Bắt buộc hẹp và căn giữa như bảng trường, cột Mô tả rộng nhất
+.prompt-grid-head,
+.prompt-grid-row {
+    display: grid;
+    grid-template-columns: 64px minmax(140px, 1fr) minmax(220px, 2fr) minmax(140px, 1fr) 180px 80px;
+    align-items: center;
+    gap: 12px;
+}
+
+.prompt-grid-head {
+    padding: 0 0 8px;
+    border-bottom: 1px solid var(--app-line);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--app-muted);
+}
+
+.prompt-grid-row {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--app-line);
+
+    &:last-child {
+        border-bottom: none;
+    }
+}
+
+.prompt-grid-row-inactive {
+    opacity: 0.6;
+}
+
+.prompt-cell-center {
+    display: flex;
+    justify-content: center;
+}
+
+.prompt-field-name {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    word-break: break-word;
+}
+
+.prompt-field-key {
+    font-size: 12px;
+    color: var(--app-muted);
+}
+
+.prompt-new-tag {
+    padding: 0 6px;
+    border-radius: 4px;
+    background: var(--app-blue-soft);
+    color: var(--app-blue);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+// sh-input-text / sh-select tự chừa lề trên cho nhãn; lưới không có nhãn nên bỏ để các ô thẳng hàng
+:host ::ng-deep .prompt-grid-row .mt-2 {
+    margin-top: 0;
+}
+
+// Màn hẹp: mỗi trường một thẻ xếp dọc, ô Dùng / Bắt buộc tự ghi nhãn vì không còn dòng tiêu đề
+@media (max-width: 767px) {
+    .prompt-grid-head {
+        display: none;
+    }
+
+    .prompt-grid-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding: 12px;
+        border: 1px solid var(--app-line);
+        border-radius: 8px;
+
+        &:last-child {
+            border-bottom: 1px solid var(--app-line);
+        }
+    }
+
+    .prompt-cell-center {
+        justify-content: flex-start;
+        align-items: center;
+        gap: 8px;
+
+        &::before {
+            content: attr(data-label);
+            font-size: 13px;
+            color: var(--app-muted);
+        }
+    }
+}

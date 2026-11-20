@@ -1,10 +1,11 @@
-import { Component, DestroyRef, inject } from '@angular/core';
+import { Component, DestroyRef, inject, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl } from '@angular/forms';
 import { Utils } from '@sh/ui';
 import { MenuItem } from 'primeng/api';
 import { DialogModule } from 'primeng/dialog';
 import { SelectButtonModule } from 'primeng/selectbutton';
+import { Tabs, TabsModule } from 'primeng/tabs';
 import { finalize } from 'rxjs';
 import { DownloadService } from '@/core/http/download.service';
 import { IViewDocumentField } from '@/models/document-field.model';
@@ -16,7 +17,7 @@ import { BaseComponent } from '@/shared/base/base.component';
 import { DataTable } from '@/shared/components/data-table/data-table.component';
 import { PageHeader } from '@/shared/components/page-header/page-header.component';
 import { CellViewTypes, TableEventTypes } from '@/shared/constants/data-table.constants';
-import { DOCUMENT_TYPE_VIEW_TABLE, DOCUMENT_TYPE_VIEWS, METADATA_URL } from '@/shared/constants/document-type.constants';
+import { DOCUMENT_TYPE_VIEW_TABLE, DOCUMENT_TYPE_VIEWS, METADATA_TAB, METADATA_URL } from '@/shared/constants/document-type.constants';
 import { PermissionConstants } from '@/shared/constants/permission.constants';
 import { IColumn, ITableAction, ITableEvent, ITableRowReorder } from '@/shared/models/data-table.models';
 import { SharedImports } from '@/shared/import.shared';
@@ -25,6 +26,7 @@ import { DocumentFieldFormComponent } from './document-field-form/document-field
 import { DocumentFieldQuickCreateComponent } from './document-field-quick-create/document-field-quick-create.component';
 import { DocumentFieldSheetCheckComponent } from './document-field-sheet-check/document-field-sheet-check.component';
 import { DocumentTypeFormComponent } from './document-type-form/document-type-form.component';
+import { DocumentTypePromptComponent } from './document-type-prompt/document-type-prompt.component';
 
 const DOCUMENT_FIELD_ACTIONS = {
     EDIT: 'edit',
@@ -39,7 +41,7 @@ const CENTER = 'text-align: center';
 
 @Component({
     selector: 'app-document-type-detail',
-    imports: [SharedImports, DialogModule, SelectButtonModule, DataTable, PageHeader],
+    imports: [SharedImports, DialogModule, SelectButtonModule, TabsModule, DataTable, PageHeader, DocumentTypePromptComponent],
     templateUrl: './document-type-detail.component.html',
     styleUrl: './document-type-detail.component.scss',
 })
@@ -51,13 +53,17 @@ export class DocumentTypeDetailComponent extends BaseComponent {
     private readonly _destroyRef = inject(DestroyRef);
 
     private readonly _documentTypeId = Number(this._activatedRoute.snapshot.paramMap.get('id'));
+    private readonly _tabs = viewChild(Tabs);
+    private readonly _prompt = viewChild(DocumentTypePromptComponent);
 
     readonly canUpdateDocumentType = this._sharedService.isGranted(PermissionConstants.FUNCTION_DOCUMENT_TYPE_UPDATE);
     readonly canCreateField = this._sharedService.isGranted(PermissionConstants.FUNCTION_DOCUMENT_FIELD_CREATE);
     readonly canUpdateField = this._sharedService.isGranted(PermissionConstants.FUNCTION_DOCUMENT_FIELD_UPDATE);
     readonly canDeleteField = this._sharedService.isGranted(PermissionConstants.FUNCTION_DOCUMENT_FIELD_DELETE);
+    readonly canViewPrompt = this._sharedService.isGranted(PermissionConstants.FUNCTION_AI_PROMPT_TEMPLATE_VIEW);
 
     readonly views = DOCUMENT_TYPE_VIEWS;
+    readonly tabs = METADATA_TAB;
 
     documentType?: IViewDocumentType;
     breadcrumbs: MenuItem[] = [];
@@ -68,6 +74,9 @@ export class DocumentTypeDetailComponent extends BaseComponent {
     selectedFields: DocumentFieldRow[] = [];
     viewHelpVisible = false;
     downloadingTemplate = false;
+    // Không có quyền xem prompt thì luôn ở tab Trường dù URL ghi ?tab=prompt
+    activeTab: string =
+        this.canViewPrompt && this._activatedRoute.snapshot.queryParamMap.get('tab') === METADATA_TAB.PROMPT ? METADATA_TAB.PROMPT : METADATA_TAB.FIELDS;
 
     private readonly _fieldActions: ITableAction[] = [
         ...(this.canUpdateField ? [{ type: DOCUMENT_FIELD_ACTIONS.EDIT, label: 'Sửa', icon: 'pi pi-pencil' }] : []),
@@ -149,6 +158,35 @@ export class DocumentTypeDetailComponent extends BaseComponent {
                     this.applyView();
                 }
             });
+    }
+
+    // Rời tab Prompt khi form còn thay đổi: p-tabs đã tự chuyển nên trả về tab Prompt, chỉ chuyển thật khi người dùng đồng ý bỏ
+    onTabChange(tab: string | number | undefined) {
+        const nextTab = String(tab);
+        if (nextTab === this.activeTab) return;
+        if (!this._prompt()?.isDirty) {
+            this.applyTab(nextTab);
+            return;
+        }
+
+        this._tabs()?.value.set(this.activeTab);
+        this.confirmDiscardPrompt().then((accepted) => accepted && this.applyTab(nextTab));
+    }
+
+    // Guard rời trang (route metadata/:id) gọi; chỉ hỏi khi tab Prompt còn thay đổi chưa lưu
+    canDeactivate(): boolean | Promise<boolean> {
+        return this._prompt()?.isDirty ? this.confirmDiscardPrompt() : true;
+    }
+
+    // Ghi tab lên URL thay cho lịch sử hiện tại để tải lại trang vẫn ở tab đó mà nút Back không đi qua từng lần đổi tab
+    private applyTab(tab: string) {
+        this.activeTab = tab;
+        this.router.navigate([], {
+            relativeTo: this._activatedRoute,
+            queryParams: { tab: this.activeTab === METADATA_TAB.PROMPT ? METADATA_TAB.PROMPT : null },
+            queryParamsHandling: 'merge',
+            replaceUrl: true,
+        });
     }
 
     // Sắp và đánh số theo thứ tự của chế độ đang chọn (hai thứ tự độc lập), rồi lọc từ khoá
@@ -273,6 +311,22 @@ export class DocumentTypeDetailComponent extends BaseComponent {
             .updateSetting(field.id, { isShow: field.isShow, isChargeable: field.isChargeable, isFieldOcr: field.isFieldOcr, fieldNameOcr: field.fieldNameOcr })
             .pipe(takeUntilDestroyed(this._destroyRef))
             .subscribe({ next: (res) => !this.isResponseSucceed(res) && revert(), error: revert });
+    }
+
+    // Giống confirmAction nhưng trả Promise có cả nhánh từ chối (guard rời trang cần biết người dùng chọn ở lại)
+    private confirmDiscardPrompt(): Promise<boolean> {
+        return new Promise((resolve) =>
+            this._confirmationService.confirm({
+                header: 'Bỏ thay đổi chưa lưu?',
+                message: 'Prompt OCR còn thay đổi chưa lưu nháp. Rời đi sẽ mất các thay đổi này.',
+                closable: true,
+                closeOnEscape: true,
+                rejectButtonProps: { label: 'Ở lại', severity: 'secondary', outlined: true },
+                acceptButtonProps: { label: 'Bỏ thay đổi', severity: 'danger' },
+                accept: () => resolve(true),
+                reject: () => resolve(false),
+            }),
+        );
     }
 
     private confirmDeleteField(field: IViewDocumentField) {
