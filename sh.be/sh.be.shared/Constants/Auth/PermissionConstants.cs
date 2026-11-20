@@ -121,5 +121,10 @@ namespace sh.be.shared.Constants.Auth
         public const string FUNCTION_AI_PROVIDER_UPDATE = "Function.Ai.Provider.Update";
         public const string FUNCTION_AI_PROVIDER_DELETE = "Function.Ai.Provider.Delete";
         public const string FUNCTION_AI_PROVIDER_DOWNLOAD_API_KEY = "Function.Ai.Provider.DownloadApiKey";
+
+        public const string MENU_AI_PROMPT_TEMPLATE = "Menu.Ai.PromptTemplate";
+        public const string FUNCTION_AI_PROMPT_TEMPLATE_VIEW = "Function.Ai.PromptTemplate.View";
+        public const string FUNCTION_AI_PROMPT_TEMPLATE_UPDATE = "Function.Ai.PromptTemplate.Update";
+        public const string FUNCTION_AI_PROMPT_TEMPLATE_PUBLISH = "Function.Ai.PromptTemplate.Publish";
     }
 }

@@ -81,6 +81,9 @@ Menu.Operation                     Menu vận hành (Task 9; API ở Task 10–1
 ├── Menu.Operation.ProjectMember   → Function.Operation.ProjectMember.Manage, .Price.ManageCompany (chỉ Admin), .Price.ManageActual
 └── Menu.Operation.Assignment      → Function.Operation.Assignment.Manage (giao / thu hồi / chuyển), .Assignment.ViewOwn (phiếu của
                                      mình), .Assignment.ViewAllSubmission (mọi văn bản, Task 15), .BonusPool.View (quỹ KPI), .Wage.View (thống kê tiền công, Task 12)
+Menu.Ai                            Menu AI (Task 19)
+├── Menu.Ai.Provider               → Function.Ai.Provider.View, .Create, .Update, .Delete, .DownloadApiKey (Task 19)
+└── Menu.Ai.PromptTemplate         → Function.Ai.PromptTemplate.View, .Update (lưu / khôi phục / bỏ nháp), .Publish (Task 21)
 ```
 
 Quy ước đặt key: `Menu.<Module>.<Tên>` cho mục menu, `Function.<Module>.<Tên>.<Hành động>` cho thao tác.
@@ -158,22 +161,20 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `api/operation/project/{projectId}/document-type/{documentTypeId}`: `GET assignment-tree`, `GET assignment-tree/profiles`, `POST assignment/preview`, `POST assignment`, `GET assignment/{ticketId}`, `POST assignment/revoke`, `POST assignment/transfer`, `POST assignment/qa/revoke`, `POST assignment/qa/transfer`, `GET assignment/ticket/paging`; `GET api/operation/my-assignment` | `Function.Operation.Assignment.Manage` (Leader chỉ cặp mình là Leader, chỉ giao / thu / chuyển / xem phiếu người mình quản lý); `my-assignment` cần `.Assignment.ViewOwn` ([23](23-chia-phieu.md), [26](26-thu-hoi-chuyen-phieu.md)) |
 | `api/operation/project/{projectId}`: `PUT member/price` | `Function.Operation.Price.ManageActual` (Admin đặt cả hai giá; Leader chỉ `ActualPrice` người mình quản lý, [24](24-don-gia-tien-cong.md)) |
 | `api/operation/project/{projectId}`: `GET wage/paging` | `Function.Operation.Wage.View` (phạm vi xem theo vai trò, [24](24-don-gia-tien-cong.md)) |
+| `api/ai/prompt-template`: `GET document-type/{id}`, `.../versions`, `GET {id}/preview` / `PUT document-type/{id}/draft`, `POST {id}/restore`, `DELETE {id}` / `POST {id}/publish` | `Function.Ai.PromptTemplate.View` / `.Update` / `.Publish` ([27](27-ai-prompt.md)) |
 
 ## Quyền người dùng: đang lệch so với cây
 
-⚠️ **Bốn key `Function.Auth.User.*` đã được seed nhưng không controller nào dùng.** Toàn bộ thao tác user (tạo, sửa, xoá,
-gán vai trò, danh sách) đang kiểm bằng `Menu.Auth`. Hệ quả: ai có `Menu.Auth` (ví dụ vai trò `Admin`) làm được mọi thao tác
-user, kể cả xoá, và không thể tách quyền xem / tạo / xoá riêng.
+⚠️ **Bốn key `Function.Auth.User.*` đã được seed nhưng không controller nào dùng.** Mọi thao tác user (tạo, sửa, xoá, gán vai trò,
+danh sách) kiểm bằng `Menu.Auth`: ai có `Menu.Auth` (ví dụ `Admin`) làm được hết, kể cả xoá, không tách được quyền xem / tạo / xoá.
 
-Cách sửa là đổi key trong `[Permission]` sang `Function.Auth.User.*`. Đây là **đổi hành vi phân quyền**, phải hỏi trước, và
-đi kèm việc gán các key mới cho vai trò đang có: `SeedRolePermission` chỉ cấp quyền đầy đủ cho `SuperAdmin` và `Admin` khi
-khởi tạo, các vai trò khác phải gán tay.
+Cách sửa là đổi key trong `[Permission]` sang `Function.Auth.User.*` — **đổi hành vi phân quyền**, phải hỏi trước, kèm gán key mới
+cho vai trò đang có: `SeedRolePermission` chỉ cấp quyền đầy đủ cho `SuperAdmin` và `Admin`, các vai trò khác phải gán tay.
 
 ## Đừng đổi tên key đã seed
 
-⚠️ `SeedPermission` chạy mỗi lần khởi động: key nào **không có** trong `DefaultPermissions` sẽ bị xoá cứng, **kèm mọi
-`RolePermission` gắn key đó**. Đổi tên một hằng trong `PermissionConstants` vì vậy làm mất quyền đã gán cho vai trò,
-không báo lỗi gì. Muốn đổi tên: thêm key mới, gán lại cho vai trò, rồi mới bỏ key cũ khỏi `DefaultPermissions` — và
-nên hỏi trước vì đây là thay đổi dữ liệu đang chạy.
+⚠️ `SeedPermission` chạy mỗi lần khởi động: key nào **không có** trong `DefaultPermissions` bị xoá cứng **kèm mọi `RolePermission`
+gắn key đó** — đổi tên một hằng trong `PermissionConstants` làm mất quyền đã gán cho vai trò, không báo lỗi. Muốn đổi tên: thêm key mới,
+gán lại cho vai trò, rồi mới bỏ key cũ khỏi `DefaultPermissions` — nên hỏi trước vì đây là thay đổi dữ liệu đang chạy.
 
 > **Tiếp:** [03-vai-tro-mac-dinh.md](03-vai-tro-mac-dinh.md) — các vai trò và luật tạo / xoá vai trò.

@@ -14,9 +14,11 @@ namespace sh.be.shared.Constants.Ai
         public const string NORMALIZE_NUMBER = "NUMBER";
         public const string NORMALIZE_DATE_DMY = "DATE_DMY";
         public const string NORMALIZE_UPPER = "UPPER";
+        public static readonly IReadOnlyList<string> NORMALIZE_RULES = [NORMALIZE_NONE, NORMALIZE_TRIM, NORMALIZE_DIGITS, NORMALIZE_NUMBER, NORMALIZE_DATE_DMY, NORMALIZE_UPPER];
         public const int NORMALIZE_RULE_MAX_LENGTH = 30;
 
-        public const int OUTPUT_KEY_MAX_LENGTH = 100;
+        public const int PROMPT_MAX_LENGTH = 20000;
+        public const int OUTPUT_KEY_MAX_LENGTH = 450;
         public const int FIELD_DESCRIPTION_MAX_LENGTH = 2000;
         public const int FIELD_EXAMPLE_MAX_LENGTH = 500;
     }
