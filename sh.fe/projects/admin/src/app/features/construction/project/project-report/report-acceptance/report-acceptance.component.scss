@@ -1,0 +1,124 @@
+@use '../report-card' as card;
+
+.acceptance-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    h2 {
+        @include card.report-card-title;
+    }
+}
+
+.acceptance-steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    li.is-reached {
+        .acceptance-step-bar {
+            background: var(--app-accent);
+        }
+
+        .acceptance-step-label {
+            font-weight: 600;
+            color: var(--app-accent-700);
+        }
+    }
+}
+
+.acceptance-step-bar {
+    height: 4px;
+    border-radius: 999px;
+    background: var(--app-line);
+}
+
+.acceptance-step-label {
+    font-size: 12px;
+    color: var(--app-muted);
+}
+
+.acceptance-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    border-radius: 10px;
+    background: var(--app-bg);
+}
+
+.acceptance-progress-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--app-ink);
+
+    b {
+        font-weight: 600;
+    }
+}
+
+.acceptance-progress-track {
+    height: 8px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--app-line);
+}
+
+.acceptance-progress-fill {
+    height: 100%;
+}
+
+.acceptance-pending {
+    font-size: 12px;
+    line-height: 18px;
+    color: var(--app-muted);
+}
+
+.acceptance-info {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 16px;
+    margin: 0;
+    font-size: 13px;
+
+    dt {
+        color: var(--app-muted);
+    }
+
+    dd {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        margin: 0;
+        text-align: right;
+    }
+}
+
+.acceptance-muted {
+    font-size: 12px;
+    color: var(--app-muted);
+}
+
+.acceptance-number {
+    font-variant-numeric: tabular-nums;
+}
+
+.acceptance-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: auto;
+}

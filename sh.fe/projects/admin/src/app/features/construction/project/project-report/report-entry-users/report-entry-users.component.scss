@@ -1,0 +1,38 @@
+@use '../report-card' as card;
+
+.entry-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.entry-title {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    h2 {
+        @include card.report-card-title;
+    }
+
+    span {
+        @include card.report-card-subtitle;
+    }
+}
+
+.is-stale {
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.entry-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 200px;
+    font-size: 13px;
+    color: var(--app-muted);
+}

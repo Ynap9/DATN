@@ -3,8 +3,8 @@ import { permissionGuard } from '@/core/auth/guard/permission.guard';
 import { PermissionConstants } from '@/shared/constants/permission.constants';
 import { DocumentTypeDetailComponent } from './document-type/document-type-detail.component';
 import { DocumentTypeListComponent } from './document-type/document-type-list.component';
-import { ProjectDetailComponent } from './project/project-detail.component';
 import { ProjectListComponent } from './project/project-list.component';
+import { ProjectReportComponent } from './project/project-report/project-report.component';
 import { SubmissionListComponent } from './submission/submission-list.component';
 
 const DOCUMENT_TYPE_PERMISSIONS = [PermissionConstants.MENU_DOCUMENT_TYPE, PermissionConstants.FUNCTION_DOCUMENT_TYPE_VIEW];
@@ -16,7 +16,7 @@ const metadataDetailDeactivateGuard: CanDeactivateFn<DocumentTypeDetailComponent
 
 export const CONSTRUCTION_ROUTES: Routes = [
     { path: 'project', component: ProjectListComponent, canActivate: [permissionGuard], data: { permissions: PROJECT_PERMISSIONS } },
-    { path: 'project/:id', component: ProjectDetailComponent, canActivate: [permissionGuard], data: { permissions: PROJECT_PERMISSIONS } },
+    { path: 'project/:id', component: ProjectReportComponent, canActivate: [permissionGuard], data: { permissions: PROJECT_PERMISSIONS } },
     {
         path: 'project/:id/metadata/:documentTypeId',
         component: SubmissionListComponent,

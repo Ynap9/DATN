@@ -95,3 +95,66 @@ export interface ILatestWorkingSubmission {
     statusQa: number;
     workedDate: string | null;
 }
+
+// Lọc chung của các API thống kê; fromDate / toDate dạng yyyy-MM-dd, bỏ trống thì BE lấy khoảng mặc định
+export interface IFindStats {
+    projectId: number;
+    documentTypeId: number;
+    fromDate?: string;
+    toDate?: string;
+}
+
+export type IFindPagingQaEntryUserStats = IFindStats & IBaseRequestPaging & { orderBy?: 'review' | 'accuracy' };
+
+export interface IProgressDaily {
+    date: string;
+    checkedCount: number;
+    qaPassedCount: number;
+}
+
+export interface IProgressDailyStats {
+    fromDate: string;
+    toDate: string;
+    totalChecked: number;
+    totalQaPassed: number;
+    days: IProgressDaily[];
+}
+
+// Các tỷ lệ là phần trăm 0–100, BE làm tròn 2 số
+export interface IQaStatsMetric {
+    reviewCount: number;
+    passedCount: number;
+    failedCount: number;
+    reviewedDocumentCount: number;
+    firstReviewCount: number;
+    firstPassCount: number;
+    firstPassRate: number;
+    wrongFieldCount: number;
+    reviewedCellCount: number;
+    fieldAccuracyRate: number;
+    avgReturnPerDocument: number;
+}
+
+export type IQaStatsSummary = IQaStatsMetric & {
+    fromDate: string;
+    toDate: string;
+    chargeableFieldCount: number;
+};
+
+export interface IQaFieldStats {
+    documentFieldId: number;
+    name: string;
+    field: string;
+    isConfigured: boolean;
+    isChargeable: boolean;
+    reviewCount: number;
+    wrongCount: number;
+    wrongRate: number;
+    accuracyRate: number;
+}
+
+export type IQaEntryUserStats = IQaStatsMetric & {
+    userId: string | null;
+    userName: string | null;
+    fullName: string | null;
+};

@@ -25,6 +25,9 @@ Bốn vai trò `Leader`, `Data`, `QA`, `User` chưa có quyền nào sau khi see
 đầu / hoàn tất được khi **đủ** điều kiện và chỉ ở dự án mình đang là Leader (`337`); cho vào khi chưa đủ và trả dự án về đang triển khai vẫn
 chỉ Admin / SuperAdmin (`400`, [22](22-nghiem-thu-du-an.md)).
 
+`Function.Construction.Submission.ProgressStats` (tiến độ theo ngày, Task 46A) chỉ Admin có qua seeder. **Leader cần gán tay** bằng
+`PUT api/auth/role/permission` mới vào được màn Báo cáo tiến độ (Task 46); DB dev chưa gán cho Leader id 2 ([17](17-thong-ke-qa.md#tiến-độ-theo-ngày--progress-statsdaily-task-46a)).
+
 `Function.Construction.Project.View` gán cho Leader id 2, Data id 3, QA id 4 bằng `PUT api/auth/role/permission` trên DB dev ngày
 2026-11-13 (Task 29): paging dự án giờ lọc theo thành viên nên mọi vai trò cần quyền này ([25](25-xoa-du-an-danh-sach-cap.md)). Môi trường mới phải gán lại.
 Từ Task 30, Leader / Data / QA chỉ thấy dự án mình được phân ở **mọi** API cần quyền này (danh sách, dropdown, chi tiết, nghiệm thu; ngoài

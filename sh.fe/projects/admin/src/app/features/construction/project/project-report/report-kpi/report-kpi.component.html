@@ -1,0 +1,19 @@
+@for (card of cards(); track card.label) {
+    <div class="kpi-card">
+        <span class="kpi-label">{{ card.label }}</span>
+        <span class="kpi-value-row">
+            <span class="kpi-value">{{ card.value }}</span>
+            @if (card.extra) {
+                <span [class]="'kpi-extra kpi-extra--' + card.extraTone">{{ card.extra }}</span>
+            }
+        </span>
+        @if (card.note) {
+            <span class="kpi-note">{{ card.note }}</span>
+        }
+        <div class="kpi-track">
+            @if (card.percent !== null) {
+                <div class="kpi-fill" [style.width.%]="card.percent" [style.background]="card.color"></div>
+            }
+        </div>
+    </div>
+}

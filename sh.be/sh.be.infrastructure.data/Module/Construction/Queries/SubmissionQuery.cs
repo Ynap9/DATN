@@ -587,6 +587,38 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             return summary;
         }
 
+        // Số văn bản khác nhau được kiểm / QA đạt theo từng ngày và cả khoảng; ngày không có số vẫn trả 0
+        public async Task<ViewProgressDailyStatsDto> FindProgressDailyStats(int projectId, int documentTypeId, DateTime fromDate, DateTime toDate,
+            string? restrictedUserId)
+        {
+            var toDateExclusive = toDate.AddDays(1);
+            var checkedDays = QueryCheckedDays(projectId, documentTypeId, fromDate, toDateExclusive, restrictedUserId);
+            var qaPassedDays = QueryQaPassedDays(projectId, documentTypeId, fromDate, toDateExclusive, restrictedUserId);
+
+            var checkedCountByDay = await CountByDayAsync(checkedDays);
+            var qaPassedCountByDay = await CountByDayAsync(qaPassedDays);
+            var totalChecked = await checkedDays.Select(x => x.SubmissionId).Distinct().CountAsync();
+            var totalQaPassed = await qaPassedDays.Select(x => x.SubmissionId).Distinct().CountAsync();
+
+            var stats = new ViewProgressDailyStatsDto
+            {
+                FromDate = fromDate,
+                ToDate = toDate,
+                TotalChecked = totalChecked,
+                TotalQaPassed = totalQaPassed,
+            };
+            for (var day = fromDate.Date; day <= toDate.Date; day = day.AddDays(1))
+            {
+                stats.Days.Add(new GetListProgressDailyDto
+                {
+                    Date = day,
+                    CheckedCount = checkedCountByDay.GetValueOrDefault(day),
+                    QaPassedCount = qaPassedCountByDay.GetValueOrDefault(day),
+                });
+            }
+            return stats;
+        }
+
         public async Task<ViewQaStatsSummaryDto> FindQaStatsSummary(FindQaStatsDto dto, DateTime fromDate, DateTime toDateExclusive, string? restrictedUserId = null)
         {
             var reviews = await FindQaReviewsAsync(dto.ProjectId, dto.DocumentTypeId, fromDate, toDateExclusive, restrictedUserId);
@@ -941,6 +973,41 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 .ToList();
         }
 
+        // Lượt kiểm đưa văn bản vào Đã kiểm (bỏ tái kiểm văn bản đang Đã kiểm); restrictedUserId khác null thì chỉ văn bản người đó đang giữ
+        private IQueryable<DaySubmission> QueryCheckedDays(int projectId, int documentTypeId, DateTime fromDate, DateTime toDateExclusive,
+            string? restrictedUserId)
+        {
+            return from l in _shDbContext.SubmissionLogs.AsNoTracking()
+                   join s in _shDbContext.Submissions.AsNoTracking() on l.SubmissionId equals s.Id
+                   where l.ProjectId == projectId && l.DocumentTypeId == documentTypeId
+                       && l.NewStatus == SubmissionConst.CHECKED && l.OldStatus != SubmissionConst.CHECKED
+                       && l.CreatedDate >= fromDate && l.CreatedDate < toDateExclusive
+                       && (restrictedUserId == null || _shDbContext.SubmissionUsers.Any(u => u.SubmissionId == s.Id && u.UserId == restrictedUserId))
+                   select new DaySubmission { Day = l.CreatedDate!.Value.Date, SubmissionId = l.SubmissionId };
+        }
+
+        // Lượt chấm QA Đạt; restrictedUserId khác null thì chỉ văn bản người đó đang giữ
+        private IQueryable<DaySubmission> QueryQaPassedDays(int projectId, int documentTypeId, DateTime fromDate, DateTime toDateExclusive,
+            string? restrictedUserId)
+        {
+            return from q in _shDbContext.SubmissionQaLogs.AsNoTracking()
+                   join s in _shDbContext.Submissions.AsNoTracking() on q.SubmissionId equals s.Id
+                   where q.ProjectId == projectId && q.DocumentTypeId == documentTypeId && q.NewStatusQa == SubmissionConst.QA_PASSED
+                       && q.CreatedDate >= fromDate && q.CreatedDate < toDateExclusive
+                       && (restrictedUserId == null || _shDbContext.SubmissionUsers.Any(u => u.SubmissionId == s.Id && u.UserId == restrictedUserId))
+                   select new DaySubmission { Day = q.CreatedDate!.Value.Date, SubmissionId = q.SubmissionId };
+        }
+
+        // Số văn bản khác nhau theo ngày (một văn bản nhiều lượt trong ngày tính 1), đếm ở SQL
+        private static Task<Dictionary<DateTime, int>> CountByDayAsync(IQueryable<DaySubmission> daySubmissions)
+        {
+            return daySubmissions
+                .Distinct()
+                .GroupBy(x => x.Day)
+                .Select(g => new { Day = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.Day, x => x.Count);
+        }
+
         private IQueryable<QaLogEntryUser> QueryQaLogEntryUsers(IQueryable<SubmissionQaLog> qaLogs)
         {
             return qaLogs.Select(q => new QaLogEntryUser
@@ -1119,6 +1186,12 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
         {
             public int QaLogId { get; init; }
             public string? EntryUserId { get; init; }
+        }
+
+        private class DaySubmission
+        {
+            public DateTime Day { get; init; }
+            public int SubmissionId { get; init; }
         }
 
         private IQueryable<Submission> ApplyFieldFilter(IQueryable<Submission> query, int? documentFieldId, string? fieldValue, bool? isEmpty,
