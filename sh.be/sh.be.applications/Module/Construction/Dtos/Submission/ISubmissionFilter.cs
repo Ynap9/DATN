@@ -8,8 +8,10 @@ namespace sh.be.applications.Module.Construction.Dtos.Submission
         int? StatusQa { get; }
         int? DocumentFieldId1 { get; }
         string? FieldValue1 { get; }
+        bool? IsEmpty1 { get; }
         int? DocumentFieldId2 { get; }
         string? FieldValue2 { get; }
+        bool? IsEmpty2 { get; }
         string? Keyword { get; }
         int? QaTicketId { get; }
         int? AssignmentTicketId { get; }

@@ -275,6 +275,21 @@ namespace sh.be.api.Controllers.Module.Construction
             }
         }
 
+        [HttpGet("latest-working")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
+        public async Task<ApiResponse> FindLatestWorking([FromQuery] FindLatestWorkingSubmissionDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindLatestWorking(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
         [HttpGet("{id:int}/next")]
         [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
         public async Task<ApiResponse> FindNext([FromRoute] int id, [FromQuery] SubmissionFilterDto dto)

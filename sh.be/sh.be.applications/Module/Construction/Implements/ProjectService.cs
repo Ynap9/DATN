@@ -83,7 +83,7 @@ namespace sh.be.applications.Module.Construction.Implements
             return await _projectQuery.FindPaging(dto, currentUserId, isAdmin);
         }
 
-        // Chi tiết dự án theo phạm vi người gọi: ngoài dự án → 303; Data / QA ẩn link, kèm tiến trình của bản thân
+        // Chi tiết dự án theo phạm vi người gọi: ngoài dự án → 303; vai trò người gọi ở từng loại văn bản; Data / QA ẩn link, kèm tiến trình của bản thân
         public async Task<FindProjectByIdDto> FindById(int id)
         {
             _logger.LogInformation($"{nameof(FindById)}, id={id}");
@@ -94,6 +94,7 @@ namespace sh.be.applications.Module.Construction.Implements
             var project = await _projectQuery.FindById(id)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
             project.DocumentTypeIds = await _projectRepository.GetDocumentTypeIdsAsync(id);
+            project.ViewerRoles = await _projectQuery.FindViewerRoles(id, currentUserId, isAdmin);
             if (!isTotalViewer)
             {
                 project.UrlGoogleSheetSync = null;

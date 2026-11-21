@@ -1,6 +1,6 @@
 # Quy ước code bắt buộc
 
-> **Phần 5/6** · trước: [04-http-auth.md](04-http-auth.md) · mục lục: [README.md](README.md)
+> **Phần 5/7** · trước: [04-http-auth.md](04-http-auth.md) · mục lục: [README.md](README.md)
 
 Áp dụng cho mọi thay đổi trong `sh.fe`. Luật chung (chỉ sửa chỗ cần thiết, comment, tách hàm, không commit khi
 chưa yêu cầu) giống BE — xem [../../be/architecture/07-conventions.md](../../be/architecture/07-conventions.md).
@@ -81,6 +81,8 @@ quá 6–7 file mới chia thư mục con (`components/`).
 - ⚠️ `ng test` (Karma) **không** kiểm strict template như `ng build` / `ng serve`: truyền `number` vào pipe khai `string` vẫn
   qua test nhưng build đỏ. Sửa template xong luôn chạy `npm run build:admin`, đừng chỉ chạy test.
 - Style: Tailwind cho bố cục; style riêng component dưới 8 kB.
+- ⚠️ Repo **không** có cấu hình Prettier: đừng chạy `npx prettier --write` — mặc định 80 cột ngắt mỗi thuộc tính một dòng, lệch hẳn kiểu template
+  hiện có (một thẻ trên ít dòng dài). Định dạng tay theo file xung quanh.
 - Thông điệp người dùng tiếng Việt, lấy từ `SuccessMessage` / `ErrorMessage` khi có sẵn.
 
 ## Kiểm trước khi báo xong

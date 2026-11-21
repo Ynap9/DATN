@@ -44,12 +44,19 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
 
         public List<ProjectDocumentTypeDocumentField> AssignDocumentFields(IEnumerable<DocumentField> documentFields, string? assignedBy, DateTime? assignedDate)
         {
+            return AppendDocumentFields(documentFields, 0, assignedBy, assignedDate);
+        }
+
+        // Cấu hình trường nối sau thứ tự import cuối của cặp: gắn mới (từ 0) hoặc trường vừa thêm vào loại văn bản đã gắn dự án
+        public List<ProjectDocumentTypeDocumentField> AppendDocumentFields(IEnumerable<DocumentField> documentFields, int lastOrderFieldImport,
+            string? assignedBy, DateTime? assignedDate)
+        {
             return documentFields
                 .Where(f => f.DocumentTypeId == DocumentTypeId)
                 .OrderBy(f => f.OrderTableView)
                 .ThenBy(f => f.Id)
                 .Select((f, index) => ProjectDocumentTypeDocumentField.Create(ProjectId, DocumentTypeId, f.Id, f.FieldImport ?? String.Empty,
-                    index + 1, assignedBy, assignedDate))
+                    lastOrderFieldImport + index + 1, assignedBy, assignedDate))
                 .ToList();
         }
 

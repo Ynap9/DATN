@@ -28,6 +28,7 @@ namespace sh.be.applications.Module.Construction.Interfaces.Services
         Task<ViewSubmissionDetailDto> FindNext(int id, SubmissionFilterDto dto);
         Task<ViewSubmissionDetailDto> FindPrevious(int id, SubmissionFilterDto dto);
         Task<ViewCountSubmissionDto> Count(SubmissionFilterDto dto);
+        Task<ViewLatestWorkingSubmissionDto?> FindLatestWorking(FindLatestWorkingSubmissionDto dto);
         Task<ViewCheckSubmissionResultDto> Check(CheckSubmissionDto dto);
         Task<BaseResponsePagingDto<GetListSubmissionLogDto>> FindLogPaging(int id, FindPagingSubmissionLogDto dto);
         Task<BaseResponsePagingDto<GetListQaSubmissionDto>> FindQaPaging(FindPagingQaSubmissionDto dto);
