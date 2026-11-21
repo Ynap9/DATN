@@ -27,6 +27,9 @@ Hồ sơ cũ không có dòng `SubmissionUser` = chưa giao, không cần script
 `Update_PromptFieldConfig_OutputKey` (`Migrations/Ai/`, Task 21) chạy sau `Add_AiModule`: nới `ai.PromptFieldConfig.OutputKey` từ `nvarchar(100)`
 lên `nvarchar(450)` (trần khoá index SQL Server), EF xoá rồi tạo lại index unique `(PromptTemplateId, OutputKey)`. Không mất dữ liệu; `Down` thu hẹp lại thì có thể cắt chữ.
 
+`Add_SubmissionLog_ChangedDatas` (`Migrations/Construction/`, Task 43A) chạy sau `Update_PromptFieldConfig_OutputKey`: chỉ thêm cột
+`construction.SubmissionLog.ChangedDatas` `nvarchar(max)` NULL. Log cũ giữ `null` (không backfill), không cần script dữ liệu.
+
 ## Dữ liệu test hồ sơ (DB dev)
 
 `test-data-ho-so.sql` tạo 15 hồ sơ + 1 hồ sơ khác loại văn bản (dự án 3, loại văn bản 3/4), 5 trường (`Ghi chú` cố ý không cấu hình

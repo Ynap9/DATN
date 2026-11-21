@@ -64,8 +64,7 @@ nên `count.total` luôn bằng `paging.totalItems`, và vị trí, hồ sơ li�
 
 Body: `{ id, projectId, documentTypeId, datas: [{ documentFieldId, data }], note }` (trước 2026-10-21 là `PUT {id}/check`, id ở route).
 
-- Hồ sơ luôn chuyển sang `CHECKED`, kể cả đã `CHECKED` (tái kiểm tra) hoặc đang `RETURNED`. Mỗi lần bấm sinh đúng **một** `SubmissionLog`
-  + **một** `AuditLog`, kể cả không sửa ô nào.
+- Hồ sơ luôn chuyển sang `CHECKED`, kể cả đã `CHECKED` (tái kiểm tra) hoặc đang `RETURNED`. Mỗi lần bấm sinh đúng **một** `SubmissionLog` + **một** `AuditLog`, kể cả không sửa ô nào.
 - `Description` của log: `Người dùng: {UserName} đã kiểm tra hồ sơ.`, `... đã tái kiểm tra hồ sơ.` hoặc `... đã kiểm tra lại hồ sơ bị trả lại.`.
 - Hồ sơ bị trả lại: `StatusQa` về `0`, xoá `QaReason` để QA chấm lại. Tái kiểm tra hồ sơ đã QA mà sửa ≥ 1 ô cũng về `0` (log "… sửa N
   trường sau QA — cần QA lại.", 18C R9); không sửa ô nào thì giữ `StatusQa`. Kết quả trả thêm `statusQa` ([13-ho-so-qa.md](13-ho-so-qa.md)).
@@ -75,7 +74,8 @@ Body: `{ id, projectId, documentTypeId, datas: [{ documentFieldId, data }], note
   - trường không gửi lên → giữ nguyên.
 - Lỗi, không ghi gì: hồ sơ không tồn tại `305`; sai dự án / loại văn bản `319`; dự án không tồn tại `303`; dự án `DONE` `316`, hết hạn `323`
   (**trừ SuperAdmin**); trường gửi trùng `318`; trường không thuộc cấu hình dự án + loại văn bản `311`; ghi chú quá 1000 ký tự `400`.
-- `changedDataCount` = số ô sửa + số ô thêm. Audit `Kiểm tra hồ sơ`, `Update`, lưu `StatusCheck` và giá trị cũ / mới từng trường.
+- `changedDataCount` = số ô sửa + số ô thêm; audit `Kiểm tra hồ sơ`, `Update` lưu `StatusCheck` và giá trị cũ / mới từng trường. Task 43A: log
+  lưu thêm `ChangedDatas` = JSON `[{ documentFieldId, oldData, newData }]` theo thứ tự `SubmissionCheckPlan.Changes` (ô thêm `oldData = ""`, không sửa → `"[]"`, log trước 43A `null`).
 - Task 40: mở transaction **trước** mọi luật, đọc văn bản `WITH (UPDLOCK, ROWLOCK)` (`EnsureSubmissionExistsForUpdateAsync`) giữ tới commit —
   Check / QA / Xoá cùng văn bản chạy lần lượt, request sau xét trên trạng thái đã commit (không còn ghi vào văn bản vừa bị xoá).
 - Thứ tự khoá chung **cặp `ProjectDocumentType` → văn bản** (như Xoá / import / giao việc): dự án có QA thì Check gọi
