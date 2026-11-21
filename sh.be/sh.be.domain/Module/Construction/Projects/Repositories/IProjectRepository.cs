@@ -19,6 +19,8 @@ namespace sh.be.domain.Module.Construction.Projects.Repositories
         void Add(Project project);
         void Update(Project project);
         Task<List<ProjectDocumentType>> GetDocumentTypesAsync(int projectId);
+        Task<List<ProjectDocumentType>> GetDocumentTypesByDocumentTypeIdAsync(int documentTypeId);
+        Task<Dictionary<int, int>> GetLastOrderFieldImportsAsync(int documentTypeId);
         Task<List<int>> GetDocumentTypeIdsAsync(int projectId);
         Task<bool> ExistsDocumentTypeAsync(int projectId, int documentTypeId);
         Task<bool> ExistsActiveDocumentTypeAsync(int projectId, int documentTypeId);

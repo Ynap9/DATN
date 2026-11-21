@@ -12,5 +12,6 @@ namespace sh.be.applications.Module.Construction.Dtos.Project
         public bool IsQaEnabled { get; set; }
         public List<int> DocumentTypeIds { get; set; } = new();
         public List<GetListProjectMyProgressDto>? MyProgresses { get; set; }
+        public List<GetListProjectViewerRoleDto> ViewerRoles { get; set; } = new();
     }
 }

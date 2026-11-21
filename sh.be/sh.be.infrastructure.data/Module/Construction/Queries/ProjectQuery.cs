@@ -237,6 +237,27 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             }).ToList();
         }
 
+        public Task<List<GetListProjectViewerRoleDto>> FindViewerRoles(int projectId, string userId, bool isAdmin)
+        {
+            // Admin: mọi loại văn bản đang gắn dự án; người khác: vai trò thành viên ở từng loại đang gắn (mỗi người một vai một cặp)
+            return (from pd in _shDbContext.ProjectDocumentTypes.AsNoTracking()
+                    where pd.ProjectId == projectId
+                    let viewerRole = isAdmin
+                        ? RoleConstants.ROLE_ADMIN
+                        : _shDbContext.ProjectMembers
+                            .Where(m => m.ProjectId == projectId && m.DocumentTypeId == pd.DocumentTypeId && m.UserId == userId)
+                            .Select(m => m.Role)
+                            .FirstOrDefault()
+                    where viewerRole != null
+                    orderby pd.DocumentTypeId
+                    select new GetListProjectViewerRoleDto
+                    {
+                        DocumentTypeId = pd.DocumentTypeId,
+                        ViewerRole = viewerRole,
+                    })
+                .ToListAsync();
+        }
+
         public async Task<ViewProjectAcceptanceDto> FindAcceptanceSummary(int projectId)
         {
             var countsByDocumentTypeId = await _shDbContext.Submissions

@@ -31,8 +31,12 @@
                 <div class="flex flex-col gap-1">
                     <span class="text-[13px] text-muted-color">Metadata</span>
                     <div class="flex flex-wrap gap-1">
-                        @for (name of documentTypeNames; track name) {
-                            <p-tag [value]="name" severity="secondary" />
+                        @for (tag of documentTypeTags; track tag.id) {
+                            @if (tag.link) {
+                                <a [routerLink]="tag.link"><p-tag class="cursor-pointer" [value]="tag.name" severity="secondary" /></a>
+                            } @else {
+                                <p-tag [value]="tag.name" severity="secondary" />
+                            }
                         } @empty {
                             <span>—</span>
                         }
@@ -44,7 +48,7 @@
         @if (project.myProgresses) {
             <div class="rounded-xl border border-[var(--app-line)] bg-[var(--app-surface)] p-4">
                 <div class="text-base font-semibold mb-4">Tiến độ của tôi</div>
-                <app-data-table [columns]="progressColumns" [data]="project.myProgresses" dataKey="documentTypeId" [paginator]="false" />
+                <app-data-table [columns]="progressColumns" [data]="project.myProgresses" dataKey="documentTypeId" [paginator]="false" (action)="onProgressAction($event)" />
             </div>
         }
 

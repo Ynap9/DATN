@@ -1,0 +1,97 @@
+@if (project) {
+    <app-page-header [title]="documentTypeName" [breadcrumbs]="breadcrumbs">
+        @if (role) {
+            <p-tag [value]="'Bạn: ' + roleLabel" severity="secondary" />
+        }
+        <p-button icon="pi pi-refresh" severity="secondary" [outlined]="true" ariaLabel="Làm mới" pTooltip="Làm mới" tooltipPosition="bottom" (onClick)="refresh()" />
+    </app-page-header>
+
+    @if (isUnassigned) {
+        <div class="flex flex-col items-center gap-3 py-12">
+            <span class="text-muted-color">Bạn chưa được giao văn bản nào trong metadata này</span>
+            <p-button label="Về dự án" severity="secondary" [outlined]="true" (onClick)="backToProject()" />
+        </div>
+    } @else {
+        <div class="flex flex-col gap-4">
+            <div class="flex flex-wrap items-end gap-4">
+                <p-tabs class="mr-auto" [value]="activeTab.key" (valueChange)="selectTab($event)">
+                    <p-tablist>
+                        @for (tab of tabs; track tab.key) {
+                            <p-tab [value]="tab.key">
+                                {{ tab.label }} <span class="text-muted-color font-normal">{{ counts[tab.key] ?? 0 }}</span>
+                            </p-tab>
+                        }
+                    </p-tablist>
+                </p-tabs>
+                @if (canToggleQaView) {
+                    <label class="flex items-center gap-2 pb-2">
+                        <p-toggleswitch [ngModel]="isQaView" (ngModelChange)="setQaView($event)" /> Xem theo QA
+                    </label>
+                }
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
+                <p-iconfield class="w-full sm:w-80">
+                    <p-inputicon class="pi pi-search" />
+                    <input pInputText class="w-full" placeholder="Tìm tên file, hồ sơ, hộp" [formControl]="keyword" />
+                </p-iconfield>
+                @if (canFilterByField) {
+                    @for (pair of fieldPairs; track pair.keys.documentFieldId) {
+                        <div class="flex items-center gap-2">
+                            <sh-select class="w-44" placeholder="Trường" [options]="documentFields" optionLabel="name" optionValue="id" [filter]="true"
+                                [showClear]="true" [ngModel]="pair.documentFieldId" (ngModelChange)="setField(pair, $event)" />
+                            <span class="text-muted-color">:</span>
+                            <p-autocomplete class="w-52" placeholder="Giá trị" optionLabel="value" appendTo="body" [ngModel]="pair.option"
+                                [suggestions]="pair.suggestions" [dropdown]="true" [showClear]="true" [delay]="searchDelay"
+                                [disabled]="!pair.documentFieldId" (completeMethod)="searchFieldValues(pair, $event.query)"
+                                (onSelect)="selectFieldValue(pair, $event.value)" (onClear)="selectFieldValue(pair, null)">
+                                <ng-template #item let-option>
+                                    {{ option.value }}
+                                    @if (!option.isEmpty) {
+                                        <span class="ml-1 text-muted-color">({{ option.submissionCount }})</span>
+                                    }
+                                </ng-template>
+                            </p-autocomplete>
+                        </div>
+                    }
+                }
+                @if (hasFilter) {
+                    <p-button label="Xoá lọc" icon="pi pi-filter-slash" [text]="true" size="small" (onClick)="clearFilters()" />
+                }
+            </div>
+
+            @if (latestWorking) {
+                <div class="flex flex-wrap items-center gap-2 text-sm">
+                    <i class="pi pi-history text-muted-color"></i>
+                    <span>Tiếp tục văn bản đang làm:</span>
+                    <a class="cursor-pointer text-primary" (click)="openLatestWorking()">{{ latestWorking.fileName }}</a>
+                    <span class="text-muted-color">{{ latestWorkingVerb }} {{ latestWorking.workedDate | date: 'HH:mm dd/MM/yyyy' }}</span>
+                </div>
+            }
+
+            <!-- Hai thẻ riêng: DataTable chỉ đọc cấu hình cột theo tableKey lúc khởi tạo -->
+            @if (isQaView) {
+                <app-data-table [tableKey]="tableKey" [columns]="columns" [data]="rows" [loading]="loading" [pageNumber]="pageNumber" [pageSize]="pageSize"
+                    [total]="totalRecords" [columnSettings]="true" (pageChange)="onPageChange($event)" (action)="onAction($event)">
+                    <div tableEmpty><ng-container [ngTemplateOutlet]="emptyState" /></div>
+                </app-data-table>
+            } @else {
+                <app-data-table [tableKey]="tableKey" [columns]="columns" [data]="rows" [loading]="loading" [pageNumber]="pageNumber" [pageSize]="pageSize"
+                    [total]="totalRecords" [columnSettings]="true" (pageChange)="onPageChange($event)" (action)="onAction($event)">
+                    <div tableEmpty><ng-container [ngTemplateOutlet]="emptyState" /></div>
+                </app-data-table>
+            }
+        </div>
+    }
+}
+
+<ng-template #emptyState>
+    <div class="flex flex-col items-center gap-3 py-8">
+        @if (hasFilter) {
+            <span class="text-muted-color">Không có văn bản khớp bộ lọc</span>
+            <p-button label="Xoá lọc" icon="pi pi-filter-slash" [text]="true" size="small" (onClick)="clearFilters()" />
+        } @else {
+            <span class="text-muted-color">Chưa có văn bản</span>
+        }
+    </div>
+</ng-template>

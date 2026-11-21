@@ -130,44 +130,38 @@ nên lúc hai trường đổi chỗ sẽ trùng tạm thời và báo lỗi. Gh
   bị bỏ qua và thành `1` (cùng bẫy với `DocumentType.DefaultView`).
 - Dropdown trả `{ id, name }` trường chưa xoá của **một** loại văn bản (sắp `OrderTableView`, `Id`); không có thì trả rỗng, không lỗi.
 - Danh sách lọc theo `documentTypeId` (tuỳ chọn) và `keyword` trên `Name` / `Field`; sắp theo loại văn bản, `OrderTableView`, `Id`.
-- Sửa không đổi được `DocumentTypeId`. Xoá là xoá mềm; xem lại sau xoá trả `302`. Xoá (một hoặc nhanh) cũng xoá mềm các dòng
-  `ProjectDocumentTypeDocumentField` của trường đó ở **mọi dự án**, trong cùng transaction ([07-du-an.md](07-du-an.md)). Mỗi thao tác ghi để lại audit kèm giá trị cũ và mới.
+- Sửa không đổi được `DocumentTypeId`. Xoá là xoá mềm; xem lại sau xoá trả `302`. Mỗi thao tác ghi để lại audit kèm giá trị cũ và mới.
+- Cấu hình trường của dự án (`ProjectDocumentTypeDocumentField`, [07](07-du-an.md)) đi theo trường, cùng transaction: xoá (một / nhanh) xoá mềm dòng của trường
+  ở **mọi dự án**; tạo (một / nhanh, Task 42 bước 0) thêm dòng cho mọi dự án chưa xoá đang gắn loại văn bản — `FieldImport` của trường, thứ tự import nối sau
+  số lớn nhất của cặp kể cả dòng đã xoá mềm (`ProjectDocumentType.AppendDocumentFields`). Trước đó trường thêm sau không vào dự án cũ: không thành cột, kiểm tra
+  và `field-values` trả `311`. Tạo trường phải `SaveChanges` một lần trước để có `Id` rồi mới thêm cấu hình.
 
 ## Đã kiểm thực tế
 
 > Các bước "chuyển thứ tự", `order = 99`, `order = 0` dưới đây kiểm luật **cũ** của `PUT {id}`, nay đã thay bằng kéo thả.
 
-Ngày 2026-10-12, gọi API thật bằng `admin`: tạo 2 trường (thứ tự `1`, `2`), tạo trùng `Field` (`409`), loại văn bản
-không tồn tại (`301`), phân trang lọc theo loại văn bản, xem chi tiết, xoá, xem lại sau xoá (`302`), seeder thêm đủ 5
-quyền. Thứ tự: tạo 4 trường ra `1–4`; chuyển trường cuối lên `1`, rồi xuống `3`; gửi `order = 99` thì về cuối; xoá
-một trường thì các trường sau dồn lên; tạo tiếp ra `n + 1`. Mọi bước hai cột thứ tự bằng nhau, hai cờ hiển thị `true`.
+Ngày 2026-10-12, API thật bằng `admin`: tạo 2 trường (`1`, `2`), trùng `Field` `409`, loại văn bản không tồn tại `301`, phân trang lọc, chi tiết, xoá, xem lại
+`302`, seeder đủ 5 quyền. Thứ tự: tạo 4 ra `1–4`; chuyển cuối lên `1` rồi xuống `3`; `order = 99` về cuối; xoá thì dồn lên; tạo tiếp `n + 1`; hai cột thứ tự bằng nhau.
+Ngày 2026-10-13, bắn đồng thời 20 tạo, 10 chuyển thứ tự, 5 xoá + 5 tạo: thứ tự đúng `1..20`, không trùng, không deadlock.
 
-Ngày 2026-10-13, bắn đồng thời: 20 lệnh tạo, rồi 10 lệnh chuyển thứ tự, rồi 5 xoá + 5 tạo cùng lúc. Sau mỗi lượt thứ tự
-đúng `1..20`, không trùng, hai cột bằng nhau, không deadlock.
+Cùng ngày, sau khi đổi luật xoá, DB sạch, kiểm `GET paging` sau **mỗi** bước: tạo `1..5`, chuyển lên / xuống, `order = 99` / `0`; xoá `2` rồi `1` → còn `3, 4, 5`;
+tạo ra `6`; xoá `6` rồi tạo ra `7`; trùng `Field` `409`; hai loại văn bản đếm riêng; ba lượt đồng thời — đúng hết, số thứ tự khác nhau = số dòng mỗi loại.
 
-Cùng ngày, sau khi đổi luật xoá, chạy lại trên DB sạch, kiểm bằng `GET paging` sau **mỗi** bước (không trùng, hai cột
-bằng nhau, hai cờ hiển thị `true`, đúng từng số thứ tự mong đợi): tạo `1..5`, chuyển lên / xuống, `order = 99` và
-`order = 0`; xoá trường `2` rồi `1` → còn `3, 4, 5`; tạo mới ra `6`; xoá `6` rồi tạo mới ra `7`; tạo trùng `Field`
-(`409`); hai loại văn bản đếm riêng; ba lượt gọi đồng thời — tất cả đúng. Trong DB, tính cả trường đã xoá, số thứ tự khác
-nhau bằng đúng số dòng của mỗi loại văn bản.
+Thêm nhanh: `SoHieu;NgayKy;TrichYeu` → `1, 2, 3`; ` NguoiKy ; ;CoQuan;nguoiky;` → đúng 2 trường `4, 5`; xoá `5` rồi thêm 2 → `6, 7`; tên đã có → `409`, không
+thêm gì; toàn `;` → `400`; `301`; tạo thường sau đó → `8`; 5 lệnh đồng thời × 3 trường → `1..15` không trùng; `name = field = fieldImport`; đủ 8 audit.
 
-Thêm nhanh, kiểm bằng `GET` sau mỗi lần gọi: `SoHieu;NgayKy;TrichYeu` → `1, 2, 3`; ` NguoiKy ; ;CoQuan;nguoiky;` → thêm
-đúng 2 trường `4, 5`; xoá trường `5` rồi thêm nhanh 2 trường → `6, 7`; có tên đã tồn tại → `409`, không thêm gì; chuỗi
-toàn `;` → `400`; loại văn bản không tồn tại → `301`; tạo thường sau đó → `8`; 5 lệnh thêm nhanh đồng thời (mỗi lệnh 3
-trường) → `1..15` không trùng; `name = field = fieldImport` ở mọi trường; ghi đủ 8 bản ghi audit.
+Xoá nhanh: có `1..6`, xoá `2, 4` → `1, 3, 5, 6`; kèm id loại khác → `302`, không đổi; xoá `6` (gửi lặp) → `1, 3, 5`; thêm → `7`; `301`; rỗng `400`; id không có /
+đã xoá → `302`, không xoá gì; `DELETE {id}` cũ vẫn chạy; 4 xoá + 2 thêm nhanh đồng thời → `200`, thứ tự không trùng; đủ 7 audit; trường đã xoá giữ thứ tự.
 
-Xoá nhanh theo loại văn bản, kiểm bằng `GET` sau mỗi lần gọi: có `1..6`, xoá `2, 4` → còn `1, 3, 5, 6`; gửi kèm id của
-loại văn bản khác → `302`, cả hai loại không đổi; xoá `6` (gửi lặp) → còn `1, 3, 5`; thêm mới → `7`; loại văn bản không
-tồn tại → `301`; danh sách rỗng → `400`; có id không tồn tại hoặc đã xoá → `302`, không xoá gì; `DELETE {id}` cũ vẫn
-chạy; 4 lệnh xoá nhanh + 2 lệnh thêm nhanh đồng thời → tất cả `200`, thứ tự không trùng; ghi đủ 7 bản ghi audit; trong DB
-trường đã xoá giữ nguyên thứ tự.
-
-Dropdown, đối chiếu với `GET paging` cùng loại văn bản: thêm 4 trường → đủ 4 theo thứ tự; chuyển trường cuối lên `1` →
-dropdown đổi theo; xoá một trường → không còn trong dropdown; loại văn bản khác chỉ ra trường của nó; loại văn bản rỗng
-hoặc không tồn tại → `[]`; `GET {id}` không bị route `dropdown` che; không token → `401`.
+Dropdown, đối chiếu `GET paging`: đủ 4 trường đúng thứ tự, đổi theo khi chuyển / xoá; loại khác chỉ ra trường của nó; loại rỗng / không tồn tại → `[]`;
+`GET {id}` không bị route `dropdown` che; không token → `401`.
 
 Map `fieldImport` (2026-10-14, sheet thật 2 tab, 7 trường): khớp cả khi khác hoa thường / thừa khoảng trắng, `"Người"` không
 khớp `"Người ký"`, `fieldImport` rỗng hoặc dòng header trống → `[]`, đổi tab đổi kết quả; `400`, `202`, `204`, `301`, `401` đúng.
+
+Gắn trường thêm sau vào dự án (2026-11-21, API thật, dữ liệu `ZZTEST42S0` đã dọn) — 12/12: tạo một / thêm nhanh ra thứ tự `3` / `4, 5` ở dự án thường, `51` / `52, 53`
+ở dự án có dòng đã xoá thứ tự `50`; dự án đã xoá và cặp đã gỡ không được thêm; thêm nhanh trùng tên → `409`, không thêm cấu hình; cột paging, kiểm tra, `field-values`,
+lọc trống chạy với trường mới. DB dev đếm 0 cặp thiếu cấu hình nên không cần script bù.
 
 ## Giới hạn
 
@@ -176,5 +170,8 @@ khớp `"Người ký"`, `fieldImport` rỗng hoặc dòng header trống → `[
 ⚠️ Xoá loại văn bản không xoá các trường của nó; trường vẫn còn nhưng không tạo thêm được vào loại văn bản đã xoá.
 
 ⚠️ Chưa kiểm `Name`, `Field` rỗng, giống `DocumentType`.
+
+⚠️ Tạo trường đúng lúc dự án đang gắn loại văn bản đó có thể sót một dòng cấu hình: hai transaction không thấy dữ liệu chưa commit của nhau và không dùng chung khoá
+(tạo trường khoá thứ tự loại văn bản, gắn dự án thì không). Cửa sổ rất hẹp, chưa chặn; gặp thì chạy lại câu đếm "cặp thiếu cấu hình" và chèn bù.
 
 > **Tiếp:** [07-du-an.md](07-du-an.md) — danh mục dự án và Google Sheet tự tạo.

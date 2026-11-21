@@ -155,6 +155,26 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
                 .ToListAsync();
         }
 
+        // Các dự án đang gắn loại văn bản (cặp chưa gỡ, dự án chưa xoá)
+        public Task<List<ProjectDocumentType>> GetDocumentTypesByDocumentTypeIdAsync(int documentTypeId)
+        {
+            return _shDbContext.ProjectDocumentTypes
+                .AsNoTracking()
+                .Where(pd => pd.DocumentTypeId == documentTypeId && _shDbContext.Projects.Any(p => p.Id == pd.ProjectId))
+                .ToListAsync();
+        }
+
+        // Thứ tự import lớn nhất theo dự án của loại văn bản, tính cả cấu hình đã xoá mềm để trường thêm sau không trùng thứ tự với dòng sẽ khôi phục
+        public Task<Dictionary<int, int>> GetLastOrderFieldImportsAsync(int documentTypeId)
+        {
+            return _shDbContext.ProjectDocumentTypeDocumentFields
+                .IgnoreQueryFilters()
+                .Where(pf => pf.DocumentTypeId == documentTypeId)
+                .GroupBy(pf => pf.ProjectId)
+                .Select(g => new { ProjectId = g.Key, LastOrderFieldImport = g.Max(pf => pf.OrderFieldImport) })
+                .ToDictionaryAsync(x => x.ProjectId, x => x.LastOrderFieldImport);
+        }
+
         public Task<List<int>> GetDocumentTypeIdsAsync(int projectId)
         {
             return _shDbContext.ProjectDocumentTypes

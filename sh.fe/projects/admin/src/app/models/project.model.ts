@@ -45,6 +45,11 @@ export interface IProjectMyProgress {
     filledFieldCount: number | null;
 }
 
+export interface IProjectViewerRole {
+    documentTypeId: number;
+    viewerRole: string;
+}
+
 export interface IViewProject {
     id: number;
     name: string;
@@ -56,6 +61,7 @@ export interface IViewProject {
     isQaEnabled: boolean;
     documentTypeIds: number[];
     myProgresses: IProjectMyProgress[] | null;
+    viewerRoles: IProjectViewerRole[];
 }
 
 export interface ICreateProject {

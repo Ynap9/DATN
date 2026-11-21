@@ -197,6 +197,44 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             return counts;
         }
 
+        public Task<ViewLatestWorkingSubmissionDto?> FindLatestWorking(int projectId, int documentTypeId, string type, string userId, string? restrictedUserId)
+        {
+            var logs = type == SubmissionConst.LATEST_WORKING_TYPE_CHECK
+                ? _shDbContext.SubmissionLogs.AsNoTracking()
+                    .Where(l => l.ProjectId == projectId && l.DocumentTypeId == documentTypeId && l.UserId == userId)
+                    .Select(l => new { l.Id, l.SubmissionId, l.CreatedDate })
+                : _shDbContext.SubmissionQaLogs.AsNoTracking()
+                    .Where(l => l.ProjectId == projectId && l.DocumentTypeId == documentTypeId && l.UserId == userId)
+                    .Select(l => new { l.Id, l.SubmissionId, l.CreatedDate });
+
+            // Lọc văn bản còn mở được trước khi sắp xếp: văn bản gần nhất đã xoá / không còn giữ đúng vai tự bị bỏ qua, lấy văn bản kế tiếp
+            var submissions = _shDbContext.Submissions
+                .AsNoTracking()
+                .Where(s => s.ProjectId == projectId && s.DocumentTypeId == documentTypeId);
+            if (restrictedUserId != null)
+            {
+                var holderRole = type == SubmissionConst.LATEST_WORKING_TYPE_CHECK ? RoleConstants.ROLE_DATA : RoleConstants.ROLE_QA;
+                submissions = submissions.Where(s => _shDbContext.SubmissionUsers.Any(u => u.SubmissionId == s.Id && u.Role == holderRole
+                    && u.UserId == restrictedUserId));
+            }
+
+            return (from l in logs
+                    join s in submissions on l.SubmissionId equals s.Id
+                    orderby l.CreatedDate descending, l.Id descending
+                    select new ViewLatestWorkingSubmissionDto
+                    {
+                        SubmissionId = s.Id,
+                        Name = s.Name,
+                        FileName = s.FileName,
+                        ProfileRange = s.ProfileRange,
+                        Box = s.Box,
+                        StatusCheck = s.StatusCheck,
+                        StatusQa = s.StatusQa,
+                        WorkedDate = l.CreatedDate,
+                    })
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<BaseResponsePagingDto<GetListSubmissionLogDto>> FindLogPaging(int submissionId, FindPagingSubmissionLogDto dto)
         {
             var query = _shDbContext.SubmissionLogs
@@ -1070,8 +1108,8 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                     && u.TicketId == assignmentTicketId));
             }
 
-            query = ApplyFieldFilter(query, filter.DocumentFieldId1, filter.FieldValue1, excludedDocumentFieldId);
-            return ApplyFieldFilter(query, filter.DocumentFieldId2, filter.FieldValue2, excludedDocumentFieldId);
+            query = ApplyFieldFilter(query, filter.DocumentFieldId1, filter.FieldValue1, filter.IsEmpty1, excludedDocumentFieldId);
+            return ApplyFieldFilter(query, filter.DocumentFieldId2, filter.FieldValue2, filter.IsEmpty2, excludedDocumentFieldId);
         }
 
         private record QaReview(int SubmissionId, int NewStatusQa, string? EntryUserId, List<int> WrongDocumentFieldIds, bool IsFirstReview,
@@ -1083,15 +1121,28 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             public string? EntryUserId { get; init; }
         }
 
-        private IQueryable<Submission> ApplyFieldFilter(IQueryable<Submission> query, int? documentFieldId, string? fieldValue, int? excludedDocumentFieldId)
+        private IQueryable<Submission> ApplyFieldFilter(IQueryable<Submission> query, int? documentFieldId, string? fieldValue, bool? isEmpty,
+            int? excludedDocumentFieldId)
         {
-            var value = fieldValue?.Trim();
-            if (!documentFieldId.HasValue || string.IsNullOrEmpty(value) || documentFieldId == excludedDocumentFieldId)
+            if (!documentFieldId.HasValue || documentFieldId == excludedDocumentFieldId)
             {
                 return query;
             }
 
             var fieldId = documentFieldId.Value;
+            // Trường trống = không có dòng dữ liệu của trường, hoặc dữ liệu chỉ toàn khoảng trắng
+            if (isEmpty == true)
+            {
+                return query.Where(s => !_shDbContext.SubmissionDatas.Any(sd => sd.SubmissionId == s.Id && sd.DocumentFieldId == fieldId
+                    && sd.Data.Trim() != String.Empty));
+            }
+
+            var value = fieldValue?.Trim();
+            if (string.IsNullOrEmpty(value))
+            {
+                return query;
+            }
+
             return query.Where(s => _shDbContext.SubmissionDatas.Any(sd => sd.SubmissionId == s.Id && sd.DocumentFieldId == fieldId && sd.Data == value));
         }
     }
