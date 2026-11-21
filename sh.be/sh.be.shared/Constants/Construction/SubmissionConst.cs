@@ -23,6 +23,9 @@ namespace sh.be.shared.Constants.Construction
         public const int TIMELINE_MAX_EVENTS = 500;
         public const string TIMELINE_EVENT_CHECK = "CHECK";
         public const string TIMELINE_EVENT_QA = "QA";
+        public const string LATEST_WORKING_TYPE_CHECK = "CHECK";
+        public const string LATEST_WORKING_TYPE_QA = "QA";
+        public static readonly IReadOnlyList<string> LATEST_WORKING_TYPES = [LATEST_WORKING_TYPE_CHECK, LATEST_WORKING_TYPE_QA];
 
         public const int MAX_PAGE_SIZE = 200;
         public const int CHECK_NOTE_MAX_LENGTH = 1000;

@@ -10,6 +10,7 @@ namespace sh.be.applications.Module.Construction.Interfaces.Queries
         Task<int?> FindNextId(int id, ISubmissionFilter filter, string? restrictedUserId = null);
         Task<int?> FindPreviousId(int id, ISubmissionFilter filter, string? restrictedUserId = null);
         Task<ViewCountSubmissionDto> Count(ISubmissionFilter filter, string? restrictedUserId = null);
+        Task<ViewLatestWorkingSubmissionDto?> FindLatestWorking(int projectId, int documentTypeId, string type, string userId, string? restrictedUserId);
         Task<BaseResponsePagingDto<GetListSubmissionLogDto>> FindLogPaging(int submissionId, FindPagingSubmissionLogDto dto);
         Task<BaseResponsePagingDto<GetListQaSubmissionDto>> FindQaPaging(FindPagingQaSubmissionDto dto, string? restrictedUserId = null);
         Task<ViewQaSubmissionDetailDto?> FindQaById(int id, ISubmissionFilter filter, bool includePosition, string? restrictedUserId = null);

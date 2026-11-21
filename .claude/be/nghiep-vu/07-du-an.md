@@ -49,6 +49,9 @@ Task 30 (2026-11-13): Leader / Data / QA được gán `Project.View` chỉ th�
   văn bản (loại đã xoá cuối, giữ tên cũ): `documentTypeId`, `documentTypeName`, `viewerRole`, `totalBox`, `totalProfileRange`,
   `totalSubmission`, `checkedCount`, `progressPercent`, `filledFieldCount` (chỉ Data). Đếm bằng **cùng hàm** với cột "của tôi" ở paging
   (`ProjectQuery.CountMyHeldSubmissionsAsync`) nên số luôn khớp ([25](25-xoa-du-an-danh-sach-cap.md#danh-sách-cặp--get-apiconstructionprojectpaging)).
+- `viewerRoles` (`GetListProjectViewerRoleDto`, Task 42 bước 0, mọi người gọi): `[{ documentTypeId, viewerRole }]` của cặp chưa gỡ, sắp `documentTypeId`. Admin → mọi
+  cặp `Admin`; người khác → `Role` ở `ProjectMember` của cặp (không xét `IsActive`), cặp không tham gia thì không có dòng. Để FE biết Leader quản lý cặp nào;
+  quyền xem văn bản vẫn theo `ResolveRestrictedUserIdAsync` (Leader cần `ViewAllSubmission` + đang hoạt động), nên Leader thiếu một trong hai vẫn chỉ thấy văn bản mình giữ.
 - Không đổi luật bấm nghiệm thu (`337`); ba API start / finish / reopen vẫn trả `GET acceptance` ở cuối.
 
 ## Loại văn bản của dự án — `ProjectDocumentType`
@@ -144,30 +147,25 @@ Cấu hình phía Google: [../architecture/05-infrastructure-external.md](../arc
 
 ## Đã kiểm thực tế
 
-Ngày 2026-10-15, gọi API thật bằng `admin`, `FolderId` rỗng: `status = 9` khi tạo → `400` (luật cũ, nay body tạo không còn
-`status`); `startedAt` sau `endedAt` → `400`;
-body hợp lệ → `205` (Drive báo `File not found` cho thư mục rỗng), không lưu dự án; `GET` / `PUT` / `DELETE` id không tồn tại
-→ `303`; không token → `401`; seeder thêm đủ 4 quyền `Function.Construction.Project.*`.
+Ngày 2026-10-15, API thật bằng `admin`, `FolderId` rỗng: `status = 9` khi tạo → `400` (luật cũ); `startedAt` sau `endedAt` → `400`; body hợp lệ → `205` (Drive
+`File not found`), không lưu; `GET` / `PUT` / `DELETE` id không tồn tại → `303`; không token → `401`; seeder đủ 4 quyền `Function.Construction.Project.*`.
 
-Ngày 2026-10-16: `dropdown` trả đủ 2 dự án sắp theo tên; `paging` trang 1 cỡ 2 trả 2 item, `totalItems = 2`; `status=2` trả
-rỗng; `keyword=" test "` khớp cả hai; `GET project` trả 2 dự án, id 2 trước id 1; không token → `401`. Sau khi thêm `documentTypeIds`: `GET 1` trả `documentTypeIds: []`; tạo và sửa với
-`[999999]` → `301`, không gọi Google, không lưu gì. Sửa dự án 1 với `[22, 26]` → 20 + 7 trường, thứ tự `1..20` và `1..7`
-khớp `OrderTableView`; rồi `[26, 30]` → 22 bị xoá, 26 giữ nguyên `CreatedDate`, 30 thêm 12 trường; rồi `[]` → hai bảng trống. Loại văn bản tạm 3 trường gắn vào dự án 1: xoá một trường → dòng đó `Deleted = 1`; `quick-delete`
-hai trường còn lại → cả hai `Deleted = 1`, có `DeletedBy`.
+Ngày 2026-10-16: `dropdown` đủ 2 dự án sắp tên; `paging` cỡ 2 ra 2 item, `totalItems = 2`; `status=2` rỗng; `keyword=" test "` khớp cả hai; `GET project` id 2 trước id 1.
+`documentTypeIds`: `GET 1` ra `[]`; `[999999]` → `301`, không gọi Google, không lưu. Sửa với `[22, 26]` → 20 + 7 trường, thứ tự `1..20`, `1..7` khớp `OrderTableView`;
+`[26, 30]` → 22 bị xoá, 26 giữ `CreatedDate`, 30 thêm 12 trường; `[]` → hai bảng trống. Xoá một / `quick-delete` trường → dòng cấu hình `Deleted = 1`, có `DeletedBy`.
 
-Chưa có `GoogleRefreshToken` → tạo trả `304` "Thiếu cấu hình dự án: GoogleRefreshToken". Chưa kiểm luồng tạo thành công,
-đổi tên, xoá trên dự án thật (cần người dùng xác thực Google trước).
+Chưa có `GoogleRefreshToken` → tạo trả `304`. Chưa kiểm tạo thành công, đổi tên, xoá trên dự án thật (cần xác thực Google trước).
 
 Ngày 2026-11-13 (Task 28, DB dev, dự án tạm `ZZTEST28` đã xoá) — **10/10**: dự án cũ sau migration đều `isQaEnabled = true`; tạo
 `isQaEnabled = false` → `false`, không gửi → `true` (DB, `GET {id}`, `paging`, `GET` danh sách khớp); audit tạo có `IsQaEnabled`;
 `PUT` gửi `isQaEnabled = true` → cờ vẫn `false`. Tạo thật nên còn 2 file Google Sheet trên Drive (xoá dự án không xoá file).
 
-Ngày 2026-11-13 (Task 30, DB dev, dữ liệu tạm `ZZTEST30` đã dọn) — danh sách + dropdown **21/21**, chi tiết + nghiệm thu (gồm bấm
-nghiệm thu) **32/32**: Admin thấy đủ; Leader có link; Data / QA link `null`; người đang tắt vẫn thấy, đã gỡ / ngoài dự án `[]` / `303` (cùng
-thông báo với id không có); Leader P1 + Data P2 thấy link P1, không link P2; `myProgresses` của Data 10 / 4 = 40%, ô 12 khớp paging và
-SQL đếm tay, QA 4 / 1 = 25%; nghiệm thu của Data / QA giống hệt Leader; start → reopen → start → finish của Admin trả đủ số liệu.
-Ngày 2026-11-14 chạy lại gộp cả checklist **43/43**, thêm user chỉ role `Admin` / chỉ `SuperAdmin` (thấy đủ, `canForce` true) và dự án đã
-xoá mềm mà Data vẫn là thành viên (không hiện ở danh sách, chi tiết / nghiệm thu `303`).
+Ngày 2026-11-13 (Task 30, DB dev, `ZZTEST30` đã dọn) — danh sách + dropdown **21/21**, chi tiết + nghiệm thu **32/32**: Admin thấy đủ; Leader có link; Data / QA
+link `null`; người đang tắt vẫn thấy, đã gỡ / ngoài dự án `[]` / `303`; Leader P1 + Data P2 thấy link P1, không P2; `myProgresses` Data 10 / 4 = 40%, ô 12 khớp
+paging và SQL, QA 4 / 1 = 25%; nghiệm thu Data / QA giống Leader. 2026-11-14 gộp checklist **43/43**, thêm user chỉ `Admin` / `SuperAdmin` và dự án đã xoá mềm.
+
+`viewerRoles` (2026-11-21, `ZZTEST42S0` đã dọn) — 6/6: Admin ra mọi cặp `Admin`; Leader M1 + Data M2 ra đúng hai dòng, `myProgresses` vẫn `null`; Data ra một dòng,
+`myProgresses` vẫn là mảng; gỡ cặp thì mất dòng dù thành viên còn; người ngoài `303`.
 
 ## Giới hạn
 

@@ -24,7 +24,7 @@ Route có ràng buộc `{id:int}` để `paging`, `count`, `proxy-file` không k
 
 Năm API đọc (và hai API QA ở [13-ho-so-qa.md](13-ho-so-qa.md)) nhận cùng bộ lọc query: `projectId`, `documentTypeId` (bắt buộc),
 `statusCheck` (`0` chưa kiểm tra, `1` đã kiểm tra, `2` trả lại; bỏ trống = tất cả), `statusQa` (`0` / `1` / `2`, bỏ trống = tất cả), `keyword`,
-`documentFieldId1` + `fieldValue1`, `documentFieldId2` + `fieldValue2`. Mọi API lọc qua **một** hàm `SubmissionQuery.ApplyFilter`,
+`documentFieldId1` + `fieldValue1` / `isEmpty1`, `documentFieldId2` + `fieldValue2` / `isEmpty2`. Mọi API lọc qua **một** hàm `SubmissionQuery.ApplyFilter`,
 nên `count.total` luôn bằng `paging.totalItems`, và vị trí, hồ sơ liền kề cũng khớp với danh sách.
 
 - Thứ tự: `Submission.Id` tăng dần (= thứ tự import).
@@ -33,7 +33,8 @@ nên `count.total` luôn bằng `paging.totalItems`, và vị trí, hồ sơ li�
   [18-qa-cham-mau.md](18-qa-cham-mau.md#18c--phiếu-qa)), không thì `327`; áp cho cả paging, count, next / previous, chi tiết, tree, xuất Excel.
   `assignmentTicketId` (Task 25, mở từ "Phiếu của tôi"): chỉ văn bản có `SubmissionUser` Role `Data` thuộc phiếu đó; không kiểm người gọi.
 - Cặp trường / giá trị: hồ sơ phải có `SubmissionData` của trường đó với `Data` **bằng đúng** giá trị đã trim. Thiếu một vế thì bỏ
-  qua cặp đó. Có hai cặp thì phải thoả cả hai.
+  qua cặp đó. Có hai cặp thì phải thoả cả hai. `isEmpty1` / `isEmpty2` = lọc trường trống (Task 42A, luật + `400` / `311` ở
+  [28-van-ban-dang-lam.md](28-van-ban-dang-lam.md#lọc-trường-trống)); văn bản đang làm gần nhất (`latest-working`) cũng ở file đó.
 - Trước khi lọc: kiểm dự án / loại văn bản bằng một query; chỉ khi sai mới kiểm chi tiết để trả đúng mã `303` / `301` / `312`.
   Dự án `DONE` vẫn xem được.
 
@@ -128,31 +129,24 @@ Bốn API chỉ đọc, quyền `Function.Construction.Submission.View`, không 
 
 ## Đã kiểm thực tế
 
-Ngày 2026-10-19, API thật bằng `admin` sau migration `Add_SubmissionLog` — 18/18 đạt: không token `401`; `paging` / `count` có / không lọc
-(keyword, `statusCheck`, hai cặp trường) trả rỗng đúng, EF dịch được `EXISTS` và câu đếm gộp; `pageSize` `0` / `-1` / `500` → `400`; `303`,
-`301`, `312`; chi tiết, lịch sử, kiểm tra với id không tồn tại → `305`; neighbor → `317`; `direction` sai → `400`.
+Ngày 2026-10-19, API thật bằng `admin` sau migration `Add_SubmissionLog` — 18/18 đạt: không token `401`; `paging` / `count` có / không lọc trả rỗng đúng,
+EF dịch được `EXISTS` và câu đếm gộp; `pageSize` `0` / `-1` / `500` → `400`; `303`, `301`, `312`; id không tồn tại → `305`; neighbor → `317`; `direction` sai → `400`.
 
-Cùng ngày, chèn 6 hồ sơ + 3 trường test bằng SQL (gắn `ZZTEST`, kiểm xong đã xoá sạch), sau khi gộp import vào `SubmissionService` — 35/35 đạt:
+Cùng ngày, 6 hồ sơ + 3 trường chèn bằng SQL (gắn `ZZTEST`, đã xoá sạch), sau khi gộp import vào `SubmissionService` — 35/35 đạt:
 
-- Đọc: phân trang qua trang 3; lọc `statusCheck`, một / hai cặp trường, keyword; cột theo `OrderTableView`, ô theo đúng thứ tự cột;
-  `count` có / không lọc; chi tiết với `position` / `totalItems` đúng khi có lọc, `position = null` khi hồ sơ không khớp lọc; `319`;
-  neighbor `next` / `previous` có lọc, đi hết 5 hồ sơ rồi `317`; tài khoản thiếu quyền `View` → `403`.
-- Kiểm tra: sửa một ô (ô không đổi không tính), tái kiểm tra + xoá trắng ô, thêm ô mới, kiểm không sửa gì (`changedDataCount = 0`
-  vẫn sinh log); `311`, `318`, `319`, `305`, ghi chú 1001 ký tự → `400`; thiếu quyền `Check` → `403`; dự án `DONE`: người thường
-  → `316`, SuperAdmin sửa được.
-- Rollback: gắn tạm `CHECK` constraint làm insert `SubmissionLog` lỗi → `500`; `SubmissionData`, `ModifiedBy` của hồ sơ giữ nguyên,
-  không có log. Lịch sử đúng `userName`, `fullName`, mô tả, mới nhất trước; `AuditLog` đủ 5 dòng; Swagger đủ 13 route (lúc đó còn `neighbor`).
+- Đọc: trang 3; lọc `statusCheck`, một / hai cặp trường, keyword; cột theo `OrderTableView`; `count`; `position` / `totalItems` đúng, `null` khi hồ sơ
+  ngoài lọc; `319`; neighbor có lọc đi hết 5 hồ sơ rồi `317`; thiếu `View` → `403`.
+- Kiểm tra: sửa một ô, tái kiểm + xoá trắng, thêm ô, kiểm không sửa (`changedDataCount = 0` vẫn sinh log); `311`, `318`, `319`, `305`, ghi chú 1001 ký tự
+  → `400`; thiếu `Check` → `403`; dự án `DONE`: người thường `316`, SuperAdmin sửa được.
+- Rollback: gắn tạm `CHECK` constraint làm insert `SubmissionLog` lỗi → `500`, dữ liệu và `ModifiedBy` giữ nguyên, không log; lịch sử, `AuditLog` 5 dòng, Swagger 13 route đúng.
 
-Sau khi tách `neighbor` thành `{id}/next`, `{id}/previous` — 20/20 đạt: đầu / cuối danh sách `317`; lọc trường, `statusCheck`, keyword; đi từ
-hồ sơ ngoài bộ lọc hoặc id không tồn tại; đi hết cả hai chiều; `303`, `301`, `312`; thiếu `View` → `403`; route cũ `neighbor` → `404`.
+Sau khi tách `neighbor` thành `{id}/next`, `{id}/previous` — 20/20 đạt: đầu / cuối `317`; lọc; đi từ hồ sơ ngoài lọc / id không tồn tại; hai chiều; `303`, `301`, `312`; `403`; `neighbor` → `404`.
 
-Tra cứu và thống kê, 2026-10-22 trên `test-data-ho-so.sql` — 37/37 đạt: `field-values` đủ giá trị, số đếm, sắp `value`, keyword không phân biệt
-hoa thường, lọc liên hoàn, bỏ cặp lọc trùng trường, `311` / `303` / `312`; `tree` đúng hình, tổng = `count.total`; `logs` mới nhất trước, lọc
-`userId`, `oldStatus`, trọn ngày, `400`, trang 2, hồ sơ đã xoá mềm; `summary` khớp SQL tay; không token `401`, `viewer` → `403`.
+Tra cứu và thống kê, 2026-10-22 trên `test-data-ho-so.sql` — 37/37 đạt: `field-values` đủ giá trị, số đếm, sắp, keyword không phân biệt hoa thường, lọc liên hoàn,
+`311` / `303` / `312`; `tree` tổng = `count.total`; `logs` lọc `userId`, `oldStatus`, trọn ngày, `400`, trang 2, hồ sơ đã xoá; `summary` khớp SQL tay; `401`, `403`.
 
-Task 25, 2026-11-12 (dự án 25 hồ sơ × 4 trường + phiếu Data 20 văn bản gắn `ZZTEST25`, đã xoá) — đạt hết: 109 API đọc + xuất Excel giống hệt bản gốc
-chạy song song; `assignmentTicketId` ra 20 / 25 ở mọi API; Check, QA Đạt / Không đạt lưu đúng; `337` cho người ngoài và Leader `IsActive = 0`; thân tạm: Resolve
-trả D1 → chỉ văn bản D1 giữ, xem chi tiết / log bị chặn, lỗi phân việc rollback cả dữ liệu trường của Check và log QA; thân đã trả về rỗng.
+Task 25, 2026-11-12 (25 hồ sơ × 4 trường + phiếu Data 20 văn bản, `ZZTEST25`, đã xoá) — đạt hết: 109 API đọc + xuất Excel giống hệt bản gốc; `assignmentTicketId` ra
+20 / 25; Check, QA lưu đúng; `337` người ngoài và Leader `IsActive = 0`; thân tạm Resolve trả D1 → chỉ văn bản D1 giữ, lỗi phân việc rollback cả Check và log QA.
 
 Đo trên 20.000 hồ sơ × 30 trường (600.000 ô, 13.334 log, gắn `ZZPERF`, đo xong đã xoá), API chạy build Debug, SQL Server 2022 Docker, trung vị 7 lần
 gọi cả HTTP. Một request nhẹ (`count` 16 hồ sơ) đã tốn ~136 ms (≈ 5 lượt đi – về: `[Permission]`, kiểm dự án, query) nên mục tiêu < 50 ms không đạt được ở môi trường này:
@@ -163,8 +157,7 @@ gọi cả HTTP. Một request nhẹ (`count` 16 hồ sơ) đã tốn ~136 ms (�
 | `field-values` lọc `statusCheck` + keyword | 319 ms | < 300 | `logs` trang 50 / lọc 7 ngày | 242 / 181 ms | < 50 |
 | `field-values` 18.000 giá trị, lấy 200 | 344 ms | < 300 | `summary` | 382 ms | < 500 |
 
-`summary` lúc đầu 4.528 ms (join ô × hồ sơ × trường, 3,4 triệu logical reads); viết lại lọc `Submission` theo dự án trong join,
-`GROUP BY (DocumentFieldId, StatusCheck)` rồi cộng trong bộ nhớ → ~13.000 reads.
+`summary` lúc đầu 4.528 ms (3,4 triệu logical reads); lọc `Submission` theo dự án trong join, `GROUP BY (DocumentFieldId, StatusCheck)` rồi cộng trong bộ nhớ → ~13.000 reads.
 
 ## Giới hạn
 

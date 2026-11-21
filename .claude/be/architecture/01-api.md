@@ -43,8 +43,8 @@ public ApiResponse FindById([FromRoute] int id)
 
 - Controller chỉ inject **interface trong `Interfaces/Services/`** của applications.
 - Không inject repository, query, `ShDbContext`, `UserManager` vào controller nghiệp vụ.
-- `OkException` lấy message theo thứ tự: `MessageLocalize` của exception → `ErrorMessages.GetMessage(code)`.
-  Exception lạ trả `500` + `"Internal server error"`.
+- `OkException` lấy message theo thứ tự: `MessageLocalize` của exception → `ErrorMessages.GetMessage(code)`. Exception lạ trả `500` + `"Internal server error"`.
+- ⚠️ Thuộc tính `string` không `?` trong DTO `[FromQuery]` bị ASP.NET tự coi là bắt buộc: gửi rỗng / thiếu ra HTTP 400 `ProblemDetails`, không vào được envelope → khai `string?` rồi tự kiểm trong service (gặp ở `latest-working`, Task 42A).
 
 ## Phân quyền
 

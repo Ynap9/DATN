@@ -65,6 +65,7 @@ URL FE `/admin/<module>/...` trùng tên module BE `api/v1/<module>/...` để t
 | [04-http-auth.md](04-http-auth.md) | `core/auth` (chưa có) và `core/http` (interceptor, tải file) |
 | [05-conventions.md](05-conventions.md) | **Quy ước code bắt buộc**, bảng "đặt đúng chỗ" |
 | [06-them-man-hinh.md](06-them-man-hinh.md) | Các bước thêm một màn hình gọi API BE |
+| [07-man-construction.md](07-man-construction.md) | Ghi chú từng màn module `construction`: Metadata, Dự án, Danh sách văn bản |
 
 ## Nguyên tắc không đổi
 

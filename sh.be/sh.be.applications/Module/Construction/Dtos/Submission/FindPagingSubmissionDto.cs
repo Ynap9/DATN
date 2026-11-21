@@ -23,11 +23,17 @@ namespace sh.be.applications.Module.Construction.Dtos.Submission
         [FromQuery(Name = "fieldValue1")]
         public string? FieldValue1 { get; set; }
 
+        [FromQuery(Name = "isEmpty1")]
+        public bool? IsEmpty1 { get; set; }
+
         [FromQuery(Name = "documentFieldId2")]
         public int? DocumentFieldId2 { get; set; }
 
         [FromQuery(Name = "fieldValue2")]
         public string? FieldValue2 { get; set; }
+
+        [FromQuery(Name = "isEmpty2")]
+        public bool? IsEmpty2 { get; set; }
 
         [FromQuery(Name = "qaTicketId")]
         public int? QaTicketId { get; set; }
