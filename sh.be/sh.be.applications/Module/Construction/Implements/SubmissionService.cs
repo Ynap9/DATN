@@ -560,6 +560,16 @@ namespace sh.be.applications.Module.Construction.Implements
             return await _submissionQuery.FindSummary(dto.ProjectId, dto.DocumentTypeId, restrictedUserId);
         }
 
+        // Số văn bản được kiểm / QA đạt theo ngày; Data / QA chỉ tính văn bản mình đang giữ
+        public async Task<ViewProgressDailyStatsDto> FindProgressDailyStats(FindProgressStatsDto dto)
+        {
+            _logger.LogInformation($"{nameof(FindProgressDailyStats)}, dto={JsonSerializer.Serialize(dto)}");
+            var (fromDate, toDate) = NormalizeQaStatsDateRange(dto.FromDate, dto.ToDate);
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            var restrictedUserId = await _submissionAssignmentService.ResolveRestrictedUserIdAsync(dto.ProjectId, dto.DocumentTypeId, getCurrentUserId());
+            return await _submissionQuery.FindProgressDailyStats(dto.ProjectId, dto.DocumentTypeId, fromDate, toDate, restrictedUserId);
+        }
+
         // Thống kê QA tổng trong khoảng ngày; Data / QA chỉ tính lượt chấm trên văn bản mình đang giữ
         public async Task<ViewQaStatsSummaryDto> FindQaStatsSummary(FindQaStatsDto dto)
         {

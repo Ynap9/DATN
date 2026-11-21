@@ -3,7 +3,7 @@
 > **Phần 17/22** · trước: [16-dong-goi-cau-hinh.md](16-dong-goi-cau-hinh.md) · mục lục: [README.md](README.md)
 
 Tổng hợp dữ liệu QA đã lưu (`SubmissionQaLog`, `SubmissionQaLogField`) của **một dự án + một loại văn bản**. Mục đích là để Leader
-biết trường nào hay sai, người nhập nào hay sai, và tỉ lệ đúng là bao nhiêu. Đây là đầu vào cho KPI và dashboard. Cả 4 API chỉ đọc:
+biết trường nào hay sai, người nhập nào hay sai, và tỉ lệ đúng là bao nhiêu. Đây là đầu vào cho KPI và dashboard. Cả 5 API chỉ đọc:
 không transaction, không audit, không đổi schema. Luồng QA tạo ra dữ liệu này nằm ở [13-ho-so-qa.md](13-ho-so-qa.md).
 
 ## Các chức năng
@@ -14,6 +14,7 @@ không transaction, không audit, không đổi schema. Luồng QA tạo ra dữ
 | `GET qa-stats/fields` | `...Submission.QaStats` | Số lần sai và tỉ lệ đúng theo từng trường, lọc thêm `entryUserId` |
 | `GET qa-stats/entry-users` | `...Submission.QaStats` | Chỉ số theo từng người nhập, phân trang, `keyword`, `orderBy` |
 | `GET {id:int}/timeline` | `Function.Construction.Submission.View` | Một trục thời gian gộp các lần kiểm tra và QA của một văn bản |
+| `GET progress-stats/daily` | `Function.Construction.Submission.ProgressStats` | Số văn bản được kiểm / QA đạt theo từng ngày (Task 46A, [mục dưới](#tiến-độ-theo-ngày--progress-statsdaily-task-46a)) |
 
 Ba API thống kê nhận `projectId`, `documentTypeId` (bắt buộc), `fromDate`, `toDate`. Key quyền `QaStats` là key mới.
 `SeedRolePermission` tự cấp key này cho `Admin`; các vai trò khác phải gán tay. Phạm vi (Task 40, chốt 14/11): Admin và Leader có
@@ -88,6 +89,27 @@ lượt chấm cũ không còn trong số của người đó.
 - Người làm (`userId`, `userName`, `fullName`) có ở mọi sự kiện.
 - Thêm loại sự kiện mới (ví dụ phiếu QA của 18C): thêm một nguồn trả `GetListSubmissionTimelineDto` với `eventType` mới rồi `Concat`
   vào chỗ ghép trong `FindTimeline`. Việc sắp xếp và cắt 500 sự kiện chỉ nằm ở chỗ ghép đó.
+
+## Tiến độ theo ngày — `progress-stats/daily` (Task 46A)
+
+Nguồn cho biểu đồ "Tiến độ theo ngày" của màn Báo cáo tiến độ (Task 46, FE). Khoảng ngày (dùng chung `NormalizeQaStatsDateRange`),
+phạm vi người xem, văn bản đã xoá và mã lỗi giống hệt 3 API thống kê ở trên. Không lọc theo người nhập, chỉ một metadata mỗi lần gọi.
+
+- **Đã kiểm** trong ngày = số văn bản **khác nhau** có lượt `SubmissionLog` đưa văn bản **vào** Đã kiểm (`NewStatus = CHECKED`,
+  `OldStatus <> CHECKED`): kiểm lần đầu hoặc kiểm lại văn bản bị trả. Tái kiểm văn bản đang Đã kiểm **không** tính (chốt 2026-11-21,
+  chặt hơn spec 46A.1), vì `Submission.Check` ghi log `CHECKED` cho mọi lần lưu, kể cả lưu lại không sửa gì.
+- **QA đạt** trong ngày = số văn bản khác nhau có `SubmissionQaLog` với `NewStatusQa = QA_PASSED`. Dự án không QA trả `0`, không ném `345`.
+- `totalChecked` / `totalQaPassed` đếm văn bản khác nhau của **cả khoảng**, không cộng các ngày: kiểm ngày D1, bị trả, kiểm lại ngày D2
+  → mỗi ngày `1`, tổng `1`.
+- `days` có đủ mọi ngày từ `fromDate` tới `toDate`, tăng dần, ngày trống trả `0`. FE vẽ thẳng, không tự bù ngày.
+- Code: `SubmissionQuery.FindProgressDailyStats`. Hai nguồn `QueryCheckedDays` / `QueryQaPassedDays` cùng trả `DaySubmission` (class
+  `init` như `QaLogEntryUser`, để EF dịch được projection) và đếm chung ở `CountByDayAsync`. Chạy 4 câu tuần tự, đếm hết ở SQL:
+  `SELECT DISTINCT CONVERT(date, CreatedDate), SubmissionId` rồi `GROUP BY` ngày, và `COUNT` trên `DISTINCT SubmissionId`.
+
+Đã kiểm 2026-11-21 bằng API thật trên DB dev chung (`ZZTEST46A`, role tạm chỉ có key mới, đã xoá sạch): 17/17 ca, gồm 12 ca spec
+46A.5, ca tái kiểm (ngày đó `0`) và `820` / `312` / `301`. Văn bản còn trong phiếu QA đang mở không xoá được, nên test phải gỡ người giữ QA
+trước. Thời gian: cặp nhiều log nhất DB dev (36 log), 366 ngày, build Release → ~0,9 s mỗi lần gọi, gồm 7 câu SQL (3 kiểm quyền + 4 đếm)
+~120 ms mỗi câu, chủ yếu do tunnel. Phần QA quét theo dự án vì `SubmissionQaLog` chưa có index `(ProjectId, DocumentTypeId, CreatedDate)`.
 
 ## Lỗi
 

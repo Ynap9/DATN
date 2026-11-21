@@ -2,8 +2,7 @@
 
 > **Phần 2/22** · trước: [01-nguoi-dung.md](01-nguoi-dung.md) · mục lục: [README.md](README.md)
 
-Quyền là một **cây** định danh bằng `Key`. Vai trò giữ một tập key; user có quyền = hợp quyền của các vai trò còn hoạt động.
-Hằng số key nằm ở `PermissionConstants` (shared); cây được seed bởi `SeedPermission`.
+Quyền là một **cây** định danh bằng `Key`. Vai trò giữ một tập key; user có quyền = hợp quyền của các vai trò còn hoạt động. Hằng số key nằm ở `PermissionConstants` (shared); cây được seed bởi `SeedPermission`.
 
 ## Cây quyền hiện tại
 
@@ -56,6 +55,7 @@ Menu.Construction                  Menu nghiệp vụ xây dựng
     ├── Function.Construction.Submission.Check    (kiểm tra và sửa dữ liệu hồ sơ)
     ├── Function.Construction.Submission.Qa       (đánh giá QA Đạt / Không đạt)
     ├── Function.Construction.Submission.QaStats  (thống kê QA theo trường, người nhập)
+    ├── Function.Construction.Submission.ProgressStats (tiến độ kiểm / QA đạt theo ngày — Task 46A)
     ├── Function.Construction.Submission.Delete   (xoá mềm hồ sơ)
     ├── Function.Construction.Submission.Export   (xuất Excel theo bộ lọc)
     └── Function.Construction.Submission.AssignQa (giao phiếu QA — Task 18C)
@@ -149,6 +149,7 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `DELETE api/construction/submission` (ids trong body) | `Function.Construction.Submission.Delete`, chỉ Admin / SuperAdmin (`400`, Task 32, [14](14-ho-so-xoa-xuat.md#xoá-hồ-sơ)) |
 | `GET api/construction/submission/export-excel`, `POST .../export-excel/job`, `GET .../export-excel/job/{jobId}` | `Function.Construction.Submission.Export` (POST / GET file: Leader chỉ dự án mình — `337`, [14](14-ho-so-xoa-xuat.md)) |
 | `GET api/construction/submission/qa-stats/summary`, `GET .../qa-stats/fields`, `GET .../qa-stats/entry-users` | `Function.Construction.Submission.QaStats` |
+| `GET api/construction/submission/progress-stats/daily` | `Function.Construction.Submission.ProgressStats` (Admin có qua seeder, Leader gán tay — [17](17-thong-ke-qa.md#tiến-độ-theo-ngày--progress-statsdaily-task-46a)) |
 | `GET api/digital-signature/template/paging`, `GET .../{id}`, `GET .../sample-file` | `Function.DigitalSignature.Template.View` |
 | `POST` / `PUT {id}` + `PUT {id}/config` / `DELETE {id}` `api/digital-signature/template` | `...Template.Create` / `.Update` / `.Delete` |
 | `GET api/digital-signature/signing-batch/running`, `GET .../{id}/files`, `.../{id}/progress`, `.../{id}/files/{fileId}/signed-url` | `Function.DigitalSignature.SigningBatch.View` |
@@ -168,8 +169,7 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 ⚠️ **Bốn key `Function.Auth.User.*` đã được seed nhưng không controller nào dùng.** Mọi thao tác user (tạo, sửa, xoá, gán vai trò,
 danh sách) kiểm bằng `Menu.Auth`: ai có `Menu.Auth` (ví dụ `Admin`) làm được hết, kể cả xoá, không tách được quyền xem / tạo / xoá.
 
-Cách sửa là đổi key trong `[Permission]` sang `Function.Auth.User.*` — **đổi hành vi phân quyền**, phải hỏi trước, kèm gán key mới
-cho vai trò đang có: `SeedRolePermission` chỉ cấp quyền đầy đủ cho `SuperAdmin` và `Admin`, các vai trò khác phải gán tay.
+Cách sửa là đổi key trong `[Permission]` sang `Function.Auth.User.*` — **đổi hành vi phân quyền**, phải hỏi trước, kèm gán key mới cho vai trò đang có: `SeedRolePermission` chỉ cấp quyền đầy đủ cho `SuperAdmin` và `Admin`, các vai trò khác phải gán tay.
 
 ## Đừng đổi tên key đã seed
 
