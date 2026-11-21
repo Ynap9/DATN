@@ -1,0 +1,42 @@
+<div class="qa-head">
+    <h2>Chất lượng QA</h2>
+    <span>{{ subtitle() }}</span>
+</div>
+
+@if (error() && !loading()) {
+    <div class="qa-state">
+        <span>Chưa tải được số liệu QA</span>
+        <p-button label="Thử lại" icon="pi pi-refresh" severity="secondary" [outlined]="true" size="small" (onClick)="retry.emit()" />
+    </div>
+} @else if (summary(); as data) {
+    @if (data.reviewCount) {
+        <div class="qa-body" [class.is-stale]="loading()">
+            <div class="qa-donut">
+                <p-chart type="doughnut" width="140px" height="140px" [ariaLabel]="'Đạt ngay lần đầu ' + formatPercent(data.firstPassRate)" [data]="chartData()"
+                    [options]="chartOptions" />
+                <div class="qa-donut-label">
+                    <span class="qa-donut-value">{{ formatPercent(data.firstPassRate) }}</span>
+                    <span>đạt lần đầu</span>
+                </div>
+            </div>
+            <dl class="qa-metrics">
+                <div>
+                    <dt>Độ chính xác ô</dt>
+                    <dd>{{ formatPercent(data.fieldAccuracyRate) }}</dd>
+                </div>
+                <div>
+                    <dt>Lượt Không đạt</dt>
+                    <dd>{{ formatNumber(data.failedCount) }}</dd>
+                </div>
+                <div>
+                    <dt>Trả lại trung bình / văn bản</dt>
+                    <dd>{{ formatNumber(data.avgReturnPerDocument) }}</dd>
+                </div>
+            </dl>
+        </div>
+    } @else {
+        <div class="qa-state" [class.is-stale]="loading()">Chưa có lượt chấm QA trong khoảng này</div>
+    }
+} @else {
+    <p-skeleton height="140px" />
+}

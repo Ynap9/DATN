@@ -1,0 +1,95 @@
+@if (project && acceptance && query) {
+    <div class="report-head">
+        <app-page-header title="Báo cáo tiến độ" [breadcrumbs]="breadcrumbs" />
+        <div class="report-meta">
+            <span class="report-meta-name">{{ project.name }}</span>
+            <app-status-badge [badge]="statusBadge" />
+            <span>{{ (project.startedAt | date: 'dd/MM/yyyy') || '—' }} – {{ (project.endedAt | date: 'dd/MM/yyyy') || '—' }}</span>
+            @if (project.isQaEnabled) {
+                <span>Có QA</span>
+            }
+        </div>
+    </div>
+
+    <section class="report-filter" aria-label="Bộ lọc">
+        <div class="report-filter-group">
+            <div class="report-filter-item">
+                <span class="report-filter-label">Metadata</span>
+                @if (managedDocumentTypes.length > 1) {
+                    <sh-select class="report-metadata" [formControl]="documentTypeControl" [options]="managedDocumentTypes" optionLabel="name"
+                        optionValue="id" />
+                } @else {
+                    <span class="report-filter-value">{{ managedDocumentTypes[0].name }}</span>
+                }
+            </div>
+            <span class="report-filter-divider" aria-hidden="true"></span>
+            <div class="report-filter-item">
+                <span class="report-filter-label">Thời gian</span>
+                <p-selectbutton [formControl]="rangeControl" [options]="rangeOptions" optionLabel="label" optionValue="value" [allowEmpty]="false" />
+                @if (rangeLabel) {
+                    <span class="report-filter-value">{{ rangeLabel }}</span>
+                }
+            </div>
+        </div>
+        <div class="report-filter-item">
+            @if (updatedAt) {
+                <span class="report-updated">Cập nhật lúc {{ updatedAt | date: 'HH:mm' }}</span>
+            }
+            <p-button icon="pi pi-refresh" label="Làm mới" severity="secondary" [outlined]="true" (onClick)="refresh()" />
+        </div>
+    </section>
+
+    <!-- Dự án không QA: ẩn thẻ QA đạt (lưới 3 cột) và 3 khối QA, không gọi qa-stats (46.3) -->
+    @if (selectedSummary; as summary) {
+        <app-report-kpi class="report-kpi" [class.report-kpi--three]="!project.isQaEnabled" role="region" aria-label="Số liệu tổng" [summary]="summary"
+            [total]="acceptance.total" [isQaEnabled]="project.isQaEnabled" [days]="daily.data?.days ?? null" [qaSummary]="qaSummary.data" />
+    }
+    <section class="report-row report-row--wide">
+        @if (canViewProgress) {
+            <app-report-daily-chart class="report-card" [stats]="daily.data" [isQaEnabled]="project.isQaEnabled" [loading]="daily.loading" [error]="daily.error"
+                (retry)="retryDaily()" />
+        } @else {
+            <ng-container *ngTemplateOutlet="deniedBlock; context: { $implicit: 'Tiến độ theo ngày' }" />
+        }
+        <app-report-acceptance class="report-card" [project]="project" [acceptance]="acceptance" (changed)="reloadContext()" />
+    </section>
+    <section class="report-row" [class.report-row--single]="!project.isQaEnabled">
+        <app-report-status-by-metadata class="report-card" [acceptance]="acceptance" [isQaEnabled]="project.isQaEnabled" />
+        @if (project.isQaEnabled) {
+            @if (canViewQaStats) {
+                <app-report-qa-quality class="report-card" [summary]="qaSummary.data" [documentTypeName]="selectedDocumentTypeName" [rangeLabel]="rangeLabel"
+                    [loading]="qaSummary.loading" [error]="qaSummary.error" (retry)="retryQaSummary()" />
+            } @else {
+                <ng-container *ngTemplateOutlet="deniedBlock; context: { $implicit: 'Chất lượng QA' }" />
+            }
+        }
+    </section>
+    <!-- Hai khối dưới tự tải khi cuộn tới (46.11); statsFilter mới mỗi lần đổi lọc / Làm mới nên khối tự tải lại -->
+    @if (project.isQaEnabled && statsFilter) {
+        <section class="report-row">
+            @if (canViewQaStats) {
+                @defer (on viewport) {
+                    <app-report-field-errors class="report-card" [filter]="statsFilter" />
+                } @placeholder {
+                    <div class="report-card"><h2 class="report-card-title">Trường hay sai nhất</h2><p-skeleton height="200px" /></div>
+                }
+                @defer (on viewport) {
+                    <app-report-entry-users class="report-card" [filter]="statsFilter" />
+                } @placeholder {
+                    <div class="report-card"><h2 class="report-card-title">Năng suất theo người nhập</h2><p-skeleton height="200px" /></div>
+                }
+            } @else {
+                <ng-container *ngTemplateOutlet="deniedBlock; context: { $implicit: 'Trường hay sai nhất' }" />
+                <ng-container *ngTemplateOutlet="deniedBlock; context: { $implicit: 'Năng suất theo người nhập' }" />
+            }
+        </section>
+    }
+}
+
+<!-- Thiếu quyền xem khối: giữ khung + câu báo, không gọi API (46.12) -->
+<ng-template #deniedBlock let-title>
+    <div class="report-card">
+        <h2 class="report-card-title">{{ title }}</h2>
+        <span class="report-denied">Bạn chưa được cấp quyền xem mục này</span>
+    </div>
+</ng-template>

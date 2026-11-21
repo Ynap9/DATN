@@ -18,13 +18,14 @@ import { AuthConstants } from '@/shared/constants/auth.constants';
 import { CellViewTypes, TableEventTypes } from '@/shared/constants/data-table.constants';
 import { PermissionConstants } from '@/shared/constants/permission.constants';
 import { getProjectStatusBadge, PROJECT_STATUSES, PROJECT_URL } from '@/shared/constants/project.constants';
+import { SUBMISSION_ROLE, SUBMISSION_ROLE_BY_VIEWER_ROLE } from '@/shared/constants/submission.constants';
 import { IColumn, IColumnFilterValue, IDateRangeValue, ITableAction, ITableEvent } from '@/shared/models/data-table.models';
 import { SharedImports } from '@/shared/import.shared';
 import { ProjectCardComponent } from './project-card/project-card.component';
 import { ProjectFormComponent } from './project-form/project-form.component';
 
 const PROJECT_ACTIONS = {
-    VIEW: 'view',
+    REPORT: 'report',
     OPEN_SHEET: 'openSheet',
     EDIT: 'edit',
     DELETE: 'delete',
@@ -69,7 +70,13 @@ export class ProjectListComponent extends BaseComponent {
     readonly skeletons = Array.from({ length: CARD_SKELETON_COUNT }, (_, index) => index);
     // Bảng và thẻ dùng chung một menu ⋯; quyền tính một lần khi mở trang
     readonly rowActions: ITableAction[] = [
-        { type: PROJECT_ACTIONS.VIEW, label: 'Xem chi tiết', icon: 'pi pi-eye' },
+        // Báo cáo tiến độ chỉ dành cho quản lý dự án (Admin / Leader của metadata trên dòng)
+        {
+            type: PROJECT_ACTIONS.REPORT,
+            label: 'Báo cáo tiến độ',
+            icon: 'pi pi-chart-bar',
+            visible: (row: IViewProjectPair) => SUBMISSION_ROLE_BY_VIEWER_ROLE[row.viewerRole] === SUBMISSION_ROLE.MANAGER,
+        },
         {
             type: PROJECT_ACTIONS.OPEN_SHEET,
             label: 'Mở Google Sheet',
@@ -155,7 +162,12 @@ export class ProjectListComponent extends BaseComponent {
         }
     }
 
+    // Dòng là cặp dự án + metadata nên mở thẳng danh sách văn bản của metadata đó
     openProject(project: IViewProjectPair) {
+        this.router.navigate([PROJECT_URL, project.projectId, 'metadata', project.documentTypeId]);
+    }
+
+    openReport(project: IViewProjectPair) {
         this.router.navigate([PROJECT_URL, project.projectId]);
     }
 
@@ -190,8 +202,10 @@ export class ProjectListComponent extends BaseComponent {
     }
 
     onAction(event: ITableEvent<IViewProjectPair>) {
-        if (event.type === TableEventTypes.CELL_CLICK || event.type === PROJECT_ACTIONS.VIEW) {
+        if (event.type === TableEventTypes.CELL_CLICK) {
             this.openProject(event.row!);
+        } else if (event.type === PROJECT_ACTIONS.REPORT) {
+            this.openReport(event.row!);
         } else if (event.type === PROJECT_ACTIONS.OPEN_SHEET) {
             window.open(event.row!.urlGoogleSheetSync!, '_blank', 'noopener');
         } else if (event.type === PROJECT_ACTIONS.EDIT) {

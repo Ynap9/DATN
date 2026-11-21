@@ -380,6 +380,21 @@ namespace sh.be.api.Controllers.Module.Construction
             }
         }
 
+        [HttpGet("progress-stats/daily")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_PROGRESS_STATS)]
+        public async Task<ApiResponse> FindProgressDailyStats([FromQuery] FindProgressStatsDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.FindProgressDailyStats(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
         [HttpGet("qa-stats/summary")]
         [Permission(PermissionConstants.FUNCTION_SUBMISSION_QA_STATS)]
         public async Task<ApiResponse> FindQaStatsSummary([FromQuery] FindQaStatsDto dto)

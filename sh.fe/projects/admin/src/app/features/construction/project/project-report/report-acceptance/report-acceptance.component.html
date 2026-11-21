@@ -1,0 +1,63 @@
+<div class="acceptance-head">
+    <h2>Nghiệm thu</h2>
+    @if (deadlineBadge; as badge) {
+        <app-status-badge [badge]="badge" />
+    }
+</div>
+
+<ol class="acceptance-steps" aria-label="Các bước">
+    @for (step of steps; track step.value; let index = $index) {
+        <li [class.is-reached]="index <= stepIndex" [attr.aria-current]="index === stepIndex ? 'step' : null">
+            <span class="acceptance-step-bar"></span>
+            <span class="acceptance-step-label">{{ step.label }}</span>
+        </li>
+    }
+</ol>
+
+<div class="acceptance-progress">
+    <div class="acceptance-progress-head">
+        <span>{{ progress.label }}</span>
+        <span class="acceptance-number"><b>{{ formatNumber(progress.done) }}</b> / {{ formatNumber(progress.total) }}</span>
+    </div>
+    <div class="acceptance-progress-track">
+        <div class="acceptance-progress-fill" [style.width.%]="progressPercent" [style.background]="progress.color"></div>
+    </div>
+    <span class="acceptance-pending">{{ pendingMessage }}</span>
+</div>
+
+<dl class="acceptance-info">
+    <dt>Hạn dự án</dt>
+    <dd class="acceptance-number">{{ (project().endedAt | date: 'dd/MM/yyyy') || '—' }}</dd>
+    <dt>Lần chuyển gần nhất</dt>
+    <dd>
+        @if (acceptance().lastTransition; as last) {
+            <span>{{ last.action }} · {{ last.createdDate | date: 'dd/MM/yyyy HH:mm' }}</span>
+            <span class="acceptance-muted">
+                {{ last.isAutomatic ? 'Hệ thống tự chuyển' : last.fullName || last.userName || '—' }}
+                @if (last.isForced) {
+                    · cho phép khi chưa đủ điều kiện
+                }
+                @if (last.reason) {
+                    · Lý do: {{ last.reason }}
+                }
+            </span>
+        } @else {
+            Chưa có
+        }
+    </dd>
+</dl>
+
+<div class="acceptance-actions">
+    @if (canStart || canFinish) {
+        <span [pTooltip]="isTransitionBlocked ? blockerMessage : ''" tooltipPosition="top">
+            <p-button [label]="canStart ? 'Bắt đầu nghiệm thu' : 'Hoàn tất nghiệm thu'" [outlined]="true" [loading]="submitting"
+                [disabled]="isTransitionBlocked" (onClick)="canStart ? startAcceptance() : finishAcceptance()" />
+        </span>
+    }
+    @if (canFinish && acceptance().canForce) {
+        <p-button label="Trả về đang triển khai" severity="secondary" [outlined]="true" [disabled]="submitting" (onClick)="reopenAcceptance()" />
+    }
+    <span [pTooltip]="canReport ? '' : 'Có khi dự án đang nghiệm thu hoặc đã xong'" tooltipPosition="top">
+        <p-button label="Tải biên bản PDF" severity="secondary" [outlined]="true" [disabled]="!canReport" (onClick)="downloadReport()" />
+    </span>
+</div>

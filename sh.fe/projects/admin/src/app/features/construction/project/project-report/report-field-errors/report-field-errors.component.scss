@@ -1,0 +1,71 @@
+@use '../report-card' as card;
+
+.field-head {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    h2 {
+        @include card.report-card-title;
+    }
+
+    span {
+        @include card.report-card-subtitle;
+    }
+}
+
+.field-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: opacity 0.2s;
+
+    &.is-stale {
+        opacity: 0.5;
+    }
+}
+
+.field-row {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr) 36px;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+}
+
+.field-name {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--app-ink);
+}
+
+.field-track {
+    height: 10px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--app-bg);
+}
+
+.field-fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+}
+
+.field-count {
+    text-align: right;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.field-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 200px;
+    font-size: 13px;
+    color: var(--app-muted);
+}

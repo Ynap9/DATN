@@ -1,0 +1,23 @@
+// Khung thẻ dùng chung của màn Báo cáo tiến độ (trang và các khối con)
+@mixin report-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+    padding: 20px;
+    border: 1px solid var(--app-line);
+    border-radius: 12px;
+    background: var(--app-surface);
+}
+
+@mixin report-card-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--app-ink);
+}
+
+@mixin report-card-subtitle {
+    font-size: 13px;
+    color: var(--app-muted);
+}
