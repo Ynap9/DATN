@@ -1,0 +1,25 @@
+<div class="field-head">
+    <h2>Trường hay sai nhất</h2>
+    <span>Số lượt QA đánh dấu sai theo trường</span>
+</div>
+
+@if (block.error && !block.loading) {
+    <div class="field-state">
+        <span>Chưa tải được trường hay sai</span>
+        <p-button label="Thử lại" icon="pi pi-refresh" severity="secondary" [outlined]="true" size="small" (onClick)="retry()" />
+    </div>
+} @else if (block.data) {
+    <div class="field-list" [class.is-stale]="block.loading">
+        @for (row of rows; track row.documentFieldId) {
+            <div class="field-row">
+                <span class="field-name" [title]="row.name">{{ row.name }}</span>
+                <span class="field-track"><span class="field-fill" [style.width.%]="row.width" [style.background]="barColor"></span></span>
+                <span class="field-count">{{ formatNumber(row.wrongCount) }}</span>
+            </div>
+        } @empty {
+            <div class="field-state">Chưa có trường nào bị đánh sai</div>
+        }
+    </div>
+} @else {
+    <p-skeleton height="200px" />
+}

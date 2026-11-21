@@ -6,7 +6,7 @@
 
 Mỗi trang đặt tên và breadcrumb bằng `app-page-header` (`shared/components/page-header`), nút chính truyền qua `ng-content`; topbar chỉ hiện ngày.
 
-⚠️ Biến `--app-*` khai báo trên `.layout-wrapper`, còn dialog gắn vào `body` nên không nhận được: style trong dialog dùng token PrimeNG (`--p-text-color`, `--p-content-border-color`).
+⚠️ Biến `--app-*` khai báo trên `.layout-wrapper`, còn dialog gắn vào `body` nên không nhận được: style trong dialog dùng token PrimeNG (`--p-text-color`, `--p-content-border-color`); JS cần màu (chart.js) đọc `getComputedStyle` trên phần tử nằm trong layout, không trên `:root`.
 
 ⚠️ `sh-select` phát `valueChanges` ngay lúc khởi tạo, nên lọc danh sách dùng output `(onChange)` để tránh gọi API hai lần.
 

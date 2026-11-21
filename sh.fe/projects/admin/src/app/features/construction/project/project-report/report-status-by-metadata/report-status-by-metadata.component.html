@@ -1,0 +1,24 @@
+<div class="status-head">
+    <h2>Trạng thái theo metadata</h2>
+    <span>Tỷ lệ văn bản ở từng bước của mỗi metadata</span>
+</div>
+
+<div class="status-legend">
+    @for (item of legend(); track item.label) {
+        <span><span class="status-swatch" [style.background]="item.color"></span>{{ item.label }}</span>
+    }
+</div>
+
+@for (row of rows(); track row.key) {
+    <div class="status-row">
+        <span class="status-row-head">
+            <span [class.is-total]="row.isTotal">{{ row.label }}</span>
+            <span class="status-row-summary">{{ row.summary }} · <b>{{ row.percent }}</b></span>
+        </span>
+        <span class="status-bar" role="img" [attr.aria-label]="row.ariaLabel" [style.background]="notCheckedColor">
+            @for (segment of row.segments; track $index) {
+                <span [style.width.%]="segment.width" [style.background]="segment.color"></span>
+            }
+        </span>
+    </div>
+}

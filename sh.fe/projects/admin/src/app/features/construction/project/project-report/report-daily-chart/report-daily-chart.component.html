@@ -1,0 +1,36 @@
+<div class="daily-head">
+    <div class="daily-title">
+        <h2>Tiến độ theo ngày</h2>
+        <span>{{ isQaEnabled() ? 'Số văn bản được kiểm và QA đạt mỗi ngày' : 'Số văn bản được kiểm mỗi ngày' }}</span>
+    </div>
+    @if (stats(); as data) {
+        <div class="daily-totals">
+            <div>
+                <span class="daily-legend"><span class="daily-swatch" [style.background]="colors.CHECKED"></span>Đã kiểm</span>
+                <span class="daily-total">{{ formatNumber(data.totalChecked) }}</span>
+            </div>
+            @if (isQaEnabled()) {
+                <div>
+                    <span class="daily-legend"><span class="daily-swatch" [style.background]="colors.QA_PASSED"></span>QA đạt</span>
+                    <span class="daily-total">{{ formatNumber(data.totalQaPassed) }}</span>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@if (error() && !loading()) {
+    <div class="daily-state">
+        <span>Chưa tải được tiến độ theo ngày</span>
+        <p-button label="Thử lại" icon="pi pi-refresh" severity="secondary" [outlined]="true" size="small" (onClick)="retry.emit()" />
+    </div>
+} @else if (stats()) {
+    <div class="daily-chart" [class.is-stale]="loading()">
+        <p-chart type="line" height="220px" ariaLabel="Biểu đồ đường số văn bản được kiểm theo ngày" [data]="chartData()" [options]="chartOptions()" />
+        @if (isEmpty()) {
+            <span class="daily-empty">Chưa có văn bản nào được kiểm trong khoảng này</span>
+        }
+    </div>
+} @else {
+    <p-skeleton height="220px" />
+}
