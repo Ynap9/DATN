@@ -248,7 +248,7 @@ export class SubmissionListComponent extends BaseComponent {
     }
 
     backToProject() {
-        this.router.navigate([PROJECT_URL, this._projectId]);
+        this.router.navigate([PROJECT_URL]);
     }
 
     openLatestWorking() {
@@ -299,21 +299,23 @@ export class SubmissionListComponent extends BaseComponent {
         this._messageService.add({ closable: true, severity: 'info', detail: OPEN_MESSAGES[type], life: 4000 });
     }
 
-    // 820 → trạng thái trống chưa được giao; 312 / 301 → về chi tiết dự án; 303 → về danh sách dự án; lỗi khác giữ màn
+    // 820 → trạng thái trống chưa được giao; 303 / 312 / 301 → về danh sách dự án; lỗi khác giữ màn
     private handleError(res: IBaseResponse) {
         if (res.code === SUBMISSION_ERROR_CODE.NOT_ASSIGNED) {
             this.isNotAssigned = true;
             return;
         }
         this.messageError(res.message);
-        if (res.code === SUBMISSION_ERROR_CODE.PROJECT_NOT_FOUND) {
-            this.router.navigate([PROJECT_URL]);
-        } else if (res.code === SUBMISSION_ERROR_CODE.DOCUMENT_TYPE_NOT_FOUND || res.code === SUBMISSION_ERROR_CODE.DOCUMENT_TYPE_NOT_IN_PROJECT) {
-            this.router.navigate([PROJECT_URL, this._projectId]);
+        if (
+            res.code === SUBMISSION_ERROR_CODE.PROJECT_NOT_FOUND ||
+            res.code === SUBMISSION_ERROR_CODE.DOCUMENT_TYPE_NOT_FOUND ||
+            res.code === SUBMISSION_ERROR_CODE.DOCUMENT_TYPE_NOT_IN_PROJECT
+        ) {
+            this.backToProject();
         }
     }
 
-    // Không có vai trò ở metadata: hỏi BE một lần để tách metadata không thuộc dự án (312 / 301 → về chi tiết dự án) với chưa được giao
+    // Không có vai trò ở metadata: hỏi BE một lần để tách metadata không thuộc dự án (312 / 301 → về danh sách dự án) với chưa được giao
     private resolveMissingRole() {
         this._submissionService
             .count(this.buildFilter())
@@ -477,7 +479,7 @@ export class SubmissionListComponent extends BaseComponent {
         this.breadcrumbs = [
             { label: 'Hồ sơ thi công' },
             { label: 'Dự án', routerLink: PROJECT_URL },
-            { label: this.project!.name, routerLink: [PROJECT_URL, this._projectId] },
+            { label: this.project!.name },
             { label: name },
         ];
     }

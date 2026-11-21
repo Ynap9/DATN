@@ -2,7 +2,7 @@
 
 > **Phần 7/7** · trước: [06-them-man-hinh.md](06-them-man-hinh.md) · mục lục: [README.md](README.md)
 
-Quyết định và bẫy riêng của từng màn đã làm; cách thêm màn mới chung ở [06-them-man-hinh.md](06-them-man-hinh.md).
+Quyết định và bẫy riêng của từng màn đã làm (cập nhật 2026-11-21); cách thêm màn mới chung ở [06-them-man-hinh.md](06-them-man-hinh.md).
 
 ## Metadata
 
@@ -29,15 +29,44 @@ Quyết định và bẫy riêng của từng màn đã làm; cách thêm màn m
 
 ## Dự án
 
-**Dự án** (Task 36, `/admin/construction/project`, `.../project/:id`; hằng `PROJECT_URL`, `PROJECT_STATUSES`):
+**Dự án** (Task 36, `/admin/construction/project`; hằng `PROJECT_URL`, `PROJECT_STATUSES`):
 
 - Danh sách đọc `GET project/paging` — mỗi dòng một cặp dự án – metadata, số liệu theo vai trò người xem; dự án 0 metadata không hiện
   nên form bắt chọn ≥ 1 metadata. Sửa từ danh sách gọi `GET {id}` trước để có đủ `documentTypeIds`.
 - Ngày gửi chuỗi local `YYYY-MM-DDT00:00:00` của `sh-calendar`, **không** `toISOString` (lệch UTC lùi 1 ngày).
 - Xoá dùng `DELETE admin/delete/{id}` (kèm dữ liệu), chỉ Admin / SuperAdmin có quyền Delete; không gọi `DELETE {id}` cũ.
-- Nghiệm thu: `a` = tổng − đã kiểm, `b` = đã kiểm − QA đạt (khớp `340` của BE); sau mỗi lần chuyển gán dữ liệu trả về rồi tải lại `GET {id}`.
-- Lối vào màn văn bản: Data / QA qua cột Thao tác "Mở văn bản" của bảng Tiến độ của tôi; người xem hết (`myProgresses = null`) qua
-  tag Metadata — chỉ thành link ở metadata có trong `viewerRoles` (Task 42).
+- Bấm tên / thẻ dòng mở thẳng danh sách văn bản đúng metadata của dòng (`project/:id/metadata/:documentTypeId`, Task 46) — màn chi tiết
+  dự án cũ đã bỏ. Mục ⋯ đầu tiên "Báo cáo tiến độ" chỉ hiện khi `row.viewerRole` là Admin / Leader.
+
+## Báo cáo tiến độ
+
+Task 46, `/admin/construction/project/:id` (`project/project-report/`), chỉ để xem — không có lối sang danh sách văn bản.
+
+- Chỉ Admin / Leader: không có metadata nào mình quản lý → toast "Chỉ quản lý dự án xem được báo cáo tiến độ" rồi về danh sách dự án.
+- Query string `?documentTypeId=&range=7|30|all` là nguồn trạng thái; thiếu / sai → metadata quản lý đầu tiên + 30 ngày, ghi lên URL
+  (`replaceUrl`) rồi mới tải để không gọi số hai lần. Không có "Tất cả" metadata; quản lý một metadata thì hiện tên, không dropdown.
+- `buildRange`: 7 / 30 ngày tính lùi từ hôm nay; Toàn bộ = từ `startedAt` nhưng không quá 366 ngày (trần BE). Nhãn khoảng lấy
+  `fromDate` / `toDate` trong response.
+
+| Khối | Nguồn | Theo |
+|---|---|---|
+| KPI | `acceptance` + `daily` (+N 7 ngày) + `qa-stats/summary` (đạt lần đầu) | metadata đang chọn |
+| Tiến độ theo ngày | `progress-stats/daily` | metadata + khoảng |
+| Nghiệm thu | `project/{id}/acceptance` | toàn dự án |
+| Trạng thái theo metadata | `acceptance` (mọi metadata, kể cả "(đã gỡ)") | toàn dự án, bỏ qua khoảng |
+| Chất lượng QA | `qa-stats/summary` | metadata + khoảng |
+| Trường hay sai · Năng suất | `qa-stats/fields` · `qa-stats/entry-users` | metadata + khoảng, `@defer (on viewport)` |
+
+- Mỗi khối một luồng `switchMap` riêng qua `bindReportBlock` (`project-report.constants.ts`): đổi lọc huỷ request cũ, lỗi chỉ đánh dấu
+  khối đó ("Chưa tải được …" + Thử lại), có số rồi thì làm mờ chứ không nháy skeleton. Hai khối `@defer` nhận `filter`; trang tạo object
+  `statsFilter` mới mỗi lần đổi lọc / Làm mới nên khối tự tải lại, không cần `reloadToken`.
+- Dự án không QA: KPI 3 cột, biểu đồ chỉ đường Đã kiểm, ẩn 3 khối QA và không gọi API của chúng; không còn chữ "QA" trên màn.
+- Thiếu `ProgressStats` / `QaStats` → khối giữ khung, ghi "Bạn chưa được cấp quyền xem mục này", không dựng component nên không gọi API.
+- Nghiệm thu: luật nút / chặn / dialog lý do / PDF chuyển nguyên từ màn chi tiết cũ (`a` = tổng − đã kiểm, `b` = đã kiểm − QA đạt, khớp
+  `340`); chuyển xong khối phát `changed`, trang tải lại dự án + acceptance. Câu "Tự vào nghiệm thu khi …" chỉ hiện ở bước Đang triển khai.
+- Màu dữ liệu khai một lần ở `REPORT_COLORS`; số định dạng `Intl` vi-VN (`formatNumber`, `formatPercent`), không đăng ký locale `vi`.
+- ⚠️ chart.js vẽ canvas nên đọc token bằng `readCssVar(element, name)` trên phần tử của khối; đừng đọc `document.documentElement`
+  — token `--app-*` không ở `:root`, ra chuỗi rỗng và chart tô đen.
 
 ## Danh sách văn bản
 
@@ -46,7 +75,7 @@ Task 42, `/admin/construction/project/:id/metadata/:documentTypeId` (`features/c
 
 - Vai trò lấy từ `viewerRoles` của `GET project/{id}` (Admin / Leader → Quản lý, Data → Nhập liệu, QA → QA), **không** suy từ
   `myProgresses = null` — Leader ở metadata A kiêm Data ở B sẽ bị coi là Quản lý cả B. Không có dòng → gọi `count` một lần: 312 / 301
-  toast rồi về chi tiết dự án, còn lại (kể cả 820) hiện trạng thái trống "chưa được giao" + nút Về dự án.
+  toast rồi về danh sách dự án, còn lại (kể cả 820) hiện trạng thái trống "chưa được giao" + nút Về danh sách dự án.
 - Query string là nguồn trạng thái duy nhất, đặt **đúng tên tham số BE** (`statusCheck`, `statusQa`, `keyword`, `documentFieldId1`,
   `fieldValue1`, `isEmpty1`, … `pageNumber`, `pageSize`) + `view=qa` cho Quản lý; ghi bằng `replaceUrl`, đổi lọc / tab / chế độ về trang 1.
   F5 hay quay lại dựng lại đúng tab, lọc, trang. Tab Chờ QA = `statusCheck=1&statusQa=0`.

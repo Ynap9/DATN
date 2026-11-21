@@ -1,11 +1,17 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import {
+    IFindPagingQaEntryUserStats,
     IFindPagingSubmission,
+    IFindStats,
     IFindSubmissionFieldValue,
     ILatestWorkingSubmission,
     IListQaSubmission,
     IListSubmission,
+    IProgressDailyStats,
+    IQaEntryUserStats,
+    IQaFieldStats,
+    IQaStatsSummary,
     ISubmissionCount,
     ISubmissionFieldValue,
     ISubmissionFilter,
@@ -41,8 +47,24 @@ export class SubmissionService {
         return this.http.get<IBaseResponseWithData<ILatestWorkingSubmission | null>>(`${this.api}/latest-working`, { params: { projectId, documentTypeId, type } });
     }
 
+    progressDailyStats(query: IFindStats) {
+        return this.http.get<IBaseResponseWithData<IProgressDailyStats>>(`${this.api}/progress-stats/daily`, { params: this.toParams(query) });
+    }
+
+    qaStatsSummary(query: IFindStats) {
+        return this.http.get<IBaseResponseWithData<IQaStatsSummary>>(`${this.api}/qa-stats/summary`, { params: this.toParams(query) });
+    }
+
+    qaStatsFields(query: IFindStats) {
+        return this.http.get<IBaseResponseWithData<IQaFieldStats[]>>(`${this.api}/qa-stats/fields`, { params: this.toParams(query) });
+    }
+
+    qaStatsEntryUsers(query: IFindPagingQaEntryUserStats) {
+        return this.http.get<IBaseResponsePaging<IQaEntryUserStats>>(`${this.api}/qa-stats/entry-users`, { params: this.toParams(query) });
+    }
+
     // Bỏ tham số trống nhưng giữ số 0: statusCheck = 0 / statusQa = 0 là lọc thật
-    private toParams(query: ISubmissionFilter) {
+    private toParams(query: ISubmissionFilter | IFindStats) {
         return Object.fromEntries(Object.entries(query).filter(([, value]) => value !== undefined && value !== null && value !== ''));
     }
 }

@@ -19,6 +19,7 @@ namespace sh.be.applications.Module.Construction.Interfaces.Queries
         Task<ViewSubmissionTreeDto> FindTree(ISubmissionFilter filter, string? restrictedUserId = null);
         Task<BaseResponsePagingDto<GetListProjectSubmissionLogDto>> FindProjectLogPaging(FindPagingProjectSubmissionLogDto dto, string? restrictedUserId = null);
         Task<ViewSubmissionSummaryDto> FindSummary(int projectId, int documentTypeId, string? restrictedUserId = null);
+        Task<ViewProgressDailyStatsDto> FindProgressDailyStats(int projectId, int documentTypeId, DateTime fromDate, DateTime toDate, string? restrictedUserId);
         Task<ViewQaStatsSummaryDto> FindQaStatsSummary(FindQaStatsDto dto, DateTime fromDate, DateTime toDateExclusive, string? restrictedUserId = null);
         Task<List<GetListQaFieldStatsDto>> FindQaFieldStats(FindQaStatsDto dto, DateTime fromDate, DateTime toDateExclusive, string? restrictedUserId = null);
         Task<BaseResponsePagingDto<GetListQaEntryUserStatsDto>> FindQaEntryUserStatsPaging(FindPagingQaEntryUserStatsDto dto, DateTime fromDate,
