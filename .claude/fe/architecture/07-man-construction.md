@@ -1,6 +1,6 @@
 # Màn hình module construction
 
-> **Phần 7/7** · trước: [06-them-man-hinh.md](06-them-man-hinh.md) · mục lục: [README.md](README.md)
+> **Phần 7/8** · trước: [06-them-man-hinh.md](06-them-man-hinh.md) · mục lục: [README.md](README.md)
 
 Quyết định và bẫy riêng của từng màn đã làm (cập nhật 2026-11-21); cách thêm màn mới chung ở [06-them-man-hinh.md](06-them-man-hinh.md).
 
@@ -84,10 +84,11 @@ Task 42, `/admin/construction/project/:id/metadata/:documentTypeId` (`features/c
 - Cột động từ `customData` của `paging`, khai `locked` để metadata thêm / bớt trường không xoá cấu hình các cột cố định. `tableKey`
   tách `construction-submission-<id>` / `construction-submission-qa-<id>` và hai thẻ `app-data-table` riêng (`@if`): DataTable chỉ đọc
   cấu hình cột theo `tableKey` lúc khởi tạo, dùng chung một thẻ thì bảng QA không nạp cấu hình của nó.
-- Mở văn bản: Task 43 / 44 chưa có màn nên chỉ toast "Màn ... đang làm"; đường dẫn để sẵn ở hằng `WORK_PATHS` của component.
+- Mở văn bản: Nhập liệu sang màn ở [08-man-nhap-lieu.md](08-man-nhap-lieu.md) (mang bộ lọc + tab, `state.fromList` để nút ← quay
+  lại bằng `location.back()`); Lịch sử mở dialog; QA (Task 44) chưa có màn nên chỉ toast. Đường dẫn ở hằng `WORK_PATHS`.
 - ⚠️ `p-autocomplete` không khai `optionValue` thì model phát `option.value` khi gợi ý có trường `value` (DTO `field-values` có) —
   đừng bắt `ngModelChange` để lấy object, dùng `(onSelect)` / `(onClear)`. Cũng đừng bật `forceSelection` khi gợi ý dựng lại sau mỗi lần
   đổi URL: sự kiện `change` dò lại danh sách rỗng rồi `clear()`, xoá luôn giá trị vừa chọn. "Phải chọn từ gợi ý" giữ bằng việc chỉ
   `onSelect` mới ghi lên URL.
 
-> **Tiếp:** hết bộ tài liệu — quay lại [README.md](README.md).
+> **Tiếp:** [08-man-nhap-lieu.md](08-man-nhap-lieu.md) — màn Nhập liệu và dialog Lịch sử.
