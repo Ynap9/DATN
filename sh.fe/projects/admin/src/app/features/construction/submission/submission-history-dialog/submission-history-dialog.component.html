@@ -1,0 +1,81 @@
+@if (loading) {
+    <div class="flex justify-center py-8"><i class="pi pi-spin pi-spinner text-2xl text-muted-color"></i></div>
+} @else if (loaded && !items.length) {
+    <div class="py-8 text-center text-muted-color">Văn bản chưa được kiểm hoặc QA lần nào</div>
+} @else {
+    <ol class="m-0 list-none p-0">
+        @for (item of items; track item.event.eventType + item.event.logId; let last = $last) {
+            @let event = item.event;
+            <li class="relative flex gap-3 pb-5 last:pb-0">
+                <!-- Trục dọc: chấm 10px + đường kẻ nối tới mục kế -->
+                <div class="relative flex w-2.5 shrink-0 justify-center">
+                    <span class="mt-1.5 size-2.5 rounded-full" [class]="item.dotClass"></span>
+                    @if (!last) {
+                        <span class="absolute top-5 -bottom-5 w-px bg-gray-200"></span>
+                    }
+                </div>
+
+                <div class="flex min-w-0 flex-1 flex-col gap-1 text-[13px]">
+                    <div class="flex flex-wrap items-baseline gap-x-2">
+                        <span class="font-semibold">{{ item.title }}</span>
+                        <span class="text-xs text-gray-500">{{ item.userLabel }} · {{ event.createdDate | date: 'dd/MM/yyyy HH:mm' }}</span>
+                    </div>
+
+                    @if (item.isCheck) {
+                        <span>Sửa {{ event.changedDataCount ?? 0 }} trường</span>
+                        @if (event.note) {
+                            <span>Ghi chú: {{ event.note }}</span>
+                        }
+                        @if (event.changedFields?.length) {
+                            <table class="w-full border-collapse text-xs">
+                                <thead>
+                                    <tr class="text-left text-gray-500">
+                                        <th class="border-b border-gray-200 py-1 pr-3 font-medium">Trường</th>
+                                        <th class="border-b border-gray-200 py-1 pr-3 font-medium">Giá trị cũ</th>
+                                        <th class="border-b border-gray-200 py-1 font-medium">Giá trị mới</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (change of event.changedFields; track change.documentFieldId) {
+                                        <tr class="align-top">
+                                            <td class="border-b border-gray-100 py-1 pr-3">{{ change.name }}</td>
+                                            <td class="border-b border-gray-100 py-1 pr-3 break-words">
+                                                <ng-container [ngTemplateOutlet]="value" [ngTemplateOutletContext]="{ $implicit: change.oldData, tone: 'line-through text-red-700' }" />
+                                            </td>
+                                            <td class="border-b border-gray-100 py-1 break-words">
+                                                <ng-container [ngTemplateOutlet]="value" [ngTemplateOutletContext]="{ $implicit: change.newData, tone: 'text-green-700' }" />
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        } @else if (event.changedFields === null && event.changedDataCount) {
+                            <span class="text-gray-500">Bản ghi cũ, không lưu chi tiết trường đã sửa</span>
+                        }
+                    } @else {
+                        <span>Người nhập: {{ event.entryUserName }}</span>
+                        @if (item.isQaFailed) {
+                            <span>Lý do: {{ event.reason || 'QA không ghi lý do' }}</span>
+                            @if (event.wrongFields?.length) {
+                                <div class="flex flex-wrap gap-1.5">
+                                    @for (field of event.wrongFields; track field.documentFieldId) {
+                                        <span class="rounded border border-red-300 bg-white px-2 py-0.5 text-xs text-red-700">{{ field.name }}</span>
+                                    }
+                                </div>
+                            }
+                        }
+                    }
+                </div>
+            </li>
+        }
+    </ol>
+}
+
+<!-- Ô giá trị cũ / mới; rỗng → "(trống)" nghiêng xám -->
+<ng-template #value let-data let-tone="tone">
+    @if (data) {
+        <span [class]="tone">{{ data }}</span>
+    } @else {
+        <span class="italic text-gray-400">(trống)</span>
+    }
+</ng-template>

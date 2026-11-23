@@ -66,6 +66,7 @@ URL FE `/admin/<module>/...` trùng tên module BE `api/v1/<module>/...` để t
 | [05-conventions.md](05-conventions.md) | **Quy ước code bắt buộc**, bảng "đặt đúng chỗ" |
 | [06-them-man-hinh.md](06-them-man-hinh.md) | Các bước thêm một màn hình gọi API BE |
 | [07-man-construction.md](07-man-construction.md) | Ghi chú từng màn module `construction`: Metadata, Dự án, Báo cáo tiến độ, Danh sách văn bản |
+| [08-man-nhap-lieu.md](08-man-nhap-lieu.md) | Màn Nhập liệu (PDF + form, ◀ ▶, Lưu, chỉ đọc) và dialog Lịch sử văn bản |
 
 ## Nguyên tắc không đổi
 

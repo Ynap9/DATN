@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using sh.be.domain.Module.Construction.Submissions.Services;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.Constants.Db;
 using sh.be.shared.HttpRequest.Error;
@@ -6,6 +7,8 @@ using sh.be.shared.HttpRequest.Exception;
 using sh.be.shared.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 
 namespace sh.be.domain.Module.Construction.Submissions.Entities
 {
@@ -20,6 +23,10 @@ namespace sh.be.domain.Module.Construction.Submissions.Entities
     public class Submission : ISoftDeleted
     {
         public const string UniqueKeyIndexName = $"IX_{nameof(Submission)}_{nameof(ProjectId)}_{nameof(DocumentTypeId)}_{nameof(FileName)}_{nameof(ProfileRange)}_{nameof(Box)}";
+        private static readonly JsonSerializerOptions ChangedDatasJsonOptions = new(JsonSerializerDefaults.Web)
+        {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        };
 
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -94,7 +101,7 @@ namespace sh.be.domain.Module.Construction.Submissions.Entities
             return StatusCheck == SubmissionConst.CHECKED;
         }
 
-        public SubmissionLog Check(string checkedBy, string userName, string? note, int changedDataCount, DateTime checkedDate)
+        public SubmissionLog Check(string checkedBy, string userName, string? note, List<SubmissionDataChange> changes, DateTime checkedDate)
         {
             var trimmedNote = note?.Trim();
             if (trimmedNote?.Length > SubmissionConst.CHECK_NOTE_MAX_LENGTH)
@@ -102,6 +109,7 @@ namespace sh.be.domain.Module.Construction.Submissions.Entities
                 throw new UserFriendlyException(ErrorCodes.BadRequest, $"Ghi chú tối đa {SubmissionConst.CHECK_NOTE_MAX_LENGTH} ký tự");
             }
 
+            var changedDataCount = changes.Count;
             var oldStatus = StatusCheck;
             var needsQaAgain = oldStatus == SubmissionConst.CHECKED && StatusQa != SubmissionConst.QA_NOT_REVIEWED && changedDataCount > 0;
             var description = oldStatus switch
@@ -122,7 +130,8 @@ namespace sh.be.domain.Module.Construction.Submissions.Entities
             ModifiedDate = checkedDate;
 
             return SubmissionLog.Create(Id, ProjectId, DocumentTypeId, checkedBy, oldStatus, StatusCheck, description,
-                String.IsNullOrEmpty(trimmedNote) ? null : trimmedNote, changedDataCount, checkedBy, checkedDate);
+                String.IsNullOrEmpty(trimmedNote) ? null : trimmedNote, changedDataCount, JsonSerializer.Serialize(changes, ChangedDatasJsonOptions),
+                checkedBy, checkedDate);
         }
 
         public SubmissionQaLog ReviewQa(int result, string? reason, IReadOnlyCollection<int> wrongDocumentFieldIds,

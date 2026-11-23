@@ -1,9 +1,12 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import {
+    ICheckSubmission,
+    ICheckSubmissionResult,
     IFindPagingQaEntryUserStats,
     IFindPagingSubmission,
     IFindStats,
+    IFindSubmissionDetail,
     IFindSubmissionFieldValue,
     ILatestWorkingSubmission,
     IListQaSubmission,
@@ -13,8 +16,10 @@ import {
     IQaFieldStats,
     IQaStatsSummary,
     ISubmissionCount,
+    ISubmissionDetail,
     ISubmissionFieldValue,
     ISubmissionFilter,
+    ISubmissionTimeline,
 } from "@/models/submission.model";
 import { LatestWorkingType } from "@/shared/constants/submission.constants";
 import { IBaseResponsePaging, IBaseResponseWithData } from "@/shared/models/request-paging.base.models";
@@ -45,6 +50,32 @@ export class SubmissionService {
 
     latestWorking(projectId: number, documentTypeId: number, type: LatestWorkingType) {
         return this.http.get<IBaseResponseWithData<ILatestWorkingSubmission | null>>(`${this.api}/latest-working`, { params: { projectId, documentTypeId, type } });
+    }
+
+    findById(id: number, query: IFindSubmissionDetail) {
+        return this.http.get<IBaseResponseWithData<ISubmissionDetail>>(`${this.api}/${id}`, { params: this.toParams(query) });
+    }
+
+    // Văn bản kế / trước trong bộ lọc; hết văn bản → 317
+    next(id: number, query: ISubmissionFilter) {
+        return this.http.get<IBaseResponseWithData<ISubmissionDetail>>(`${this.api}/${id}/next`, { params: this.toParams(query) });
+    }
+
+    previous(id: number, query: ISubmissionFilter) {
+        return this.http.get<IBaseResponseWithData<ISubmissionDetail>>(`${this.api}/${id}/previous`, { params: this.toParams(query) });
+    }
+
+    check(body: ICheckSubmission) {
+        return this.http.put<IBaseResponseWithData<ICheckSubmissionResult>>(`${this.api}/check`, body);
+    }
+
+    timeline(id: number) {
+        return this.http.get<IBaseResponseWithData<ISubmissionTimeline[]>>(`${this.api}/${id}/timeline`);
+    }
+
+    // Tải bằng DownloadService: thành công là PDF, lỗi là JSON IBaseResponse (HTTP 200)
+    proxyFileUrl(fileUrl: string) {
+        return `${this.api}/proxy-file?url=${encodeURIComponent(fileUrl)}`;
     }
 
     progressDailyStats(query: IFindStats) {

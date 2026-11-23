@@ -331,7 +331,7 @@ namespace sh.be.applications.Module.Construction.Implements
             return await _submissionQuery.FindLatestWorking(dto.ProjectId, dto.DocumentTypeId, type, currentUserId, restrictedUserId);
         }
 
-        // Kiểm tra hồ sơ: lưu dữ liệu sửa + log + audit, chuyển văn bản vừa kiểm cho QA phụ trách; dự án không QA thì tự vào nghiệm thu
+        // Kiểm tra hồ sơ: lưu dữ liệu sửa + log (kèm cũ → mới từng ô) + audit, chuyển văn bản vừa kiểm cho QA phụ trách; dự án không QA thì tự vào nghiệm thu
         public async Task<ViewCheckSubmissionResultDto> Check(CheckSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(Check)}, dto={JsonSerializer.Serialize(dto)}");
@@ -354,7 +354,7 @@ namespace sh.be.applications.Module.Construction.Implements
                 var now = GetVietnamTime();
                 var inputs = dto.Datas.Select(data => new SubmissionDataInput(data.DocumentFieldId, data.Data)).ToList();
                 var plan = SubmissionDomainService.BuildCheckPlan(submission, inputs, mappings, existingDatas, currentUserId, now);
-                var log = submission.Check(currentUserId, userName, dto.Note, plan.ChangedDataCount, now);
+                var log = submission.Check(currentUserId, userName, dto.Note, plan.Changes, now);
 
                 _submissionRepository.AddDatas(plan.DatasToInsert);
                 _submissionRepository.AddLog(log);
