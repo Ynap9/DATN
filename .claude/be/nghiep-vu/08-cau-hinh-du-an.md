@@ -15,7 +15,7 @@ Google mà hệ thống dùng tạo, đổi tên, xoá Google Sheet của dự �
 | Sửa | `PUT api/construction/project-config/{id}` | `Function.Construction.ProjectConfig.Update` |
 | Xoá | `DELETE api/construction/project-config/{id}` | `Function.Construction.ProjectConfig.Delete` |
 | Lấy link xác thực Google | `GET api/construction/project-config/google-authorization-url` | `Function.Construction.ProjectConfig.Update` |
-| Google gọi lại sau khi đồng ý | `GET api/construction/project-config/google-callback?code=&state=` | **không cần token** (`[AllowAnonymous]`) |
+| Google gọi lại sau khi đồng ý / huỷ (302 về màn Cấu hình) | `GET api/construction/project-config/google-callback?code=&state=&error=` | **không cần token** (`[AllowAnonymous]`) |
 
 Body tạo / sửa: `{ "name", "value", "description" }`.
 
@@ -47,9 +47,21 @@ mặc định `3`), `DeadlineMailEnabled` (`true` / `false`, mặc định `true
 2. Mở link, đăng nhập Gmail sở hữu thư mục, đồng ý → Google chuyển trình duyệt về `GoogleRedirectUri`.
 3. Callback kiểm `state` (sai / hết hạn → `400`), đổi `code` lấy refresh token (`207` nếu Google từ chối), ghi dòng `GoogleRefreshToken`
    (chưa có thì tạo), audit ghi đúng người đã lấy link.
+4. Callback không trả JSON mà chuyển trình duyệt (`302`) về màn Cấu hình `<AuthServer:AppUrl>/admin/construction/project-config`
+   (Task 50A), để người dùng khỏi thấy trang chữ thô:
+
+| Kết quả | Query thêm vào |
+|---|---|
+| Thành công | `?google=success` |
+| Google gửi `error` (bấm Huỷ…): không gọi service, không kiểm `state` vì không ghi gì | `?google=error&message=Bạn đã huỷ cấp quyền Google` |
+| Lỗi nghiệp vụ (`400` / `207` / `304`) | `?google=error&message=<câu lỗi>` (cắt 200 ký tự rồi mới `EscapeDataString`) |
+| Lỗi khác | Log lỗi, `?google=error&message=Kết nối Google thất bại, thử lại sau`, không đưa stack lên URL |
 
 ⚠️ Callback không cần token nên chỉ được tin `state` đã ký: đừng bỏ bước kiểm `state`, nếu không ai cũng có thể gắn tài khoản Google
 của họ vào hệ thống. Khoá Data Protection lưu trong hồ sơ người dùng Windows chạy app; đổi máy / user chạy app thì link cũ hết hiệu lực.
+
+⚠️ `AuthServer:AppUrl` chỉ khai trong `appsettings.json` = `http://localhost:4200`. Deploy mà không ghi đè (vd. biến môi trường
+`AuthServer__AppUrl`) thì callback đưa người dùng về localhost. Đừng thêm key cấu hình riêng cho callback: dùng chung `AppUrl`.
 
 ## Đã kiểm thực tế
 
@@ -57,6 +69,11 @@ Ngày 2026-10-15: tạo 4 dòng Google; trùng tên `409`; tên rỗng `400`; da
 trong DB; audit ghi `******`; id không tồn tại `304`; link xác thực đúng `redirect_uri`, `access_type`, `prompt`, scope; callback `state`
 giả hoặc thiếu → `400`; `state` thật + `code` giả → Google `invalid_grant` → `207`; tạo dự án khi chưa có refresh token → `304`.
 Chưa kiểm đồng ý thật trên trình duyệt (cần người dùng đăng nhập Google).
+
+Ngày 2026-11-23 (Task 50A, API thật, 10/10): mọi ca đều `302` về `/admin/construction/project-config`. Thiếu `state` / `state` giả → câu
+`400`; `state` thật + `code` giả → câu `207`; `error=access_denied` (kể cả `state` giả) → "Bạn đã huỷ cấp quyền Google"; xoá tạm dòng
+`GoogleClientId` → "Thiếu cấu hình dự án: GoogleClientId", tạo lại đúng giá trị cũ. `GoogleRefreshToken` không đổi. Chưa kiểm đồng ý thật
+(`?google=success`).
 
 ## Giới hạn
 
