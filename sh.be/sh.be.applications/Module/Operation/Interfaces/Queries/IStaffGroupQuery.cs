@@ -8,5 +8,6 @@ namespace sh.be.applications.Module.Operation.Interfaces.Queries
         Task<BaseResponsePagingDto<ViewStaffGroupDto>> FindPaging(FindPagingStaffGroupDto dto);
         Task<FindStaffGroupByIdDto?> FindById(int id);
         Task<BaseResponsePagingDto<StaffGroupCandidateDto>> FindCandidates(FindStaffGroupCandidateDto dto);
+        Task<List<StaffGroupOwnerDto>> FindOwners(string? ownerUserId);
     }
 }

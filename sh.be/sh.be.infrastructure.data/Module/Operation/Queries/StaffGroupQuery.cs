@@ -160,6 +160,32 @@ namespace sh.be.infrastructure.data.Module.Operation.Queries
             };
         }
 
+        public async Task<List<StaffGroupOwnerDto>> FindOwners(string? ownerUserId)
+        {
+            // Query filter của StaffGroup đã bỏ nhóm xoá mềm; join Users bỏ chủ nhóm đã bị xoá khỏi hệ thống
+            var staffGroups = _shDbContext.StaffGroups.AsNoTracking();
+            if (!string.IsNullOrEmpty(ownerUserId))
+            {
+                staffGroups = staffGroups.Where(g => g.OwnerUserId == ownerUserId);
+            }
+
+            // Đếm theo chủ trước rồi mới join — EF không dịch được join trên chính IGrouping
+            var groupCounts = staffGroups
+                .GroupBy(g => g.OwnerUserId)
+                .Select(owner => new { OwnerUserId = owner.Key, GroupCount = owner.Count() });
+
+            return await (from c in groupCounts
+                          join u in _shDbContext.Users on c.OwnerUserId equals u.Id
+                          orderby u.FullName, u.UserName
+                          select new StaffGroupOwnerDto
+                          {
+                              UserId = u.Id,
+                              UserName = u.UserName ?? "",
+                              FullName = u.FullName,
+                              GroupCount = c.GroupCount,
+                          }).ToListAsync();
+        }
+
         private static string? JoinStaffRoles(IEnumerable<string> roleNames)
         {
             var distinctRoleNames = roleNames.Distinct().OrderBy(name => name).ToList();

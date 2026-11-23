@@ -1,0 +1,49 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="flex flex-col gap-5">
+        <div class="flex items-center gap-2.5">
+            <app-member-avatar [member]="member" />
+            <span class="flex flex-col">
+                <span class="font-semibold">{{ displayName }}</span>
+                <span class="text-xs text-muted-color">{{ member.userName }} · {{ roleLabel }}</span>
+            </span>
+        </div>
+
+        @if (!isLeader) {
+            <section class="flex flex-col gap-3 rounded-md bg-gray-50 p-4">
+                <span class="text-xs font-semibold uppercase tracking-wide text-muted-color">Đơn giá</span>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div class="flex flex-col gap-1">
+                        <sh-input-number label="Giá công ty" formControlName="companyPrice" suffix=" đ" [min]="0" [max]="priceMax"
+                            [isShowMessageInvalid]="false" />
+                        @if (companyPriceError) {
+                            <small class="text-red-600">{{ companyPriceError }}</small>
+                        }
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <sh-input-number label="Giá thực nhận" formControlName="actualPrice" suffix=" đ" [min]="0" [max]="priceMax"
+                            [isShowMessageInvalid]="false" />
+                        @if (actualPriceError) {
+                            <small class="text-red-600">{{ actualPriceError }}</small>
+                        }
+                    </div>
+                </div>
+                <small class="text-muted-color">{{ priceHint }}</small>
+            </section>
+
+            <sh-select label="Leader quản lý" formControlName="managedByUserId" [options]="managers" optionLabel="label" optionValue="userId" />
+        }
+
+        <div class="flex items-start justify-between gap-4">
+            <span class="flex flex-col">
+                <label for="memberIsActive">Đang làm</label>
+                <small class="text-muted-color">Tắt = không nhận phiếu mới, phiếu đang giữ vẫn làm tiếp.</small>
+            </span>
+            <p-toggleswitch inputId="memberIsActive" formControlName="isActive" />
+        </div>
+    </div>
+
+    <div class="mt-6 flex justify-end gap-2">
+        <p-button label="Huỷ" severity="secondary" [outlined]="true" (onClick)="close()" />
+        <p-button type="submit" label="Lưu" [disabled]="hasPriceError" [loading]="submitting" />
+    </div>
+</form>

@@ -191,6 +191,15 @@ namespace sh.be.applications.Module.Operation.Implements
             return await _staffGroupQuery.FindCandidates(dto);
         }
 
+        // Danh sách chủ nhóm cho ô lọc: Admin thấy mọi chủ nhóm, người khác chỉ chính mình (cùng luật ép ownerUserId của paging)
+        public async Task<List<StaffGroupOwnerDto>> FindOwners()
+        {
+            _logger.LogInformation($"{nameof(FindOwners)}");
+            var currentUserId = getCurrentUserId();
+            var isAdmin = PermissionDomainService.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId));
+            return await _staffGroupQuery.FindOwners(isAdmin ? null : currentUserId);
+        }
+
         private async Task<StaffGroup> EnsureAccessibleAsync(int id)
         {
             var currentUserId = getCurrentUserId();

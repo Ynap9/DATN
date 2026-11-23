@@ -13,5 +13,6 @@ namespace sh.be.applications.Module.Operation.Interfaces.Services
         Task<FindStaffGroupByIdDto> AddMembers(int id, ChangeStaffGroupMembersDto dto);
         Task<FindStaffGroupByIdDto> RemoveMembers(int id, ChangeStaffGroupMembersDto dto);
         Task<BaseResponsePagingDto<StaffGroupCandidateDto>> FindCandidates(FindStaffGroupCandidateDto dto);
+        Task<List<StaffGroupOwnerDto>> FindOwners();
     }
 }

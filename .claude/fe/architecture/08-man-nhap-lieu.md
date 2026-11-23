@@ -1,6 +1,6 @@
 # Màn Nhập liệu và dialog Lịch sử
 
-> **Phần 8/9** · trước: [07-man-construction.md](07-man-construction.md) · mục lục: [README.md](README.md)
+> **Phần 8/10** · trước: [07-man-construction.md](07-man-construction.md) · mục lục: [README.md](README.md)
 
 Task 43, giao diện làm lại ở Task 53 (cập nhật 2026-11-23). Màn làm việc của người Data: PDF bên trái, các trường bên phải, Lưu = Kiểm tra rồi sang văn bản kế.
 
@@ -37,6 +37,8 @@ Task 43, giao diện làm lại ở Task 53 (cập nhật 2026-11-23). Màn làm
 - Thanh trên cao 56px. Trái: nút ←, khối 2 dòng gồm tên file (cắt "…", tooltip tên đủ) + tag trạng thái, rồi `locationText`
   = Hồ sơ · Hộp · tên metadata. Tên metadata đi theo query `documentTypeName` từ danh sách, ◀ ▶ giữ lại tham số này. Mở link
   trực tiếp không có tham số thì dòng 2 bỏ phần đó.
+- ⚠️ Hồ sơ / Hộp import có khi đã kèm tiền tố ("HS 114", "Hộp 12") → ghép thêm "Hồ sơ " / "Hộp " ra "Hộp Hộp 12". Dùng
+  `buildLocationText` (`submission-location.ts`, chung màn Nhập liệu và QA): giá trị đã bắt đầu bằng hồ sơ / hs / hộp thì giữ nguyên.
 - Phải: cụm [◀ | x / y | ▶], các nút text Chia / A− / A+ / Lịch sử, nút Lưu. Văn bản đang bị trả thì nhãn nút là
   "Lưu · gửi QA lại". Chỉ đọc thì ẩn nút Lưu, chân form bỏ vế "Ctrl + Enter: Lưu".
 - Tiêu đề form có dòng tóm tắt (`formSummary`). Chỉ đọc → xám + khoá. Bị trả còn trường sai → đỏ "Còn X / Y trường QA đánh sai".

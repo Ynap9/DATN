@@ -1,6 +1,6 @@
 # Quy ước code bắt buộc
 
-> **Phần 5/9** · trước: [04-http-auth.md](04-http-auth.md) · mục lục: [README.md](README.md)
+> **Phần 5/10** · trước: [04-http-auth.md](04-http-auth.md) · mục lục: [README.md](README.md)
 
 Áp dụng cho mọi thay đổi trong `sh.fe`. Luật chung (chỉ sửa chỗ cần thiết, comment, tách hàm, không commit khi
 chưa yêu cầu) giống BE — xem [../../be/architecture/07-conventions.md](../../be/architecture/07-conventions.md).
@@ -92,6 +92,10 @@ quá 6–7 file mới chia thư mục con (`components/`).
   `providePrimeNG` không bật `cssLayer`, nên style PrimeNG nằm ngoài layer và thắng lớp Tailwind. Cách tránh: chỉ thêm `!`
   (`px-2!`, `text-[13px]!`) cho thuộc tính PrimeNG tự đặt, như padding, gap, cỡ chữ nút, độ rộng nút chỉ có icon, độ đậm nhãn
   nút. Height, cỡ icon `.pi` thì không cần `!`. Ví dụ ở thanh trên màn Nhập liệu ([08-man-nhap-lieu.md](08-man-nhap-lieu.md)).
+- ⚠️ Biến `--app-*` (`--app-line`, `--app-ink`…) trong dialog mở bằng `DialogService` không có giá trị → viền thành đen, màu chữ
+  rơi về mặc định. Lý do: biến khai báo ở `.layout-wrapper` (`shared/assets/layout/_main.scss`), còn dialog gắn thẳng vào `body`.
+  Cách tránh: trong dialog dùng mã màu (`border-[#e4e8e6]`, `text-[#8a958f]`…), như dialog Nhóm nhân viên. Cũng đừng dùng `-mt-*`
+  cho dòng đầu nội dung dialog: nó bị header che mất nửa.
 - Bảng: cột chữ dài không khai `width` thì đặt `min-width` (vd. cột trường động của bảng văn bản 180px); cột ngắn (mã, hồ sơ,
   hộp, ngày) `cellStyle: 'white-space: nowrap'`. `.p-tag` đã `nowrap` toàn cục.
 - ⚠️ Repo **không** có cấu hình Prettier: đừng chạy `npx prettier --write` — mặc định 80 cột ngắt mỗi thuộc tính một dòng, lệch hẳn kiểu template

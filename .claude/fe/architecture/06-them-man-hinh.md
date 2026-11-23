@@ -1,6 +1,6 @@
 # Thêm một màn hình gọi API BE
 
-> **Phần 6/9** · trước: [05-conventions.md](05-conventions.md) · mục lục: [README.md](README.md)
+> **Phần 6/10** · trước: [05-conventions.md](05-conventions.md) · mục lục: [README.md](README.md)
 
 ⚠️ `PUT api/v1/auth/user` chỉ sửa chính người đang đăng nhập (`UpdateUserDto` không có id), nên màn Người dùng không có nút Sửa.
 

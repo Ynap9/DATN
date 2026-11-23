@@ -1,0 +1,79 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="flex flex-col gap-5">
+        <span class="text-[13px] text-muted-color">{{ subtitle }}</span>
+
+        <div class="flex flex-col gap-1">
+            <sh-input-text label="Tên nhóm" formControlName="name" [required]="true" [maxlength]="'' + nameMax" [isShowMessageInvalid]="false" />
+            @if (nameError) {
+                <small class="text-red-600">{{ nameError }}</small>
+            }
+        </div>
+
+        <sh-input-text label="Mô tả" formControlName="description" [textarea]="true" [rows]="2" [maxlength]="'' + descriptionMax" />
+
+        <div class="flex flex-col gap-2">
+            <label>Vai trò</label>
+            <div class="flex gap-1 rounded-lg bg-[#f3f5f4] p-[3px]" role="radiogroup">
+                @for (button of roleButtons; track button.role) {
+                    @let isSelected = currentRole === button.role;
+                    <button type="button" role="radio" [attr.aria-checked]="isSelected" [disabled]="isRoleLocked || loadingDetail"
+                        class="h-8 flex-1 rounded-md border-0 text-[13px] font-semibold"
+                        [class]="isSelected ? 'bg-white text-[#16201c] shadow-sm' : isRoleLocked ? 'bg-transparent text-[#8a958f] cursor-not-allowed' : 'bg-transparent text-[#5d6b66] cursor-pointer'"
+                        (click)="selectRole(button.role)">
+                        {{ button.label }}
+                    </button>
+                }
+            </div>
+            <small class="text-muted-color">{{ roleHint }}</small>
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <label for="staffGroupMemberSearch">Thêm người</label>
+            <p-autocomplete inputId="staffGroupMemberSearch" class="w-full" [inputStyleClass]="'w-full'" appendTo="body"
+                placeholder="Gõ tài khoản / họ tên để chọn…" optionLabel="label" [(ngModel)]="search" [ngModelOptions]="{ standalone: true }"
+                [suggestions]="suggestions" [disabled]="!canAddMember" [delay]="400" emptyMessage="Không có người phù hợp" [showEmptyMessage]="true"
+                (completeMethod)="searchCandidates($event)" (onSelect)="addMember($event)" />
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <span class="text-xs font-semibold uppercase tracking-wide text-muted-color">Thành viên ({{ members.length }})</span>
+            <div class="max-h-[220px] overflow-y-auto rounded-md border border-[#e4e8e6]">
+                @if (loadingDetail) {
+                    <div class="px-3 py-4 text-center text-[13px] text-muted-color">Đang tải…</div>
+                } @else {
+                    @for (member of members; track member.userId) {
+                        @let chip = getMemberChip(member);
+                        <div class="flex items-center gap-2.5 border-b border-[#e4e8e6] px-3 py-2 last:border-b-0">
+                            <app-member-avatar [member]="{ fullName: member.fullName, userName: member.userName, role: member.staffRole ?? '' }" />
+                            <span class="flex min-w-0 flex-1 flex-col">
+                                <span class="font-semibold">{{ member.fullName || member.userName }}</span>
+                                <span class="text-xs text-muted-color">{{ member.userName }}</span>
+                            </span>
+                            @if (chip) {
+                                <span class="rounded-full px-2 py-0.5 text-xs font-semibold" [class]="chip.style">{{ chip.label }}</span>
+                            }
+                            <p-button icon="pi pi-times" size="small" severity="secondary" [text]="true"
+                                [ariaLabel]="'Bỏ ' + (member.fullName || member.userName)" (onClick)="removeMember(member)" />
+                        </div>
+                    } @empty {
+                        <div class="px-3 py-4 text-center text-[13px] text-muted-color">Chưa có ai — có thể thêm sau.</div>
+                    }
+                }
+            </div>
+            @if (membersError) {
+                <small class="text-red-600">{{ membersError }}</small>
+            }
+            @if (isMixed) {
+                <div class="flex items-start gap-2 rounded-md border border-[#f0d9a8] bg-[#fdf3e3] p-3 text-[13px] text-[#8a5a12]">
+                    <i class="pi pi-exclamation-triangle mt-0.5"></i>
+                    <span>Nhóm có người đã đổi sang vai trò khác. Bỏ người đó ra trước khi thêm người mới.</span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="mt-6 flex justify-end gap-2">
+        <p-button label="Huỷ" severity="secondary" [outlined]="true" (onClick)="close()" />
+        <p-button type="submit" [label]="isEdit ? 'Lưu' : 'Tạo nhóm'" [disabled]="loadingDetail || !!membersError" [loading]="submitting" />
+    </div>
+</form>

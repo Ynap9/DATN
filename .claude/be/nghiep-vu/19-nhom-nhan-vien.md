@@ -49,6 +49,14 @@ nhóm **không** dùng để tính tiền hay giao phiếu. Task 10, 2026-10-26.
 | 6 | POST | `{id:int}/members` | Thêm `userIds` | Chi tiết nhóm |
 | 7 | DELETE | `{id:int}/members` | Bỏ `userIds` (body) | Chi tiết nhóm |
 | 8 | GET | `candidates` | `role` **bắt buộc** `Data` / `QA`, `keyword`, `excludeStaffGroupId` | User có đúng role đó, sắp `fullName` |
+| 9 | GET | `owners` | Không tham số. Admin: mọi chủ nhóm; người khác: chỉ chính mình nếu đang làm chủ ≥ 1 nhóm, không thì `[]` | `StaffGroupOwnerDto` (`userId`, `userName`, `fullName`, `groupCount` = số nhóm chưa xoá), sắp `fullName` rồi `userName` |
+
+API 9 (Task 49A) đổ ô lọc "Chủ nhóm" ở màn Nhóm nhân viên, rồi FE gửi `ownerUserId` vào API 1. Chủ nhóm đã bị xoá khỏi `Users`
+tự rơi khỏi danh sách (join `Users`).
+
+- ⚠️ `GroupBy` rồi `join` thẳng trên nhóm (`group g by … into owner join u …`) → EF báo "could not be translated" lúc chạy,
+  build vẫn qua. Nguyên nhân: EF không join được trên chính `IGrouping`. Cách tránh: `Select` ra `{ key, Count() }` trước rồi
+  mới join, như `StaffGroupQuery.FindOwners`.
 
 Luồng FE: dropdown "Vai trò" chỉ để lọc (BE không nhận) → gọi API 8 theo role → lưu bằng API 3. Màn sửa: khoá dropdown theo `role`
 của API 2 (nhóm rỗng thì mở), gọi `candidates?role=…&excludeStaffGroupId=<id>`.
@@ -74,6 +82,10 @@ SMTP), xoá sạch sau khi test: **50/50 đạt** — đủ các ca ở mục 10
 802; 804 cho nhóm trộn, user Leader, user không có, nhóm lệch; idempotent; `candidates` + `excludeStaffGroupId`; Leader A ↔ B → 801;
 400 cho 501 người / tên rỗng / 201 ký tự; xoá rồi tạo lại cùng tên; đủ 5 audit action; Data → 403; không token → 401).
 DB dev trước khi merge không có user nào giữ cả `Data` và `QA`.
+
+API 9 (2026-11-23, Task 49A): **6/6 đạt** — Admin thấy Admin + L1 (`groupCount` 1 / 2), L1 xoá 1 nhóm còn 1, L1 gọi chỉ thấy
+mình, L2 chưa có nhóm → `[]`, không token → 401, `Data` → 403, Swagger `v1-operation` có `owners` và `GET {id}` vẫn chạy.
+Dùng user `t10_la` / `t10_lb` / `t10_d1`, xoá các nhóm test sau khi xong.
 
 ⚠️ Bẫy khi viết script kiểm thử PowerShell: biến không phân biệt hoa thường — `$LA` (userId) đè `$la` (token) làm mọi lời gọi thành 401.
 

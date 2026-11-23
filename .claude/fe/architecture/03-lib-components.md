@@ -1,6 +1,6 @@
 # UI kit @sh/ui (lib-components)
 
-> **Phần 3/9** · trước: [02-app-admin.md](02-app-admin.md) · mục lục: [README.md](README.md)
+> **Phần 3/10** · trước: [02-app-admin.md](02-app-admin.md) · mục lục: [README.md](README.md)
 
 `projects/lib-components/src/my-lib-components`, cổng duy nhất là `src/public-api.ts`, import qua alias `@sh/ui`.
 Chỉ chứa thứ **hiển thị và nhập liệu**: không token, không router-guard, không gọi API, không biết module BE nào.

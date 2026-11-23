@@ -54,6 +54,21 @@ namespace sh.be.api.Controllers.Module.Operation
             }
         }
 
+        [HttpGet("owners")]
+        [Permission(PermissionConstants.FUNCTION_STAFF_GROUP_MANAGE)]
+        public async Task<ApiResponse> FindOwners()
+        {
+            try
+            {
+                var data = await _staffGroupService.FindOwners();
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
         [HttpGet("{id:int}")]
         [Permission(PermissionConstants.FUNCTION_STAFF_GROUP_MANAGE)]
         public async Task<ApiResponse> FindById([FromRoute] int id)

@@ -1,6 +1,6 @@
 # Màn QA
 
-> **Phần 9/9** · trước: [08-man-nhap-lieu.md](08-man-nhap-lieu.md) · mục lục: [README.md](README.md)
+> **Phần 9/10** · trước: [08-man-nhap-lieu.md](08-man-nhap-lieu.md) · mục lục: [README.md](README.md)
 
 Task 44 (cập nhật 2026-11-23). Màn chấm của người QA: PDF bên trái, giá trị từng trường bên phải (chỉ đọc), bấm "Sai" ở
 trường không khớp rồi chấm Đạt hoặc Trả lại, xong tự sang văn bản kế trong bộ lọc.
@@ -42,4 +42,4 @@ trường không khớp rồi chấm Đạt hoặc Trả lại, xong tự sang v
 - ⚠️ Test trên DB dev qua tunnel: mỗi lần mở văn bản mất 3–6 s. Bấm khi màn đang bận thì nút bị tắt, thao tác mất — đừng
   coi là lỗi điều hướng.
 
-> **Tiếp:** hết bộ tài liệu — quay lại [README.md](README.md).
+> **Tiếp:** [10-man-operation.md](10-man-operation.md) — màn module Operation: Thành viên dự án.
