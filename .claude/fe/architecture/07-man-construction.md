@@ -1,6 +1,6 @@
 # Màn hình module construction
 
-> **Phần 7/9** · trước: [06-them-man-hinh.md](06-them-man-hinh.md) · mục lục: [README.md](README.md)
+> **Phần 7/10** · trước: [06-them-man-hinh.md](06-them-man-hinh.md) · mục lục: [README.md](README.md)
 
 Quyết định và bẫy riêng của từng màn đã làm (cập nhật 2026-11-21); cách thêm màn mới chung ở [06-them-man-hinh.md](06-them-man-hinh.md).
 

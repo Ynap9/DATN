@@ -1,0 +1,40 @@
+<div class="flex flex-col gap-5">
+    <span class="-mt-2 text-[13px] text-muted-color">{{ pair.projectName }} · {{ pair.documentTypeName }}</span>
+
+    <div class="flex flex-col gap-2">
+        <label>Vai trò</label>
+        <div class="flex gap-1 rounded-lg bg-[#f3f5f4] p-[3px]" role="radiogroup">
+            @for (button of roleButtons; track button.role) {
+                @let isQaLocked = button.role === qaRole && !pair.isQaEnabled;
+                <span class="flex-1" [pTooltip]="isQaLocked ? 'Dự án không có QA' : ''" tooltipPosition="top">
+                    <button type="button" role="radio" [attr.aria-checked]="role === button.role" [disabled]="isQaLocked"
+                        class="h-8 w-full rounded-md border-0 text-[13px] font-semibold"
+                        [class]="role === button.role ? 'bg-white text-[var(--app-ink)] shadow-sm' : isQaLocked ? 'bg-transparent text-[var(--app-faint)] cursor-not-allowed' : 'bg-transparent text-[var(--app-muted)] cursor-pointer'"
+                        (click)="selectRole(button.role)">
+                        {{ button.label }}
+                    </button>
+                </span>
+            }
+        </div>
+    </div>
+
+    <div>
+        <sh-multi-select label="Người dùng" placeholder="Gõ tài khoản / họ tên…" display="chip" [formControl]="userIds" [options]="candidates"
+            optionLabel="label" optionValue="userId" [filter]="true" [showToggleAll]="false" emptyFilterMessage="Không có người phù hợp"
+            emptyMessage="Không có người phù hợp" (onFilter)="onCandidateFilter($event)" (onChange)="onUsersChange($event)" />
+        <small class="text-muted-color">Chỉ gợi ý người có vai trò đã chọn và chưa ở dự án.</small>
+    </div>
+
+    @if (canPickGroup && !isLeaderRole) {
+        <sh-select label="Hoặc thêm cả nhóm" [formControl]="staffGroupId" [options]="staffGroups" optionLabel="label" optionValue="id" />
+    }
+
+    @if (!isLeaderRole) {
+        <sh-select label="Leader quản lý" [formControl]="managedByUserId" [options]="managers" optionLabel="label" optionValue="userId" />
+    }
+</div>
+
+<div class="mt-6 flex justify-end gap-2">
+    <p-button label="Huỷ" severity="secondary" [outlined]="true" (onClick)="close()" />
+    <p-button [label]="submitLabel" [disabled]="!canSubmit" [loading]="submitting" (onClick)="onSubmit()" />
+</div>

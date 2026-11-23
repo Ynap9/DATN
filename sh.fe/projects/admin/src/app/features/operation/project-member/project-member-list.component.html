@@ -1,0 +1,60 @@
+<app-page-header title="Thành viên dự án" [breadcrumbs]="breadcrumbs">
+    @if (pair && !isClosed) {
+        <p-button icon="pi pi-plus" label="Thêm thành viên" (onClick)="openAddForm()" />
+    }
+</app-page-header>
+
+@if (pairsLoaded && !pairs.length) {
+    <div class="flex flex-col items-center gap-3 py-12">
+        <span class="text-muted-color">Chỉ Admin quản lý thành viên dự án</span>
+    </div>
+} @else if (pair) {
+    <div class="flex flex-col gap-4">
+        <div class="flex flex-wrap items-end gap-4 rounded-md border border-[var(--app-line)] bg-[var(--app-surface)] p-4">
+            <sh-select class="w-full sm:w-80" label="Dự án" [options]="projects" optionLabel="projectName" optionValue="projectId" [filter]="true"
+                [ngModel]="pair.projectId" (ngModelChange)="onProjectChange($event)" />
+            <sh-select class="w-full sm:w-64" label="Loại tài liệu" [options]="documentTypes" optionLabel="documentTypeName" optionValue="documentTypeId"
+                [ngModel]="pair.documentTypeId" (ngModelChange)="onDocumentTypeChange($event)" />
+            <div class="flex flex-wrap items-center gap-2 pb-1.5">
+                <app-status-badge [badge]="statusBadge" />
+                <span class="inline-flex h-[26px] items-center rounded-full bg-[#eef1ef] px-2.5 text-xs font-semibold text-[#3f4b47]">
+                    {{ pair.isQaEnabled ? 'Có QA' : 'Không QA' }}
+                </span>
+            </div>
+        </div>
+
+        @if (isClosed) {
+            <div class="flex items-start gap-2 rounded-md border border-gray-200 bg-gray-50 p-3 text-[13px]">
+                <i class="pi pi-lock mt-0.5 text-base text-gray-500"></i>
+                <span>Dự án đã xong / hết hạn — chỉ xem thành viên, không thêm / sửa / gỡ.</span>
+            </div>
+        }
+
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex gap-1 rounded-lg bg-[#f3f5f4] p-[3px]" role="tablist">
+                @for (tab of tabs; track tab.key) {
+                    <button type="button" role="tab" [attr.aria-selected]="role === tab.key"
+                        class="inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-md border-0 px-3 text-[13px] font-semibold"
+                        [class]="role === tab.key ? 'bg-white text-[var(--app-ink)] shadow-sm' : 'bg-transparent text-[var(--app-muted)]'"
+                        (click)="selectTab(tab.key)">
+                        {{ tab.label }} <span class="font-normal text-[var(--app-faint)]">{{ counts[tab.key] ?? 0 }}</span>
+                    </button>
+                }
+            </div>
+            <p-iconfield class="w-full sm:w-72">
+                <p-inputicon class="pi pi-search" />
+                <input pInputText class="w-full" placeholder="Tài khoản / Họ tên" [formControl]="keyword" />
+            </p-iconfield>
+        </div>
+
+        <div>
+            <app-data-table tableKey="operation-project-member" [columns]="columns" [data]="rows" [loading]="loading" [pageNumber]="pageNumber"
+                [pageSize]="pageSize" [rowsPerPageOptions]="[pageSize]" [total]="totalRecords" (pageChange)="onPageChange($event)"
+                (action)="onAction($event)" />
+            <div class="flex flex-wrap justify-between gap-2 border-t border-[var(--app-line)] bg-[#fafbfa] px-4 py-2.5 text-xs text-[var(--app-muted)]">
+                <span>{{ totalRecords }} thành viên</span>
+                <span>Giá Nhập liệu tính theo trường có dữ liệu · QA theo lượt chấm · Leader không có giá</span>
+            </div>
+        </div>
+    </div>
+}
