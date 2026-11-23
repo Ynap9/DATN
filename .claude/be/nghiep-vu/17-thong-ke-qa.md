@@ -83,10 +83,10 @@ lượt chấm cũ không còn trong số của người đó.
 
 - Gộp `SubmissionLog` (`eventType = "CHECK"`) và `SubmissionQaLog` (`"QA"`) của một văn bản, cũ trước mới sau. Cùng `createdDate`
   thì `CHECK` đứng trước. Mỗi sự kiện là **một lần chấm** (không gộp lượt như các API thống kê). Tối đa 500 sự kiện, không phân trang.
-- `CHECK` có: `oldStatusCheck`, `newStatusCheck`, `note`, `changedDataCount`, `description`.
+- `CHECK` có: `oldStatusCheck`, `newStatusCheck`, `note`, `changedDataCount`, `description`, `changedFields` `[{ documentFieldId, name, oldData,
+  newData }]` (Task 43A, đọc `SubmissionLog.ChangedDatas`; tên và thứ tự như `wrongFields`, trường mất hẳn thì bỏ; log trước 43A hoặc JSON hỏng → `null`).
 - `QA` có: `newStatusQa`, `reason`, `wrongFields` `[{ documentFieldId, name }]` và người nhập của lần chấm đó (`entryUserId`,
-  `entryUserName`). Trường không thuộc loại sự kiện thì là `null`.
-- Người làm (`userId`, `userName`, `fullName`) có ở mọi sự kiện.
+  `entryUserName`). Trường không thuộc loại sự kiện thì là `null`. Người làm (`userId`, `userName`, `fullName`) có ở mọi sự kiện.
 - Thêm loại sự kiện mới (ví dụ phiếu QA của 18C): thêm một nguồn trả `GetListSubmissionTimelineDto` với `eventType` mới rồi `Concat`
   vào chỗ ghép trong `FindTimeline`. Việc sắp xếp và cắt 500 sự kiện chỉ nằm ở chỗ ghép đó.
 

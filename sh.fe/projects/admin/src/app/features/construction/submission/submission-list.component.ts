@@ -1,7 +1,6 @@
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl } from '@angular/forms';
-import { ParamMap } from '@angular/router';
 import { ShSelectComponent } from '@sh/ui';
 import { MenuItem } from 'primeng/api';
 import { AutoCompleteModule } from 'primeng/autocomplete';
@@ -43,17 +42,9 @@ import { SharedImports } from '@/shared/import.shared';
 import { IColumn, ITableAction, ITableEvent } from '@/shared/models/data-table.models';
 import { IBaseResponse } from '@/shared/models/request-paging.base.models';
 import { buildCheckColumns, buildQaColumns, SUBMISSION_ACTIONS, SubmissionRow } from './submission-columns';
+import { openSubmissionHistory } from './submission-history-dialog/submission-history-dialog.component';
+import { readSubmissionQuery, SubmissionQuery } from './submission-query';
 
-// Trạng thái lọc của màn, đọc từ query string (đặt đúng tên tham số BE)
-type SubmissionListQuery = Partial<Omit<ISubmissionFilter, 'projectId' | 'documentTypeId'>> & {
-    pageNumber?: number;
-    pageSize?: number;
-    view?: SubmissionView;
-};
-
-const NUMBER_PARAMS = ['statusCheck', 'statusQa', 'documentFieldId1', 'documentFieldId2', 'pageNumber', 'pageSize'];
-const BOOLEAN_PARAMS = ['isEmpty1', 'isEmpty2'];
-const STRING_PARAMS = ['keyword', 'fieldValue1', 'fieldValue2', 'view'];
 const COUNT_PAGE = { pageNumber: 1, pageSize: 1 };
 const SEARCH_DEBOUNCE_MS = 400;
 const DEFAULT_PAGE_SIZE = 25;
@@ -64,11 +55,9 @@ const WORK_PATHS = {
     [SUBMISSION_ACTIONS.QA]: 'qa/:submissionId',
 };
 
-// Chưa có màn làm việc: mở văn bản chỉ báo đang làm
+// Loại chưa có màn: mở văn bản chỉ báo đang làm
 const OPEN_MESSAGES: Record<string, string> = {
-    [SUBMISSION_ACTIONS.CHECK]: 'Màn nhập liệu đang làm',
     [SUBMISSION_ACTIONS.QA]: 'Màn QA đang làm',
-    [SUBMISSION_ACTIONS.HISTORY]: 'Đang làm',
 };
 
 // Tên tham số BE của 2 cặp "Trường : giá trị"
@@ -116,7 +105,7 @@ export class SubmissionListComponent extends BaseComponent {
     role: SubmissionRole | null = null;
     documentTypeName = '';
     breadcrumbs: MenuItem[] = [];
-    query: SubmissionListQuery = {};
+    query: SubmissionQuery = {};
     counts: Record<string, number> = {};
     // Không có quyền xem trường thì ẩn 2 cặp lọc, giữ ô tìm
     readonly canFilterByField = this._sharedService.isGranted(PermissionConstants.FUNCTION_DOCUMENT_FIELD_VIEW);
@@ -178,13 +167,14 @@ export class SubmissionListComponent extends BaseComponent {
         return this.query.pageSize ?? DEFAULT_PAGE_SIZE;
     }
 
-    // Data → Nhập liệu, QA → QA; Quản lý có cả hai (QA khi dự án bật QA) và Lịch sử
+    // Data → Nhập liệu, QA → QA; Quản lý có cả hai (QA khi dự án bật QA); mọi vai trò có Lịch sử
     get rowActions(): ITableAction[] {
         const check = { type: SUBMISSION_ACTIONS.CHECK, label: 'Nhập liệu', icon: 'pi pi-pencil' };
         const qa = { type: SUBMISSION_ACTIONS.QA, label: 'QA', icon: 'pi pi-check-square' };
-        if (this.role === SUBMISSION_ROLE.DATA) return [check];
-        if (this.role === SUBMISSION_ROLE.QA) return [qa];
-        return [check, ...(this.project!.isQaEnabled ? [qa] : []), { type: SUBMISSION_ACTIONS.HISTORY, label: 'Lịch sử', icon: 'pi pi-history' }];
+        const history = { type: SUBMISSION_ACTIONS.HISTORY, label: 'Lịch sử', icon: 'pi pi-history' };
+        if (this.role === SUBMISSION_ROLE.DATA) return [check, history];
+        if (this.role === SUBMISSION_ROLE.QA) return [qa, history];
+        return [check, ...(this.project!.isQaEnabled ? [qa] : []), history];
     }
 
     get hasFilter() {
@@ -211,7 +201,7 @@ export class SubmissionListComponent extends BaseComponent {
                 }
                 this.loadDocumentFields();
                 this._activatedRoute.queryParamMap.pipe(takeUntilDestroyed(this._destroyRef)).subscribe((params) => {
-                    this.query = this.readQuery(params);
+                    this.query = readSubmissionQuery(params);
                     this.syncFilterControls();
                     this.load();
                     if (this.view !== this._latestWorkingView) {
@@ -242,9 +232,15 @@ export class SubmissionListComponent extends BaseComponent {
         this.setQuery({ pageNumber: (event.page ?? 0) + 1, pageSize: event.rows ?? this.pageSize }, false);
     }
 
-    // Bấm Tên file mở theo chế độ đang xem; nút Thao tác mở đúng loại đã chọn
-    onAction(event: ITableEvent) {
-        this.openSubmission(event.type === TableEventTypes.CELL_CLICK ? (this.isQaView ? SUBMISSION_ACTIONS.QA : SUBMISSION_ACTIONS.CHECK) : event.type);
+    // Bấm Tên file mở theo chế độ đang xem; nút Thao tác mở đúng loại đã chọn, Lịch sử mở dialog
+    onAction(event: ITableEvent<SubmissionRow | IListQaSubmission>) {
+        const row = event.row!;
+        if (event.type === SUBMISSION_ACTIONS.HISTORY) {
+            openSubmissionHistory(this._dialogService, row.id, row.fileName);
+            return;
+        }
+        const type = event.type === TableEventTypes.CELL_CLICK ? (this.isQaView ? SUBMISSION_ACTIONS.QA : SUBMISSION_ACTIONS.CHECK) : event.type;
+        this.openSubmission(type, row.id);
     }
 
     backToProject() {
@@ -252,7 +248,7 @@ export class SubmissionListComponent extends BaseComponent {
     }
 
     openLatestWorking() {
-        this.openSubmission(this._latestWorkingView === SUBMISSION_VIEW.QA ? SUBMISSION_ACTIONS.QA : SUBMISSION_ACTIONS.CHECK);
+        this.openSubmission(this._latestWorkingView === SUBMISSION_VIEW.QA ? SUBMISSION_ACTIONS.QA : SUBMISSION_ACTIONS.CHECK, this.latestWorking!.submissionId);
     }
 
     selectTab(key: string | number | undefined) {
@@ -291,12 +287,23 @@ export class SubmissionListComponent extends BaseComponent {
     }
 
     clearFilters() {
-        const patch = FIELD_PAIR_KEYS.reduce((result, keys) => ({ ...result, ...this.pairPatch(keys, undefined) }), {} as SubmissionListQuery);
+        const patch = FIELD_PAIR_KEYS.reduce((result, keys) => ({ ...result, ...this.pairPatch(keys, undefined) }), {} as SubmissionQuery);
         this.setQuery({ ...patch, keyword: undefined });
     }
 
-    private openSubmission(type: string) {
-        this._messageService.add({ closable: true, severity: 'info', detail: OPEN_MESSAGES[type], life: 4000 });
+    // Nhập liệu: sang màn làm việc kèm bộ lọc + tab đang chọn (bỏ trang, giữ view để nút ← về đúng chế độ); loại khác chưa có màn
+    private openSubmission(type: string, submissionId: number) {
+        if (type !== SUBMISSION_ACTIONS.CHECK) {
+            this._messageService.add({ closable: true, severity: 'info', detail: OPEN_MESSAGES[type], life: 4000 });
+            return;
+        }
+        const { pageNumber, pageSize, ...filter } = this.query;
+        const queryParams = { ...filter, statusCheck: this.activeTab.statusCheck, statusQa: this.activeTab.statusQa };
+        this.router.navigate([WORK_PATHS[type].replace(':submissionId', String(submissionId))], {
+            relativeTo: this._activatedRoute,
+            queryParams,
+            state: { fromList: true },
+        });
     }
 
     // 820 → trạng thái trống chưa được giao; 303 / 312 / 301 → về danh sách dự án; lỗi khác giữ màn
@@ -340,7 +347,7 @@ export class SubmissionListComponent extends BaseComponent {
     }
 
     // Mọi thay đổi lọc / tab / chế độ / trang ghi lên URL rồi tải lại từ query string; đổi lọc thì về trang 1
-    private setQuery(patch: SubmissionListQuery, resetPage = true) {
+    private setQuery(patch: SubmissionQuery, resetPage = true) {
         const queryParams = Object.fromEntries(
             Object.entries({ ...this.query, ...(resetPage ? { pageNumber: undefined } : {}), ...patch }).filter(
                 ([, value]) => value !== undefined && value !== null && value !== '',
@@ -349,7 +356,7 @@ export class SubmissionListComponent extends BaseComponent {
         this.router.navigate([], { relativeTo: this._activatedRoute, queryParams, replaceUrl: true });
     }
 
-    private pairPatch(keys: FieldPairKeys, documentFieldId: number | undefined, fieldValue?: string, isEmpty?: boolean): SubmissionListQuery {
+    private pairPatch(keys: FieldPairKeys, documentFieldId: number | undefined, fieldValue?: string, isEmpty?: boolean): SubmissionQuery {
         return { [keys.documentFieldId]: documentFieldId, [keys.fieldValue]: fieldValue, [keys.isEmpty]: isEmpty };
     }
 
@@ -377,21 +384,6 @@ export class SubmissionListComponent extends BaseComponent {
                     this.documentFields = res.data;
                 }
             });
-    }
-
-    private readQuery(params: ParamMap): SubmissionListQuery {
-        const query: Record<string, string | number | boolean> = {};
-        params.keys.forEach((key) => {
-            const value = params.get(key)!;
-            if (NUMBER_PARAMS.includes(key) && value !== '' && !isNaN(Number(value))) {
-                query[key] = Number(value);
-            } else if (BOOLEAN_PARAMS.includes(key)) {
-                query[key] = value === 'true';
-            } else if (STRING_PARAMS.includes(key)) {
-                query[key] = value;
-            }
-        });
-        return query;
     }
 
     // Bộ lọc chung gửi BE (ô tìm + cặp trường), chưa gồm trạng thái của tab

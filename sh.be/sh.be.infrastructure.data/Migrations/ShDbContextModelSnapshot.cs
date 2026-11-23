@@ -1827,6 +1827,9 @@ namespace sh.be.infrastructure.data.Migrations
                     b.Property<int>("ChangedDataCount")
                         .HasColumnType("int");
 
+                    b.Property<string>("ChangedDatas")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 

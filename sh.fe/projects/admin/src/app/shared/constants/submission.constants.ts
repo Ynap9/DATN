@@ -84,10 +84,23 @@ export const SUBMISSION_QA_TABS: ISubmissionTab[] = [
     { key: 'totalFailed', label: 'Không đạt', statusQa: SUBMISSION_QA_STATUS.FAILED },
 ];
 
-// Mã lỗi BE (ErrorCodes) màn danh sách văn bản xử lý riêng (42.15)
+// Mã lỗi BE (ErrorCodes) màn danh sách (42.15) và màn Nhập liệu (43.17 / 43.18) xử lý riêng
 export const SUBMISSION_ERROR_CODE = {
     DOCUMENT_TYPE_NOT_FOUND: 301,
     PROJECT_NOT_FOUND: 303,
+    SUBMISSION_NOT_FOUND: 305,
     DOCUMENT_TYPE_NOT_IN_PROJECT: 312,
+    FILE_UNAVAILABLE: 315,
+    PROJECT_DONE: 316,
+    NO_MORE_SUBMISSION: 317,
+    NOT_IN_DOCUMENT_TYPE: 319,
+    PROJECT_EXPIRED: 323,
     NOT_ASSIGNED: 820,
+    QA_PASSED_LOCKED: 826,
+} as const;
+
+// Loại sự kiện timeline văn bản (SubmissionConst.TIMELINE_EVENT_*)
+export const TIMELINE_EVENT = {
+    CHECK: 'CHECK',
+    QA: 'QA',
 } as const;

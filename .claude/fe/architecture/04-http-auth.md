@@ -1,6 +1,6 @@
 # Xác thực, HTTP và xử lý lỗi
 
-> **Phần 4/7** · trước: [03-lib-components.md](03-lib-components.md) · mục lục: [README.md](README.md)
+> **Phần 4/8** · trước: [03-lib-components.md](03-lib-components.md) · mục lục: [README.md](README.md)
 
 Nằm ở `admin/src/app/core/auth/` và `core/http/`. Lib `@sh/ui` không có phần nào ở đây.
 

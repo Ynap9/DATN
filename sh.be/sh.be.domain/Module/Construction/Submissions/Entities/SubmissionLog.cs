@@ -26,6 +26,7 @@ namespace sh.be.domain.Module.Construction.Submissions.Entities
         [MaxLength(1000)]
         public string? Note { get; private set; }
         public int ChangedDataCount { get; private set; }
+        public string? ChangedDatas { get; private set; }
         public string? CreatedBy { get; private set; }
         public DateTime? CreatedDate { get; private set; }
         public string? ModifiedBy { get; private set; }
@@ -39,7 +40,7 @@ namespace sh.be.domain.Module.Construction.Submissions.Entities
         }
 
         public static SubmissionLog Create(int submissionId, int projectId, int documentTypeId, string userId, int oldStatus, int newStatus,
-            string description, string? note, int changedDataCount, string? createdBy, DateTime createdDate)
+            string description, string? note, int changedDataCount, string? changedDatas, string? createdBy, DateTime createdDate)
         {
             return new SubmissionLog
             {
@@ -52,6 +53,7 @@ namespace sh.be.domain.Module.Construction.Submissions.Entities
                 Description = description,
                 Note = note,
                 ChangedDataCount = changedDataCount,
+                ChangedDatas = changedDatas,
                 CreatedBy = createdBy,
                 CreatedDate = createdDate,
             };
