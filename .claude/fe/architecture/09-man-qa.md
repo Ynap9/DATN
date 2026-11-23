@@ -14,6 +14,7 @@ trường không khớp rồi chấm Đạt hoặc Trả lại, xong tự sang v
 | API | `GET submission/{id}/qa` (chi tiết + người kiểm), `GET submission/{id}/qa-logs`, `PUT submission/qa` (`result` 1 Đạt / 2 Không đạt) |
 | Bố cục | `submission/submission-layout.ts`: cùng khoá localStorage với màn Nhập liệu, hai màn chia chung một bố cục |
 | Đầu / cuối bộ lọc | `isFilterEdge` trong `submission-query.ts`, dùng chung với màn Nhập liệu |
+| Thanh trên | Cùng khuôn với màn Nhập liệu từ Task 53 (cỡ, cụm ◀ ▶, dòng 2 có tên metadata qua query `documentTypeName`), không có nút Lưu. Xem [08-man-nhap-lieu.md](08-man-nhap-lieu.md#giao-diện-task-53) |
 | Hằng | `QA_RESULT`, `QA_REASON_MAX_LENGTH` (1000), `QA_QUICK_REASONS`, mã lỗi 320–345 ở `submission.constants.ts` |
 
 ## Quyết định
