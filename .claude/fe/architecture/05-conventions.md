@@ -88,6 +88,10 @@ quá 6–7 file mới chia thư mục con (`components/`).
   nhỏ 22px). Đã chặn ở gốc: `tailwind.css` khai `--spacing` / `--text-*` / `--radius-*` bằng px, `variables/_theme.scss` đặt
   token cỡ PrimeNG (`--p-form-field-*`, `--p-inputtext-*`, `--p-button-*`, `--p-tag-*`) bằng px. Đừng đổi gốc sang 16px:
   PrimeNG đặt cứng `font-size: 1rem` cho ô nhập / nút nên chữ trong ô sẽ thành 16px. Cần cỡ mới thì thêm token px ở hai chỗ trên.
+- ⚠️ Lớp Tailwind đặt trên nút / ô PrimeNG có thể không ăn (vd. `px-2` trên `pButton` vẫn ra padding mặc định). Lý do:
+  `providePrimeNG` không bật `cssLayer`, nên style PrimeNG nằm ngoài layer và thắng lớp Tailwind. Cách tránh: chỉ thêm `!`
+  (`px-2!`, `text-[13px]!`) cho thuộc tính PrimeNG tự đặt, như padding, gap, cỡ chữ nút, độ rộng nút chỉ có icon, độ đậm nhãn
+  nút. Height, cỡ icon `.pi` thì không cần `!`. Ví dụ ở thanh trên màn Nhập liệu ([08-man-nhap-lieu.md](08-man-nhap-lieu.md)).
 - Bảng: cột chữ dài không khai `width` thì đặt `min-width` (vd. cột trường động của bảng văn bản 180px); cột ngắn (mã, hồ sơ,
   hộp, ngày) `cellStyle: 'white-space: nowrap'`. `.p-tag` đã `nowrap` toàn cục.
 - ⚠️ Repo **không** có cấu hình Prettier: đừng chạy `npx prettier --write` — mặc định 80 cột ngắt mỗi thuộc tính một dòng, lệch hẳn kiểu template

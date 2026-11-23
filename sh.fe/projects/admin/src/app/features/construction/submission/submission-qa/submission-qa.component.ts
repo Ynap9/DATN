@@ -39,7 +39,7 @@ import { IBaseResponse } from '@/shared/models/request-paging.base.models';
 import { openSubmissionHistory } from '../submission-history-dialog/submission-history-dialog.component';
 import { FONT_SIZE_MAX, FONT_SIZE_MIN, ISubmissionLayout, readSubmissionLayout, writeSubmissionLayout } from '../submission-layout';
 import { SubmissionPdfViewerComponent } from '../submission-pdf-viewer/submission-pdf-viewer.component';
-import { AdjacentDirection, isFilterEdge, readSubmissionQuery, SubmissionQuery } from '../submission-query';
+import { AdjacentDirection, DOCUMENT_TYPE_NAME_PARAM, isFilterEdge, readSubmissionQuery, SubmissionQuery } from '../submission-query';
 
 const BANNER_DATE_FORMAT = 'HH:mm dd/MM/yyyy';
 const REASON_INPUT_ID = 'submission-qa-reason';
@@ -91,6 +91,8 @@ export class SubmissionQaComponent extends BaseComponent {
 
     private readonly _projectId = Number(this._activatedRoute.snapshot.paramMap.get('id'));
     private readonly _documentTypeId = Number(this._activatedRoute.snapshot.paramMap.get('documentTypeId'));
+    // Tên metadata màn danh sách gửi kèm; mở link trực tiếp thì rỗng
+    private readonly _documentTypeName = this._activatedRoute.snapshot.queryParamMap.get(DOCUMENT_TYPE_NAME_PARAM) ?? '';
     // Mở từ màn danh sách trong phiên này thì nút ← quay lại đúng tab, lọc, trang (44.14)
     private readonly _fromList = !!(this._location.getState() as { fromList?: boolean } | null)?.fromList;
     private readonly _reload$ = new Subject<void>();
@@ -139,11 +141,12 @@ export class SubmissionQaComponent extends BaseComponent {
         return SUBMISSION_QA_STATUSES.find((status) => status.value === this.submission?.statusQa);
     }
 
-    // "Hồ sơ … · Hộp …", bỏ vế rỗng
+    // "Hồ sơ … · Hộp … · <metadata>", bỏ vế rỗng
     get locationText() {
         const parts = [
             this.submission?.profileRange ? `Hồ sơ ${this.submission.profileRange}` : '',
             this.submission?.box ? `Hộp ${this.submission.box}` : '',
+            this._documentTypeName,
         ];
         return parts.filter(Boolean).join(' · ');
     }
@@ -507,11 +510,11 @@ export class SubmissionQaComponent extends BaseComponent {
         );
     }
 
-    // Đổi văn bản thay cho mục lịch sử hiện tại, giữ bộ lọc; đã hỏi / đã gửi nên guard không hỏi lại
+    // Đổi văn bản thay cho mục lịch sử hiện tại, giữ bộ lọc + tên metadata; đã hỏi / đã gửi nên guard không hỏi lại
     private openSubmission(submissionId: number) {
         this._allowLeave = true;
         this.router.navigate([PROJECT_URL, this._projectId, 'metadata', this._documentTypeId, 'qa', submissionId], {
-            queryParams: this.query,
+            queryParams: { ...this.query, [DOCUMENT_TYPE_NAME_PARAM]: this._documentTypeName || null },
             replaceUrl: true,
         });
     }
