@@ -68,7 +68,7 @@ URL FE `/admin/<module>/...` trùng tên module BE `api/v1/<module>/...` để t
 | [07-man-construction.md](07-man-construction.md) | Ghi chú từng màn module `construction`: Metadata, Dự án, Báo cáo tiến độ, Danh sách văn bản |
 | [08-man-nhap-lieu.md](08-man-nhap-lieu.md) | Màn Nhập liệu (PDF + form, ◀ ▶, Lưu, chỉ đọc) và dialog Lịch sử văn bản |
 | [09-man-qa.md](09-man-qa.md) | Màn QA (đánh dấu trường Sai, Đạt / Trả lại, banner chỉ đọc, Lần trước sai) |
-| [10-man-operation.md](10-man-operation.md) | Màn module `operation`: Thành viên dự án (chỉ Admin, chọn cặp trên URL, Thêm / Sửa giá / Gỡ) |
+| [10-man-operation.md](10-man-operation.md) | Màn module `operation`: Thành viên dự án (chỉ Admin, chọn cặp trên URL, Thêm / Sửa giá / Gỡ); Nhóm nhân viên (Tạo / Sửa / Xoá, nhóm lệch vai trò) |
 
 ## Nguyên tắc không đổi
 

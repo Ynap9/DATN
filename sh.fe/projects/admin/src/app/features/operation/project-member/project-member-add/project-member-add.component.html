@@ -1,5 +1,5 @@
 <div class="flex flex-col gap-5">
-    <span class="-mt-2 text-[13px] text-muted-color">{{ pair.projectName }} · {{ pair.documentTypeName }}</span>
+    <span class="text-[13px] text-muted-color">{{ pair.projectName }} · {{ pair.documentTypeName }}</span>
 
     <div class="flex flex-col gap-2">
         <label>Vai trò</label>
@@ -9,7 +9,7 @@
                 <span class="flex-1" [pTooltip]="isQaLocked ? 'Dự án không có QA' : ''" tooltipPosition="top">
                     <button type="button" role="radio" [attr.aria-checked]="role === button.role" [disabled]="isQaLocked"
                         class="h-8 w-full rounded-md border-0 text-[13px] font-semibold"
-                        [class]="role === button.role ? 'bg-white text-[var(--app-ink)] shadow-sm' : isQaLocked ? 'bg-transparent text-[var(--app-faint)] cursor-not-allowed' : 'bg-transparent text-[var(--app-muted)] cursor-pointer'"
+                        [class]="role === button.role ? 'bg-white text-[#16201c] shadow-sm' : isQaLocked ? 'bg-transparent text-[#8a958f] cursor-not-allowed' : 'bg-transparent text-[#5d6b66] cursor-pointer'"
                         (click)="selectRole(button.role)">
                         {{ button.label }}
                     </button>

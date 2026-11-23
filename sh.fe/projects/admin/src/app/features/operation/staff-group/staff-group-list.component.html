@@ -1,0 +1,49 @@
+<app-page-header title="Nhóm nhân viên" [breadcrumbs]="breadcrumbs">
+    @if (canManage) {
+        <p-button icon="pi pi-plus" label="Tạo nhóm" (onClick)="openForm()" />
+    }
+</app-page-header>
+
+<div class="flex flex-col gap-4">
+    <span class="-mt-2 text-[13px] text-muted-color">Nhóm dùng để thêm nhanh cả tổ vào dự án. Không ảnh hưởng tiền công hay giao phiếu.</span>
+
+    @if (canManage) {
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="flex gap-1 rounded-lg bg-[#f3f5f4] p-[3px]" role="tablist">
+                    @for (tab of tabs; track tab.key) {
+                        <button type="button" role="tab" [attr.aria-selected]="role === tab.key"
+                            class="inline-flex h-7 cursor-pointer items-center rounded-md border-0 px-3 text-[13px] font-semibold"
+                            [class]="role === tab.key ? 'bg-white text-[var(--app-ink)] shadow-sm' : 'bg-transparent text-[var(--app-muted)]'"
+                            (click)="selectTab(tab.key)">
+                            {{ tab.label }}
+                        </button>
+                    }
+                </div>
+                @if (isAdmin) {
+                    <sh-select class="w-full sm:w-60" [options]="owners" optionLabel="label" optionValue="userId" [filter]="true"
+                        placeholder="Mọi trưởng nhóm" [ngModel]="ownerUserId" (ngModelChange)="onOwnerChange($event)" />
+                }
+            </div>
+            <p-iconfield class="w-full sm:w-72">
+                <p-inputicon class="pi pi-search" />
+                <input pInputText class="w-full" placeholder="Tên / mô tả nhóm" [formControl]="keyword" />
+            </p-iconfield>
+        </div>
+    }
+
+    <div>
+        <app-data-table tableKey="operation-staff-group" [columns]="columns" [data]="rows" [loading]="loading" [pageNumber]="pageNumber"
+            [pageSize]="pageSize" [rowsPerPageOptions]="[pageSize]" [total]="totalRecords" [paginator]="canManage"
+            (pageChange)="onPageChange($event)" (action)="onAction($event)">
+            @if (!canManage) {
+                <span tableEmpty>Bạn không có quyền quản lý nhóm</span>
+            }
+        </app-data-table>
+        @if (canManage) {
+            <div class="border-t border-[var(--app-line)] bg-[#fafbfa] px-4 py-2.5 text-xs text-[var(--app-muted)]">
+                {{ totalRecords }} nhóm{{ isAdmin ? '' : ' · Bạn chỉ thấy nhóm mình tạo' }}
+            </div>
+        }
+    </div>
+</div>
