@@ -135,6 +135,55 @@ export interface ISubmissionDetail {
     fields: ISubmissionField[];
 }
 
+// GET {id}/qa: chi tiết văn bản kèm người chấm QA / người kiểm gần nhất (ViewQaSubmissionDetailDto)
+export interface IQaSubmissionDetail extends ISubmissionDetail {
+    qaBy: string | null;
+    qaUserName: string | null;
+    qaDate: string | null;
+    checkedBy: string | null;
+    checkedUserName: string | null;
+    checkedDate: string | null;
+    checkNote: string | null;
+}
+
+// result = QA_RESULT; Không đạt bắt buộc reason và ≥ 1 trường sai
+export interface IReviewQaSubmission {
+    id: number;
+    projectId: number;
+    documentTypeId: number;
+    result: number;
+    reason: string | null;
+    wrongDocumentFieldIds: number[];
+}
+
+export interface IReviewQaResult {
+    submissionId: number;
+    statusCheck: number;
+    statusQa: number;
+    qaReason: string | null;
+    wrongDocumentFieldIds: number[];
+    qaLogId: number;
+    qaTicketId: number | null;
+    ticketStatus: string | null;
+}
+
+// GET {id}/qa-logs, mới nhất trước
+export interface ISubmissionQaLog {
+    id: number;
+    submissionId: number;
+    userId: string;
+    userName: string | null;
+    fullName: string | null;
+    oldStatusQa: number;
+    newStatusQa: number;
+    oldStatusCheck: number;
+    newStatusCheck: number;
+    reason: string | null;
+    wrongDocumentFieldIds: number[];
+    description: string;
+    createdDate: string | null;
+}
+
 export interface ICheckSubmissionData {
     documentFieldId: number;
     data: string;

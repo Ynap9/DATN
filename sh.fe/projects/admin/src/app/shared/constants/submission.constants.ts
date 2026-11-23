@@ -84,20 +84,40 @@ export const SUBMISSION_QA_TABS: ISubmissionTab[] = [
     { key: 'totalFailed', label: 'Không đạt', statusQa: SUBMISSION_QA_STATUS.FAILED },
 ];
 
-// Mã lỗi BE (ErrorCodes) màn danh sách (42.15) và màn Nhập liệu (43.17 / 43.18) xử lý riêng
+// Mã lỗi BE (ErrorCodes) màn danh sách (42.15), màn Nhập liệu (43.17 / 43.18) và màn QA (44.17 / 44.18) xử lý riêng
 export const SUBMISSION_ERROR_CODE = {
     DOCUMENT_TYPE_NOT_FOUND: 301,
     PROJECT_NOT_FOUND: 303,
     SUBMISSION_NOT_FOUND: 305,
+    FIELD_NOT_IN_PROJECT: 311,
     DOCUMENT_TYPE_NOT_IN_PROJECT: 312,
     FILE_UNAVAILABLE: 315,
     PROJECT_DONE: 316,
     NO_MORE_SUBMISSION: 317,
+    DUPLICATE_FIELD: 318,
     NOT_IN_DOCUMENT_TYPE: 319,
+    NOT_CHECKED_FOR_QA: 320,
+    QA_REASON_REQUIRED: 321,
     PROJECT_EXPIRED: 323,
+    QA_WRONG_FIELD_REQUIRED: 324,
+    QA_SUBMISSION_LOCKED: 332,
+    QA_NOT_ASSIGNEE: 334,
+    PROJECT_QA_DISABLED: 345,
     NOT_ASSIGNED: 820,
     QA_PASSED_LOCKED: 826,
 } as const;
+
+// Kết quả chấm QA gửi lên PUT qa (SubmissionConst.QA_RESULTS)
+export const QA_RESULT = {
+    PASSED: 1,
+    FAILED: 2,
+} as const;
+
+// SubmissionConst.QA_REASON_MAX_LENGTH
+export const QA_REASON_MAX_LENGTH = 1000;
+
+// Chip thêm nhanh vào lý do trả lại (44.15)
+export const QA_QUICK_REASONS = ['Không khớp PDF', 'Sai chính tả', 'Thiếu dữ liệu', 'Sai định dạng ngày'];
 
 // Loại sự kiện timeline văn bản (SubmissionConst.TIMELINE_EVENT_*)
 export const TIMELINE_EVENT = {

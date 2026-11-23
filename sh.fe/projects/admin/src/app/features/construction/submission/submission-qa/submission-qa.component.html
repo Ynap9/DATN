@@ -1,0 +1,178 @@
+@if (isNotAssigned) {
+    <div class="flex flex-col items-center gap-3 py-12">
+        <span class="text-muted-color">Văn bản này không được giao cho bạn</span>
+        <p-button label="Về danh sách" severity="secondary" [outlined]="true" (onClick)="backToList()" />
+    </div>
+} @else if (project && submission) {
+    <div class="flex h-[calc(100vh-var(--app-topbar-h)-3.25rem)] flex-col overflow-hidden rounded-md border border-gray-200 bg-white">
+        <div class="flex h-12 shrink-0 items-center gap-3 border-b border-gray-200 px-3">
+            <p-button icon="pi pi-arrow-left" severity="secondary" [text]="true" size="small" ariaLabel="Về danh sách" pTooltip="Về danh sách"
+                tooltipPosition="bottom" (onClick)="backToList()" />
+            <span class="min-w-0 truncate text-sm font-semibold" [pTooltip]="submission.fileName" tooltipPosition="bottom">{{ submission.fileName }}</span>
+            @if (locationText) {
+                <span class="shrink-0 text-xs text-gray-500">{{ locationText }}</span>
+            }
+            <p-tag [value]="checkStatus?.label ?? '—'" [severity]="checkStatus?.severity" [rounded]="true" />
+            <p-tag [value]="qaStatus?.label ?? '—'" [severity]="qaStatus?.severity" [rounded]="true" />
+
+            <div class="ml-auto flex shrink-0 items-center gap-2">
+                <p-button icon="pi pi-chevron-left" severity="secondary" [outlined]="true" size="small" ariaLabel="Văn bản trước"
+                    pTooltip="Văn bản trước (Ctrl + ↑)" tooltipPosition="bottom" [disabled]="isBusy || isEdge('previous')" (onClick)="navigate('previous')" />
+                <span class="text-sm tabular-nums">{{ submission.position ?? '—' }} / {{ submission.totalItems }}</span>
+                <p-button icon="pi pi-chevron-right" severity="secondary" [outlined]="true" size="small" ariaLabel="Văn bản sau"
+                    pTooltip="Văn bản sau (Ctrl + ↓)" tooltipPosition="bottom" [disabled]="isBusy || isEdge('next')" (onClick)="navigate('next')" />
+                @if (isOutsideFilter) {
+                    <p-tag value="Ngoài bộ lọc" severity="secondary" pTooltip="Văn bản không thuộc bộ lọc đang chọn; ◀ ▶ vẫn đi trong bộ lọc"
+                        tooltipPosition="bottom" />
+                }
+                <p-button [icon]="layout.direction === 'horizontal' ? 'pi pi-arrows-v' : 'pi pi-arrows-h'" severity="secondary" [outlined]="true"
+                    size="small" [ariaLabel]="layout.direction === 'horizontal' ? 'Chia dọc' : 'Chia ngang'"
+                    [pTooltip]="layout.direction === 'horizontal' ? 'Chia dọc' : 'Chia ngang'" tooltipPosition="bottom" (onClick)="toggleDirection()" />
+                <p-button label="A−" severity="secondary" [outlined]="true" size="small" ariaLabel="Giảm cỡ chữ" pTooltip="Giảm cỡ chữ" tooltipPosition="bottom"
+                    [disabled]="layout.fontSize <= fontSizeMin" (onClick)="changeFontSize(-1)" />
+                <p-button label="A+" severity="secondary" [outlined]="true" size="small" ariaLabel="Tăng cỡ chữ" pTooltip="Tăng cỡ chữ" tooltipPosition="bottom"
+                    [disabled]="layout.fontSize >= fontSizeMax" (onClick)="changeFontSize(1)" />
+                <p-button label="Lịch sử" icon="pi pi-history" severity="secondary" [outlined]="true" size="small" (onClick)="openHistory()" />
+            </div>
+        </div>
+
+        <div class="flex h-9 shrink-0 items-center gap-2 border-b border-gray-200 bg-gray-50 px-3 text-xs text-gray-600">
+            <span>Người nhập: {{ submission.checkedUserName || '—' }}</span>
+            <span>·</span>
+            <span>Kiểm lúc: {{ (submission.checkedDate | date: 'dd/MM/yyyy HH:mm') || '—' }}</span>
+            <span>·</span>
+            <span>Lượt QA: {{ qaTurnText }}</span>
+        </div>
+
+        <!-- Lặp theo hướng: đổi Ngang / Dọc thì dựng lại Splitter với kích thước đã lưu -->
+        @for (direction of [layout.direction]; track direction) {
+            <p-splitter class="min-h-0 flex-1" styleClass="h-full rounded-none border-0" [layout]="direction" [panelSizes]="layout.sizes"
+                (onResizeStart)="resizing = true" (onResizeEnd)="onResizeEnd($event)">
+                <ng-template #panel>
+                    <!-- Đang kéo thanh chia thì iframe không nuốt sự kiện chuột -->
+                    <app-submission-pdf-viewer class="block h-full w-full" [class.pointer-events-none]="resizing" [fileUrl]="submission.fileUrlS3Object" />
+                </ng-template>
+                <ng-template #panel>
+                    <div class="flex h-full w-full flex-col">
+                        @if (banner; as banner) {
+                            <div class="m-4 mb-0 flex items-start gap-2 rounded-md border p-3 text-[13px]" [class]="bannerStyle.box">
+                                <i class="pi mt-0.5 text-base" [class]="bannerStyle.icon"></i>
+                                <div class="flex min-w-0 flex-col gap-1">
+                                    @if (banner.title) {
+                                        <span class="font-semibold">{{ banner.title }}</span>
+                                    }
+                                    @if (banner.message) {
+                                        <span>{{ banner.message }}</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        <div class="flex flex-col gap-1 px-4 pt-4 pb-2">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-sm font-semibold">Đối chiếu dữ liệu với bản PDF</span>
+                                @if (markedFieldIds.size) {
+                                    <span class="rounded bg-red-50 px-2 py-0.5 text-xs text-red-700">{{ markedFieldIds.size }} sai / {{ visibleFields.length }} trường</span>
+                                } @else {
+                                    <span class="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700">{{ visibleFields.length }} trường</span>
+                                }
+                            </div>
+                            <span class="text-xs text-gray-500">
+                                {{ canReview ? 'So từng trường với PDF. Trường không khớp → bấm “Sai”.' : 'Chỉ xem — văn bản này không chấm được lúc này.' }}
+                            </span>
+                        </div>
+
+                        <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-auto px-4 pb-4">
+                            @for (field of visibleFields; track field.documentFieldId) {
+                                @let marked = isMarked(field);
+                                @let previousWrong = isPreviousWrong(field);
+                                <div class="grid items-start gap-3 rounded-md border p-2"
+                                    [class]="canReview ? 'grid-cols-[150px_minmax(0,1fr)_auto]' : 'grid-cols-[150px_minmax(0,1fr)]'"
+                                    [class.border-transparent]="!marked && !previousWrong" [class.border-red-200]="marked" [class.bg-red-50]="marked"
+                                    [class.border-amber-200]="previousWrong" [class.bg-amber-50]="previousWrong">
+                                    <div class="flex flex-col items-start gap-1 pt-2 text-xs font-medium text-gray-600">
+                                        <span class="break-words">{{ field.name }}</span>
+                                        @if (previousWrong) {
+                                            <span class="rounded bg-amber-100 px-1.5 text-[11px] text-amber-800">Lần trước sai</span>
+                                        }
+                                    </div>
+                                    <div class="rounded-md border px-3 py-2 break-words whitespace-pre-wrap select-text" [style.font-size.px]="layout.fontSize"
+                                        [class]="marked ? 'border-red-200 bg-white' : 'border-gray-200 bg-gray-50'">
+                                        @if (field.data.trim()) {
+                                            {{ field.data }}
+                                        } @else {
+                                            <span class="text-gray-500 italic">Trống</span>
+                                        }
+                                    </div>
+                                    @if (canReview) {
+                                        @let pressed = markedFieldIds.has(field.documentFieldId);
+                                        <button pButton type="button" icon="pi pi-times" label="Sai" size="small" class="h-8"
+                                            [severity]="pressed ? 'danger' : 'secondary'" [outlined]="!pressed" [attr.aria-pressed]="pressed"
+                                            [disabled]="isBusy" (click)="toggleMark(field)"></button>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        @if (canReview) {
+                            <div class="shrink-0 border-t border-gray-200 bg-white p-3 text-[13px]">
+                                @if (!markedFieldIds.size) {
+                                    <div class="flex items-center justify-between gap-3">
+                                        <div class="flex min-w-0 flex-col gap-0.5">
+                                            <span class="font-semibold">Mọi trường đều khớp với PDF?</span>
+                                            <span class="text-xs text-gray-500">Có trường sai thì bấm “Sai” ở trường đó — nút sẽ chuyển sang Trả lại.</span>
+                                        </div>
+                                        <div class="flex shrink-0 items-center gap-2">
+                                            <p-button label="Để sau" severity="secondary" [outlined]="true" size="small" [disabled]="isBusy || isEdge('next')"
+                                                (onClick)="navigate('next')" />
+                                            <p-button label="Đạt · sang văn bản sau" icon="pi pi-check" size="small" pTooltip="Ctrl + Enter" tooltipPosition="top"
+                                                [loading]="submitting" [disabled]="isBusy" (onClick)="submitReview()" />
+                                        </div>
+                                    </div>
+                                } @else {
+                                    <div class="flex flex-col gap-2">
+                                        <div class="flex flex-col gap-0.5">
+                                            <span class="font-semibold text-red-700">Trả lại cho người nhập</span>
+                                            <span>{{ markedFieldIds.size }} trường sai: {{ markedFieldNames }}</span>
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <sh-input-text label="Lý do trả lại" placeholder="" [formControl]="reasonControl" [inputId]="reasonInputId"
+                                                [textarea]="true" [rows]="3" [maxlength]="reasonMaxLength" [required]="true" [isShowMessageInvalid]="false" />
+                                            <small class="self-end text-gray-500">{{ reasonControl.value.length }} / {{ reasonMaxLength }}</small>
+                                        </div>
+                                        <div class="flex flex-wrap items-center gap-1.5">
+                                            <span class="text-xs text-gray-500">Thêm nhanh:</span>
+                                            @for (chip of quickReasons; track chip) {
+                                                <button type="button" class="cursor-pointer rounded border border-gray-300 bg-white px-2 py-0.5 text-xs disabled:cursor-default"
+                                                    [disabled]="isBusy" (click)="addQuickReason(chip)">
+                                                    {{ chip }}
+                                                </button>
+                                            }
+                                        </div>
+                                        <div class="flex items-center justify-between gap-3">
+                                            <div class="flex min-w-0 flex-col items-start">
+                                                <p-button label="Bỏ đánh dấu, chấm Đạt" [link]="true" size="small" styleClass="px-0" [disabled]="isBusy"
+                                                    (onClick)="clearMarks()" />
+                                                <span class="text-xs text-gray-500">
+                                                    {{ trimmedReason ? 'Người nhập sẽ thấy lý do và các trường bị tô đỏ.' : 'Nhập lý do để trả lại.' }}
+                                                </span>
+                                            </div>
+                                            <p-button label="Trả lại · sang văn bản sau" icon="pi pi-undo" severity="danger" size="small" pTooltip="Ctrl + Enter"
+                                                tooltipPosition="top" [loading]="submitting" [disabled]="isBusy || !trimmedReason" (onClick)="submitReview()" />
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        } @else if (readonlyBanner?.isFinished) {
+                            <div class="flex shrink-0 items-center justify-between gap-3 border-t border-gray-200 bg-white p-3 text-[13px]">
+                                <span class="text-gray-500">Văn bản này không cần chấm thêm.</span>
+                                <p-button label="Văn bản sau" icon="pi pi-chevron-right" iconPos="right" severity="secondary" [outlined]="true" size="small"
+                                    [disabled]="isBusy || isEdge('next')" (onClick)="navigate('next')" />
+                            </div>
+                        }
+                    </div>
+                </ng-template>
+            </p-splitter>
+        }
+    </div>
+}

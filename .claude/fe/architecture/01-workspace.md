@@ -1,6 +1,6 @@
 # Workspace và build
 
-> **Phần 1/8** · mục lục: [README.md](README.md)
+> **Phần 1/9** · mục lục: [README.md](README.md)
 
 ## angular.json
 
