@@ -27,24 +27,10 @@ import { SharedImports } from '@/shared/import.shared';
 import { IBaseResponse } from '@/shared/models/request-paging.base.models';
 import { openSubmissionHistory } from './submission-history-dialog/submission-history-dialog.component';
 import { SubmissionPdfViewerComponent } from './submission-pdf-viewer/submission-pdf-viewer.component';
-import { readSubmissionQuery, SubmissionQuery } from './submission-query';
+import { FONT_SIZE_MAX, FONT_SIZE_MIN, ISubmissionLayout, readSubmissionLayout, writeSubmissionLayout } from './submission-layout';
+import { AdjacentDirection, isFilterEdge, readSubmissionQuery, SubmissionQuery } from './submission-query';
 
-type SplitDirection = 'horizontal' | 'vertical';
-type AdjacentDirection = 'previous' | 'next';
-
-// Tuỳ chọn bố cục, lưu localStorage và dùng chung mọi dự án (43.4 / 43.14)
-interface ICheckLayout {
-    direction: SplitDirection;
-    sizes: [number, number];
-    fontSize: number;
-}
-
-const LAYOUT_STORAGE_KEY = 'construction.submission-check.layout';
-const DEFAULT_LAYOUT: ICheckLayout = { direction: 'horizontal', sizes: [55, 45], fontSize: 14 };
-const FONT_SIZE_MIN = 12;
-const FONT_SIZE_MAX = 18;
 const FIELD_ELEMENT_ID_PREFIX = 'submission-field-';
-const NO_MORE_MESSAGE = 'Đã hết văn bản trong bộ lọc';
 // Lưu bị chặn vì văn bản / dự án vừa đổi trạng thái: tải lại để form chuyển chỉ đọc (43.18)
 const RELOAD_AFTER_SAVE_CODES: number[] = [
     SUBMISSION_ERROR_CODE.QA_PASSED_LOCKED,
@@ -97,9 +83,9 @@ export class SubmissionCheckComponent extends BaseComponent {
     override form = new FormGroup<Record<string, FormControl<string>>>({});
     saving = false;
     navigating = false;
-    // Hướng đã gặp 317 (hết văn bản) thì tắt nút, mở văn bản khác thì bật lại
+    // Hướng không còn văn bản thì tắt nút, mở văn bản khác thì bật lại
     noMore: Record<AdjacentDirection, boolean> = { previous: false, next: false };
-    layout = readLayout();
+    layout = readSubmissionLayout();
     resizing = false;
     readonly fontSizeMin = FONT_SIZE_MIN;
     readonly fontSizeMax = FONT_SIZE_MAX;
@@ -137,6 +123,11 @@ export class SubmissionCheckComponent extends BaseComponent {
 
     get isBusy() {
         return this.loading || this.saving || this.navigating;
+    }
+
+    // Văn bản đầu / cuối bộ lọc thì tắt sẵn nút chiều đó; văn bản ngoài bộ lọc chỉ tắt sau khi BE báo hết (317)
+    isEdge(direction: AdjacentDirection) {
+        return this.noMore[direction] || isFilterEdge(this.submission, direction);
     }
 
     override ngOnInit(): void {
@@ -182,7 +173,7 @@ export class SubmissionCheckComponent extends BaseComponent {
 
     // ◀ ▶ đi trong bộ lọc (43.8); có sửa chưa lưu thì hỏi trước khi gọi BE
     async navigate(direction: AdjacentDirection) {
-        if (!this.submission || this.isBusy || this.noMore[direction]) return;
+        if (!this.submission || this.isBusy || this.isEdge(direction)) return;
         if (this.hasChanges() && !(await this.confirmLeave())) return;
         const request =
             direction === 'next'
@@ -199,7 +190,6 @@ export class SubmissionCheckComponent extends BaseComponent {
                     this.openSubmission(res.data.id);
                 } else if (res.code === SUBMISSION_ERROR_CODE.NO_MORE_SUBMISSION) {
                     this.noMore[direction] = true;
-                    this.messageInfo(NO_MORE_MESSAGE);
                 } else {
                     this.handleProjectError(res);
                 }
@@ -389,7 +379,6 @@ export class SubmissionCheckComponent extends BaseComponent {
                 }
                 if (res.code === SUBMISSION_ERROR_CODE.NO_MORE_SUBMISSION) {
                     this.noMore.next = true;
-                    this.messageInfo(NO_MORE_MESSAGE);
                 } else {
                     this.messageError(res.message);
                 }
@@ -474,31 +463,8 @@ export class SubmissionCheckComponent extends BaseComponent {
         }
     }
 
-    private saveLayout(layout: ICheckLayout) {
+    private saveLayout(layout: ISubmissionLayout) {
         this.layout = layout;
-        try {
-            localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(layout));
-        } catch {
-            // localStorage bị chặn: chỉ nhớ bố cục tới khi tải lại trang
-        }
+        writeSubmissionLayout(layout);
     }
-}
-
-// Đọc từng tuỳ chọn đã lưu; thiếu hoặc hỏng tuỳ chọn nào thì tuỳ chọn đó về mặc định
-function readLayout(): ICheckLayout {
-    try {
-        const saved = JSON.parse(localStorage.getItem(LAYOUT_STORAGE_KEY) ?? '{}') as Partial<ICheckLayout>;
-        const fontSize = saved.fontSize;
-        return {
-            direction: saved.direction === 'vertical' ? 'vertical' : 'horizontal',
-            sizes: isValidSizes(saved.sizes) ? saved.sizes : DEFAULT_LAYOUT.sizes,
-            fontSize: Number.isInteger(fontSize) && fontSize! >= FONT_SIZE_MIN && fontSize! <= FONT_SIZE_MAX ? fontSize! : DEFAULT_LAYOUT.fontSize,
-        };
-    } catch {
-        return DEFAULT_LAYOUT;
-    }
-}
-
-function isValidSizes(sizes: unknown): sizes is [number, number] {
-    return Array.isArray(sizes) && sizes.length === 2 && sizes.every((size) => typeof size === 'number' && size > 0);
 }

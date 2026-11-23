@@ -1,5 +1,5 @@
 import { ParamMap } from '@angular/router';
-import { ISubmissionFilter } from '@/models/submission.model';
+import { ISubmissionDetail, ISubmissionFilter } from '@/models/submission.model';
 import { SubmissionView } from '@/shared/constants/submission.constants';
 
 // Trạng thái lọc trên query string của màn danh sách văn bản / Nhập liệu (đặt đúng tên tham số BE)
@@ -27,4 +27,12 @@ export function readSubmissionQuery(params: ParamMap): SubmissionQuery {
         }
     });
     return query;
+}
+
+export type AdjacentDirection = 'previous' | 'next';
+
+// Văn bản đầu / cuối bộ lọc theo position / totalItems BE trả; văn bản ngoài bộ lọc (position = null) không xét được
+export function isFilterEdge(submission: ISubmissionDetail | undefined, direction: AdjacentDirection) {
+    if (submission?.position == null || submission.totalItems == null) return false;
+    return direction === 'next' ? submission.position >= submission.totalItems : submission.position <= 1;
 }

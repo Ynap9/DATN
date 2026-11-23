@@ -49,15 +49,10 @@ const COUNT_PAGE = { pageNumber: 1, pageSize: 1 };
 const SEARCH_DEBOUNCE_MS = 400;
 const DEFAULT_PAGE_SIZE = 25;
 
-// Đường dẫn màn làm việc dưới project/:id/metadata/:documentTypeId (42.14). Task 43 / 44 khai route rồi điều hướng kèm bộ lọc
-const WORK_PATHS = {
+// Đường dẫn màn làm việc dưới project/:id/metadata/:documentTypeId (42.14): màn Nhập liệu (Task 43), màn QA (Task 44)
+const WORK_PATHS: Record<string, string> = {
     [SUBMISSION_ACTIONS.CHECK]: 'check/:submissionId',
     [SUBMISSION_ACTIONS.QA]: 'qa/:submissionId',
-};
-
-// Loại chưa có màn: mở văn bản chỉ báo đang làm
-const OPEN_MESSAGES: Record<string, string> = {
-    [SUBMISSION_ACTIONS.QA]: 'Màn QA đang làm',
 };
 
 // Tên tham số BE của 2 cặp "Trường : giá trị"
@@ -291,12 +286,8 @@ export class SubmissionListComponent extends BaseComponent {
         this.setQuery({ ...patch, keyword: undefined });
     }
 
-    // Nhập liệu: sang màn làm việc kèm bộ lọc + tab đang chọn (bỏ trang, giữ view để nút ← về đúng chế độ); loại khác chưa có màn
+    // Sang màn Nhập liệu / QA kèm bộ lọc + tab đang chọn (bỏ trang, giữ view để nút ← về đúng chế độ)
     private openSubmission(type: string, submissionId: number) {
-        if (type !== SUBMISSION_ACTIONS.CHECK) {
-            this._messageService.add({ closable: true, severity: 'info', detail: OPEN_MESSAGES[type], life: 4000 });
-            return;
-        }
         const { pageNumber, pageSize, ...filter } = this.query;
         const queryParams = { ...filter, statusCheck: this.activeTab.statusCheck, statusQa: this.activeTab.statusQa };
         this.router.navigate([WORK_PATHS[type].replace(':submissionId', String(submissionId))], {

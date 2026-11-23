@@ -15,10 +15,14 @@ import {
     IQaEntryUserStats,
     IQaFieldStats,
     IQaStatsSummary,
+    IQaSubmissionDetail,
+    IReviewQaResult,
+    IReviewQaSubmission,
     ISubmissionCount,
     ISubmissionDetail,
     ISubmissionFieldValue,
     ISubmissionFilter,
+    ISubmissionQaLog,
     ISubmissionTimeline,
 } from "@/models/submission.model";
 import { LatestWorkingType } from "@/shared/constants/submission.constants";
@@ -67,6 +71,19 @@ export class SubmissionService {
 
     check(body: ICheckSubmission) {
         return this.http.put<IBaseResponseWithData<ICheckSubmissionResult>>(`${this.api}/check`, body);
+    }
+
+    findQaById(id: number, query: IFindSubmissionDetail) {
+        return this.http.get<IBaseResponseWithData<IQaSubmissionDetail>>(`${this.api}/${id}/qa`, { params: this.toParams(query) });
+    }
+
+    // pageSize = -1: lấy hết lượt QA của văn bản
+    qaLogs(id: number) {
+        return this.http.get<IBaseResponsePaging<ISubmissionQaLog>>(`${this.api}/${id}/qa-logs`, { params: { pageNumber: 1, pageSize: -1 } });
+    }
+
+    reviewQa(body: IReviewQaSubmission) {
+        return this.http.put<IBaseResponseWithData<IReviewQaResult>>(`${this.api}/qa`, body);
     }
 
     timeline(id: number) {
