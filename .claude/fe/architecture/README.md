@@ -67,6 +67,7 @@ URL FE `/admin/<module>/...` trùng tên module BE `api/v1/<module>/...` để t
 | [06-them-man-hinh.md](06-them-man-hinh.md) | Các bước thêm một màn hình gọi API BE |
 | [07-man-construction.md](07-man-construction.md) | Ghi chú từng màn module `construction`: Metadata, Dự án, Báo cáo tiến độ, Danh sách văn bản |
 | [08-man-nhap-lieu.md](08-man-nhap-lieu.md) | Màn Nhập liệu (PDF + form, ◀ ▶, Lưu, chỉ đọc) và dialog Lịch sử văn bản |
+| [09-man-qa.md](09-man-qa.md) | Màn QA (đánh dấu trường Sai, Đạt / Trả lại, banner chỉ đọc, Lần trước sai) |
 
 ## Nguyên tắc không đổi
 
