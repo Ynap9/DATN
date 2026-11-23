@@ -29,6 +29,7 @@ import { openSubmissionHistory } from './submission-history-dialog/submission-hi
 import { SubmissionPdfViewerComponent } from './submission-pdf-viewer/submission-pdf-viewer.component';
 import { FONT_SIZE_MAX, FONT_SIZE_MIN, ISubmissionLayout, readSubmissionLayout, writeSubmissionLayout } from './submission-layout';
 import { AdjacentDirection, DOCUMENT_TYPE_NAME_PARAM, isFilterEdge, readSubmissionQuery, SubmissionQuery } from './submission-query';
+import { buildLocationText } from './submission-location';
 
 const FIELD_ELEMENT_ID_PREFIX = 'submission-field-';
 // Lưu bị chặn vì văn bản / dự án vừa đổi trạng thái: tải lại để form chuyển chỉ đọc (43.18)
@@ -114,14 +115,9 @@ export class SubmissionCheckComponent extends BaseComponent {
         return SUBMISSION_QA_STATUSES.find((status) => status.value === this.submission?.statusQa);
     }
 
-    // "Hồ sơ … · Hộp … · <metadata>", bỏ vế rỗng
+    // "Hồ sơ … · Hộp … · <metadata>", bỏ vế rỗng; dữ liệu đã có tiền tố thì không lặp
     get locationText() {
-        const parts = [
-            this.submission?.profileRange ? `Hồ sơ ${this.submission.profileRange}` : '',
-            this.submission?.box ? `Hộp ${this.submission.box}` : '',
-            this._documentTypeName,
-        ];
-        return parts.filter(Boolean).join(' · ');
+        return buildLocationText(this.submission?.profileRange, this.submission?.box, this._documentTypeName);
     }
 
     // position = null: văn bản không thuộc bộ lọc đang chọn (vd. mở qua "Tiếp tục")

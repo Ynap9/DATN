@@ -40,6 +40,7 @@ import { openSubmissionHistory } from '../submission-history-dialog/submission-h
 import { FONT_SIZE_MAX, FONT_SIZE_MIN, ISubmissionLayout, readSubmissionLayout, writeSubmissionLayout } from '../submission-layout';
 import { SubmissionPdfViewerComponent } from '../submission-pdf-viewer/submission-pdf-viewer.component';
 import { AdjacentDirection, DOCUMENT_TYPE_NAME_PARAM, isFilterEdge, readSubmissionQuery, SubmissionQuery } from '../submission-query';
+import { buildLocationText } from '../submission-location';
 
 const BANNER_DATE_FORMAT = 'HH:mm dd/MM/yyyy';
 const REASON_INPUT_ID = 'submission-qa-reason';
@@ -141,14 +142,9 @@ export class SubmissionQaComponent extends BaseComponent {
         return SUBMISSION_QA_STATUSES.find((status) => status.value === this.submission?.statusQa);
     }
 
-    // "Hồ sơ … · Hộp … · <metadata>", bỏ vế rỗng
+    // "Hồ sơ … · Hộp … · <metadata>", bỏ vế rỗng; dữ liệu đã có tiền tố thì không lặp
     get locationText() {
-        const parts = [
-            this.submission?.profileRange ? `Hồ sơ ${this.submission.profileRange}` : '',
-            this.submission?.box ? `Hộp ${this.submission.box}` : '',
-            this._documentTypeName,
-        ];
-        return parts.filter(Boolean).join(' · ');
+        return buildLocationText(this.submission?.profileRange, this.submission?.box, this._documentTypeName);
     }
 
     // position = null: văn bản không thuộc bộ lọc đang chọn (vd. mở qua "Tiếp tục")
