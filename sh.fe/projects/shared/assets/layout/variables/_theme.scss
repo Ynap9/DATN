@@ -52,6 +52,30 @@ $sh-transition-slow:   0.3s ease;
     --p-highlight-color:            #0e7c66 !important;
     --p-highlight-focus-color:      #0c6e5a !important;
 
+    // Cỡ PrimeNG theo px: token Aura tính theo rem, gốc html 14px làm ô / nút cao 29px, nút nhỏ và tag chữ 10,5px.
+    // Ô nhập, nút thường cao ~36px; nút / ô nhỏ ~28px chữ 12px; tag chữ 12px
+    --p-form-field-padding-x:     12px !important;
+    --p-form-field-padding-y:     9px !important;
+    --p-form-field-sm-font-size:  12px !important;
+    --p-form-field-sm-padding-x:  10px !important;
+    --p-form-field-sm-padding-y:  6px !important;
+    --p-inputtext-padding-x:      12px !important;
+    --p-inputtext-padding-y:      9px !important;
+    --p-inputtext-sm-font-size:   12px !important;
+    --p-inputtext-sm-padding-x:   10px !important;
+    --p-inputtext-sm-padding-y:   6px !important;
+    --p-button-padding-x:         14px !important;
+    --p-button-padding-y:         9px !important;
+    --p-button-icon-only-width:   36px !important;
+    --p-button-sm-font-size:      12px !important;
+    --p-button-sm-padding-x:      10px !important;
+    --p-button-sm-padding-y:      6px !important;
+    --p-button-sm-icon-only-width: 30px !important;
+    --p-tag-font-size:            12px !important;
+    --p-tag-font-weight:          600 !important;
+    --p-tag-padding:              3px 8px !important;
+    --p-tag-icon-size:            11px !important;
+
     --sh-primary:          #0e7c66;
     --sh-primary-hover:    #0a5e4e;
     --sh-primary-light:    #e6f3ef;

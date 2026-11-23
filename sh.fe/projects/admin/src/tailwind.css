@@ -14,4 +14,21 @@
   --breakpoint-lg: 992px;
   --breakpoint-xl: 1200px;
   --breakpoint-2xl: 1920px;
+
+  /* html { font-size: 14px } (_core.scss) làm lớp theo rem co 12,5% (text-xs = 10,5px). Đặt lại theo px để
+     p-4 = 16px, text-xs = 12px, rounded-md = 6px đúng như thiết kế */
+  --spacing: 4px;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 30px;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
 }

@@ -81,6 +81,15 @@ quá 6–7 file mới chia thư mục con (`components/`).
 - ⚠️ `ng test` (Karma) **không** kiểm strict template như `ng build` / `ng serve`: truyền `number` vào pipe khai `string` vẫn
   qua test nhưng build đỏ. Sửa template xong luôn chạy `npm run build:admin`, đừng chỉ chạy test.
 - Style: Tailwind cho bố cục; style riêng component dưới 8 kB.
+- Chuẩn kích cỡ (chốt 23/11): chữ thân 14px, chữ phụ / nhãn trường / tag 12px, tiêu đề khối 13–14px đậm 600. Ô nhập và nút
+  thường cao ~36px, nút / ô `size="small"` ~28px chữ 12px. Khoảng cách theo bội 4px (`gap-2` = 8px, `p-4` = 16px). Thiết kế
+  ghi số px nào thì dùng đúng lớp Tailwind tương ứng (`text-xs` = 12px, `h-9` = 36px), không cần `text-[12px]`.
+- ⚠️ `html { font-size: 14px }` (`shared/assets/layout/_core.scss`) làm mọi cỡ theo rem co 12,5% (`text-xs` ra 10,5px, nút
+  nhỏ 22px). Đã chặn ở gốc: `tailwind.css` khai `--spacing` / `--text-*` / `--radius-*` bằng px, `variables/_theme.scss` đặt
+  token cỡ PrimeNG (`--p-form-field-*`, `--p-inputtext-*`, `--p-button-*`, `--p-tag-*`) bằng px. Đừng đổi gốc sang 16px:
+  PrimeNG đặt cứng `font-size: 1rem` cho ô nhập / nút nên chữ trong ô sẽ thành 16px. Cần cỡ mới thì thêm token px ở hai chỗ trên.
+- Bảng: cột chữ dài không khai `width` thì đặt `min-width` (vd. cột trường động của bảng văn bản 180px); cột ngắn (mã, hồ sơ,
+  hộp, ngày) `cellStyle: 'white-space: nowrap'`. `.p-tag` đã `nowrap` toàn cục.
 - ⚠️ Repo **không** có cấu hình Prettier: đừng chạy `npx prettier --write` — mặc định 80 cột ngắt mỗi thuộc tính một dòng, lệch hẳn kiểu template
   hiện có (một thẻ trên ít dòng dài). Định dạng tay theo file xung quanh.
 - Thông điệp người dùng tiếng Việt, lấy từ `SuccessMessage` / `ErrorMessage` khi có sẵn.
