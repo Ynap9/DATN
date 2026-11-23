@@ -1,6 +1,6 @@
 # Màn hình module construction
 
-> **Phần 7/10** · trước: [06-them-man-hinh.md](06-them-man-hinh.md) · mục lục: [README.md](README.md)
+> **Phần 7/11** · trước: [06-them-man-hinh.md](06-them-man-hinh.md) · mục lục: [README.md](README.md)
 
 Quyết định và bẫy riêng của từng màn đã làm (cập nhật 2026-11-21); cách thêm màn mới chung ở [06-them-man-hinh.md](06-them-man-hinh.md).
 
@@ -78,9 +78,9 @@ Task 42, `/admin/construction/project/:id/metadata/:documentTypeId` (`features/c
   toast rồi về danh sách dự án, còn lại (kể cả 820) hiện trạng thái trống "chưa được giao" + nút Về danh sách dự án.
 - Query string là nguồn trạng thái duy nhất, đặt **đúng tên tham số BE** (`statusCheck`, `statusQa`, `keyword`, `documentFieldId1`,
   `fieldValue1`, `isEmpty1`, … `pageNumber`, `pageSize`) + `view=qa` cho Quản lý; ghi bằng `replaceUrl`, đổi lọc / tab / chế độ về trang 1.
-  F5 hay quay lại dựng lại đúng tab, lọc, trang. Tab Chờ QA = `statusCheck=1&statusQa=0`.
-- Số trên tab: Nhập liệu gọi `count` không gửi trạng thái; QA gọi `qa/paging` `pageSize=1` hai lần (Chờ QA có `statusCheck=1`, Đạt /
-  Không đạt không trạng thái) vì QA Không đạt đưa văn bản về Bị trả. "Tiếp tục văn bản đang làm" chỉ gọi lại khi đổi chế độ / Làm mới.
+  F5 hay quay lại dựng lại đúng tab, lọc, trang. Tab Chưa QA = `statusCheck=1&statusQa=0`.
+- Số trên tab: Nhập liệu gọi `count` không gửi trạng thái; QA gọi `qa/paging` `pageSize=1` hai lần (Chưa QA có `statusCheck=1`, Đạt /
+  Không đạt không trạng thái) vì QA Không đạt đưa văn bản về Trả lại. "Tiếp tục văn bản đang làm" chỉ gọi lại khi đổi chế độ / Làm mới.
 - Cột động từ `customData` của `paging`, khai `locked` để metadata thêm / bớt trường không xoá cấu hình các cột cố định. `tableKey`
   tách `construction-submission-<id>` / `construction-submission-qa-<id>` và hai thẻ `app-data-table` riêng (`@if`): DataTable chỉ đọc
   cấu hình cột theo `tableKey` lúc khởi tạo, dùng chung một thẻ thì bảng QA không nạp cấu hình của nó.

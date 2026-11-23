@@ -230,7 +230,7 @@ export class SubmissionCheckComponent extends BaseComponent {
         }
         this._confirmationService.confirm({
             header: 'Văn bản đã QA đạt',
-            message: 'Lưu thay đổi sẽ đưa văn bản về Chờ QA và phải QA lại. Tiếp tục?',
+            message: 'Lưu thay đổi sẽ đưa văn bản về Chưa QA và phải QA lại. Tiếp tục?',
             closable: true,
             closeOnEscape: true,
             rejectButtonProps: { label: 'Huỷ', severity: 'secondary', outlined: true },

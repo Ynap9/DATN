@@ -1,6 +1,6 @@
 # Quy ước code bắt buộc
 
-> **Phần 5/10** · trước: [04-http-auth.md](04-http-auth.md) · mục lục: [README.md](README.md)
+> **Phần 5/11** · trước: [04-http-auth.md](04-http-auth.md) · mục lục: [README.md](README.md)
 
 Áp dụng cho mọi thay đổi trong `sh.fe`. Luật chung (chỉ sửa chỗ cần thiết, comment, tách hàm, không commit khi
 chưa yêu cầu) giống BE — xem [../../be/architecture/07-conventions.md](../../be/architecture/07-conventions.md).

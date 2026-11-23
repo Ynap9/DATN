@@ -1,6 +1,6 @@
 # Màn module Operation
 
-> **Phần 10/10** · trước: [09-man-qa.md](09-man-qa.md) · mục lục: [README.md](README.md)
+> **Phần 10/11** · trước: [09-man-qa.md](09-man-qa.md) · mục lục: [README.md](README.md)
 
 Ba màn: Thành viên dự án (Task 47), Nhóm nhân viên (Task 49), Chia phiếu (Task 51), 2026-11-23. BE ở
 [../../be/nghiep-vu/21-thanh-vien-du-an.md](../../be/nghiep-vu/21-thanh-vien-du-an.md),
@@ -91,4 +91,4 @@ mất cặp). `reload()` tải lại danh sách và **luôn** phát lại cặp 
 - Đã kiểm 2026-11-23 bằng Chrome headless trên dự án test riêng (đã xoá): đủ 13 ca mục 51.3 (gồm 2 tab cùng giao → `812`, QA từng
   nhập → `331`, dự án không QA, người đã tắt). **Chưa kiểm**: trần 1000 nút, lỗi `811 / 821` lúc Giao, dòng cảnh báo `warnings`.
 
-> **Tiếp:** hết bộ tài liệu — quay lại [README.md](README.md).
+> **Tiếp:** [11-man-nhap-xuat.md](11-man-nhap-xuat.md) — màn Nhập / Xuất dữ liệu (wizard import, xuất Excel chạy nền).

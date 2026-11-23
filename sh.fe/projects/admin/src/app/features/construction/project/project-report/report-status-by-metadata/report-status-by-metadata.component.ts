@@ -15,8 +15,8 @@ const NOT_CHECKED_LEGEND = { label: 'Chưa kiểm', text: 'chưa kiểm', color:
 
 const QA_SEGMENTS: ISegmentDef[] = [
     { label: 'QA đạt', text: 'QA đạt', color: REPORT_COLORS.QA_PASSED, count: (row) => row.totalQaPassed },
-    { label: 'Chờ QA', text: 'chờ QA', color: REPORT_COLORS.QA_PENDING, count: (row) => row.totalQaNotReviewed },
-    { label: 'Bị trả', text: 'bị trả', color: REPORT_COLORS.RETURNED, count: (row) => row.totalReturned },
+    { label: 'Chưa QA', text: 'chưa QA', color: REPORT_COLORS.QA_PENDING, count: (row) => row.totalQaNotReviewed },
+    { label: 'Trả lại', text: 'trả lại', color: REPORT_COLORS.RETURNED, count: (row) => row.totalReturned },
 ];
 
 // Dự án không QA: chỉ Đã kiểm / Chưa kiểm (Chưa kiểm gồm cả bị trả)

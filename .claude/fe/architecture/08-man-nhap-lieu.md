@@ -1,6 +1,6 @@
 # Màn Nhập liệu và dialog Lịch sử
 
-> **Phần 8/10** · trước: [07-man-construction.md](07-man-construction.md) · mục lục: [README.md](README.md)
+> **Phần 8/11** · trước: [07-man-construction.md](07-man-construction.md) · mục lục: [README.md](README.md)
 
 Task 43, giao diện làm lại ở Task 53 (cập nhật 2026-11-23). Màn làm việc của người Data: PDF bên trái, các trường bên phải, Lưu = Kiểm tra rồi sang văn bản kế.
 
@@ -41,8 +41,8 @@ Task 43, giao diện làm lại ở Task 53 (cập nhật 2026-11-23). Màn làm
   `buildLocationText` (`submission-location.ts`, chung màn Nhập liệu và QA): giá trị đã bắt đầu bằng hồ sơ / hs / hộp thì giữ nguyên.
 - Phải: cụm [◀ | x / y | ▶], các nút text Chia / A− / A+ / Lịch sử, nút Lưu. Văn bản đang bị trả thì nhãn nút là
   "Lưu · gửi QA lại". Chỉ đọc thì ẩn nút Lưu, chân form bỏ vế "Ctrl + Enter: Lưu".
-- Tiêu đề form có dòng tóm tắt (`formSummary`). Chỉ đọc → xám + khoá. Bị trả còn trường sai → đỏ "Còn X / Y trường QA đánh sai".
-  Bị trả và đã sửa hết → cam. Các trường hợp khác → "N trường".
+- Tiêu đề form có dòng tóm tắt (`formSummary`). Chỉ đọc → xám + khoá. Trả lại còn trường sai → đỏ "Còn X / Y trường QA đánh sai".
+  Trả lại và đã sửa hết → cam. Các trường hợp khác → "N trường".
 - Không còn khối đỏ "QA trả lại" và chip cạnh nhãn. Trường sai có **một dòng** chú thích dưới ô (`wrongFieldNote`), cắt "…",
   `title` = toàn câu. Chưa sửa: viền + chữ đỏ "QA đánh sai — lý do", lý do rỗng thì chỉ "QA đánh sai". Đã sửa: cam "Đã sửa · sẽ
   gửi QA lại khi Lưu". Văn bản bị trả mà đang chỉ đọc (dự án xong…) vẫn hiện chú thích đỏ.

@@ -18,6 +18,12 @@ export const APP_MENU_ITEMS: MenuItem[] = [
                 routerLinkActiveOptions: { paths: 'subset', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' },
                 permission: PermissionConstants.FUNCTION_DOCUMENT_TYPE_VIEW,
             },
+            {
+                label: 'Nhập / Xuất dữ liệu',
+                icon: 'pi pi-file-import',
+                routerLink: ['/admin/construction/data-transfer'],
+                permission: [PermissionConstants.FUNCTION_SUBMISSION_IMPORT, PermissionConstants.FUNCTION_SUBMISSION_EXPORT],
+            },
         ],
     },
     {

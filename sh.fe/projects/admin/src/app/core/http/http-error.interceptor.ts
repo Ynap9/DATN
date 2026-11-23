@@ -5,6 +5,7 @@ import { catchError, throwError } from 'rxjs';
 import { SKIP_ERROR_TOAST } from './http-context';
 
 const HTTP_ERROR_MESSAGES: Record<number, string> = {
+    400: 'Dữ liệu gửi lên không hợp lệ',
     401: 'Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn',
     403: 'Bạn không có quyền thực hiện thao tác này',
     404: 'Đường dẫn không tồn tại',

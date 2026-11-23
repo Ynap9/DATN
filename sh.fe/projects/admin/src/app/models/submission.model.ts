@@ -1,3 +1,4 @@
+import { ISheetHeader } from '@/models/document-field.model';
 import { IBaseRequestPaging } from '@/shared/models/request-paging.base.models';
 
 export interface ISubmissionFilter {
@@ -299,3 +300,89 @@ export type IQaEntryUserStats = IQaStatsMetric & {
     userName: string | null;
     fullName: string | null;
 };
+
+// Body import từ Google Sheet của dự án (append / blank); ô cột trống gửi ''
+export interface IImportSubmission {
+    projectId: number;
+    documentTypeId: number;
+    fileColumnImport: string;
+    linkColumnImport: string;
+    profileRange: string;
+    box: string;
+}
+
+export interface IImportOverwriteSubmission extends IImportSubmission {
+    url: string;
+    sheetName: string;
+    columnImport: string;
+    documentFieldId: number;
+    overwriteChecked: boolean;
+}
+
+// Body import từ file Excel đã tải lên; overwrite không có url
+export interface IImportExcelSubmission extends IImportSubmission {
+    fileKey: string;
+    sheetName: string;
+}
+
+export interface IImportExcelOverwriteSubmission extends IImportExcelSubmission {
+    columnImport: string;
+    documentFieldId: number;
+    overwriteChecked: boolean;
+}
+
+export interface IUploadImportExcelResult {
+    fileKey: string;
+    fileName: string;
+    sheets: ISheetHeader[];
+}
+
+export interface IVerifyImportAppend {
+    totalDataFields: number;
+    totalAppendRowCount: number;
+    totalFieldCount: number;
+    totalSubmission: number;
+    totalSubmissionGoogleSheet: number;
+}
+
+export interface IVerifyImportBlank {
+    totalBlankCount: number;
+    totalFieldCount: number;
+}
+
+export interface IVerifyImportOverwrite {
+    totalOverWriteCount: number;
+    totalSkippedChecked: number;
+}
+
+// Kết quả chạy thử theo kiểu import (khoá = IMPORT_KIND)
+export interface IVerifyImportResultMap {
+    append: IVerifyImportAppend;
+    blank: IVerifyImportBlank;
+    overwrite: IVerifyImportOverwrite;
+}
+
+export interface IImportSubmissionResult {
+    message: string;
+    totalDataFields: number;
+}
+
+// status theo BACKGROUND_JOB_STATUS
+export interface ISubmissionImportJob {
+    jobId: string;
+    status: number;
+    fileName: string;
+    resultMessage: string | null;
+    errorMessage: string | null;
+}
+
+// columns = mã cột thêm (EXPORT_COLUMNS), gửi lặp ?columns=a&columns=b
+export type IExportSubmission = ISubmissionFilter & { columns?: string[] };
+
+export interface ISubmissionExportJob {
+    jobId: string;
+    status: number;
+    fileName: string;
+    downloadUrl: string | null;
+    errorMessage: string | null;
+}

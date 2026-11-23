@@ -24,6 +24,8 @@ export const PermissionConstants = {
     FUNCTION_SUBMISSION_QA: 'Function.Construction.Submission.Qa',
     FUNCTION_SUBMISSION_QA_STATS: 'Function.Construction.Submission.QaStats',
     FUNCTION_SUBMISSION_PROGRESS_STATS: 'Function.Construction.Submission.ProgressStats',
+    FUNCTION_SUBMISSION_IMPORT: 'Function.Construction.Submission.Import',
+    FUNCTION_SUBMISSION_EXPORT: 'Function.Construction.Submission.Export',
     MENU_TEMPLATE: 'Menu.DigitalSignature.Template',
     MENU_SIGNING_BATCH: 'Menu.DigitalSignature.SigningBatch',
     MENU_PACKAGE_CONFIG: 'Menu.Packaging.Config',
