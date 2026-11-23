@@ -28,7 +28,7 @@ import { IBaseResponse } from '@/shared/models/request-paging.base.models';
 import { openSubmissionHistory } from './submission-history-dialog/submission-history-dialog.component';
 import { SubmissionPdfViewerComponent } from './submission-pdf-viewer/submission-pdf-viewer.component';
 import { FONT_SIZE_MAX, FONT_SIZE_MIN, ISubmissionLayout, readSubmissionLayout, writeSubmissionLayout } from './submission-layout';
-import { AdjacentDirection, isFilterEdge, readSubmissionQuery, SubmissionQuery } from './submission-query';
+import { AdjacentDirection, DOCUMENT_TYPE_NAME_PARAM, isFilterEdge, readSubmissionQuery, SubmissionQuery } from './submission-query';
 
 const FIELD_ELEMENT_ID_PREFIX = 'submission-field-';
 // Lưu bị chặn vì văn bản / dự án vừa đổi trạng thái: tải lại để form chuyển chỉ đọc (43.18)
@@ -38,10 +38,24 @@ const RELOAD_AFTER_SAVE_CODES: number[] = [
     SUBMISSION_ERROR_CODE.PROJECT_EXPIRED,
 ];
 
-// Banner chỉ đọc: xám (thiếu quyền / dự án đã xong, hết hạn), xanh (Data mở văn bản đã QA đạt) — 43.9 / 43.11
+// Lý do chỉ đọc (thiếu quyền / dự án đã xong, hết hạn / Data mở văn bản đã QA đạt) — 43.9; hiện ở dòng tóm tắt tiêu đề form (53.8)
 interface IReadonlyBanner {
-    tone: 'gray' | 'green';
     message: string;
+}
+
+type WrongFieldTone = 'red' | 'amber';
+
+// Dòng tóm tắt bên phải tiêu đề form (53.8)
+interface IFormSummary {
+    tone: 'gray' | WrongFieldTone;
+    text: string;
+    isLocked?: boolean;
+}
+
+// Chú thích 1 dòng dưới trường QA đánh sai (53.11)
+interface IWrongFieldNote {
+    tone: WrongFieldTone;
+    text: string;
 }
 
 // Màn Nhập liệu: kiểm tra một văn bản (Task 43)
@@ -63,6 +77,8 @@ export class SubmissionCheckComponent extends BaseComponent {
 
     private readonly _projectId = Number(this._activatedRoute.snapshot.paramMap.get('id'));
     private readonly _documentTypeId = Number(this._activatedRoute.snapshot.paramMap.get('documentTypeId'));
+    // Tên metadata màn danh sách gửi kèm; mở link trực tiếp thì rỗng
+    private readonly _documentTypeName = this._activatedRoute.snapshot.queryParamMap.get(DOCUMENT_TYPE_NAME_PARAM) ?? '';
     // Mở từ màn danh sách trong phiên này thì nút ← quay lại đúng tab, lọc, trang (43.13)
     private readonly _fromList = !!(this._location.getState() as { fromList?: boolean } | null)?.fromList;
     private readonly _reload$ = new Subject<void>();
@@ -98,11 +114,12 @@ export class SubmissionCheckComponent extends BaseComponent {
         return SUBMISSION_QA_STATUSES.find((status) => status.value === this.submission?.statusQa);
     }
 
-    // "Hồ sơ … · Hộp …", bỏ vế rỗng
+    // "Hồ sơ … · Hộp … · <metadata>", bỏ vế rỗng
     get locationText() {
         const parts = [
             this.submission?.profileRange ? `Hồ sơ ${this.submission.profileRange}` : '',
             this.submission?.box ? `Hộp ${this.submission.box}` : '',
+            this._documentTypeName,
         ];
         return parts.filter(Boolean).join(' · ');
     }
@@ -112,13 +129,25 @@ export class SubmissionCheckComponent extends BaseComponent {
         return this.submission?.position == null;
     }
 
-    // Banner đỏ chỉ khi văn bản bị QA trả lại và form sửa được (chỉ đọc thắng QA trả lại)
+    // Văn bản bị QA trả lại và form sửa được (chỉ đọc thắng QA trả lại): đổi nhãn Lưu, tóm tắt số trường sai còn lại
     get isReturned() {
         return !this.readonlyBanner && this.submission?.statusCheck === SUBMISSION_CHECK_STATUS.RETURNED;
     }
 
     get wrongFields() {
         return this.visibleFields.filter((field) => this.wrongFieldIds.has(field.documentFieldId));
+    }
+
+    // Chỉ đọc → lý do khoá; đang bị trả → số trường sai chưa sửa / đã sửa hết; còn lại → số trường (53.8)
+    get formSummary(): IFormSummary {
+        if (this.readonlyBanner) return { tone: 'gray', text: this.readonlyBanner.message, isLocked: true };
+        if (this.isReturned) {
+            const remaining = this.wrongFields.filter((field) => !this.isEdited(field)).length;
+            return remaining
+                ? { tone: 'red', text: `Còn ${remaining} / ${this.wrongFields.length} trường QA đánh sai` }
+                : { tone: 'amber', text: 'Đã sửa hết trường sai — Lưu để gửi QA lại' };
+        }
+        return { tone: 'gray', text: `${this.visibleFields.length} trường` };
     }
 
     get isBusy() {
@@ -245,7 +274,15 @@ export class SubmissionCheckComponent extends BaseComponent {
         return value.trim() !== field.data.trim();
     }
 
-    // Bấm chip trường đánh sai / mở văn bản: cuộn tới ô nhập rồi focus
+    // Chú thích trường QA đánh sai khi văn bản đang bị trả, kể cả lúc chỉ đọc (khi đó không sửa được nên luôn đỏ) — 53.11
+    wrongFieldNote(field: ISubmissionField): IWrongFieldNote | null {
+        if (this.submission?.statusCheck !== SUBMISSION_CHECK_STATUS.RETURNED || !this.wrongFieldIds.has(field.documentFieldId)) return null;
+        if (this.isEdited(field)) return { tone: 'amber', text: 'Đã sửa · sẽ gửi QA lại khi Lưu' };
+        const reason = this.submission.qaReason?.trim();
+        return { tone: 'red', text: reason ? `QA đánh sai — ${reason}` : 'QA đánh sai' };
+    }
+
+    // Mở văn bản: cuộn tới ô nhập rồi focus
     focusField(documentFieldId: number) {
         const input = this._element.querySelector(`#${this.fieldElementId(documentFieldId)}`) as HTMLInputElement | null;
         input?.scrollIntoView({ block: 'center' });
@@ -277,7 +314,7 @@ export class SubmissionCheckComponent extends BaseComponent {
             });
     }
 
-    // Dựng lại form theo văn bản vừa tải; sửa được thì focus trường đầu tiên (43.7)
+    // Dựng lại form theo văn bản vừa tải; sửa được thì focus trường sai đầu tiên nếu đang bị trả, không thì trường đầu tiên (43.7 / 53.12)
     private applySubmission(submission: ISubmissionDetail) {
         if (submission.id !== this.submission?.id) {
             this.noMore = { previous: false, next: false };
@@ -294,21 +331,22 @@ export class SubmissionCheckComponent extends BaseComponent {
         if (this.readonlyBanner) {
             this.form.disable();
         } else if (this.visibleFields.length) {
-            afterNextRender(() => this.focusField(this.visibleFields[0].documentFieldId), { injector: this._injector });
+            const focusedField = (this.isReturned && this.wrongFields[0]) || this.visibleFields[0];
+            afterNextRender(() => this.focusField(focusedField.documentFieldId), { injector: this._injector });
         }
     }
 
     // Xét theo thứ tự, lấy điều kiện đầu tiên khớp (43.9); Quản lý sửa hộ được văn bản đã QA đạt
     private resolveReadonlyBanner(submission: ISubmissionDetail): IReadonlyBanner | null {
         if (!this._sharedService.isGranted(PermissionConstants.FUNCTION_SUBMISSION_CHECK)) {
-            return { tone: 'gray', message: 'Bạn chỉ có quyền xem văn bản.' };
+            return { message: 'Bạn chỉ có quyền xem văn bản.' };
         }
         if (!this._sharedService.isSuperAdmin()) {
-            if (this.project!.status === PROJECT_STATUS.DONE) return { tone: 'gray', message: 'Dự án đã xong — chỉ xem.' };
-            if (this.project!.status === PROJECT_STATUS.EXPIRED) return { tone: 'gray', message: 'Dự án đã hết hạn — chỉ xem.' };
+            if (this.project!.status === PROJECT_STATUS.DONE) return { message: 'Dự án đã xong — chỉ xem.' };
+            if (this.project!.status === PROJECT_STATUS.EXPIRED) return { message: 'Dự án đã hết hạn — chỉ xem.' };
         }
         if (this.role === SUBMISSION_ROLE.DATA && submission.statusQa === SUBMISSION_QA_STATUS.PASSED) {
-            return { tone: 'green', message: 'Văn bản đã QA đạt — đã khoá, không sửa được nữa.' };
+            return { message: 'Văn bản đã QA đạt — đã khoá, không sửa được nữa.' };
         }
         return null;
     }
@@ -386,11 +424,11 @@ export class SubmissionCheckComponent extends BaseComponent {
             });
     }
 
-    // Đổi văn bản thay cho mục lịch sử hiện tại, giữ bộ lọc; đã hỏi / đã lưu nên guard không hỏi lại
+    // Đổi văn bản thay cho mục lịch sử hiện tại, giữ bộ lọc + tên metadata; đã hỏi / đã lưu nên guard không hỏi lại
     private openSubmission(submissionId: number) {
         this._allowLeave = true;
         this.router.navigate([PROJECT_URL, this._projectId, 'metadata', this._documentTypeId, 'check', submissionId], {
-            queryParams: this.query,
+            queryParams: { ...this.query, [DOCUMENT_TYPE_NAME_PARAM]: this._documentTypeName || null },
             replaceUrl: true,
         });
     }
