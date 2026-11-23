@@ -13,6 +13,7 @@ namespace sh.be.applications.Module.Construction.Dtos.Submission
         public int? NewStatusCheck { get; set; }
         public string? Note { get; set; }
         public int? ChangedDataCount { get; set; }
+        public List<SubmissionTimelineChangedFieldDto>? ChangedFields { get; set; }
         public int? NewStatusQa { get; set; }
         public string? Reason { get; set; }
         public List<SubmissionTimelineWrongFieldDto>? WrongFields { get; set; }

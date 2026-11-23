@@ -96,6 +96,98 @@ export interface ILatestWorkingSubmission {
     workedDate: string | null;
 }
 
+export type IFindSubmissionDetail = ISubmissionFilter & { includePosition?: boolean };
+
+export interface ISubmissionField {
+    documentFieldId: number;
+    name: string;
+    field: string;
+    fieldType: string;
+    isShow: boolean;
+    isChargeable: boolean;
+    orderListView: number;
+    isShowListView: boolean;
+    width: number | null;
+    submissionDataId: number | null;
+    data: string;
+    indexGoogleSheet: string | null;
+}
+
+// position / totalItems chỉ có khi includePosition = true; position = null khi văn bản không thuộc bộ lọc
+export interface ISubmissionDetail {
+    id: number;
+    projectId: number;
+    documentTypeId: number;
+    name: string;
+    fileName: string;
+    fileUrlS3Object: string;
+    profileRange: string;
+    box: string;
+    statusCheck: number;
+    statusQa: number;
+    qaReason: string | null;
+    qaWrongDocumentFieldIds: number[];
+    createdDate: string | null;
+    modifiedDate: string | null;
+    modifiedBy: string | null;
+    position: number | null;
+    totalItems: number | null;
+    fields: ISubmissionField[];
+}
+
+export interface ICheckSubmissionData {
+    documentFieldId: number;
+    data: string;
+}
+
+export interface ICheckSubmission {
+    id: number;
+    projectId: number;
+    documentTypeId: number;
+    datas: ICheckSubmissionData[];
+}
+
+export interface ICheckSubmissionResult {
+    submissionId: number;
+    statusCheck: number;
+    statusQa: number;
+    changedDataCount: number;
+    logId: number;
+}
+
+export interface ISubmissionTimelineField {
+    documentFieldId: number;
+    name: string;
+}
+
+export interface ISubmissionTimelineChangedField {
+    documentFieldId: number;
+    name: string;
+    oldData: string;
+    newData: string;
+}
+
+// eventType = TIMELINE_EVENT; trường CHECK / QA chỉ có giá trị ở sự kiện cùng loại. changedFields = null: log trước Task 43A
+export interface ISubmissionTimeline {
+    eventType: string;
+    logId: number;
+    createdDate: string | null;
+    userId: string;
+    userName: string | null;
+    fullName: string | null;
+    description: string;
+    oldStatusCheck: number | null;
+    newStatusCheck: number | null;
+    note: string | null;
+    changedDataCount: number | null;
+    changedFields: ISubmissionTimelineChangedField[] | null;
+    newStatusQa: number | null;
+    reason: string | null;
+    wrongFields: ISubmissionTimelineField[] | null;
+    entryUserId: string | null;
+    entryUserName: string | null;
+}
+
 // Lọc chung của các API thống kê; fromDate / toDate dạng yyyy-MM-dd, bỏ trống thì BE lấy khoảng mặc định
 export interface IFindStats {
     projectId: number;

@@ -1,10 +1,12 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using sh.be.applications.Module.Construction.Dtos.DocumentField;
 using sh.be.applications.Module.Construction.Dtos.Submission;
 using sh.be.applications.Module.Construction.Interfaces.Queries;
 using sh.be.domain.Module.Construction.Submissions.Entities;
+using sh.be.domain.Module.Construction.Submissions.Services;
 using sh.be.infrastructure.data.Base;
 using sh.be.infrastructure.data.Persistence.Db;
 using sh.be.shared.Constants.Auth;
@@ -12,6 +14,7 @@ using sh.be.shared.Constants.Construction;
 using sh.be.shared.HttpRequest.BaseRequest;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
+using System.Text.Json;
 
 namespace sh.be.infrastructure.data.Module.Construction.Queries
 {
@@ -45,8 +48,11 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             { SubmissionConst.QA_FAILED, "Không đạt" },
         };
 
-        public SubmissionQuery(ShDbContext shDbContext, IMapper mapper) : base(shDbContext, mapper)
+        private readonly ILogger<SubmissionQuery> _logger;
+
+        public SubmissionQuery(ShDbContext shDbContext, IMapper mapper, ILogger<SubmissionQuery> logger) : base(shDbContext, mapper)
         {
+            _logger = logger;
         }
 
         public async Task<BaseResponsePagingDto<GetListSubmissionDto>> FindPaging(FindPagingSubmissionDto dto, string? restrictedUserId = null)
@@ -731,7 +737,7 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             var checkLogs = await _shDbContext.SubmissionLogs
                 .AsNoTracking()
                 .Where(l => l.SubmissionId == submissionId)
-                .Select(l => new { l.Id, l.UserId, l.OldStatus, l.NewStatus, l.Note, l.ChangedDataCount, l.Description, l.CreatedDate })
+                .Select(l => new { l.Id, l.UserId, l.OldStatus, l.NewStatus, l.Note, l.ChangedDataCount, l.ChangedDatas, l.Description, l.CreatedDate })
                 .ToListAsync();
             var qaLogs = await _shDbContext.SubmissionQaLogs
                 .AsNoTracking()
@@ -752,6 +758,39 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                                                })
                 .ToListAsync())
                 .ToLookup(f => f.SubmissionQaLogId, f => new SubmissionTimelineWrongFieldDto { DocumentFieldId = f.Id, Name = f.Name });
+
+            // ChangedDatas null = log có trước khi lưu chi tiết sửa; JSON hỏng cũng coi như null để timeline vẫn trả được
+            var changesByCheckLogId = new Dictionary<int, List<SubmissionDataChange>?>();
+            foreach (var log in checkLogs)
+            {
+                try
+                {
+                    changesByCheckLogId[log.Id] = log.ChangedDatas == null
+                        ? null
+                        : JsonSerializer.Deserialize<List<SubmissionDataChange>>(log.ChangedDatas, JsonSerializerOptions.Web);
+                }
+                catch (JsonException ex)
+                {
+                    _logger.LogWarning(ex, $"{nameof(FindTimeline)}, ChangedDatas hỏng, submissionLogId={log.Id}");
+                    changesByCheckLogId[log.Id] = null;
+                }
+            }
+            var changedFieldIds = changesByCheckLogId.Values
+                .SelectMany(changes => changes ?? [])
+                .Select(change => change.DocumentFieldId)
+                .Distinct()
+                .ToList();
+            var changedFieldById = await _shDbContext.DocumentFields
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .Where(d => changedFieldIds.Contains(d.Id))
+                .Select(d => new
+                {
+                    d.Id,
+                    d.OrderListView,
+                    Name = d.Deleted ? d.Name + SubmissionConst.DELETED_FIELD_NAME_SUFFIX : d.Name,
+                })
+                .ToDictionaryAsync(d => d.Id);
 
             var entryUserIdByQaLogId = await QueryQaLogEntryUsers(_shDbContext.SubmissionQaLogs.Where(l => l.SubmissionId == submissionId))
                 .ToDictionaryAsync(e => e.QaLogId, e => e.EntryUserId);
@@ -779,6 +818,18 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 NewStatusCheck = l.NewStatus,
                 Note = l.Note,
                 ChangedDataCount = l.ChangedDataCount,
+                ChangedFields = changesByCheckLogId[l.Id]?
+                    .Where(change => changedFieldById.ContainsKey(change.DocumentFieldId))
+                    .OrderBy(change => changedFieldById[change.DocumentFieldId].OrderListView)
+                    .ThenBy(change => change.DocumentFieldId)
+                    .Select(change => new SubmissionTimelineChangedFieldDto
+                    {
+                        DocumentFieldId = change.DocumentFieldId,
+                        Name = changedFieldById[change.DocumentFieldId].Name,
+                        OldData = change.OldData,
+                        NewData = change.NewData,
+                    })
+                    .ToList(),
             });
             var qaEvents = qaLogs.Select(l =>
             {
