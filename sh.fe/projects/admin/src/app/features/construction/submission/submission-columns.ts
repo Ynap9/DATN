@@ -13,15 +13,18 @@ export const SUBMISSION_ACTIONS = {
 } as const;
 
 const CENTER_STYLE = 'text-align: center';
+const NOWRAP_STYLE = 'white-space: nowrap';
 const DATE_TIME_FORMAT = 'dd/MM/yyyy HH:mm';
+// Cột trường chưa cấu hình độ rộng: không để bảng ép còn vài chữ một dòng (Trích yếu cao 10 dòng)
+const FIELD_MIN_WIDTH = 180;
 
 // STT · Tên file (bấm để mở) · Hồ sơ · Hộp — chung hai bảng
 function leadingColumns(): IColumn[] {
     return [
         { header: 'STT', key: 'index', cellViewType: CellViewTypes.INDEX, locked: true, headerContainerStyle: 'width: 64px', cellStyle: CENTER_STYLE },
-        { header: 'Tên file', field: 'fileName', clickable: true, locked: true },
-        { header: 'Hồ sơ', field: 'profileRange' },
-        { header: 'Hộp', field: 'box' },
+        { header: 'Tên file', field: 'fileName', clickable: true, locked: true, cellStyle: NOWRAP_STYLE },
+        { header: 'Hồ sơ', field: 'profileRange', cellStyle: NOWRAP_STYLE },
+        { header: 'Hộp', field: 'box', cellStyle: NOWRAP_STYLE },
     ];
 }
 
@@ -47,7 +50,7 @@ export function buildCheckColumns(fieldColumns: ISubmissionColumn[], isQaEnabled
             key: `field-${column.documentFieldId}`,
             field: `fieldValues.${column.documentFieldId}`,
             locked: true,
-            headerContainerStyle: column.width ? `width: ${column.width}px` : undefined,
+            headerContainerStyle: column.width ? `width: ${column.width}px` : `min-width: ${FIELD_MIN_WIDTH}px`,
         })),
         { header: 'Kiểm', key: 'statusCheck', cellViewType: CellViewTypes.CUSTOM_COMP, customComponent: SubmissionCheckStatusCellComponent },
         ...(isQaEnabled ? [{ header: 'QA', key: 'statusQa', cellViewType: CellViewTypes.CUSTOM_COMP, customComponent: SubmissionQaStatusCellComponent }] : []),

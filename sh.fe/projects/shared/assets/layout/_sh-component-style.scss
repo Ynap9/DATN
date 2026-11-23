@@ -230,6 +230,11 @@ lib-calendar {
     }
 }
 
+// Nhãn trạng thái không gãy dòng khi cột bảng hẹp ("Đã kiểm" thành 2 dòng)
+.p-tag {
+    white-space: nowrap;
+}
+
 .p-menu-item-label {
     color: black !important;
 }
