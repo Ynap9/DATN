@@ -33,6 +33,7 @@ export const PermissionConstants = {
     FUNCTION_PROJECT_MEMBER_MANAGE: 'Function.Operation.ProjectMember.Manage',
     FUNCTION_PRICE_MANAGE_COMPANY: 'Function.Operation.Price.ManageCompany',
     FUNCTION_PRICE_MANAGE_ACTUAL: 'Function.Operation.Price.ManageActual',
+    FUNCTION_ASSIGNMENT_MANAGE: 'Function.Operation.Assignment.Manage',
     MENU_OPERATION_ASSIGNMENT: 'Menu.Operation.Assignment',
     MENU_AI_PROVIDER: 'Menu.Ai.Provider',
     MENU_AI_PROMPT_TEMPLATE: 'Menu.Ai.PromptTemplate',

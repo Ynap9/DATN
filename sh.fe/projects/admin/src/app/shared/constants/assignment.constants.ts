@@ -1,0 +1,26 @@
+// Vai trò giao việc = đúng tên role hệ thống BE (RoleConstants)
+export const ASSIGNMENT_ROLE = {
+    DATA: 'Data',
+    QA: 'QA',
+} as const;
+
+export type AssignmentRole = (typeof ASSIGNMENT_ROLE)[keyof typeof ASSIGNMENT_ROLE];
+
+// Khớp BE: ≤ 1000 hộp / hồ sơ mỗi lần giao
+export const ASSIGNMENT_ITEMS_MAX = 1000;
+export const ASSIGNMENT_TREE_PAGE_SIZE = 20;
+export const ASSIGNMENT_MEMBER_PAGE_SIZE = 20;
+
+// Mã lỗi BE (ErrorCodes) màn chia phiếu cần xử lý riêng
+export const ASSIGNMENT_ERROR_CODE = {
+    CONSTRUCTION_ERROR_QA_TICKET_TOO_LARGE: 329,
+    CONSTRUCTION_ERROR_QA_SAME_AS_ENTRY: 331,
+    OPERATION_ERROR_NOT_PROJECT_LEADER: 805,
+    OPERATION_ERROR_ASSIGNEE_NOT_MEMBER: 811,
+    OPERATION_ERROR_ASSIGNMENT_CONFLICT: 812,
+    OPERATION_ERROR_ASSIGNMENT_NODE_EMPTY: 813,
+    OPERATION_ERROR_PROJECT_CLOSED: 818,
+    OPERATION_ERROR_LEADER_FORBIDDEN_TARGET: 821,
+    OPERATION_ERROR_NOTHING_TO_ASSIGN: 824,
+    OPERATION_ERROR_TICKET_TOO_LARGE: 825,
+} as const;

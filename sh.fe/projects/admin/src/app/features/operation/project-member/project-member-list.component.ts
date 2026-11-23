@@ -1,7 +1,6 @@
-import { Component, DestroyRef, inject } from '@angular/core';
+import { Component, DestroyRef, inject, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl } from '@angular/forms';
-import { ShSelectComponent } from '@sh/ui';
 import { MenuItem } from 'primeng/api';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
@@ -9,10 +8,10 @@ import { PaginatorState } from 'primeng/paginator';
 import { debounceTime, finalize, forkJoin } from 'rxjs';
 import { IViewProjectPair } from '@/models/project.model';
 import { ProjectMemberService } from '@/services/project-member.service';
-import { ProjectService } from '@/services/project.service';
 import { BaseComponent } from '@/shared/base/base.component';
 import { DataTable } from '@/shared/components/data-table/data-table.component';
 import { PageHeader } from '@/shared/components/page-header/page-header.component';
+import { ProjectPairPicker } from '@/shared/components/project-pair-picker/project-pair-picker.component';
 import { StatusBadge } from '@/shared/components/status-badge/status-badge.component';
 import { CellViewTypes } from '@/shared/constants/data-table.constants';
 import { getProjectStatusBadge, PROJECT_STATUS } from '@/shared/constants/project.constants';
@@ -52,24 +51,22 @@ const MEMBER_TABS = [
 
 @Component({
     selector: 'app-project-member-list',
-    imports: [SharedImports, DataTable, PageHeader, StatusBadge, ShSelectComponent, IconFieldModule, InputIconModule],
+    imports: [SharedImports, DataTable, PageHeader, ProjectPairPicker, StatusBadge, IconFieldModule, InputIconModule],
     templateUrl: './project-member-list.component.html',
 })
 export class ProjectMemberListComponent extends BaseComponent {
-    private readonly _projectService = inject(ProjectService);
     private readonly _projectMemberService = inject(ProjectMemberService);
     private readonly _destroyRef = inject(DestroyRef);
+    private readonly _picker = viewChild(ProjectPairPicker);
 
     readonly breadcrumbs: MenuItem[] = [{ label: 'Vận hành' }, { label: 'Thành viên dự án' }];
     readonly tabs = MEMBER_TABS;
     readonly pageSize = MEMBER_PAGE_SIZE;
     readonly keyword = new FormControl('', { nonNullable: true });
 
-    // Chỉ các cặp người xem là Admin (màn chỉ dành cho Admin)
-    pairs: IViewProjectPair[] = [];
-    pairsLoaded = false;
-    projects: { projectId: number; projectName: string }[] = [];
-    documentTypes: IViewProjectPair[] = [];
+    // Chỉ các cặp người xem là Admin (màn chỉ dành cho Admin); null = picker chưa tải xong
+    readonly viewerRoles = [MEMBER_VIEWER_ADMIN];
+    pairs: IViewProjectPair[] | null = null;
     pair: IViewProjectPair | null = null;
     role = '';
     pageNumber = this.START_PAGE_NUMBER;
@@ -121,69 +118,21 @@ export class ProjectMemberListComponent extends BaseComponent {
             this.pageNumber = this.START_PAGE_NUMBER;
             this.load();
         });
-        this.loadPairs(() => {
-            this._activatedRoute.queryParamMap.pipe(takeUntilDestroyed(this._destroyRef)).subscribe(() => this.applySelection());
-        });
     }
 
-    // Lấy hết cặp dự án – loại tài liệu một lần, giữ cặp Admin; dự án khác nhau sắp theo tên
-    loadPairs(onLoaded?: () => void) {
-        this._projectService
-            .findPaging({ pageNumber: 1, pageSize: -1 })
-            .pipe(takeUntilDestroyed(this._destroyRef))
-            .subscribe((res) => {
-                if (!this.isResponseSucceed(res)) return;
-                this.pairs = res.data.items.filter((item) => item.viewerRole === MEMBER_VIEWER_ADMIN);
-                const projectNames = new Map(this.pairs.map((item) => [item.projectId, item.projectName]));
-                this.projects = [...projectNames]
-                    .map(([projectId, projectName]) => ({ projectId, projectName }))
-                    .sort((a, b) => a.projectName.localeCompare(b.projectName, 'vi'));
-                this.pairsLoaded = true;
-                if (onLoaded) {
-                    onLoaded();
-                } else {
-                    this.applySelection();
-                }
-            });
-    }
-
-    // Đọc cặp từ URL; thiếu / không còn trong danh sách thì ghi cặp đầu tiên lên URL (queryParamMap gọi lại hàm này)
-    applySelection() {
-        const params = this._activatedRoute.snapshot.queryParamMap;
-        const projectId = Number(params.get('projectId'));
-        const documentTypeId = Number(params.get('documentTypeId'));
-        const found = this.pairs.find((item) => item.projectId === projectId && item.documentTypeId === documentTypeId);
-        if (!found) {
-            this.pair = null;
+    // Picker phát cặp mới (đổi cặp → về tab Tất cả, trang 1) hoặc phát lại cặp cũ sau reload (giữ tab)
+    onPairChange(pair: IViewProjectPair | null) {
+        const isPairChanged = pair?.projectId !== this.pair?.projectId || pair?.documentTypeId !== this.pair?.documentTypeId;
+        this.pair = pair;
+        if (!pair) {
             this.rows = [];
-            if (this.pairs.length) {
-                const first = this.pairs.find((item) => item.projectId === this.projects[0].projectId)!;
-                this.selectPair(first.projectId, first.documentTypeId);
-            }
             return;
         }
-        const isPairChanged = found.projectId !== this.pair?.projectId || found.documentTypeId !== this.pair?.documentTypeId;
-        this.pair = found;
-        this.documentTypes = this.pairs.filter((item) => item.projectId === found.projectId);
         if (isPairChanged) {
             this.role = '';
             this.pageNumber = this.START_PAGE_NUMBER;
         }
         this.load();
-    }
-
-    // sh-select phát lại giá trị lúc khởi tạo nên so với cặp đang chọn; đổi dự án thì lấy loại tài liệu đầu tiên
-    onProjectChange(projectId: number) {
-        if (projectId === this.pair?.projectId) return;
-        const first = this.pairs.find((item) => item.projectId === projectId);
-        if (first) {
-            this.selectPair(projectId, first.documentTypeId);
-        }
-    }
-
-    onDocumentTypeChange(documentTypeId: number) {
-        if (documentTypeId === this.pair?.documentTypeId) return;
-        this.selectPair(this.pair!.projectId, documentTypeId);
     }
 
     selectTab(role: string) {
@@ -262,7 +211,7 @@ export class ProjectMemberListComponent extends BaseComponent {
     // 818 dự án vừa đóng / 805 vừa mất quyền → tải lại danh sách cặp; 806 thành viên không còn → tải lại bảng
     handleMemberError(code: number) {
         if (code === MEMBER_ERROR_CODE.OPERATION_ERROR_PROJECT_CLOSED || code === MEMBER_ERROR_CODE.OPERATION_ERROR_NOT_PROJECT_LEADER) {
-            this.loadPairs();
+            this._picker()?.reload();
         } else if (code === MEMBER_ERROR_CODE.OPERATION_ERROR_MEMBER_NOT_FOUND) {
             this.load();
         }
@@ -303,9 +252,5 @@ export class ProjectMemberListComponent extends BaseComponent {
                     });
             },
         });
-    }
-
-    private selectPair(projectId: number, documentTypeId: number) {
-        this.router.navigate([], { relativeTo: this._activatedRoute, queryParams: { projectId, documentTypeId }, replaceUrl: true });
     }
 }

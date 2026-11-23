@@ -1,0 +1,144 @@
+<!-- Dialog không có header PrimeNG: tự vẽ tiêu đề + nút × để chặn đóng khi đang có tick. Màu hex vì --app-* không có trong dialog -->
+<div class="flex flex-col gap-4 pt-5 text-[#16201c]">
+    <div class="flex items-start justify-between gap-3">
+        <div>
+            <h2 class="m-0 text-lg font-semibold">{{ title }}</h2>
+            <p class="m-0 mt-1 text-[13px] text-[#5d6b66]">{{ subtitle }}</p>
+        </div>
+        <p-button icon="pi pi-times" [text]="true" [rounded]="true" severity="secondary" ariaLabel="Đóng" (onClick)="close()" />
+    </div>
+
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-4">
+            <p-iconfield class="w-64">
+                <p-inputicon class="pi pi-search" />
+                <input pInputText class="w-full" placeholder="Hộp / hồ sơ" [formControl]="keyword" />
+            </p-iconfield>
+            <label class="flex cursor-pointer items-center gap-2 text-[13px]">
+                <input type="checkbox" class="h-4 w-4 cursor-pointer accent-[#0b7a63]" [checked]="onlyUnassigned"
+                    (change)="onOnlyUnassignedChange($any($event.target).checked)" />
+                Chỉ nút còn chưa giao
+            </label>
+        </div>
+        <span class="text-[13px] text-[#5d6b66]">
+            Đã chọn <b class="text-[#16201c]">{{ selection.size }}</b> nút · Chưa giao trong nút đã chọn <b class="text-[#16201c]">{{ selectedUnassigned }}</b>
+        </span>
+    </div>
+
+    <div class="overflow-hidden rounded-md border border-[#e4e8e6]">
+        <div class="max-h-[380px] overflow-auto">
+            <table class="w-full border-collapse text-[13px]">
+                <thead class="sticky top-0 z-[1] bg-[#f6f8f7] text-xs text-[#5d6b66]">
+                    <tr>
+                        <th class="px-3 py-2 text-left font-semibold">Hộp / hồ sơ</th>
+                        @if (isQa) {
+                            <th class="w-20 px-3 py-2 text-right font-semibold">Đã kiểm</th>
+                            <th class="w-20 px-3 py-2 text-right font-semibold">Chưa giao</th>
+                            <th class="w-28 px-3 py-2 text-right font-semibold">Còn đang nhập</th>
+                            <th class="w-44 px-3 py-2 text-left font-semibold">QA phụ trách</th>
+                        } @else {
+                            <th class="w-20 px-3 py-2 text-right font-semibold">Văn bản</th>
+                            <th class="w-20 px-3 py-2 text-right font-semibold">Chưa giao</th>
+                            <th class="w-60 px-3 py-2 text-left font-semibold">Người đang giữ</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (box of boxes; track box.box) {
+                        <ng-container *ngTemplateOutlet="nodeRow; context: { $implicit: box, boxNode: box, isProfile: false }" />
+                        @if (isExpanded(box.box)) {
+                            @if (isLoadingProfiles(box.box)) {
+                                <tr><td colspan="5" class="py-2 pl-14 text-[#8a958f]">Đang tải hồ sơ…</td></tr>
+                            } @else {
+                                @for (profile of getProfiles(box.box); track profile.profileRange) {
+                                    <ng-container *ngTemplateOutlet="nodeRow; context: { $implicit: profile, boxNode: box, isProfile: true }" />
+                                } @empty {
+                                    <tr><td colspan="5" class="py-2 pl-14 text-[#8a958f]">Không có hồ sơ</td></tr>
+                                }
+                            }
+                        }
+                    } @empty {
+                        <tr>
+                            <td colspan="5" class="py-8 text-center text-[#8a958f]">
+                                {{ loadingTree ? 'Đang tải…' : onlyUnassigned ? 'Không còn hộp / hồ sơ chưa giao' : 'Không có hộp / hồ sơ' }}
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="flex flex-wrap items-center justify-between gap-2 border-t border-[#e4e8e6] bg-[#fafbfa] px-3 py-1">
+            <span class="text-xs text-[#5d6b66]">{{ boxRangeText }}</span>
+            @if (totalBoxes > treePageSize) {
+                <p-paginator [first]="(boxPage - 1) * treePageSize" [rows]="treePageSize" [totalRecords]="totalBoxes" [showFirstLastIcon]="false"
+                    styleClass="!bg-transparent !p-0" (onPageChange)="onBoxPageChange($event)" />
+            }
+        </div>
+    </div>
+
+    @if (preview) {
+        <div class="flex flex-col gap-2 rounded-md border p-3 text-[13px]"
+            [class]="preview.canSave ? 'border-[#cfe7df] bg-[#eef7f3]' : 'border-[#f1c9c4] bg-[#fdf0ee]'">
+            <div class="flex flex-wrap gap-x-6 gap-y-1">
+                @for (metric of previewMetrics; track metric.label) {
+                    <span>
+                        {{ metric.label }}:
+                        <b [ngClass]="{ 'text-[#b3261e]': metric.danger && metric.value > 0 }">{{ metric.value }}</b>
+                    </span>
+                }
+            </div>
+            @for (warning of preview.warnings; track $index) {
+                <div class="text-[#8a5a12]">⚠ {{ warning }}</div>
+            }
+            @if (!preview.canSave) {
+                <div class="font-semibold text-[#b3261e]">Không giao được:</div>
+                @for (reason of preview.blockReasons; track $index) {
+                    <div class="text-[#b3261e]">• {{ reason }}</div>
+                }
+                @for (conflict of preview.conflicts; track $index) {
+                    <div class="text-[#b3261e]">• {{ getConflictText(conflict) }}</div>
+                }
+                <div class="text-[#5d6b66]">Bỏ chọn các nút này, hoặc chuyển / thu hồi phiếu của người đó trước.</div>
+            }
+        </div>
+    }
+
+    <div class="flex justify-end gap-2 border-t border-[#e4e8e6] pt-4">
+        <p-button label="Đóng" severity="secondary" [outlined]="true" (onClick)="close()" />
+        <p-button label="Xem trước" [outlined]="true" [disabled]="!selection.size" [loading]="previewing" (onClick)="runPreview()" />
+        <p-button [label]="isQa ? 'Giao phụ trách' : 'Giao phiếu'" [disabled]="!canAssign" [loading]="assigning" (onClick)="assign()" />
+    </div>
+</div>
+
+<!-- Một dòng cây: hộp (bấm mũi tên mở hồ sơ) hoặc hồ sơ (thụt vào) -->
+<ng-template #nodeRow let-node let-boxNode="boxNode" let-isProfile="isProfile">
+    <tr class="border-t border-[#eef1ef] hover:bg-[#fafbfa]">
+        <td class="px-3 py-2">
+            <div class="flex items-center gap-2" [class.pl-7]="isProfile">
+                @if (!isProfile) {
+                    <button type="button" class="flex h-5 w-5 cursor-pointer items-center justify-center rounded border-0 bg-transparent p-0 text-[#5d6b66]"
+                        [attr.aria-label]="(isExpanded(node.box) ? 'Thu ' : 'Mở ') + getBoxLabel(node.box)" (click)="toggleExpand(node)">
+                        <i class="pi text-xs" [class]="isExpanded(node.box) ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+                    </button>
+                    <input #boxCheck type="checkbox" class="h-4 w-4 cursor-pointer accent-[#0b7a63]" [attr.aria-label]="'Chọn ' + getBoxLabel(node.box)"
+                        [checked]="getBoxState(node.box) === 'checked'" [indeterminate]="getBoxState(node.box) === 'partial'"
+                        (change)="toggleBox(node, boxCheck)" />
+                    <span class="font-semibold">{{ getBoxLabel(node.box) }}</span>
+                } @else {
+                    <input #profileCheck type="checkbox" class="h-4 w-4 cursor-pointer accent-[#0b7a63]"
+                        [attr.aria-label]="'Chọn ' + getBoxLabel(boxNode.box) + ' › ' + getProfileLabel(node.profileRange)" [checked]="isProfileChecked(boxNode.box, node.profileRange)"
+                        (change)="toggleProfile(boxNode, node, profileCheck)" />
+                    <span>{{ getProfileLabel(node.profileRange) }}</span>
+                }
+            </div>
+        </td>
+        <td class="px-3 py-2 text-right">{{ node.total }}</td>
+        <td class="px-3 py-2 text-right" [ngClass]="{ 'text-[#8a958f]': !node.unassigned }">{{ node.unassigned }}</td>
+        @if (isQa) {
+            <td class="px-3 py-2 text-right">{{ node.notChecked }}</td>
+            <td class="px-3 py-2">{{ node.ownerFullName || '—' }}</td>
+        } @else {
+            <td class="px-3 py-2 text-[#5d6b66]">{{ getHoldersText(node) }}</td>
+        }
+    </tr>
+</ng-template>

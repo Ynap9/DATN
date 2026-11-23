@@ -1,0 +1,61 @@
+<app-page-header title="Chia phiếu" [breadcrumbs]="breadcrumbs">
+    <app-project-pair-picker [viewerRoles]="viewerRoles" (pairsLoaded)="pairs = $event" (pairChange)="onPairChange($event)" />
+</app-page-header>
+
+@if (!pair) {
+    <div class="flex flex-col items-center gap-3 py-12">
+        <span class="text-muted-color">Chọn dự án và loại tài liệu</span>
+    </div>
+} @else {
+    <div class="flex flex-col gap-4">
+        <div class="flex items-start gap-2 rounded-md border border-[#cfe3f5] bg-[#e8f0f8] p-3 text-[13px] text-[#1d4580]">
+            <i class="pi pi-info-circle mt-0.5"></i>
+            <span>{{ guide }}</span>
+        </div>
+
+        @if (isClosed) {
+            <div class="flex items-start gap-2 rounded-md border border-gray-200 bg-gray-50 p-3 text-[13px]">
+                <i class="pi pi-lock mt-0.5 text-base text-gray-500"></i>
+                <span>Dự án đã xong / hết hạn — chỉ xem, không chia phiếu.</span>
+            </div>
+        }
+
+        @if (canViewMembers) {
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex gap-1 rounded-lg bg-[#f3f5f4] p-[3px]" role="tablist">
+                        @for (tab of roleTabs; track tab.key) {
+                            <button type="button" role="tab" [attr.aria-selected]="role === tab.key"
+                                class="inline-flex h-7 cursor-pointer items-center rounded-md border-0 px-3 text-[13px] font-semibold"
+                                [class]="role === tab.key ? 'bg-white text-[var(--app-ink)] shadow-sm' : 'bg-transparent text-[var(--app-muted)]'"
+                                (click)="selectTab(tab.key)">
+                                {{ tab.label }}
+                            </button>
+                        }
+                    </div>
+                    <sh-select class="w-full sm:w-48" [options]="activeOptions" optionLabel="label" optionValue="value" [ngModel]="activeFilter"
+                        (ngModelChange)="onActiveChange($event)" />
+                </div>
+                <p-iconfield class="w-full sm:w-72">
+                    <p-inputicon class="pi pi-search" />
+                    <input pInputText class="w-full" placeholder="Tài khoản / họ tên" [formControl]="keyword" />
+                </p-iconfield>
+            </div>
+        }
+
+        <div>
+            <app-data-table tableKey="operation-assignment-member" [columns]="columns" [data]="rows" [loading]="loading" [pageNumber]="pageNumber"
+                [pageSize]="pageSize" [rowsPerPageOptions]="[pageSize]" [total]="totalRecords" [paginator]="canViewMembers"
+                (pageChange)="onPageChange($event)" (action)="onAction($event)">
+                @if (!canViewMembers) {
+                    <span tableEmpty>Cần quyền Quản lý thành viên dự án để xem danh sách người. Liên hệ Admin.</span>
+                }
+            </app-data-table>
+            @if (canViewMembers) {
+                <div class="border-t border-[var(--app-line)] bg-[#fafbfa] px-4 py-2.5 text-xs text-[var(--app-muted)]">
+                    {{ totalRecords }} thành viên{{ isLeaderView ? ' · Bạn chỉ thấy người mình quản lý' : '' }}
+                </div>
+            }
+        </div>
+    </div>
+}
