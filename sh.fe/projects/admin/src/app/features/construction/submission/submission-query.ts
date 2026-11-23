@@ -9,6 +9,9 @@ export type SubmissionQuery = Partial<Omit<ISubmissionFilter, 'projectId' | 'doc
     view?: SubmissionView;
 };
 
+// Tên metadata màn danh sách gửi sang màn Nhập liệu / QA để hiện ở thanh trên; chỉ để hiển thị nên không nằm trong SubmissionQuery
+export const DOCUMENT_TYPE_NAME_PARAM = 'documentTypeName';
+
 const NUMBER_PARAMS = ['statusCheck', 'statusQa', 'documentFieldId1', 'documentFieldId2', 'pageNumber', 'pageSize'];
 const BOOLEAN_PARAMS = ['isEmpty1', 'isEmpty2'];
 const STRING_PARAMS = ['keyword', 'fieldValue1', 'fieldValue2', 'view'];
