@@ -43,7 +43,7 @@ import { IColumn, ITableAction, ITableEvent } from '@/shared/models/data-table.m
 import { IBaseResponse } from '@/shared/models/request-paging.base.models';
 import { buildCheckColumns, buildQaColumns, SUBMISSION_ACTIONS, SubmissionRow } from './submission-columns';
 import { openSubmissionHistory } from './submission-history-dialog/submission-history-dialog.component';
-import { readSubmissionQuery, SubmissionQuery } from './submission-query';
+import { DOCUMENT_TYPE_NAME_PARAM, readSubmissionQuery, SubmissionQuery } from './submission-query';
 
 const COUNT_PAGE = { pageNumber: 1, pageSize: 1 };
 const SEARCH_DEBOUNCE_MS = 400;
@@ -286,10 +286,15 @@ export class SubmissionListComponent extends BaseComponent {
         this.setQuery({ ...patch, keyword: undefined });
     }
 
-    // Sang màn Nhập liệu / QA kèm bộ lọc + tab đang chọn (bỏ trang, giữ view để nút ← về đúng chế độ)
+    // Sang màn Nhập liệu / QA kèm bộ lọc + tab đang chọn (bỏ trang, giữ view để nút ← về đúng chế độ) và tên metadata cho thanh trên
     private openSubmission(type: string, submissionId: number) {
         const { pageNumber, pageSize, ...filter } = this.query;
-        const queryParams = { ...filter, statusCheck: this.activeTab.statusCheck, statusQa: this.activeTab.statusQa };
+        const queryParams = {
+            ...filter,
+            statusCheck: this.activeTab.statusCheck,
+            statusQa: this.activeTab.statusQa,
+            [DOCUMENT_TYPE_NAME_PARAM]: this.documentTypeName || null,
+        };
         this.router.navigate([WORK_PATHS[type].replace(':submissionId', String(submissionId))], {
             relativeTo: this._activatedRoute,
             queryParams,

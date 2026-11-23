@@ -5,34 +5,51 @@
     </div>
 } @else if (project && submission) {
     <div class="flex h-[calc(100vh-var(--app-topbar-h)-3.25rem)] flex-col overflow-hidden rounded-md border border-gray-200 bg-white">
-        <div class="flex h-12 shrink-0 items-center gap-3 border-b border-gray-200 px-3">
-            <p-button icon="pi pi-arrow-left" severity="secondary" [text]="true" size="small" ariaLabel="Về danh sách" pTooltip="Về danh sách"
-                tooltipPosition="bottom" (onClick)="backToList()" />
-            <span class="min-w-0 truncate text-sm font-semibold" [pTooltip]="submission.fileName" tooltipPosition="bottom">{{ submission.fileName }}</span>
-            @if (locationText) {
-                <span class="shrink-0 text-xs text-gray-500">{{ locationText }}</span>
-            }
-            <p-tag [value]="checkStatus?.label ?? '—'" [severity]="checkStatus?.severity" [rounded]="true" />
-            <p-tag [value]="qaStatus?.label ?? '—'" [severity]="qaStatus?.severity" [rounded]="true" />
+        <!-- Cùng khuôn thanh trên màn Nhập liệu (53.15); thuộc tính PrimeNG tự đặt (padding, gap, cỡ chữ nút, độ rộng nút icon) cần ! mới đè được -->
+        <div class="flex h-14 shrink-0 items-center gap-3 border-b border-gray-200 pr-3 pl-2">
+            <button pButton type="button" icon="pi pi-arrow-left" severity="secondary" [text]="true" aria-label="Về danh sách" pTooltip="Về danh sách"
+                tooltipPosition="bottom" class="h-9 shrink-0 [&_.p-button-icon]:text-lg" (click)="backToList()"></button>
+            <div class="flex min-w-0 flex-col gap-0.5">
+                <div class="flex min-w-0 items-center gap-2">
+                    <span class="min-w-0 truncate text-sm font-semibold" [pTooltip]="submission.fileName" tooltipPosition="bottom">{{ submission.fileName }}</span>
+                    <p-tag [value]="checkStatus?.label ?? '—'" [severity]="checkStatus?.severity" [rounded]="true" />
+                    <p-tag [value]="qaStatus?.label ?? '—'" [severity]="qaStatus?.severity" [rounded]="true" />
+                </div>
+                @if (locationText) {
+                    <span class="truncate text-xs text-gray-500">{{ locationText }}</span>
+                }
+            </div>
 
             <div class="ml-auto flex shrink-0 items-center gap-2">
-                <p-button icon="pi pi-chevron-left" severity="secondary" [outlined]="true" size="small" ariaLabel="Văn bản trước"
-                    pTooltip="Văn bản trước (Ctrl + ↑)" tooltipPosition="bottom" [disabled]="isBusy || isEdge('previous')" (onClick)="navigate('previous')" />
-                <span class="text-sm tabular-nums">{{ submission.position ?? '—' }} / {{ submission.totalItems }}</span>
-                <p-button icon="pi pi-chevron-right" severity="secondary" [outlined]="true" size="small" ariaLabel="Văn bản sau"
-                    pTooltip="Văn bản sau (Ctrl + ↓)" tooltipPosition="bottom" [disabled]="isBusy || isEdge('next')" (onClick)="navigate('next')" />
+                <div class="flex h-8.5 items-center overflow-hidden rounded-lg border border-gray-200">
+                    <button pButton type="button" icon="pi pi-chevron-left" severity="secondary" [text]="true" aria-label="Văn bản trước"
+                        pTooltip="Văn bản trước (Ctrl + ↑)" tooltipPosition="bottom" class="h-8 w-8.5! rounded-none! [&_.p-button-icon]:text-base"
+                        [disabled]="isBusy || isEdge('previous')" (click)="navigate('previous')"></button>
+                    <span class="border-x border-gray-200 px-2.5 text-[13px] leading-8 text-gray-700 tabular-nums">
+                        {{ submission.position ?? '—' }} / {{ submission.totalItems }}
+                    </span>
+                    <button pButton type="button" icon="pi pi-chevron-right" severity="secondary" [text]="true" aria-label="Văn bản sau"
+                        pTooltip="Văn bản sau (Ctrl + ↓)" tooltipPosition="bottom" class="h-8 w-8.5! rounded-none! [&_.p-button-icon]:text-base"
+                        [disabled]="isBusy || isEdge('next')" (click)="navigate('next')"></button>
+                </div>
                 @if (isOutsideFilter) {
                     <p-tag value="Ngoài bộ lọc" severity="secondary" pTooltip="Văn bản không thuộc bộ lọc đang chọn; ◀ ▶ vẫn đi trong bộ lọc"
                         tooltipPosition="bottom" />
                 }
-                <p-button [icon]="layout.direction === 'horizontal' ? 'pi pi-arrows-v' : 'pi pi-arrows-h'" severity="secondary" [outlined]="true"
-                    size="small" [ariaLabel]="layout.direction === 'horizontal' ? 'Chia dọc' : 'Chia ngang'"
-                    [pTooltip]="layout.direction === 'horizontal' ? 'Chia dọc' : 'Chia ngang'" tooltipPosition="bottom" (onClick)="toggleDirection()" />
-                <p-button label="A−" severity="secondary" [outlined]="true" size="small" ariaLabel="Giảm cỡ chữ" pTooltip="Giảm cỡ chữ" tooltipPosition="bottom"
-                    [disabled]="layout.fontSize <= fontSizeMin" (onClick)="changeFontSize(-1)" />
-                <p-button label="A+" severity="secondary" [outlined]="true" size="small" ariaLabel="Tăng cỡ chữ" pTooltip="Tăng cỡ chữ" tooltipPosition="bottom"
-                    [disabled]="layout.fontSize >= fontSizeMax" (onClick)="changeFontSize(1)" />
-                <p-button label="Lịch sử" icon="pi pi-history" severity="secondary" [outlined]="true" size="small" (onClick)="openHistory()" />
+
+                <span class="mx-1 h-5 w-px bg-gray-200"></span>
+                <button pButton type="button" [icon]="layout.direction === 'horizontal' ? 'pi pi-arrows-v' : 'pi pi-arrows-h'" severity="secondary"
+                    [text]="true" [attr.aria-label]="layout.direction === 'horizontal' ? 'Chia dọc' : 'Chia ngang'"
+                    [pTooltip]="layout.direction === 'horizontal' ? 'Chia dọc' : 'Chia ngang'" tooltipPosition="bottom"
+                    class="h-8.5 w-8.5! [&_.p-button-icon]:text-[17px]" (click)="toggleDirection()"></button>
+                <button pButton type="button" label="A−" severity="secondary" [text]="true" aria-label="Giảm cỡ chữ" pTooltip="Giảm cỡ chữ"
+                    tooltipPosition="bottom" class="h-8.5 px-2! text-[13px]!" [disabled]="layout.fontSize <= fontSizeMin"
+                    (click)="changeFontSize(-1)"></button>
+                <button pButton type="button" label="A+" severity="secondary" [text]="true" aria-label="Tăng cỡ chữ" pTooltip="Tăng cỡ chữ"
+                    tooltipPosition="bottom" class="h-8.5 px-2! text-[13px]!" [disabled]="layout.fontSize >= fontSizeMax"
+                    (click)="changeFontSize(1)"></button>
+                <button pButton type="button" label="Lịch sử" icon="pi pi-history" severity="secondary" [text]="true"
+                    class="h-8.5 gap-1.5! px-2.5! text-[13px]! [&_.p-button-icon]:text-base" (click)="openHistory()"></button>
             </div>
         </div>
 
