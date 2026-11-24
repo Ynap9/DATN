@@ -620,6 +620,51 @@ namespace sh.be.api.Controllers.Module.Construction
             }
         }
 
+        [HttpGet("export-sheet/sheet-names")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_EXPORT)]
+        public async Task<ApiResponse> GetExportSheetNames([FromQuery] GetExportSheetNamesDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.GetExportSheetNames(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPost("export-sheet/job")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_EXPORT)]
+        public async Task<ApiResponse> CreateExportSheetJob([FromQuery] ExportSheetSubmissionDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.CreateExportSheetJob(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("export-sheet/job/{jobId}")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_EXPORT)]
+        public async Task<ApiResponse> FindExportSheetJob([FromRoute] string jobId)
+        {
+            try
+            {
+                var data = await _submissionService.FindExportSheetJob(jobId);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
         [HttpGet("proxy-file")]
         [Permission(PermissionConstants.FUNCTION_SUBMISSION_VIEW)]
         public async Task<IActionResult> ProxyFile([FromQuery] string url)

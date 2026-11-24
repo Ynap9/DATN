@@ -49,5 +49,9 @@ namespace sh.be.applications.Module.Construction.Interfaces.Services
         Task<ExportFileDto> ExportExcelFromJob(ExportSubmissionDto dto);
         Task<ViewSubmissionExportJobDto> CreateExportJob(ExportSubmissionDto dto);
         Task<ViewSubmissionExportJobDto> FindExportJob(string jobId);
+        Task<List<string>> GetExportSheetNames(GetExportSheetNamesDto dto);
+        Task<ViewSubmissionExportSheetJobDto> CreateExportSheetJob(ExportSheetSubmissionDto dto);
+        Task<ViewSubmissionExportSheetJobDto> FindExportSheetJob(string jobId);
+        Task ExportSheetFromJob(ExportSheetSubmissionDto dto);
     }
 }

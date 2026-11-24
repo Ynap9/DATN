@@ -66,7 +66,7 @@ namespace sh.be.shared.HttpRequest.Error
             { ErrorCodes.ConstructionErrorProjectExpired, "Dự án đã hết hạn, không được thao tác hồ sơ" },
             { ErrorCodes.ConstructionErrorQaWrongFieldRequired, "Đánh giá không đạt phải chọn ít nhất một trường sai" },
             { ErrorCodes.ConstructionErrorSubmissionCheckedNotDeletable, "Không được xoá hồ sơ đã kiểm tra" },
-            { ErrorCodes.ConstructionErrorExportJobNotFound, "Không tìm thấy yêu cầu xuất Excel hoặc yêu cầu đã hết hạn" },
+            { ErrorCodes.ConstructionErrorExportJobNotFound, "Không tìm thấy yêu cầu xuất dữ liệu hoặc yêu cầu đã hết hạn" },
             { ErrorCodes.ConstructionErrorQaTicketNotFound, "Không tìm thấy phiếu QA" },
             { ErrorCodes.ConstructionErrorQaNoSubmissionToAssign, "Không có văn bản phù hợp để giao QA" },
             { ErrorCodes.ConstructionErrorQaTicketTooLarge, "Một phiếu QA tối đa 5000 văn bản" },

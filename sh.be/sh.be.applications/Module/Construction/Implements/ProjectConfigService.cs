@@ -117,6 +117,22 @@ namespace sh.be.applications.Module.Construction.Implements
             await _unitOfWork.SaveChangesAsync();
         }
 
+        // Tài khoản Gmail đã kết nối để tạo / sửa / ghi Google Sheet; thiếu cấu hình hoặc chưa kết nối thì 304
+        public async Task<SpreadsheetAccountDto> GetSpreadsheetAccount()
+        {
+            _logger.LogInformation($"{nameof(GetSpreadsheetAccount)}");
+            var values = await _projectConfigDomainService.GetRequiredValuesAsync(ProjectConfigConst.GOOGLE_CLIENT_ID,
+                ProjectConfigConst.GOOGLE_CLIENT_SECRET, ProjectConfigConst.GOOGLE_REFRESH_TOKEN, ProjectConfigConst.GOOGLE_FOLDER_ID);
+
+            return new SpreadsheetAccountDto
+            {
+                ClientId = values[ProjectConfigConst.GOOGLE_CLIENT_ID],
+                ClientSecret = values[ProjectConfigConst.GOOGLE_CLIENT_SECRET],
+                RefreshToken = values[ProjectConfigConst.GOOGLE_REFRESH_TOKEN],
+                FolderId = values[ProjectConfigConst.GOOGLE_FOLDER_ID],
+            };
+        }
+
         private async Task<SpreadsheetAccountDto> GetGoogleClientAsync()
         {
             var values = await _projectConfigDomainService.GetRequiredValuesAsync(

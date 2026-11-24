@@ -32,7 +32,7 @@ namespace sh.be.applications.Module.Construction.Implements
         private readonly IProjectQuery _projectQuery;
         private readonly ProjectDomainService _projectDomainService;
         private readonly DocumentTypeDomainService _documentTypeDomainService;
-        private readonly ProjectConfigDomainService _projectConfigDomainService;
+        private readonly IProjectConfigService _projectConfigService;
         private readonly IGoogleSheetExternal _googleSheetExternal;
         private readonly IRoleRepository _roleRepository;
         private readonly IUserRepository _userRepository;
@@ -40,7 +40,7 @@ namespace sh.be.applications.Module.Construction.Implements
 
         public ProjectService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<ProjectService> logger, IRequestContext requestContext, TimeProvider timeProvider,
             IProjectRepository projectRepository, IDocumentFieldRepository documentFieldRepository, IProjectQuery projectQuery, ProjectDomainService projectDomainService,
-            DocumentTypeDomainService documentTypeDomainService, ProjectConfigDomainService projectConfigDomainService, IGoogleSheetExternal googleSheetExternal,
+            DocumentTypeDomainService documentTypeDomainService, IProjectConfigService projectConfigService, IGoogleSheetExternal googleSheetExternal,
             IRoleRepository roleRepository, IUserRepository userRepository, IPdfExternal pdfExternal
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
@@ -52,7 +52,7 @@ namespace sh.be.applications.Module.Construction.Implements
             _projectQuery = projectQuery;
             _projectDomainService = projectDomainService;
             _documentTypeDomainService = documentTypeDomainService;
-            _projectConfigDomainService = projectConfigDomainService;
+            _projectConfigService = projectConfigService;
             _googleSheetExternal = googleSheetExternal;
         }
 
@@ -296,7 +296,7 @@ namespace sh.be.applications.Module.Construction.Implements
             CreatedSpreadsheetDto? spreadsheet = null;
             if (dto.IsGoogleSheetEnabled)
             {
-                account = await GetSpreadsheetAccountAsync();
+                account = await _projectConfigService.GetSpreadsheetAccount();
                 spreadsheet = await _googleSheetExternal.CreateSpreadsheetAsync(account, project.Name, project.GoogleSheetName);
             }
 
@@ -357,7 +357,7 @@ namespace sh.be.applications.Module.Construction.Implements
             SpreadsheetAccountDto? renamedAccount = null;
             if (project.Name != oldName && project.HasGoogleSheet())
             {
-                renamedAccount = await GetSpreadsheetAccountAsync();
+                renamedAccount = await _projectConfigService.GetSpreadsheetAccount();
                 await _googleSheetExternal.RenameSpreadsheetAsync(renamedAccount, project.UrlGoogleSheetSync, project.Name);
             }
 
@@ -463,7 +463,7 @@ namespace sh.be.applications.Module.Construction.Implements
             }
             try
             {
-                var account = await GetSpreadsheetAccountAsync();
+                var account = await _projectConfigService.GetSpreadsheetAccount();
                 if (!await _googleSheetExternal.TryRenameSpreadsheetAsync(account, project.UrlGoogleSheetSync, $"{project.Name} (đã xoá)"))
                 {
                     _logger.LogWarning($"{nameof(DeleteCascade)}, id={id}, không đổi tên được Google Sheet {project.UrlGoogleSheetSync}");
@@ -482,20 +482,6 @@ namespace sh.be.applications.Module.Construction.Implements
 
             _projectRepository.AddDocumentTypes(projectDocumentTypes);
             _projectRepository.AddDocumentFields(projectDocumentTypes.SelectMany(pd => pd.AssignDocumentFields(documentFields, assignedBy, assignedDate)));
-        }
-
-        private async Task<SpreadsheetAccountDto> GetSpreadsheetAccountAsync()
-        {
-            var values = await _projectConfigDomainService.GetRequiredValuesAsync(ProjectConfigConst.GOOGLE_CLIENT_ID,
-                ProjectConfigConst.GOOGLE_CLIENT_SECRET, ProjectConfigConst.GOOGLE_REFRESH_TOKEN, ProjectConfigConst.GOOGLE_FOLDER_ID);
-
-            return new SpreadsheetAccountDto
-            {
-                ClientId = values[ProjectConfigConst.GOOGLE_CLIENT_ID],
-                ClientSecret = values[ProjectConfigConst.GOOGLE_CLIENT_SECRET],
-                RefreshToken = values[ProjectConfigConst.GOOGLE_REFRESH_TOKEN],
-                FolderId = values[ProjectConfigConst.GOOGLE_FOLDER_ID],
-            };
         }
 
         private static object ToAuditData(Project project, IEnumerable<int> documentTypeIds)

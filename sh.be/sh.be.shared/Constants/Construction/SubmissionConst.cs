@@ -39,6 +39,8 @@ namespace sh.be.shared.Constants.Construction
         public const int EXPORT_CLEANUP_LOOKBACK_DAYS = 7;
         public const string EXPORT_CLEANUP_RECURRING_JOB_ID = "submission-export-cleanup";
         public const string EXPORT_FAILED_MESSAGE = "Xuất Excel thất bại, hãy thử lại";
+        public const string EXPORT_SHEET_JOB_TYPE = "submission-export-sheet";
+        public const string EXPORT_SHEET_FAILED_MESSAGE = "Xuất Google Sheet thất bại, hãy thử lại";
         public const string EXPORT_COLUMN_FILE_URL = "fileUrl";
         public const string EXPORT_COLUMN_CHECK_STATUS = "checkStatus";
         public const string EXPORT_COLUMN_CHECKED_BY = "checkedBy";

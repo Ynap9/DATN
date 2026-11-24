@@ -211,6 +211,14 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
             }
             return SubmissionConst.EXPORT_COLUMNS.Where(column => requestedColumns.Contains(column, StringComparer.OrdinalIgnoreCase)).ToList();
         }
+
+        public static void EnsureExportStartRowValid(int startRow)
+        {
+            if (startRow < 1)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Dòng bắt đầu phải từ 1 trở lên");
+            }
+        }
     }
 
     public record SubmissionDataInput(int DocumentFieldId, string Data);
