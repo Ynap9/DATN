@@ -17,9 +17,9 @@ import { ProjectService } from '@/services/project.service';
     template: `
         <div class="flex flex-wrap items-end gap-4">
             <sh-select class="w-full sm:w-80" label="Dự án" [options]="projects" optionLabel="projectName" optionValue="projectId" [filter]="true"
-                placeholder="Chọn dự án" [ngModel]="pair?.projectId" (ngModelChange)="onProjectChange($event)" />
+                placeholder="Chọn dự án" [ngModel]="pair?.projectId" [disabled]="disabled()" (ngModelChange)="onProjectChange($event)" />
             <sh-select class="w-full sm:w-64" label="Loại tài liệu" [options]="documentTypes" optionLabel="documentTypeName" optionValue="documentTypeId"
-                placeholder="Chọn loại tài liệu" [ngModel]="pair?.documentTypeId" (ngModelChange)="onDocumentTypeChange($event)" />
+                placeholder="Chọn loại tài liệu" [ngModel]="pair?.documentTypeId" [disabled]="disabled()" (ngModelChange)="onDocumentTypeChange($event)" />
         </div>
     `,
 })
@@ -30,6 +30,8 @@ export class ProjectPairPicker {
     private readonly _destroyRef = inject(DestroyRef);
 
     viewerRoles = input.required<string[]>();
+    // Khoá 2 ô chọn (vd màn Nhập / Xuất đang import); mặc định mở
+    disabled = input(false);
     pairChange = output<IViewProjectPair | null>();
     pairsLoaded = output<IViewProjectPair[]>();
 

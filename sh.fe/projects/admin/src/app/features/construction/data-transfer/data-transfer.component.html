@@ -1,7 +1,7 @@
 <app-page-header title="Nhập / Xuất dữ liệu" [breadcrumbs]="breadcrumbs">
     <!-- Picker luôn render (nó tự tải danh sách cặp); không có cặp Admin / Leader nào thì ẩn và hiện câu báo -->
-    <app-project-pair-picker [class.hidden]="pairs && !pairs.length" [viewerRoles]="viewerRoles" (pairsLoaded)="pairs = $event"
-        (pairChange)="onPairChange($event)" />
+    <app-project-pair-picker [class.hidden]="pairs && !pairs.length" [viewerRoles]="viewerRoles" [disabled]="isImporting"
+        (pairsLoaded)="pairs = $event" (pairChange)="onPairChange($event)" />
 </app-page-header>
 
 @if (pairs && !pairs.length) {

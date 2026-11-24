@@ -69,6 +69,7 @@ export interface ICreateProject {
     startedAt: string | null;
     endedAt: string | null;
     isQaEnabled: boolean;
+    isGoogleSheetEnabled: boolean;
     documentTypeIds: number[];
 }
 

@@ -20,9 +20,9 @@ Task 48 (cập nhật 2026-11-23). Admin / Leader của dự án nhập văn b�
 
 ## Quyết định
 
-- Picker dùng chung với `viewerRoles = ['Admin', 'Leader']`, **không khoá picker** khi đang import (người dùng chốt, lệch 48.4).
-  Đổi cặp giữa chừng → wizard huỷ subscription (lượt tải file, chạy thử, import, hỏi job) và về bước 1; import Google có
-  thể vẫn chạy xong ở BE nhưng màn không hiện kết quả. Tab vẫn khoá khi đang import.
+- Picker dùng chung với `viewerRoles = ['Admin', 'Leader']`, **khoá picker + tab** khi đang import (`[disabled]="isImporting"`,
+  Task 54 bù đủ 48.4); import xong / lỗi thì `importingChange(false)` mở lại. Đổi cặp lúc khác (kể cả sửa URL tay khi đang
+  import) → wizard huỷ subscription (lượt tải file, chạy thử, import, hỏi job) và về bước 1.
 - Hai tab ẩn bằng `[class.hidden]` chứ không `@if`, để đổi tab không mất tiến độ wizard / danh sách file đã xuất.
 - Dự án `ACCEPTING` / `DONE` / `EXPIRED` → khung xám thay wizard; tab Xuất vẫn dùng được.
 - Upload: FE chặn đuôi khác `.xlsx` và > 20 MB trước khi gửi; `observe: 'events'` để hiện %.
@@ -49,6 +49,8 @@ Task 48 (cập nhật 2026-11-23). Admin / Leader của dự án nhập văn b�
 ## Chưa làm / chưa kiểm
 
 - Chưa kiểm trình duyệt (người dùng hẹn sau): upload thật, chạy thử / import cả 3 kiểu × 2 nguồn, job xuất, popup tải về.
+  Task 54 (2026-11-24) đã kiểm trên trình duyệt: khoá / mở picker + tab và nguồn Google khoá khi dự án không Sheet, nhưng
+  upload / chạy thử / job là response giả lập (MinIO đầy, `209`).
 - Import xong không tải lại số "Sẽ xuất" của tab Xuất (đổi lọc / đổi cặp mới cập nhật).
 
 > **Tiếp:** [12-man-cau-hinh.md](12-man-cau-hinh.md) — màn Cấu hình.

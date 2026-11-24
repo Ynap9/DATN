@@ -33,6 +33,9 @@ Quyết định và bẫy riêng của từng màn đã làm (cập nhật 2026-
 
 - Danh sách đọc `GET project/paging` — mỗi dòng một cặp dự án – metadata, số liệu theo vai trò người xem; dự án 0 metadata không hiện
   nên form bắt chọn ≥ 1 metadata. Sửa từ danh sách gọi `GET {id}` trước để có đủ `documentTypeIds`.
+- Form **Tạo** có 2 nút gạt chỉ đặt lúc tạo, mặc định bật: "Có kiểm tra QA" (`isQaEnabled`) và "Tạo Google Sheet đồng bộ"
+  (`isGoogleSheetEnabled`, Task 54). Tắt Sheet → dự án không có `urlGoogleSheetSync`, chỉ nhập bằng Excel, ẩn nút "Mở Google
+  Sheet"; bật mà chưa kết nối Google → BE trả `304`, form giữ nguyên dữ liệu. Form **Sửa** không có và không gửi 2 trường này.
 - Ngày gửi chuỗi local `YYYY-MM-DDT00:00:00` của `sh-calendar`, **không** `toISOString` (lệch UTC lùi 1 ngày).
 - Xoá dùng `DELETE admin/delete/{id}` (kèm dữ liệu), chỉ Admin / SuperAdmin có quyền Delete; không gọi `DELETE {id}` cũ.
 - Bấm tên / thẻ dòng mở thẳng danh sách văn bản đúng metadata của dòng (`project/:id/metadata/:documentTypeId`, Task 46) — màn chi tiết
