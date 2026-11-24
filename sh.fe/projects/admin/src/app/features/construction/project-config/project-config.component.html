@@ -1,0 +1,11 @@
+<app-page-header title="Cấu hình" [breadcrumbs]="breadcrumbs"
+    description="Tài khoản Google dùng để tạo, đổi tên, xoá Google Sheet của dự án và cách báo hạn dự án. Áp dụng cho mọi dự án." />
+
+@if (configs) {
+    <div class="mt-4 flex max-w-[880px] flex-col gap-4">
+        <app-google-connection-section [isConnected]="isGoogleConnected" [canConnect]="canConnect" [connecting]="connecting" [result]="googleResult"
+            (connect)="connectGoogle()" />
+        <app-google-app-section [configs]="configs" [isConnected]="isGoogleConnected" (saved)="loadConfigs()" />
+        <app-deadline-section [configs]="configs" (saved)="loadConfigs()" />
+    </div>
+}

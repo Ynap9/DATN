@@ -39,10 +39,13 @@ namespace sh.be.applications.Base
                 .ForMember(d => d.MyProgresses, o => o.Ignore())
                 .ForMember(d => d.ViewerRoles, o => o.Ignore());
             CreateMap<Project, GetListProjectDropDownDto>();
+            // Chỉ che secret đang có giá trị, để FE phân biệt "đã lưu" với dòng rỗng
             CreateMap<ProjectConfig, GetListProjectConfigDto>()
-                .ForMember(d => d.Value, o => o.MapFrom(s => ProjectConfigConst.SECRET_NAMES.Contains(s.Name) ? ProjectConfigConst.MASKED_VALUE : s.Value));
+                .ForMember(d => d.Value, o => o.MapFrom(s => ProjectConfigConst.SECRET_NAMES.Contains(s.Name) && !string.IsNullOrWhiteSpace(s.Value)
+                    ? ProjectConfigConst.MASKED_VALUE : s.Value));
             CreateMap<ProjectConfig, FindProjectConfigByIdDto>()
-                .ForMember(d => d.Value, o => o.MapFrom(s => ProjectConfigConst.SECRET_NAMES.Contains(s.Name) ? ProjectConfigConst.MASKED_VALUE : s.Value));
+                .ForMember(d => d.Value, o => o.MapFrom(s => ProjectConfigConst.SECRET_NAMES.Contains(s.Name) && !string.IsNullOrWhiteSpace(s.Value)
+                    ? ProjectConfigConst.MASKED_VALUE : s.Value));
             CreateMap<QaSamplingConfig, ViewQaSamplingConfigDto>()
                 .ForMember(d => d.IsDefault, o => o.MapFrom(s => s.Id == 0));
             CreateMap<Template, GetListTemplateDto>();

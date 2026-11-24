@@ -1,0 +1,33 @@
+<section class="flex flex-wrap items-center gap-4 rounded-xl border border-[var(--app-line)] bg-[var(--app-surface)] p-5" aria-labelledby="googleConnectionTitle">
+    @if (isConnected()) {
+        <div class="flex size-11 flex-none items-center justify-center rounded-[10px] bg-[var(--app-accent-soft)]">
+            <i class="pi pi-check text-xl! text-[var(--app-accent-700)]"></i>
+        </div>
+        <div class="flex flex-[1_1_320px] flex-col gap-0.5">
+            <h2 id="googleConnectionTitle" class="m-0! text-[15px]! font-semibold!">Đã kết nối tài khoản Google</h2>
+            <span class="text-[13px] text-[var(--app-muted)]">Hệ thống đã có quyền tạo sheet trong thư mục Drive. Kết nối lại khi đổi Gmail sở hữu thư mục.</span>
+        </div>
+    } @else {
+        <div class="flex size-11 flex-none items-center justify-center rounded-[10px] bg-[var(--app-amber-soft)]">
+            <i class="pi pi-exclamation-circle text-xl! text-[var(--app-amber)]"></i>
+        </div>
+        <div class="flex flex-[1_1_320px] flex-col gap-0.5">
+            <h2 id="googleConnectionTitle" class="m-0! text-[15px]! font-semibold!">Chưa kết nối tài khoản Google</h2>
+            <span class="text-[13px] text-[var(--app-muted)]">
+                Điền đủ 4 ô bên dưới, Lưu, rồi bấm Kết nối: trang chuyển sang Google, đăng nhập Gmail sở hữu thư mục Drive, bấm Cho phép, xong tự quay về đây.
+            </span>
+        </div>
+    }
+
+    @if (canConnect()) {
+        <p-button [label]="isConnected() ? 'Kết nối lại' : 'Kết nối tài khoản Google'" icon="pi pi-external-link" [loading]="connecting()"
+            (onClick)="connect.emit()" />
+    }
+
+    @if (result(); as result) {
+        <div class="basis-full rounded-lg border px-3 py-2.5 text-[13px]"
+            [class]="result.isSuccess ? 'border-[#b9e0d3] bg-[var(--app-accent-soft)] text-[var(--app-accent-700)]' : 'border-[#f3c7c7] bg-[var(--app-red-soft)] text-[var(--app-red)]'">
+            {{ result.message }}
+        </div>
+    }
+</section>

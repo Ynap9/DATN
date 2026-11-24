@@ -55,6 +55,7 @@ export const APP_MENU_ITEMS: MenuItem[] = [
             { label: 'Người dùng', icon: 'pi pi-user', routerLink: ['/admin/auth/user'], permission: PermissionConstants.MENU_AUTH },
             { label: 'Vai trò và phân quyền', icon: 'pi pi-shield', routerLink: ['/admin/auth/role'], permission: PermissionConstants.MENU_AUTH },
             { label: 'Nhật ký hệ thống', icon: 'pi pi-history', routerLink: ['/admin/core/audit-log'], permission: PermissionConstants.FUNCTION_AUDIT_LOG_VIEW },
+            { label: 'Cấu hình', icon: 'pi pi-cog', routerLink: ['/admin/construction/project-config'], permission: PermissionConstants.MENU_PROJECT_CONFIG },
         ],
     },
 ];

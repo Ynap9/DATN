@@ -1,13 +1,13 @@
 # Màn hình module construction
 
-> **Phần 7/11** · trước: [06-them-man-hinh.md](06-them-man-hinh.md) · mục lục: [README.md](README.md)
+> **Phần 7/12** · trước: [06-them-man-hinh.md](06-them-man-hinh.md) · mục lục: [README.md](README.md)
 
 Quyết định và bẫy riêng của từng màn đã làm (cập nhật 2026-11-21); cách thêm màn mới chung ở [06-them-man-hinh.md](06-them-man-hinh.md).
 
 ## Metadata
 
 **Metadata** (loại / trường văn bản), là mục menu riêng **Metadata** ngay dưới "Dự án" trong nhóm Hồ sơ thi công
-(`/admin/construction/metadata`, `.../metadata/:id`; hằng `METADATA_URL`, Task 39). Đường `project-config` để dành cho màn Cấu hình dự án sau này. Menu không có mục "Hồ sơ".
+(`/admin/construction/metadata`, `.../metadata/:id`; hằng `METADATA_URL`, Task 39). Màn Cấu hình (`/admin/construction/project-config`, Task 50) xem [12-man-cau-hinh.md](12-man-cau-hinh.md). Menu không có mục "Hồ sơ".
 
 - Danh sách có Số trường, Số dự án đang dùng, Ngày tạo; "Xóa" ẩn khi `projectCount > 0` (BE vẫn chặn `346`).
 - Chi tiết: tiêu đề có đường kẻ tách nội dung; 4 nút 32px ở đầu trang — Kiểm tra Google Sheet, Tải template (nền trắng viền xám, tải có

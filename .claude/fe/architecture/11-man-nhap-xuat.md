@@ -1,6 +1,6 @@
 # Màn Nhập / Xuất dữ liệu
 
-> **Phần 11/11** · trước: [10-man-operation.md](10-man-operation.md) · mục lục: [README.md](README.md)
+> **Phần 11/12** · trước: [10-man-operation.md](10-man-operation.md) · mục lục: [README.md](README.md)
 
 Task 48 (cập nhật 2026-11-23). Admin / Leader của dự án nhập văn bản từ Google Sheet của dự án hoặc file Excel
 (wizard 4 bước), và xuất Excel theo bộ lọc + cột thêm (job chạy nền). **Chưa kiểm trên trình duyệt**, mới build sạch.
@@ -51,4 +51,4 @@ Task 48 (cập nhật 2026-11-23). Admin / Leader của dự án nhập văn b�
 - Chưa kiểm trình duyệt (người dùng hẹn sau): upload thật, chạy thử / import cả 3 kiểu × 2 nguồn, job xuất, popup tải về.
 - Import xong không tải lại số "Sẽ xuất" của tab Xuất (đổi lọc / đổi cặp mới cập nhật).
 
-> **Tiếp:** hết bộ tài liệu — quay lại [README.md](README.md).
+> **Tiếp:** [12-man-cau-hinh.md](12-man-cau-hinh.md) — màn Cấu hình.

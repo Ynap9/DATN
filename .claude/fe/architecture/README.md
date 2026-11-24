@@ -70,6 +70,7 @@ URL FE `/admin/<module>/...` trùng tên module BE `api/v1/<module>/...` để t
 | [09-man-qa.md](09-man-qa.md) | Màn QA (đánh dấu trường Sai, Đạt / Trả lại, banner chỉ đọc, Lần trước sai) |
 | [10-man-operation.md](10-man-operation.md) | Màn module `operation`: Thành viên dự án (chỉ Admin, chọn cặp trên URL, Thêm / Sửa giá / Gỡ); Nhóm nhân viên (Tạo / Sửa / Xoá, nhóm lệch vai trò); Chia phiếu (cây hộp / hồ sơ, xem trước, giao); picker cặp dùng chung |
 | [11-man-nhap-xuat.md](11-man-nhap-xuat.md) | Màn Nhập / Xuất dữ liệu: wizard import Google Sheet / Excel (chạy thử, job nền), tab Xuất Excel chọn cột thêm |
+| [12-man-cau-hinh.md](12-man-cau-hinh.md) | Màn Cấu hình: kết nối Google (quay về `?google=`), ứng dụng Google (che secret, Đổi), hạn dự án; lưu từng dòng PUT / POST, 409 / 304 |
 
 ## Nguyên tắc không đổi
 

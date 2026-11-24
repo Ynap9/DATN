@@ -1,6 +1,6 @@
 # Màn module Operation
 
-> **Phần 10/11** · trước: [09-man-qa.md](09-man-qa.md) · mục lục: [README.md](README.md)
+> **Phần 10/12** · trước: [09-man-qa.md](09-man-qa.md) · mục lục: [README.md](README.md)
 
 Ba màn: Thành viên dự án (Task 47), Nhóm nhân viên (Task 49), Chia phiếu (Task 51), 2026-11-23. BE ở
 [../../be/nghiep-vu/21-thanh-vien-du-an.md](../../be/nghiep-vu/21-thanh-vien-du-an.md),

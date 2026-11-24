@@ -17,7 +17,8 @@ Google mà hệ thống dùng tạo, đổi tên, xoá Google Sheet của dự �
 | Lấy link xác thực Google | `GET api/construction/project-config/google-authorization-url` | `Function.Construction.ProjectConfig.Update` |
 | Google gọi lại sau khi đồng ý / huỷ (302 về màn Cấu hình) | `GET api/construction/project-config/google-callback?code=&state=&error=` | **không cần token** (`[AllowAnonymous]`) |
 
-Body tạo / sửa: `{ "name", "value", "description" }`.
+Body tạo / sửa: `{ "name", "value", "description" }`. Danh sách trả `{ id, name, value, description, createdDate, modifiedDate }`:
+`POST` chỉ ghi `createdDate`, nên dòng chưa sửa lần nào có `modifiedDate = null` (FE lấy `modifiedDate ?? createdDate`, Task 50).
 
 ## Các dòng cấu hình Google — `ProjectConfigConst`
 
@@ -35,7 +36,8 @@ mặc định `3`), `DeadlineMailEnabled` (`true` / `false`, mặc định `true
 ## Luật nghiệp vụ
 
 - `Name` bắt buộc, trim, **duy nhất** trong các dòng chưa xoá → trùng `409`, rỗng `400`. Xoá là xoá mềm; không tồn tại → `304`.
-- Giá trị bí mật trả ra API và ghi audit dạng `******`. Sửa mà gửi `value = "******"` cho dòng bí mật thì **giữ giá trị cũ**
+- Giá trị bí mật **đang có giá trị** trả ra API dạng `******`; rỗng / toàn khoảng trắng thì trả nguyên, để FE biết dòng có mà chưa
+  lưu secret / chưa kết nối (`MappingProfile`, Task 50). Audit luôn ghi `******`. Sửa mà gửi `value = "******"` cho dòng bí mật thì **giữ giá trị cũ**
   (`ProjectConfig.Update`), để FE gửi lại form không ghi đè secret.
 - Dùng cấu hình: `ProjectConfigDomainService.GetRequiredValuesAsync` — thiếu dòng hoặc `Value` rỗng → `304` "Thiếu cấu hình dự án: <tên>".
 - Audit `Tạo / Cập nhật / Xóa cấu hình dự án`, `Xác thực tài khoản Google cho cấu hình dự án`.
@@ -74,6 +76,10 @@ Ngày 2026-11-23 (Task 50A, API thật, 10/10): mọi ca đều `302` về `/adm
 `400`; `state` thật + `code` giả → câu `207`; `error=access_denied` (kể cả `state` giả) → "Bạn đã huỷ cấp quyền Google"; xoá tạm dòng
 `GoogleClientId` → "Thiếu cấu hình dự án: GoogleClientId", tạo lại đúng giá trị cũ. `GoogleRefreshToken` không đổi. Chưa kiểm đồng ý thật
 (`?google=success`).
+
+Ngày 2026-11-24 (Task 50 bước 0, API thật, 11/11): danh sách có `createdDate`; secret có giá trị vẫn `******` ở danh sách và `{id}`; đặt tạm
+`GoogleRefreshToken` rỗng / toàn khoảng trắng bằng SQL → trả nguyên; trả lại đúng giá trị cũ (so SHA-256), `modifiedDate` không đổi.
+Bước này sửa BE ngoài ranh giới "chỉ 50A" của spec Task 50, người dùng đã đồng ý.
 
 ## Giới hạn
 
