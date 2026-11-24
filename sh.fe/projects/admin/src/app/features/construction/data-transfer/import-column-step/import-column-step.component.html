@@ -1,7 +1,10 @@
 <div class="flex flex-col gap-4">
     <span class="text-[13px] text-[var(--app-muted)]">Chọn cột trên sheet. Các cột dữ liệu còn lại tự ghép theo “Tên cột import” của metadata.</span>
     @if (!canReadHeaders) {
-        <span class="text-[13px] text-[var(--app-muted)]">Không đọc được tên cột, hãy gõ đúng tên cột trên sheet.</span>
+        <div class="flex items-start gap-2 rounded-md border border-[var(--app-amber)] bg-[var(--app-amber-soft)] p-3 text-[13px]">
+            <i class="pi pi-exclamation-triangle mt-0.5 text-[var(--app-amber)]"></i>
+            <span>Không đọc được tên cột, hãy gõ đúng tên cột trên sheet.</span>
+        </div>
     }
 
     <div class="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
