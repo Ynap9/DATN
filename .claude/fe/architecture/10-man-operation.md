@@ -10,8 +10,7 @@ và [23-chia-phieu.md](../../be/nghiep-vu/23-chia-phieu.md).
 **Picker dùng chung** `shared/components/project-pair-picker` (`app-project-pair-picker`): tải mọi cặp một lần
 (`construction/project/paging?pageSize=-1`), giữ cặp có `viewerRole` trong input `viewerRoles`, nhớ cặp trên URL
 (`?projectId=&documentTypeId=`, merge với tham số lọc khác). Phát `pairsLoaded` (danh sách) và `pairChange` (cặp mới; `null` khi
-mất cặp). Input `disabled` (mặc định `false`) khoá 2 ô chọn, chỉ màn Nhập / Xuất dùng khi đang import. `reload()` tải lại
-danh sách và **luôn** phát lại cặp đang chọn với dữ liệu mới (vd sau `818` dự án vừa đóng).
+mất cặp). `reload()` tải lại danh sách và **luôn** phát lại cặp đang chọn với dữ liệu mới (vd sau `818` dự án vừa đóng).
 
 ## Thành viên dự án
 
