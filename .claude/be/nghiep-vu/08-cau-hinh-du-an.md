@@ -55,7 +55,8 @@ mặc định `3`), `DeadlineMailEnabled` (`true` / `false`, mặc định `true
 | Kết quả | Query thêm vào |
 |---|---|
 | Thành công | `?google=success` |
-| Google gửi `error` (bấm Huỷ…): không gọi service, không kiểm `state` vì không ghi gì | `?google=error&message=Bạn đã huỷ cấp quyền Google` |
+| Google gửi `error=access_denied` (bấm Huỷ, so không phân biệt hoa thường): không gọi service, không kiểm `state` vì không ghi gì | `?google=error&message=Bạn đã huỷ cấp quyền Google` |
+| Google gửi `error` khác (`invalid_scope`, `server_error`…, Task 54A): log cảnh báo kèm `error`, không gọi service | `?google=error&message=Kết nối Google thất bại, thử lại sau` (không đưa mã lỗi Google lên URL) |
 | Lỗi nghiệp vụ (`400` / `207` / `304`) | `?google=error&message=<câu lỗi>` (cắt 200 ký tự rồi mới `EscapeDataString`) |
 | Lỗi khác | Log lỗi, `?google=error&message=Kết nối Google thất bại, thử lại sau`, không đưa stack lên URL |
 
@@ -80,6 +81,9 @@ Ngày 2026-11-23 (Task 50A, API thật, 10/10): mọi ca đều `302` về `/adm
 Ngày 2026-11-24 (Task 50 bước 0, API thật, 11/11): danh sách có `createdDate`; secret có giá trị vẫn `******` ở danh sách và `{id}`; đặt tạm
 `GoogleRefreshToken` rỗng / toàn khoảng trắng bằng SQL → trả nguyên; trả lại đúng giá trị cũ (so SHA-256), `modifiedDate` không đổi.
 Bước này sửa BE ngoài ranh giới "chỉ 50A" của spec Task 50, người dùng đã đồng ý.
+
+Ngày 2026-11-24 (Task 54A, API thật): `error=access_denied` và `ACCESS_DENIED` → câu huỷ; `error=server_error` → "Kết nối Google thất bại,
+thử lại sau", log có `error=server_error`, URL không chứa mã lỗi.
 
 ## Giới hạn
 

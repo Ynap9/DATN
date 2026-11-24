@@ -17,6 +17,7 @@ Giá trị từng trường của hồ sơ nằm ở `construction.SubmissionDat
 | Xem file PDF của hồ sơ | `GET api/construction/submission/proxy-file?url=...` | `Function.Construction.Submission.View` |
 
 Ngoài key quyền, 12 API verify / import / tạo job chỉ cho Admin hoặc Leader đang hoạt động của dự án, kiểm đầu tiên → `337` (Task 25; `upload` không kiểm).
+Bốn API append / blank đọc Sheet của dự án: dự án tạo không kèm Sheet → `348` "Dự án không gắn Google Sheet, hãy nhập bằng file Excel" (Task 54A, kiểm đầu `ReadProjectGoogleSheetAsync`); Excel và overwrite (URL sheet ngoài) không đổi.
 
 FE luôn gọi `verify` → hiện số liệu → người dùng xác nhận → gọi import. Verify và import dùng **chung** hàm dựng kế hoạch
 (`SubmissionImportDomainService.Build...Plan`), nên số verify bằng đúng số import ghi (nếu sheet và DB không đổi giữa hai lần gọi).
@@ -144,7 +145,9 @@ dự án + loại văn bản thì chờ khoá 5 giây rồi Failed `310`, không
 
 ## Xem file — proxy
 
-`GET proxy-file?url=`: `url` phải là `FileUrlS3Object` của một hồ sơ (không thì `305`). BE tải bằng `HttpClient`
+`GET proxy-file?url=`: `url` phải là `FileUrlS3Object` của ít nhất một hồ sơ (không thì `305`; `url` rỗng bị model binding chặn `400`), và người gọi
+phải xem được **ít nhất một** hồ sơ đó theo luật xem chi tiết `EnsureCanViewAsync` (Admin, Leader có `ViewAllSubmission` của cặp, Data / QA
+đang giữ) — không thì `820` của hồ sơ đầu tiên (Task 54A). BE tải bằng `HttpClient`
 (`IFileDownloadExternal` → `HttpFileDownloadExternal`) và trả **stream** `application/pdf`, `Content-Disposition: inline`,
 `Cache-Control: private, max-age=300`. Link không phải http(s), lỗi mạng, HTTP lỗi hoặc `Content-Type` khác `application/pdf` /
 `application/octet-stream` → `315` (vẫn `ApiResponse` JSON, HTTP 200). FE kiểm `Content-Type` của response: JSON là lỗi.
@@ -158,23 +161,20 @@ dòng trống ở giữa → `IndexGoogleSheet` đúng dòng thật; blank thêm
 đếm, `CHECKED` bị bỏ qua / ghi được khi `overwriteChecked = true`, audit có giá trị cũ / mới, 0 thay đổi không ghi audit; lỗi `306`,
 `307` (sai tên cột, sai `columnImport`), `308` (kèm số dòng), `309`, `311`, `312`, `313` (cả verify), `314`; 2 append đồng thời
 200 dòng → một tạo 200, một chờ khoá rồi tạo 0, không trùng; proxy PDF → `%PDF` inline, link HTML → `315`, url ngoài hồ sơ → `305`;
-không token → `401`; Swagger nhóm `construction` đủ 7 API.
+không token → `401`; Swagger nhóm `construction` đủ 7 API. 2026-11-24 (Task 54A, `ZZTEST54A` đã dọn): `348` đúng câu ở append / blank verify;
+proxy: Data giữ → PDF, Data khác → `820`, Leader của cặp / Admin → PDF, file gắn 2 hồ sơ của 2 Data → cả hai PDF. Chưa kiểm import Excel (MinIO đầy, `209`).
 
 ## Giới hạn
 
 ⚠️ Chưa kiểm: thiếu quyền → `403`. Rollback đã kiểm bằng cách dừng API giữa lúc bulk insert (đã chèn 20.000 hồ sơ + 396.000 dữ liệu
-trong transaction): DB không còn hồ sơ, dữ liệu, audit nào của lần import đó.
+trong transaction): DB không còn hồ sơ, dữ liệu, audit nào của lần import đó. Lỗi `308` / `314` liệt kê **mọi** dòng lỗi (message rất dài).
 
 ⚠️ Sheet dự án do tài khoản OAuth tạo trong thư mục `GoogleFolderId`; reader dùng **service account**, nên thư mục / sheet phải share cho
 `client_email` của service account (người dùng tự share) — không thì `203`.
-
 ⚠️ Trường thêm vào loại văn bản **sau** khi gắn vào dự án không tự vào cấu hình `ProjectDocumentTypeDocumentField` (hành vi của
 [07-du-an.md](07-du-an.md)), nên import không thấy trường đó cho tới khi cấu hình dự án được cập nhật.
-
 ⚠️ `proxy-file` tìm `FileUrlS3Object` không có index (cột `nvarchar(1000)` vượt giới hạn khoá index) → quét bảng `Submission` mỗi lần
 xem file. Bảng lớn thì nên đổi sang tìm theo `Id` hồ sơ — đổi contract FE, hỏi trước. Chấp nhận `application/octet-stream` vì MinIO
 thường lưu PDF với kiểu này, nên file không phải PDF mà có kiểu đó vẫn lọt.
-
-⚠️ Thông báo lỗi `308` / `314` liệt kê **mọi** dòng lỗi; sheet lỗi hàng nghìn dòng cho message rất dài.
 
 > **Tiếp:** [12-ho-so-kiem-tra.md](12-ho-so-kiem-tra.md) — xem, lọc và kiểm tra hồ sơ sau khi import.

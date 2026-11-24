@@ -998,8 +998,10 @@ namespace sh.be.applications.Module.Construction.Implements
             return new OverwriteSheetSource(project, table, columns, mapping, columnImportIndex);
         }
 
+        // Đọc Google Sheet gắn với dự án; dự án không gắn Sheet → 348
         private Task<SheetTable> ReadProjectGoogleSheetAsync(Project project)
         {
+            project.EnsureGoogleSheetLinked();
             return _dataReaderExternal.ReadTableAsync(project.UrlGoogleSheetSync, project.GoogleSheetName);
         }
 

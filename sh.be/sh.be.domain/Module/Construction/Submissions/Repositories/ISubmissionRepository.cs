@@ -15,7 +15,7 @@ namespace sh.be.domain.Module.Construction.Submissions.Repositories
         void AddQaLog(SubmissionQaLog log);
         void AddQaLogFields(IEnumerable<SubmissionQaLogField> fields);
         Task LockImportAsync(int projectId, int documentTypeId);
-        Task<bool> ExistsByFileUrlAsync(string fileUrl);
+        Task<List<Submission>> GetByFileUrlAsync(string fileUrl);
         Task<List<ExistingSubmissionSnapshot>> GetSnapshotsAsync(int projectId, int documentTypeId);
         Task<List<SubmissionData>> GetDatasAsync(int projectId, int documentTypeId, IReadOnlyCollection<int> documentFieldIds);
         Task BulkInsertSubmissionsAsync(IList<Submission> submissions);

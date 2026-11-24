@@ -25,6 +25,7 @@ namespace sh.be.api.Controllers.Module.Construction
         private const int GoogleErrorMessageMaxLength = 200;
         private const string GoogleAuthorizationCanceledMessage = "Bạn đã huỷ cấp quyền Google";
         private const string GoogleAuthorizationFailedMessage = "Kết nối Google thất bại, thử lại sau";
+        private const string GoogleAccessDeniedError = "access_denied";
 
         private readonly IProjectConfigService _projectConfigService;
         private readonly AuthServerSettings _authServerSettings;
@@ -132,9 +133,15 @@ namespace sh.be.api.Controllers.Module.Construction
         [AllowAnonymous]
         public async Task<IActionResult> CompleteGoogleAuthorization([FromQuery] GoogleAuthorizationCallbackDto dto)
         {
+            // Chỉ access_denied là người dùng bấm Huỷ; lỗi khác của Google chỉ ghi log, không đưa mã lỗi lên URL
             if (!string.IsNullOrWhiteSpace(dto.Error))
             {
-                return RedirectToProjectConfig(GoogleAuthorizationCanceledMessage);
+                if (string.Equals(dto.Error, GoogleAccessDeniedError, StringComparison.OrdinalIgnoreCase))
+                {
+                    return RedirectToProjectConfig(GoogleAuthorizationCanceledMessage);
+                }
+                _logger.LogWarning($"{nameof(CompleteGoogleAuthorization)}, error={dto.Error}");
+                return RedirectToProjectConfig(GoogleAuthorizationFailedMessage);
             }
 
             try
