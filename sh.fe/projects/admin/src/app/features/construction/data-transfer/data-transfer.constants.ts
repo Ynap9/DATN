@@ -136,10 +136,29 @@ export function getVerifyView(kind: ImportKind, result: IVerifyImportResult): IV
 // Cột tick sẵn khi mở tab Xuất (48.16)
 export const EXPORT_DEFAULT_COLUMNS = ['checkStatus', 'checkedBy'];
 
-// Một dòng "File đã xuất": chỉ giữ trong phiên của trang, BE không có API liệt kê job (48.17)
+// Đích xuất của tab Xuất dữ liệu (56.2); thẻ chọn đích cùng khuôn thẻ nguồn ở bước 1 tab Nhập
+export const EXPORT_TARGET = {
+    EXCEL: 'excel',
+    SHEET: 'sheet',
+} as const;
+
+export type ExportTarget = (typeof EXPORT_TARGET)[keyof typeof EXPORT_TARGET];
+
+export const EXPORT_TARGET_OPTIONS: { value: ExportTarget; label: string; description: string; icon: string }[] = [
+    { value: EXPORT_TARGET.EXCEL, label: 'File Excel (.xlsx)', description: 'Tạo file chạy nền, tải về máy.', icon: 'pi pi-file-excel' },
+    { value: EXPORT_TARGET.SHEET, label: 'Google Sheet', description: 'Ghi vào một sheet có sẵn, thay dữ liệu từ dòng bắt đầu.', icon: 'pi pi-table' },
+];
+
+// Một dòng "Đã xuất": chỉ giữ trong phiên của trang, BE không có API liệt kê job (48.17, 56.11)
+// Dòng Excel dùng fileName / downloadUrl / readyAt; dòng Sheet dùng sheetUrl / sheetName / startRow / total (fileName để '')
 export interface IExportJobRow {
     jobId: string;
+    target: ExportTarget;
     fileName: string;
+    sheetUrl?: string;
+    sheetName?: string;
+    startRow?: number;
+    total?: number;
     status: number;
     downloadUrl: string | null;
     errorMessage: string | null;

@@ -1,7 +1,51 @@
 <div class="flex flex-wrap items-start gap-[18px]">
-    <!-- Trái: lọc + cột thêm -->
+    <!-- Trái: đích xuất + lọc + cột thêm -->
     <div class="flex min-w-0 flex-[999_1_560px] flex-col rounded-[14px] border border-[var(--app-line)] bg-white shadow-sm">
-        <div class="border-b border-[#eef1ef] px-6 py-4 text-base font-bold">Văn bản cần xuất</div>
+        <div class="border-b border-[#eef1ef] px-6 py-4 text-base font-bold">Xuất ra</div>
+        <div class="flex flex-col gap-4 px-6 py-5">
+            <div class="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3.5">
+                @for (option of targetOptions; track option.value) {
+                    @let selected = target === option.value;
+                    <button type="button" [attr.aria-pressed]="selected" class="flex cursor-pointer items-start gap-3 rounded-xl px-4 py-3.5 text-left"
+                        [class]="selected ? 'border-[1.5px] border-[var(--app-accent)] bg-[#f3faf7]' : 'border border-[var(--app-line-strong)] bg-white'"
+                        (click)="selectTarget(option.value)">
+                        <span class="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[9px]"
+                            [class]="selected ? 'bg-[var(--app-accent)] text-white' : 'bg-[#eef1ef] text-[#3f4b47]'">
+                            <i [class]="option.icon"></i>
+                        </span>
+                        <span class="flex flex-col">
+                            <span class="text-sm font-bold">{{ option.label }}</span>
+                            <span class="text-[13px] text-[var(--app-muted)]">{{ option.description }}</span>
+                        </span>
+                    </button>
+                }
+            </div>
+
+            @if (target === targetKey.SHEET) {
+                <div class="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-x-4 gap-y-3.5">
+                    <div class="col-span-full flex flex-col gap-1">
+                        <label for="exportSheetUrl" class="text-xs font-semibold text-[var(--app-muted)]">Link Google Sheet *</label>
+                        <div class="flex items-center gap-2">
+                            <input pInputText id="exportSheetUrl" class="min-w-0 flex-1" [class]="sheetNamesError ? 'border-[var(--app-red)]!' : ''" [ngModel]="sheetUrl"
+                                (ngModelChange)="onSheetUrlChange($event)" />
+                            <p-button label="Lấy danh sách sheet" severity="secondary" [outlined]="true" [loading]="isLoadingSheetNames" (onClick)="loadSheetNames()" />
+                        </div>
+                        @if (sheetNamesError) {
+                            <span class="text-xs text-[var(--app-red)]">{{ sheetNamesError }}</span>
+                        }
+                    </div>
+                    <sh-select label="Tên sheet" [required]="true" [options]="sheetNames" placeholder="Bấm &quot;Lấy danh sách sheet&quot; trước" [disabled]="!sheetNames.length"
+                        [(ngModel)]="sheetName" />
+                    <sh-input-number label="Dòng bắt đầu" [required]="true" [min]="1" [useGrouping]="false" [(ngModel)]="startRow" />
+                    <span class="col-span-full text-xs text-[var(--app-muted)]">
+                        Dòng bắt đầu là dòng tiêu đề cột, dữ liệu ghi ngay dưới. Mọi ô từ dòng này trở xuống bị xoá trước khi ghi; các dòng phía trên giữ nguyên. Sheet phải chia sẻ quyền
+                        Chỉnh sửa cho tài khoản Google đã kết nối ở màn Cấu hình.
+                    </span>
+                </div>
+            }
+        </div>
+
+        <div class="border-y border-[#eef1ef] px-6 py-4 text-base font-bold">Văn bản cần xuất</div>
         <div class="grid grid-cols-1 gap-3.5 px-6 py-5 sm:grid-cols-3">
             <sh-select label="Trạng thái kiểm" [options]="checkStatusOptions" optionLabel="label" optionValue="value" placeholder="Tất cả"
                 [showClear]="true" [ngModel]="statusCheck" (ngModelChange)="onStatusCheckChange($event)" />
@@ -49,26 +93,47 @@
                 </span>
                 <span class="text-[13px] text-[var(--app-muted)]">4 cột gốc + các trường + {{ activeColumns.length }} cột thêm</span>
             </div>
-            <p-button label="Xuất Excel" icon="pi pi-download" styleClass="w-full" [disabled]="!total" [loading]="isCreating" (onClick)="exportExcel()" />
-            <span class="text-xs text-[var(--app-muted)]">File tạo chạy nền, xong hiện ở danh sách dưới. Giữ trong 1–2 ngày.</span>
+            @if (target === targetKey.SHEET) {
+                <div class="flex flex-col gap-0.5 rounded-[10px] border border-[#eef1ef] px-3 py-2.5 text-[13px]">
+                    <span class="text-xs text-[var(--app-muted)]">Ghi vào</span>
+                    <span class="font-semibold break-all">{{ sheetName || '—' }} · từ dòng {{ startRow }}</span>
+                    @if (sheetUrl.trim()) {
+                        <a class="font-semibold text-[var(--app-accent-700)]" [href]="sheetUrl.trim()" target="_blank" rel="noopener">Mở Google Sheet ↗</a>
+                    }
+                </div>
+                <p-button label="Xuất Google Sheet" icon="pi pi-table" styleClass="w-full" [disabled]="isSheetExportDisabled" [loading]="isCreating" (onClick)="exportSheet()" />
+                <span class="text-xs text-[var(--app-muted)]">Ghi chạy nền, xong hiện ở danh sách dưới.</span>
+            } @else {
+                <p-button label="Xuất Excel" icon="pi pi-download" styleClass="w-full" [disabled]="!total" [loading]="isCreating" (onClick)="exportExcel()" />
+                <span class="text-xs text-[var(--app-muted)]">File tạo chạy nền, xong hiện ở danh sách dưới. Giữ trong 1–2 ngày.</span>
+            }
         </div>
 
         <div class="overflow-hidden rounded-[14px] border border-[var(--app-line)] bg-white">
-            <div class="border-b border-[#eef1ef] px-[22px] py-3.5 text-sm font-bold">File đã xuất</div>
+            <div class="border-b border-[#eef1ef] px-[22px] py-3.5 text-sm font-bold">Đã xuất</div>
             @for (job of jobs; track job.jobId) {
+                @let isSheet = job.target === targetKey.SHEET;
                 <div class="flex flex-col gap-1.5 border-t border-[#f1f3f2] px-[22px] py-3 first:border-t-0">
-                    <span class="text-[13px] font-semibold break-all">{{ job.fileName }}</span>
+                    <span class="flex items-start gap-2 text-[13px] font-semibold break-all">
+                        <i class="mt-0.5 shrink-0" [class]="isSheet ? 'pi pi-table' : 'pi pi-file-excel'"></i>
+                        {{ isSheet ? job.sheetName + ' · từ dòng ' + job.startRow : job.fileName }}
+                    </span>
+                    <span class="text-xs text-[var(--app-muted)]">{{ isSheet ? 'Google Sheet · ' + formatNumber(job.total ?? 0) + ' văn bản' : 'File Excel' }}</span>
                     <div class="flex items-center justify-between">
                         @switch (job.status) {
                             @case (jobStatus.DONE) {
-                                <span class="rounded-full bg-[var(--app-accent-soft)] px-2.5 py-0.5 text-xs font-semibold text-[var(--app-accent-700)]">Sẵn sàng</span>
-                                <button type="button" class="cursor-pointer border-0 bg-transparent p-0 text-[13px] font-semibold text-[var(--app-accent-700)]" (click)="download(job)">Tải về</button>
+                                <span class="rounded-full bg-[var(--app-accent-soft)] px-2.5 py-0.5 text-xs font-semibold text-[var(--app-accent-700)]">{{ isSheet ? 'Đã ghi' : 'Sẵn sàng' }}</span>
+                                @if (isSheet) {
+                                    <a class="text-[13px] font-semibold text-[var(--app-accent-700)]" [href]="job.sheetUrl" target="_blank" rel="noopener">Mở Sheet ↗</a>
+                                } @else {
+                                    <button type="button" class="cursor-pointer border-0 bg-transparent p-0 text-[13px] font-semibold text-[var(--app-accent-700)]" (click)="download(job)">Tải về</button>
+                                }
                             }
                             @case (jobStatus.FAILED) {
                                 <span class="rounded-full bg-[var(--app-red-soft)] px-2.5 py-0.5 text-xs font-semibold text-[var(--app-red)]">Lỗi</span>
                             }
                             @default {
-                                <span class="rounded-full bg-[var(--app-blue-soft)] px-2.5 py-0.5 text-xs font-semibold text-[var(--app-blue)]">Đang tạo file…</span>
+                                <span class="rounded-full bg-[var(--app-blue-soft)] px-2.5 py-0.5 text-xs font-semibold text-[var(--app-blue)]">{{ isSheet ? 'Đang ghi…' : 'Đang tạo file…' }}</span>
                             }
                         }
                     </div>
@@ -77,7 +142,7 @@
                     }
                 </div>
             } @empty {
-                <div class="px-[22px] py-4 text-[13px] text-[var(--app-muted)]">Chưa xuất file nào.</div>
+                <div class="px-[22px] py-4 text-[13px] text-[var(--app-muted)]">Chưa xuất lần nào.</div>
             }
         </div>
     </div>

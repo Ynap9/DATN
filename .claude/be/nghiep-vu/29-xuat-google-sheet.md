@@ -22,21 +22,23 @@ API lấy tên tab cũng kiểm đủ vì nó dùng tài khoản Gmail của h�
 - **Tài khoản**: Gmail đã kết nối ở màn Cấu hình ([08](08-cau-hinh-du-an.md)), lấy qua `IProjectConfigService.GetSpreadsheetAccount()` —
   cùng tài khoản tạo / đổi tên Sheet dự án, không dùng service account. Thiếu một trong 4 cấu hình Google (kể cả `GoogleFolderId`
   dù xuất không cần thư mục) → `304`.
-- **Link**: Sheet bất kỳ (FE điền sẵn link Sheet của dự án), **trừ Sheet đang gắn với dự án khác chưa xoá** → `202` câu "Google Sheet
-  thuộc dự án khác, không dùng được cho dự án này". Vì sao: mọi Sheet dự án do cùng một Gmail tạo, không chặn thì Leader dự án A
-  ghi đè được Sheet nguồn import của dự án B. Luật này người dùng chốt thêm ngày 2026-11-24, ngoài bảng CASE của spec.
-- **Cách ghi**: xoá giá trị từ dòng `startRow` tới dòng cuối của tab, dòng `startRow` là tiêu đề, dữ liệu từ dòng kế tiếp; các dòng phía
+- **Link**: Sheet bất kỳ, **trừ Sheet đang gắn làm Sheet đồng bộ của một dự án chưa xoá, kể cả chính dự án đang xuất** → `202` câu
+  "Google Sheet đang là Sheet đồng bộ của một dự án, không dùng để xuất". Vì sao: Sheet đồng bộ là nguồn import và mọi Sheet dự án do cùng một
+  Gmail tạo; không chặn thì xuất xoá mất nguồn import của dự án đó. Luật chốt thêm ngày 2026-11-24, ngoài bảng CASE của spec; ban đầu chỉ
+  chặn dự án khác, ngày 2026-11-24 chặn luôn Sheet chính của dự án (task 56 FE không điền sẵn link Sheet dự án).
+- **Cách ghi**: dòng `startRow` là tiêu đề, dữ liệu từ dòng kế tiếp, mỗi dòng đệm ô rỗng tới hết số cột của tab để ghi đè ô cũ bên phải; rồi
+  mới xoá giá trị các dòng dư phía dưới tới cuối tab. Kết quả như "xoá từ `startRow` trở xuống rồi ghi" nhưng lỗi giữa chừng không để tab trống; các dòng phía
   trên giữ nguyên. Ghi RAW nên "001", ngày dạng chữ giữ nguyên như file Excel. Tab thiếu dòng / cột thì tự thêm ([05](../architecture/05-infrastructure-external.md)).
 - **`startRow`**: số nguyên ≥ 1 (FE mặc định 1); < 1 hoặc thiếu → `400` "Dòng bắt đầu phải từ 1 trở lên".
-- **Kiểm trước khi tạo job** (trả lỗi ngay, không tạo job), theo thứ tự: quyền, bộ lọc, mã cột, `startRow`, Sheet dự án khác, tài khoản
+- **Kiểm trước khi tạo job** (trả lỗi ngay, không tạo job), theo thứ tự: quyền, bộ lọc, mã cột, `startRow`, Sheet đồng bộ của dự án, tài khoản
   Google, đọc tên tab, `sheetName` có trong file, server queue `export`.
 - **Job** `SubmissionExportJob.ExecuteSheetAsync` → `ExportSheetFromJob` (không kiểm user, đã kiểm lúc tạo). Lỗi nghiệp vụ trong job
-  (`204` tab bị xoá sau khi bấm, `206`, `207`, `322`…) → `3` ngay với câu của mã, không retry. Lỗi khác → retry 2 lần rồi câu chung
+  (`204` tab bị xoá sau khi bấm, `206`, `207`, `322`…) → `3` ngay với câu của mã, không retry. Lỗi tạm thời của Google (429 / 5xx) và lỗi khác → retry 2 lần rồi câu chung
   `Xuất Google Sheet thất bại, hãy thử lại`. Tham số job chỉ có `JobType = submission-export-sheet` + `UserId`; không bảng, không audit.
 
 | Lỗi | Mã |
 |---|---|
-| Link sai định dạng, hoặc Sheet của dự án khác | `202` |
+| Link sai định dạng, hoặc là Sheet đồng bộ của một dự án | `202` |
 | Gmail không đọc được file (chưa chia sẻ, không tồn tại) khi lấy tên tab | `203` |
 | `sheetName` không có trong file | `204` |
 | Ghi thất bại trong job (thiếu quyền Chỉnh sửa…) | `206` |
@@ -45,13 +47,12 @@ API lấy tên tab cũng kiểm đủ vì nó dùng tài khoản Gmail của h�
 | Thiếu cấu hình Google / chưa kết nối | `304` |
 | `jobId` không có, hết hạn, của người khác, hoặc là job xuất Excel (và ngược lại) | `326` — câu dùng chung "Không tìm thấy yêu cầu xuất dữ liệu…" |
 
-⚠️ Xuất vào Sheet đồng bộ của **chính** dự án không bị chặn (đã chốt): xuất từ dòng 1 thay dữ liệu nguồn import bằng bảng xuất, và không
-khoá chung với import nên import Google chạy cùng lúc có thể đọc phải bảng đang ghi dở. Hai job ghi cùng một tab cũng không khoá nhau.
+⚠️ Hai job xuất ghi cùng một tab không khoá nhau (FE khoá nút khi còn dòng "Đang ghi…" cùng link và tab, nhưng gọi API thẳng vẫn được): kết quả là bản ghi sau cùng đè lên.
 
-⚠️ Ghi không nguyên tử, chia lô 5.000 dòng: lỗi giữa chừng để lại tab đã xoá mà mới ghi một phần; chỉ xoá giá trị, định dạng ô cũ còn.
+⚠️ Ghi không nguyên tử, chia lô 5.000 dòng: lỗi giữa chừng để lại tab ghi dở (đầu là dữ liệu mới, sau là dữ liệu cũ) nhưng không bao giờ trống; xuất lại là đúng. Chỉ xoá giá trị, định dạng ô cũ còn.
 Chưa xử lý giới hạn 10 triệu ô của Google — lỗi Google trả về thành `206`.
 
-⚠️ Chặn dự án khác so `UrlGoogleSheetSync` chứa `spreadsheetId` (id Google dài cố định nên không nhầm); Sheet của dự án **đã xoá** không
+⚠️ Chặn Sheet dự án so `UrlGoogleSheetSync` chứa `spreadsheetId` (id Google dài cố định nên không nhầm); Sheet của dự án **đã xoá** không
 bị chặn. Máy đồng đội chạy code cũ cùng DB vẫn có thể nhặt job (bẫy ở [14](14-ho-so-xoa-xuat.md#xuất-excel-chạy-nền)).
 
 ## Đã kiểm thực tế
@@ -59,13 +60,18 @@ bị chặn. Máy đồng đội chạy code cũ cùng DB vẫn có thể nhặt
 Ngày 2026-11-24, Debug chạy `dotnet` trên máy dev cổng 5356, DB dev qua tunnel, Gmail đã kết nối thật; script `test56a.py` trong
 scratchpad tạo dự án tạm `ZZTEST56A` có Sheet, 5 văn bản, user Data + Admin tạm, rồi dọn hết (cả file Sheet trên Drive).
 
-- 16 ca chạy thật, đều qua: tên tab đúng thứ tự; link sai `202`; Sheet dự án khác `202` (cả 2 API); id không tồn tại `203` (thay cho file
+- 16 ca chạy thật, đều qua: tên tab đúng thứ tự; link sai `202`; Sheet đồng bộ dự án `202` (cả 2 API); id không tồn tại `203` (thay cho file
   chưa chia sẻ — cùng nhánh lỗi Google); xoá tạm `GoogleRefreshToken` → `304` rồi trả lại đúng (so SHA-256); Data → `403` như
   `export-excel/job`; `startRow` 0 / thiếu → `400`; tab không có → `204`, không tạo job.
 - `startRow = 3` trên tab có dữ liệu dòng 1–200: dòng 1–2 giữ, dòng 3 tiêu đề, 5 dòng dữ liệu, không còn dòng cũ; "001", "05/11/2026" giữ
   chữ. Lọc `statusCheck = 1` + `columns` → bảng trên Sheet trùng từng ô với `GET export-excel` cùng bộ lọc. Job do server `export` của máy
   dev chạy, `0 → 2`.
 - `326`: Admin khác hỏi job, job Excel hỏi ở API Sheet và ngược lại. `GET export-excel` / `POST export-excel/job` vẫn như cũ.
+- Chặng sửa 2026-11-24 (script `test56b.py`, dự án tạm `ZZTEST56B` + một Sheet đích riêng, dọn hết, 15/15 qua): Sheet chính của dự án → `202` cả
+  2 API; Sheet dự án khác vẫn `202`; Sheet không thuộc dự án nào đọc được. Xuất từ dòng 3 vào tab 10 cột × 200 dòng cũ: dòng 1–2 giữ đủ
+  10 cột, bảng mới 6 cột × 6 dòng, cột G–J và các dòng dư đã trống; xuất lại từ dòng 1 với bộ lọc + cột thêm trùng từng ô file Excel;
+  tab 3 dòng × 2 cột tự mở rộng. Chưa chạy thật: retry khi Google trả 429 / 5xx (không gây ra được lỗi này), và Sheet của dự án **đã xoá**
+  không bị chặn (API trả `303` vì dự án không còn nên không tới được bước kiểm).
 - Không làm được: file chỉ chia sẻ quyền Xem → `206` (không có file như vậy); tắt server queue `export` → `211` (máy đồng đội vẫn nghe
   queue `export` trên DB chung).
 

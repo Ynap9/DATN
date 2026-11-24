@@ -70,10 +70,10 @@ lớp con chỉ override `ReadHeaderRowsAsync`, `ReadHeaderCellsAsync`, `ReadRow
 | `CreateSpreadsheetAsync(account, title, sheetName)` | Drive `files.create` trong `FolderId`, đổi tên sheet `0` (lỗi thì xoá file); lỗi → `205` |
 | `RenameSpreadsheetAsync` / `TryRename...` / `TryDeleteSpreadsheetAsync` | Drive `files.update` / `files.delete`; lỗi → `206`, bản `Try` trả `false` |
 | `ExtractSpreadsheetId(url)` / `GetSheetNamesAsync(account, url)` | Tách id từ link (sai → `202`) / Sheets `spreadsheets.get` (`sheets.properties.title`), tên tab đúng thứ tự trong file; lỗi Google → `203` |
-| `WriteTableAsync(account, url, sheetName, startRow, headers, rows)` | Không có tab → `204`; lưới thiếu dòng / cột thì `appendDimension`; `values.clear` từ `startRow` tới dòng cuối, rồi `values.update` RAW từ `A<startRow>` (tiêu đề + dữ liệu), lô 5.000 dòng; dòng trên `startRow` giữ nguyên; lỗi Google → `206` |
+| `WriteTableAsync(account, url, sheetName, startRow, headers, rows)` | Không có tab → `204`; lưới thiếu dòng / cột thì `appendDimension`; `values.update` RAW từ `A<startRow>` (tiêu đề + dữ liệu, mỗi dòng đệm `""` tới hết số cột của lưới để ghi đè ô cũ bên phải), lô 5.000 dòng, rồi mới `values.clear` các dòng dư phía dưới; dòng trên `startRow` giữ nguyên; lỗi Google → `206`, riêng 429 / 5xx ném nguyên cho Hangfire thử lại |
 
 `Base/GoogleOAuthFlowFactory` dựng flow + `UserCredential` (scope `drive` + `spreadsheets`), `Base/GoogleSheetUrl` đổi URL ↔ id. Token hết hạn / bị thu hồi → `207`.
-⚠️ `WriteTableAsync` không nguyên tử: lỗi giữa các lô để lại tab đã xoá mà mới ghi một phần; `values.clear` chỉ xoá giá trị, định dạng còn.
+⚠️ `WriteTableAsync` không nguyên tử: lỗi giữa các lô để lại tab ghi dở (dòng đầu là dữ liệu mới, dòng sau còn cũ) nhưng không bao giờ trống; vì ghi trước xoá sau nên chạy lại là đúng. `values.clear` chỉ xoá giá trị, định dạng còn.
 ⚠️ Ghi bằng service account thì Google trả `403 storageQuotaExceeded` (không có dung lượng) — đừng quay lại. ⚠️ Consent screen **Testing**: token hết hạn sau 7 ngày.
 
 `IExcelExternal` (ClosedXML): `CreateTemplate(templateName, headers)` = `CreateTable` không có dòng dữ liệu, tên file thêm `_template`;

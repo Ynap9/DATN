@@ -386,3 +386,17 @@ export interface ISubmissionExportJob {
     downloadUrl: string | null;
     errorMessage: string | null;
 }
+
+export type IExportSheetSubmission = IExportSubmission & { url: string; sheetName: string; startRow: number };
+
+export interface IExportSheetNamesQuery {
+    projectId: number;
+    documentTypeId: number;
+    url: string;
+}
+
+export interface ISubmissionExportSheetJob {
+    jobId: string;
+    status: number;
+    errorMessage: string | null;
+}

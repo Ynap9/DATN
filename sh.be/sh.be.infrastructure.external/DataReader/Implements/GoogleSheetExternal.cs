@@ -13,6 +13,7 @@ using sh.be.infrastructure.external.DataReader.Base;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
 using sh.be.shared.Settings;
+using System.Net;
 using DriveFile = Google.Apis.Drive.v3.Data.File;
 
 namespace sh.be.infrastructure.external.DataReader.Implements
@@ -27,6 +28,7 @@ namespace sh.be.infrastructure.external.DataReader.Implements
         private const string RowDimension = "ROWS";
         private const string ColumnDimension = "COLUMNS";
         private const int WriteBatchRowCount = 5000;
+        private const int ServerErrorStatusCode = 500;
 
         private readonly GoogleSheetSettings _googleSheetSettings;
         private readonly ILogger<GoogleSheetExternal> _logger;
@@ -186,7 +188,8 @@ namespace sh.be.infrastructure.external.DataReader.Implements
             }
         }
 
-        // Xoá giá trị từ dòng startRow tới cuối sheet rồi ghi tiêu đề ở startRow, dữ liệu từ dòng kế tiếp; các dòng phía trên giữ nguyên
+        // Ghi tiêu đề ở startRow, dữ liệu từ dòng kế tiếp (ô thừa bên phải ghi đè rỗng) rồi mới xoá các dòng dư phía dưới, nên lỗi giữa chừng không để tab trống;
+        // các dòng phía trên startRow giữ nguyên. Lỗi tạm thời của Google (429 / 5xx) ném nguyên để Hangfire thử lại
         public async Task WriteTableAsync(SpreadsheetAccountDto account, string spreadsheetUrl, string sheetName, int startRow, List<string> headers,
             List<List<string>> rows)
         {
@@ -199,21 +202,26 @@ namespace sh.be.infrastructure.external.DataReader.Implements
                 var sheets = await GetSheetsAsync(sheetsService, spreadsheetId, SheetGridFields);
                 var sheetProperties = sheets.Select(sheet => sheet.Properties).FirstOrDefault(properties => properties.Title == sheetName)
                     ?? throw new UserFriendlyException(ErrorCodes.CoreErrorSheetNotFound);
-                var rowCount = await EnsureGridSizeAsync(sheetsService, spreadsheetId, sheetProperties, startRow + rows.Count, headers.Count);
+                var (rowCount, columnCount) = await EnsureGridSizeAsync(sheetsService, spreadsheetId, sheetProperties, startRow + rows.Count, headers.Count);
 
+                var values = rows.Prepend(headers)
+                    .Select(row => (IList<object>)row.Concat(Enumerable.Repeat(string.Empty, columnCount - row.Count)).Cast<object>().ToList())
+                    .ToList();
                 var quotedSheetName = QuoteSheetName(sheetName);
-                await sheetsService.Spreadsheets.Values.Clear(new ClearValuesRequest(), spreadsheetId, $"{quotedSheetName}!{startRow}:{rowCount}").ExecuteAsync();
-
-                var values = new List<IList<object>> { headers.ToList<object>() };
-                values.AddRange(rows.Select(row => row.ToList<object>()));
                 await WriteValuesAsync(sheetsService, spreadsheetId, quotedSheetName, startRow, values);
+
+                var firstLeftoverRow = startRow + values.Count;
+                if (firstLeftoverRow <= rowCount)
+                {
+                    await sheetsService.Spreadsheets.Values.Clear(new ClearValuesRequest(), spreadsheetId, $"{quotedSheetName}!{firstLeftoverRow}:{rowCount}").ExecuteAsync();
+                }
             }
             catch (TokenResponseException ex)
             {
                 _logger.LogError(ex, $"{nameof(WriteTableAsync)}, error={ex.Error?.Error}");
                 throw new UserFriendlyException(ErrorCodes.CoreErrorAuthorizeDataSourceFailed);
             }
-            catch (GoogleApiException ex)
+            catch (GoogleApiException ex) when (!IsTransient(ex))
             {
                 _logger.LogError(ex, $"{nameof(WriteTableAsync)}, spreadsheetId={spreadsheetId}, sheetName={sheetName}");
                 throw new UserFriendlyException(ErrorCodes.CoreErrorUpdateDataSourceFailed);
@@ -261,8 +269,8 @@ namespace sh.be.infrastructure.external.DataReader.Implements
             return spreadsheet.Sheets ?? [];
         }
 
-        // Lưới sheet thiếu dòng / cột thì thêm cho đủ (ghi ra ngoài lưới Google báo lỗi); trả số dòng của lưới sau khi thêm
-        private static async Task<int> EnsureGridSizeAsync(SheetsService sheetsService, string spreadsheetId, SheetProperties sheetProperties,
+        // Lưới sheet thiếu dòng / cột thì thêm cho đủ (ghi ra ngoài lưới Google báo lỗi); trả số dòng và số cột của lưới sau khi thêm
+        private static async Task<(int RowCount, int ColumnCount)> EnsureGridSizeAsync(SheetsService sheetsService, string spreadsheetId, SheetProperties sheetProperties,
             int requiredRowCount, int requiredColumnCount)
         {
             var rowCount = sheetProperties.GridProperties?.RowCount ?? 0;
@@ -281,7 +289,7 @@ namespace sh.be.infrastructure.external.DataReader.Implements
             {
                 await sheetsService.Spreadsheets.BatchUpdate(new BatchUpdateSpreadsheetRequest { Requests = requests }, spreadsheetId).ExecuteAsync();
             }
-            return Math.Max(rowCount, requiredRowCount);
+            return (Math.Max(rowCount, requiredRowCount), Math.Max(columnCount, requiredColumnCount));
         }
 
         private static Request CreateAppendDimensionRequest(int? sheetId, string dimension, int length)
@@ -290,6 +298,12 @@ namespace sh.be.infrastructure.external.DataReader.Implements
             {
                 AppendDimension = new AppendDimensionRequest { SheetId = sheetId, Dimension = dimension, Length = length },
             };
+        }
+
+        // Quá giới hạn gọi (429) hoặc Google lỗi máy chủ (5xx) thì thử lại được, khác lỗi quyền / dữ liệu
+        private static bool IsTransient(GoogleApiException ex)
+        {
+            return ex.HttpStatusCode == HttpStatusCode.TooManyRequests || (int)ex.HttpStatusCode >= ServerErrorStatusCode;
         }
 
         // Ghi RAW để giữ nguyên "001", ngày dạng chữ; chia lô để mỗi lần gọi không quá lớn

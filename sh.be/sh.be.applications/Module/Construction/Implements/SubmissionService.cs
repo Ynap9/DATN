@@ -768,7 +768,7 @@ namespace sh.be.applications.Module.Construction.Implements
             _logger.LogInformation($"{nameof(GetExportSheetNames)}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
             await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
-            return await ReadExportSheetNamesAsync(dto.ProjectId, dto.Url);
+            return await ReadExportSheetNamesAsync(dto.Url);
         }
 
         // Xếp job nền xuất hồ sơ ra Google Sheet theo bộ lọc; kiểm tài khoản Google, link, tab ngay để báo lỗi trước khi tạo job
@@ -781,7 +781,7 @@ namespace sh.be.applications.Module.Construction.Implements
             await EnsureQaTicketFilterVisibleAsync(dto);
             dto.Columns = SubmissionDomainService.NormalizeExportColumns(dto.Columns);
             SubmissionDomainService.EnsureExportStartRowValid(dto.StartRow);
-            var sheetNames = await ReadExportSheetNamesAsync(dto.ProjectId, dto.Url);
+            var sheetNames = await ReadExportSheetNamesAsync(dto.Url);
             if (!sheetNames.Contains(dto.SheetName))
             {
                 throw new UserFriendlyException(ErrorCodes.CoreErrorSheetNotFound);
@@ -835,10 +835,10 @@ namespace sh.be.applications.Module.Construction.Implements
             await _googleSheetExternal.WriteTableAsync(account, dto.Url, dto.SheetName, dto.StartRow, table.Headers, table.Rows);
         }
 
-        // Chặn Sheet của dự án khác trước khi dùng tài khoản Gmail chung đọc tên tab
-        private async Task<List<string>> ReadExportSheetNamesAsync(int projectId, string url)
+        // Chặn Sheet đồng bộ của mọi dự án (kể cả dự án đang xuất) trước khi dùng tài khoản Gmail chung đọc tên tab
+        private async Task<List<string>> ReadExportSheetNamesAsync(string url)
         {
-            await _projectDomainService.EnsureGoogleSheetNotInOtherProjectAsync(projectId, _googleSheetExternal.ExtractSpreadsheetId(url));
+            await _projectDomainService.EnsureGoogleSheetNotUsedByProjectAsync(_googleSheetExternal.ExtractSpreadsheetId(url));
             var account = await _projectConfigService.GetSpreadsheetAccount();
             return await _googleSheetExternal.GetSheetNamesAsync(account, url);
         }

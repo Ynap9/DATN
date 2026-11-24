@@ -39,10 +39,10 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
             return _shDbContext.Projects.AnyAsync(p => p.Name == name && p.Id != excludedId);
         }
 
-        // Dự án khác (chưa xoá) có link Google Sheet chứa spreadsheetId; id Google dài cố định nên so chuỗi con không nhầm file
-        public Task<bool> ExistsGoogleSheetInOtherProjectAsync(int projectId, string spreadsheetId)
+        // Có dự án (chưa xoá) có link Google Sheet chứa spreadsheetId; id Google dài cố định nên so chuỗi con không nhầm file
+        public Task<bool> ExistsGoogleSheetInProjectAsync(string spreadsheetId)
         {
-            return _shDbContext.Projects.AnyAsync(p => p.Id != projectId && p.UrlGoogleSheetSync.Contains(spreadsheetId));
+            return _shDbContext.Projects.AnyAsync(p => p.UrlGoogleSheetSync.Contains(spreadsheetId));
         }
 
         public Task<List<Project>> GetWithEndedAtByStatusesAsync(IReadOnlyCollection<int> statuses)

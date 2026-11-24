@@ -27,12 +27,12 @@ namespace sh.be.domain.Module.Construction.Projects.Services
             }
         }
 
-        // Mọi Sheet dự án do cùng một Gmail tạo nên chặn ghi vào Sheet của dự án khác (đè nguồn import của dự án đó)
-        public async Task EnsureGoogleSheetNotInOtherProjectAsync(int projectId, string spreadsheetId)
+        // Sheet đồng bộ của dự án là nguồn import nên chặn ghi đè bằng xuất, kể cả dự án đang xuất
+        public async Task EnsureGoogleSheetNotUsedByProjectAsync(string spreadsheetId)
         {
-            if (await _projectRepository.ExistsGoogleSheetInOtherProjectAsync(projectId, spreadsheetId))
+            if (await _projectRepository.ExistsGoogleSheetInProjectAsync(spreadsheetId))
             {
-                throw new UserFriendlyException(ErrorCodes.CoreErrorInvalidDataSource, "Google Sheet thuộc dự án khác, không dùng được cho dự án này");
+                throw new UserFriendlyException(ErrorCodes.CoreErrorInvalidDataSource, "Google Sheet đang là Sheet đồng bộ của một dự án, không dùng để xuất");
             }
         }
 

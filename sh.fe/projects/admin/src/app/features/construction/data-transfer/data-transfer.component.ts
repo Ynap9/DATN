@@ -25,7 +25,7 @@ type DataTransferTab = (typeof DATA_TRANSFER_TAB)[keyof typeof DATA_TRANSFER_TAB
 // Mỗi tab chỉ hiện khi có quyền tương ứng (48.1)
 const TABS: { key: DataTransferTab; label: string; permission: string }[] = [
     { key: DATA_TRANSFER_TAB.IMPORT, label: 'Nhập dữ liệu', permission: PermissionConstants.FUNCTION_SUBMISSION_IMPORT },
-    { key: DATA_TRANSFER_TAB.EXPORT, label: 'Xuất Excel', permission: PermissionConstants.FUNCTION_SUBMISSION_EXPORT },
+    { key: DATA_TRANSFER_TAB.EXPORT, label: 'Xuất dữ liệu', permission: PermissionConstants.FUNCTION_SUBMISSION_EXPORT },
 ];
 
 // Trạng thái dự án BE chặn import: 341 / 313 / 323 (48.6)

@@ -3,6 +3,8 @@ import { inject, Injectable } from "@angular/core";
 import {
     ICheckSubmission,
     ICheckSubmissionResult,
+    IExportSheetNamesQuery,
+    IExportSheetSubmission,
     IExportSubmission,
     IFindPagingQaEntryUserStats,
     IFindPagingSubmission,
@@ -27,6 +29,7 @@ import {
     ISubmissionCount,
     ISubmissionDetail,
     ISubmissionExportJob,
+    ISubmissionExportSheetJob,
     ISubmissionFieldValue,
     ISubmissionFilter,
     ISubmissionImportJob,
@@ -164,8 +167,22 @@ export class SubmissionService {
         return this.http.get<IBaseResponseWithData<ISubmissionExportJob>>(`${this.api}/export-excel/job/${jobId}`);
     }
 
+    // Tên các tab của Google Sheet sẽ xuất vào, BE đọc bằng tài khoản Gmail đã kết nối
+    getExportSheetNames(query: IExportSheetNamesQuery) {
+        return this.http.get<IBaseResponseWithData<string[]>>(`${this.api}/export-sheet/sheet-names`, { params: this.toParams(query) });
+    }
+
+    // Như createExportJob, thêm url / sheetName / startRow; bộ lọc + columns đọc từ query, không có body
+    createExportSheetJob(query: IExportSheetSubmission) {
+        return this.http.post<IBaseResponseWithData<ISubmissionExportSheetJob>>(`${this.api}/export-sheet/job`, null, { params: this.toParams(query) });
+    }
+
+    findExportSheetJob(jobId: string) {
+        return this.http.get<IBaseResponseWithData<ISubmissionExportSheetJob>>(`${this.api}/export-sheet/job/${jobId}`);
+    }
+
     // Bỏ tham số trống nhưng giữ số 0: statusCheck = 0 / statusQa = 0 là lọc thật; mảng giữ nguyên để gửi lặp
-    private toParams(query: ISubmissionFilter | IFindStats | IExportSubmission) {
+    private toParams(query: ISubmissionFilter | IFindStats | IExportSubmission | IExportSheetNamesQuery) {
         return Object.fromEntries(Object.entries(query).filter(([, value]) => value !== undefined && value !== null && value !== ''));
     }
 }
