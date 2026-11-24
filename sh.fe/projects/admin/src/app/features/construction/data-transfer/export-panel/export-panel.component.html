@@ -15,14 +15,15 @@
             </div>
         </div>
 
-        <div class="flex items-center justify-between gap-3 border-t border-[#eef1ef] px-6 py-4">
-            <div class="flex flex-col">
+        <div class="flex flex-col border-t border-[#eef1ef] px-6 py-4">
+            <div class="flex items-center gap-2">
                 <span class="text-base font-bold">Cột thêm</span>
-                <span class="text-xs text-[var(--app-muted)]">Luôn có STT, Tên file, Hồ sơ, Hộp và các trường hiện ở bảng.</span>
+                <p-button [label]="isAllSelected ? 'Bỏ chọn hết' : 'Chọn hết'" [text]="true" size="small" (onClick)="toggleAll()" />
             </div>
-            <p-button [label]="isAllSelected ? 'Bỏ chọn hết' : 'Chọn hết'" [text]="true" size="small" (onClick)="toggleAll()" />
+            <span class="text-xs text-[var(--app-muted)]">Luôn có STT, Tên file, Hồ sơ, Hộp và các trường hiện ở bảng.</span>
         </div>
-        <div class="grid grid-cols-1 gap-3 px-6 pb-[22px] sm:grid-cols-2">
+        <!-- Các nhóm chia đều một hàng khi đủ chỗ, không để nhóm lẻ rơi xuống hàng dưới một mình -->
+        <div class="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3 px-6 pb-[22px]">
             @for (group of columnGroups; track group.name) {
                 <div class="flex flex-col gap-2 rounded-[10px] border border-[#eef1ef] px-3.5 py-3">
                     <span class="text-[11px] font-bold tracking-[0.06em] text-[var(--app-muted)]">{{ group.name }}</span>
