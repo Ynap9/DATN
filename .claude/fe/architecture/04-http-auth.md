@@ -1,6 +1,6 @@
 # Xác thực, HTTP và xử lý lỗi
 
-> **Phần 4/11** · trước: [03-lib-components.md](03-lib-components.md) · mục lục: [README.md](README.md)
+> **Phần 4/13** · trước: [03-lib-components.md](03-lib-components.md) · mục lục: [README.md](README.md)
 
 Nằm ở `admin/src/app/core/auth/` và `core/http/`. Lib `@sh/ui` không có phần nào ở đây.
 
@@ -21,7 +21,7 @@ Nằm ở `admin/src/app/core/auth/` và `core/http/`. Lib `@sh/ui` không có p
 | Interceptor | Làm gì |
 |---|---|
 | `baseUrlInterceptor` | URL bắt đầu bằng `/api/` hoặc `/connect/` được ghép `environment.api`; service chỉ ghi đường dẫn |
-| `httpErrorInterceptor` | Lỗi HTTP ⇒ toast (`401`, `403`, `404` có câu riêng, còn lại câu chung), trừ khi đặt `SKIP_ERROR_TOAST` |
+| `httpErrorInterceptor` | Lỗi HTTP ⇒ toast (`400`, `401`, `403`, `404` có câu riêng, còn lại câu chung), trừ khi đặt `SKIP_ERROR_TOAST` |
 | `authInterceptor` | Bật `withCredentials` cho request `/api/`, trừ khi đặt `SKIP_AUTH`; `401` ⇒ refresh một lần qua `AuthService.refreshAccessToken` rồi gửi lại, không refresh được ⇒ `logout()` |
 
 Token nằm trong cookie `HttpOnly` do BE đặt, JS không đọc được. FE dùng client `client-web2`, không có secret.
@@ -40,7 +40,7 @@ this._http.get(url, { context });
 ⚠️ Chỉ **lỗi HTTP** mới qua `httpErrorInterceptor`. BE trả lỗi nghiệp vụ bằng **HTTP 200** + `status = 0`, nên lỗi
 nghiệp vụ phải được đọc ở tầng data-access của tính năng (sẽ có `unwrapApiResponse` theo plan khớp BE).
 ⚠️ Đăng nhập sai BE trả HTTP **400** `{ error: 'invalid_grant', error_description }`; lời gọi `/connect/token` phải
-đặt `SKIP_ERROR_TOAST` và tự hiện `error_description`, nếu không sẽ ra toast câu chung.
+đặt `SKIP_ERROR_TOAST` và tự hiện `error_description`, nếu không sẽ ra toast "Dữ liệu gửi lên không hợp lệ" (câu của mã 400).
 
 ## GlobalErrorHandler
 

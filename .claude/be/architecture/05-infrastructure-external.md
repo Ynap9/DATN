@@ -69,14 +69,15 @@ lớp con chỉ override `ReadHeaderRowsAsync`, `ReadHeaderCellsAsync`, `ReadRow
 | `BuildAuthorizationUrl` / `ExchangeRefreshTokenAsync` | Link consent (`prompt=consent`) / đổi `code` lấy refresh token; lỗi → `207` |
 | `CreateSpreadsheetAsync(account, title, sheetName)` | Drive `files.create` trong `FolderId`, đổi tên sheet `0` (lỗi thì xoá file); lỗi → `205` |
 | `RenameSpreadsheetAsync` / `TryRename...` / `TryDeleteSpreadsheetAsync` | Drive `files.update` / `files.delete`; lỗi → `206`, bản `Try` trả `false` |
+| `ExtractSpreadsheetId(url)` / `GetSheetNamesAsync(account, url)` | Tách id từ link (sai → `202`) / Sheets `spreadsheets.get` (`sheets.properties.title`), tên tab đúng thứ tự trong file; lỗi Google → `203` |
+| `WriteTableAsync(account, url, sheetName, startRow, headers, rows)` | Không có tab → `204`; lưới thiếu dòng / cột thì `appendDimension`; `values.update` RAW từ `A<startRow>` (tiêu đề + dữ liệu, mỗi dòng đệm `""` tới hết số cột của lưới để ghi đè ô cũ bên phải), lô 5.000 dòng, rồi mới `values.clear` các dòng dư phía dưới; dòng trên `startRow` giữ nguyên; lỗi Google → `206`, riêng 429 / 5xx ném nguyên cho Hangfire thử lại |
 
-`Base/GoogleOAuthFlowFactory` dựng flow + `UserCredential` (scope `drive` + `spreadsheets`), `Base/GoogleSheetUrl` đổi URL ↔ id.
-Refresh token hết hạn / bị thu hồi → `207`, phải xác thực lại. ⚠️ Ghi bằng service account thì Google trả `403 storageQuotaExceeded`
-(service account không có dung lượng) — đừng quay lại. ⚠️ OAuth consent screen ở **Testing** thì refresh token hết hạn sau 7 ngày.
+`Base/GoogleOAuthFlowFactory` dựng flow + `UserCredential` (scope `drive` + `spreadsheets`), `Base/GoogleSheetUrl` đổi URL ↔ id. Token hết hạn / bị thu hồi → `207`.
+⚠️ `WriteTableAsync` không nguyên tử: lỗi giữa các lô để lại tab ghi dở (dòng đầu là dữ liệu mới, dòng sau còn cũ) nhưng không bao giờ trống; vì ghi trước xoá sau nên chạy lại là đúng. `values.clear` chỉ xoá giá trị, định dạng còn.
+⚠️ Ghi bằng service account thì Google trả `403 storageQuotaExceeded` (không có dung lượng) — đừng quay lại. ⚠️ Consent screen **Testing**: token hết hạn sau 7 ngày.
 
 `IExcelExternal` (ClosedXML): `CreateTemplate(templateName, headers)` = `CreateTable` không có dòng dữ liệu, tên file thêm `_template`;
-`CreateMultiSheetTemplate(templateName, sheets)` như `CreateTemplate` nhưng mỗi `ExcelSheetTemplateDto` một sheet. Cả ba dùng chung `CreateWorkbook` + `AddWorksheet` (header dòng `1` in đậm + freeze, giãn cột theo 200 dòng đầu, kẹp rộng 8–60). Luật tên sheet / file Excel (31 ký tự, ký tự cấm) ở `Base/ExcelNaming`. Controller trả `File(...)`; lỗi vẫn trả `ApiResponse`.
-⚠️ Hai tên sheet trùng nhau sau khi cắt 31 ký tự thì ClosedXML ném lỗi — chưa xử lý vì 6 tên schema đóng gói hiện tại không trùng.
+`CreateMultiSheetTemplate(templateName, sheets)` như `CreateTemplate` nhưng mỗi `ExcelSheetTemplateDto` một sheet. Cả ba dùng chung `CreateWorkbook` + `AddWorksheet` (header dòng `1` in đậm + freeze, giãn cột theo 200 dòng đầu, kẹp rộng 8–60). Luật tên sheet / file Excel (31 ký tự, ký tự cấm) ở `Base/ExcelNaming`. Controller trả `File(...)`; lỗi vẫn trả `ApiResponse`. ⚠️ Hai tên sheet trùng nhau sau khi cắt 31 ký tự thì ClosedXML ném lỗi — chưa xử lý vì 6 tên schema đóng gói hiện tại không trùng.
 
 ## Storage, Mail
 
@@ -86,8 +87,7 @@ Refresh token hết hạn / bị thu hồi → `207`, phải xác thực lại. 
 - `IFileDownloadExternal.OpenPdfAsync`: trả **stream** (không nạp RAM); không phải http(s), lỗi mạng / HTTP, `Content-Type` lạ → `315`.
 - `IPluginSetupExternal`: whitelist `PluginSettings.SupportedVersions` (`IOptionsMonitor`, sửa appsettings không cần build) + bộ cài
   `sh.be.api/Plugins/` đúng tên `PluginConst.SETUP_FILE_NAME`. ⚠️ Exe ~160 MB trong `.gitignore`: máy chủ phải chép tay, thiếu thì `613`.
-- `IMailExternal`: `SendAsync`, `SendAccountCreatedAsync`, `SendProjectDeadlineAsync`; tiêu đề + HTML ở tầng ngoài; section `Email`.
-⚠️ Đổi chỗ embedded resource (`Mail/Templates`, `Storage/Files`) phải sửa cả csproj và `SampleFileExternal.FilesNamespace` — build qua nhưng đọc ra `null`.
+- `IMailExternal`: `SendAsync`, `SendAccountCreatedAsync`, `SendProjectDeadlineAsync`; tiêu đề + HTML ở tầng ngoài; section `Email`. ⚠️ Đổi chỗ embedded resource (`Mail/Templates`, `Storage/Files`) phải sửa cả csproj và `SampleFileExternal.FilesNamespace` — build qua nhưng đọc ra `null`.
 
 ## Thêm một dịch vụ ngoài
 

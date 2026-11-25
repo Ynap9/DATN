@@ -1,0 +1,43 @@
+<app-page-header title="Nhập / Xuất dữ liệu" [breadcrumbs]="breadcrumbs" [description]="pair ? pairSummary : undefined">
+    <!-- Picker luôn render (nó tự tải danh sách cặp); không có cặp Admin / Leader nào thì ẩn và hiện câu báo -->
+    <app-project-pair-picker [class.hidden]="pairs && !pairs.length" [viewerRoles]="viewerRoles" (pairsLoaded)="pairs = $event"
+        (pairChange)="onPairChange($event)" />
+</app-page-header>
+
+@if (pairs && !pairs.length) {
+    <div class="flex flex-col items-center gap-3 py-12">
+        <span class="text-muted-color">Bạn chưa quản lý dự án nào</span>
+    </div>
+} @else if (pair) {
+    <div class="mt-4 flex flex-col gap-4">
+        <div class="flex gap-1 self-start rounded-[10px] bg-[#e6eae8] p-1" role="tablist">
+            @for (tab of tabs; track tab.key) {
+                <button type="button" role="tab" [attr.aria-selected]="activeTab === tab.key" [disabled]="isImporting"
+                    class="inline-flex h-[34px] cursor-pointer items-center rounded-[7px] border-0 px-[18px] text-[13px] font-semibold disabled:cursor-not-allowed"
+                    [class]="activeTab === tab.key ? 'bg-white text-[var(--app-accent-700)] shadow-sm' : 'bg-transparent text-[var(--app-muted)]'"
+                    (click)="selectTab(tab.key)">
+                    {{ tab.label }}
+                </button>
+            }
+        </div>
+
+        <!-- Ẩn bằng class để đổi tab không mất tiến độ wizard -->
+        @if (hasImportTab) {
+            <div [class.hidden]="activeTab !== tabKey.IMPORT">
+                @if (notImportableMessage) {
+                    <div class="flex items-start gap-2 rounded-md border border-gray-200 bg-gray-50 p-3 text-[13px]">
+                        <i class="pi pi-lock mt-0.5 text-base text-gray-500"></i>
+                        <span>{{ notImportableMessage }}</span>
+                    </div>
+                } @else {
+                    <app-import-wizard [pair]="pair" (importingChange)="isImporting = $event" (imported)="onImported()" (forbidden)="reloadPairs()" />
+                }
+            </div>
+        }
+        @if (hasExportTab) {
+            <div [class.hidden]="activeTab !== tabKey.EXPORT">
+                <app-export-panel [pair]="pair" (forbidden)="reloadPairs()" />
+            </div>
+        }
+    </div>
+}

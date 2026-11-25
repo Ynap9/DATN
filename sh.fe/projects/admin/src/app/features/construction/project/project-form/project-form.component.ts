@@ -46,6 +46,8 @@ export class ProjectFormComponent extends BaseComponent {
             // Paging dự án dựa trên ProjectDocumentType: dự án không có metadata sẽ không hiện ở danh sách
             documentTypeIds: new FormControl<number[]>(this.project?.documentTypeIds ?? [], { nonNullable: true, validators: [Validators.required] }),
             isQaEnabled: new FormControl(this.project?.isQaEnabled ?? true, { nonNullable: true }),
+            // Chỉ gửi khi tạo; form Sửa không có ô này
+            isGoogleSheetEnabled: new FormControl(true, { nonNullable: true }),
             status: new FormControl({ value: this.project?.status ?? PROJECT_STATUS.DOING, disabled: this.isStatusLocked }, { nonNullable: true }),
         },
         { validators: dateRangeValidator },
@@ -63,10 +65,10 @@ export class ProjectFormComponent extends BaseComponent {
     onSubmit() {
         if (this.isFormInvalid()) return;
 
-        const { name, startedAt, endedAt, documentTypeIds, isQaEnabled, status } = this.form.getRawValue();
+        const { name, startedAt, endedAt, documentTypeIds, isQaEnabled, isGoogleSheetEnabled, status } = this.form.getRawValue();
         const request$ = this.project
             ? this._projectService.update(this.project.id, { name, startedAt, endedAt, status, documentTypeIds })
-            : this._projectService.create({ name, startedAt, endedAt, isQaEnabled, documentTypeIds });
+            : this._projectService.create({ name, startedAt, endedAt, isQaEnabled, isGoogleSheetEnabled, documentTypeIds });
 
         this.submitting = true;
         request$

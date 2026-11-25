@@ -1,6 +1,6 @@
 # Văn bản đang làm gần nhất và lọc trường trống
 
-> **Phần 28/28** · trước: [27-ai-prompt.md](27-ai-prompt.md) · mục lục: [README.md](README.md)
+> **Phần 28/29** · trước: [27-ai-prompt.md](27-ai-prompt.md) · mục lục: [README.md](README.md)
 
 Task 42A (2026-11-21) thêm hai thứ cho màn danh sách văn bản FE (Task 42). Thứ nhất là dòng "Tiếp tục văn bản đang làm" để người
 dùng quay lại đúng văn bản vừa lưu / vừa chấm. Thứ hai là lọc "(Trống)" để tìm văn bản còn thiếu dữ liệu ở một trường. Bộ lọc chung
@@ -60,4 +60,4 @@ job xuất chỉ chạy tới bước kiểm (không có Hangfire server).
 ⚠️ `SubmissionLog` chỉ có index `(ProjectId, DocumentTypeId, CreatedDate)`, `SubmissionQaLog` chỉ có `(SubmissionId, CreatedDate)`: `latest-working`
 lọc thêm `UserId` nên quét nhiều khi log lớn (phát hiện #13). DB dev nhỏ chưa thấy chậm; thêm index `(ProjectId, DocumentTypeId, UserId, CreatedDate)` cần migration, chưa chốt.
 
-> **Tiếp:** hết — quay lại [README.md](README.md).
+> **Tiếp:** [29-xuat-google-sheet.md](29-xuat-google-sheet.md) — xuất hồ sơ ra Google Sheet chạy nền.

@@ -27,6 +27,15 @@ namespace sh.be.domain.Module.Construction.Projects.Services
             }
         }
 
+        // Sheet đồng bộ của dự án là nguồn import nên chặn ghi đè bằng xuất, kể cả dự án đang xuất
+        public async Task EnsureGoogleSheetNotUsedByProjectAsync(string spreadsheetId)
+        {
+            if (await _projectRepository.ExistsGoogleSheetInProjectAsync(spreadsheetId))
+            {
+                throw new UserFriendlyException(ErrorCodes.CoreErrorInvalidDataSource, "Google Sheet đang là Sheet đồng bộ của một dự án, không dùng để xuất");
+            }
+        }
+
         public static void EnsureHasDocumentTypes(List<int> documentTypeIds)
         {
             if (documentTypeIds.Count == 0)

@@ -101,9 +101,13 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
             _shDbContext.SubmissionQaLogFields.AddRange(fields);
         }
 
-        public Task<bool> ExistsByFileUrlAsync(string fileUrl)
+        // Mọi văn bản chưa xoá gắn file này (chỉ đọc)
+        public Task<List<Submission>> GetByFileUrlAsync(string fileUrl)
         {
-            return _shDbContext.Submissions.AnyAsync(s => s.FileUrlS3Object == fileUrl);
+            return _shDbContext.Submissions
+                .AsNoTracking()
+                .Where(s => s.FileUrlS3Object == fileUrl)
+                .ToListAsync();
         }
 
         public Task<List<ExistingSubmissionSnapshot>> GetSnapshotsAsync(int projectId, int documentTypeId)

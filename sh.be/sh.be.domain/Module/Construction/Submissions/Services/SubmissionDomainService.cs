@@ -134,12 +134,15 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentFieldNotInProject);
         }
 
-        public async Task EnsureFileUrlExistsAsync(string fileUrl)
+        // Một file có thể gắn nhiều văn bản
+        public async Task<List<Submission>> EnsureFileUrlExistsAsync(string fileUrl)
         {
-            if (!await _submissionRepository.ExistsByFileUrlAsync(fileUrl))
+            var submissions = await _submissionRepository.GetByFileUrlAsync(fileUrl);
+            if (submissions.Count == 0)
             {
                 throw new UserFriendlyException(ErrorCodes.ConstructionErrorSubmissionNotFound);
             }
+            return submissions;
         }
 
         public Task LockImportAsync(int projectId, int documentTypeId)
@@ -207,6 +210,14 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
                 throw new UserFriendlyException(ErrorCodes.BadRequest, $"Cột xuất không hợp lệ: {invalidColumn}");
             }
             return SubmissionConst.EXPORT_COLUMNS.Where(column => requestedColumns.Contains(column, StringComparer.OrdinalIgnoreCase)).ToList();
+        }
+
+        public static void EnsureExportStartRowValid(int startRow)
+        {
+            if (startRow < 1)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Dòng bắt đầu phải từ 1 trở lên");
+            }
         }
     }
 

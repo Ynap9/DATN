@@ -69,7 +69,9 @@ URL FE `/admin/<module>/...` trùng tên module BE `api/v1/<module>/...` để t
 | [08-man-nhap-lieu.md](08-man-nhap-lieu.md) | Màn Nhập liệu (PDF + form, ◀ ▶, Lưu, chỉ đọc) và dialog Lịch sử văn bản |
 | [09-man-qa.md](09-man-qa.md) | Màn QA (đánh dấu trường Sai, Đạt / Trả lại, banner chỉ đọc, Lần trước sai) |
 | [10-man-operation.md](10-man-operation.md) | Màn module `operation`: Thành viên dự án (chỉ Admin, chọn cặp trên URL, Thêm / Sửa giá / Gỡ); Nhóm nhân viên (Tạo / Sửa / Xoá, nhóm lệch vai trò); picker cặp dùng chung |
-| [11-man-chia-phieu.md](11-man-chia-phieu.md) | Màn Chia phiếu: cây hộp / hồ sơ, xem trước, giao; phiếu của một người, chuyển / thu hồi phiếu và phụ trách QA |
+| [11-man-nhap-xuat.md](11-man-nhap-xuat.md) | Màn Nhập / Xuất dữ liệu: wizard import Google Sheet / Excel (chạy thử, job nền), tab Xuất Excel chọn cột thêm |
+| [12-man-cau-hinh.md](12-man-cau-hinh.md) | Màn Cấu hình: kết nối Google (quay về `?google=`), ứng dụng Google (che secret, Đổi), hạn dự án; lưu từng dòng PUT / POST, 409 / 304 |
+| [13-man-chia-phieu.md](13-man-chia-phieu.md) | Màn Chia phiếu: cây hộp / hồ sơ, xem trước, giao; phiếu của một người, chuyển / thu hồi phiếu và phụ trách QA |
 
 ## Nguyên tắc không đổi
 

@@ -1,3 +1,4 @@
+using sh.be.applications.Base.Dtos.DataReader;
 using sh.be.applications.Module.Construction.Dtos.ProjectConfig;
 
 namespace sh.be.applications.Module.Construction.Interfaces.Services
@@ -11,5 +12,6 @@ namespace sh.be.applications.Module.Construction.Interfaces.Services
         Task Delete(int id);
         Task<string> GetGoogleAuthorizationUrl();
         Task CompleteGoogleAuthorization(GoogleAuthorizationCallbackDto dto);
+        Task<SpreadsheetAccountDto> GetSpreadsheetAccount();
     }
 }

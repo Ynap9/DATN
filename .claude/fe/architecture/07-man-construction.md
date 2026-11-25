@@ -1,13 +1,13 @@
 # Màn hình module construction
 
-> **Phần 7/11** · trước: [06-them-man-hinh.md](06-them-man-hinh.md) · mục lục: [README.md](README.md)
+> **Phần 7/13** · trước: [06-them-man-hinh.md](06-them-man-hinh.md) · mục lục: [README.md](README.md)
 
 Quyết định và bẫy riêng của từng màn đã làm (cập nhật 2026-11-21); cách thêm màn mới chung ở [06-them-man-hinh.md](06-them-man-hinh.md).
 
 ## Metadata
 
 **Metadata** (loại / trường văn bản), là mục menu riêng **Metadata** ngay dưới "Dự án" trong nhóm Hồ sơ thi công
-(`/admin/construction/metadata`, `.../metadata/:id`; hằng `METADATA_URL`, Task 39). Đường `project-config` để dành cho màn Cấu hình dự án sau này. Menu không có mục "Hồ sơ".
+(`/admin/construction/metadata`, `.../metadata/:id`; hằng `METADATA_URL`, Task 39). Màn Cấu hình (`/admin/construction/project-config`, Task 50) xem [12-man-cau-hinh.md](12-man-cau-hinh.md). Menu không có mục "Hồ sơ".
 
 - Danh sách có Số trường, Số dự án đang dùng, Ngày tạo; "Xóa" ẩn khi `projectCount > 0` (BE vẫn chặn `346`).
 - Chi tiết: tiêu đề có đường kẻ tách nội dung; 4 nút 32px ở đầu trang — Kiểm tra Google Sheet, Tải template (nền trắng viền xám, tải có
@@ -33,6 +33,9 @@ Quyết định và bẫy riêng của từng màn đã làm (cập nhật 2026-
 
 - Danh sách đọc `GET project/paging` — mỗi dòng một cặp dự án – metadata, số liệu theo vai trò người xem; dự án 0 metadata không hiện
   nên form bắt chọn ≥ 1 metadata. Sửa từ danh sách gọi `GET {id}` trước để có đủ `documentTypeIds`.
+- Form **Tạo** có 2 nút gạt chỉ đặt lúc tạo, mặc định bật: "Có kiểm tra QA" (`isQaEnabled`) và "Tạo Google Sheet đồng bộ"
+  (`isGoogleSheetEnabled`, Task 54). Tắt Sheet → dự án không có `urlGoogleSheetSync`, chỉ nhập bằng Excel, ẩn nút "Mở Google
+  Sheet"; bật mà chưa kết nối Google → BE trả `304`, form giữ nguyên dữ liệu. Form **Sửa** không có và không gửi 2 trường này.
 - Ngày gửi chuỗi local `YYYY-MM-DDT00:00:00` của `sh-calendar`, **không** `toISOString` (lệch UTC lùi 1 ngày).
 - Xoá dùng `DELETE admin/delete/{id}` (kèm dữ liệu), chỉ Admin / SuperAdmin có quyền Delete; không gọi `DELETE {id}` cũ.
 - Bấm tên / thẻ dòng mở thẳng danh sách văn bản đúng metadata của dòng (`project/:id/metadata/:documentTypeId`, Task 46) — màn chi tiết
@@ -78,9 +81,9 @@ Task 42, `/admin/construction/project/:id/metadata/:documentTypeId` (`features/c
   toast rồi về danh sách dự án, còn lại (kể cả 820) hiện trạng thái trống "chưa được giao" + nút Về danh sách dự án.
 - Query string là nguồn trạng thái duy nhất, đặt **đúng tên tham số BE** (`statusCheck`, `statusQa`, `keyword`, `documentFieldId1`,
   `fieldValue1`, `isEmpty1`, … `pageNumber`, `pageSize`) + `view=qa` cho Quản lý; ghi bằng `replaceUrl`, đổi lọc / tab / chế độ về trang 1.
-  F5 hay quay lại dựng lại đúng tab, lọc, trang. Tab Chờ QA = `statusCheck=1&statusQa=0`.
-- Số trên tab: Nhập liệu gọi `count` không gửi trạng thái; QA gọi `qa/paging` `pageSize=1` hai lần (Chờ QA có `statusCheck=1`, Đạt /
-  Không đạt không trạng thái) vì QA Không đạt đưa văn bản về Bị trả. "Tiếp tục văn bản đang làm" chỉ gọi lại khi đổi chế độ / Làm mới.
+  F5 hay quay lại dựng lại đúng tab, lọc, trang. Tab Chưa QA = `statusCheck=1&statusQa=0`.
+- Số trên tab: Nhập liệu gọi `count` không gửi trạng thái; QA gọi `qa/paging` `pageSize=1` hai lần (Chưa QA có `statusCheck=1`, Đạt /
+  Không đạt không trạng thái) vì QA Không đạt đưa văn bản về Trả lại. "Tiếp tục văn bản đang làm" chỉ gọi lại khi đổi chế độ / Làm mới.
 - Cột động từ `customData` của `paging`, khai `locked` để metadata thêm / bớt trường không xoá cấu hình các cột cố định. `tableKey`
   tách `construction-submission-<id>` / `construction-submission-qa-<id>` và hai thẻ `app-data-table` riêng (`@if`): DataTable chỉ đọc
   cấu hình cột theo `tableKey` lúc khởi tạo, dùng chung một thẻ thì bảng QA không nạp cấu hình của nó.

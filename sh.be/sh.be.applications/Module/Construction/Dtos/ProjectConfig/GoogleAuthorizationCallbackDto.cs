@@ -4,5 +4,6 @@ namespace sh.be.applications.Module.Construction.Dtos.ProjectConfig
     {
         public string? Code { get; set; }
         public string? State { get; set; }
+        public string? Error { get; set; }
     }
 }

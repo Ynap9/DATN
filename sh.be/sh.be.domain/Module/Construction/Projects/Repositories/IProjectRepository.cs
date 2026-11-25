@@ -7,6 +7,7 @@ namespace sh.be.domain.Module.Construction.Projects.Repositories
     {
         Task<Project?> FindByIdAsync(int id);
         Task<bool> ExistsByNameAsync(string name, int? excludedId = null);
+        Task<bool> ExistsGoogleSheetInProjectAsync(string spreadsheetId);
         Task<List<Project>> GetWithEndedAtByStatusesAsync(IReadOnlyCollection<int> statuses);
         Task<bool> TryLockDeadlineCheckAsync();
         Task ReleaseDeadlineCheckLockAsync();

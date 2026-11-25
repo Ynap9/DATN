@@ -32,7 +32,7 @@ namespace sh.be.applications.Module.Construction.Implements
         private readonly IProjectQuery _projectQuery;
         private readonly ProjectDomainService _projectDomainService;
         private readonly DocumentTypeDomainService _documentTypeDomainService;
-        private readonly ProjectConfigDomainService _projectConfigDomainService;
+        private readonly IProjectConfigService _projectConfigService;
         private readonly IGoogleSheetExternal _googleSheetExternal;
         private readonly IRoleRepository _roleRepository;
         private readonly IUserRepository _userRepository;
@@ -40,7 +40,7 @@ namespace sh.be.applications.Module.Construction.Implements
 
         public ProjectService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<ProjectService> logger, IRequestContext requestContext, TimeProvider timeProvider,
             IProjectRepository projectRepository, IDocumentFieldRepository documentFieldRepository, IProjectQuery projectQuery, ProjectDomainService projectDomainService,
-            DocumentTypeDomainService documentTypeDomainService, ProjectConfigDomainService projectConfigDomainService, IGoogleSheetExternal googleSheetExternal,
+            DocumentTypeDomainService documentTypeDomainService, IProjectConfigService projectConfigService, IGoogleSheetExternal googleSheetExternal,
             IRoleRepository roleRepository, IUserRepository userRepository, IPdfExternal pdfExternal
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
@@ -52,7 +52,7 @@ namespace sh.be.applications.Module.Construction.Implements
             _projectQuery = projectQuery;
             _projectDomainService = projectDomainService;
             _documentTypeDomainService = documentTypeDomainService;
-            _projectConfigDomainService = projectConfigDomainService;
+            _projectConfigService = projectConfigService;
             _googleSheetExternal = googleSheetExternal;
         }
 
@@ -278,7 +278,7 @@ namespace sh.be.applications.Module.Construction.Implements
             return _pdfExternal.CreateReport($"BienBanNghiemThu_{project.Name}_{now:yyyyMMddHHmm}", report);
         }
 
-        // Tạo dự án kèm cờ có / không QA (chỉ đặt lúc tạo), gán loại văn bản và tạo Google Sheet đồng bộ
+        // Tạo dự án kèm cờ có / không QA (chỉ đặt lúc tạo), gán loại văn bản và tạo Google Sheet đồng bộ khi được chọn
         public async Task<FindProjectByIdDto> Create(CreateProjectDto dto)
         {
             _logger.LogInformation($"{nameof(Create)}, dto={JsonSerializer.Serialize(dto)}");
@@ -291,13 +291,22 @@ namespace sh.be.applications.Module.Construction.Implements
             await _documentTypeDomainService.EnsureAllExistAsync(documentTypeIds);
 
             var project = Project.Create(dto.Name, dto.StartedAt, dto.EndedAt, dto.IsQaEnabled, currentUserId, now);
-            var account = await GetSpreadsheetAccountAsync();
-            var spreadsheet = await _googleSheetExternal.CreateSpreadsheetAsync(account, project.Name, project.GoogleSheetName);
+            // Không tạo Sheet thì không cần kết nối Google; UrlGoogleSheetSync giữ rỗng
+            SpreadsheetAccountDto? account = null;
+            CreatedSpreadsheetDto? spreadsheet = null;
+            if (dto.IsGoogleSheetEnabled)
+            {
+                account = await _projectConfigService.GetSpreadsheetAccount();
+                spreadsheet = await _googleSheetExternal.CreateSpreadsheetAsync(account, project.Name, project.GoogleSheetName);
+            }
 
             await using var transaction = await _unitOfWork.BeginTransactionAsync();
             try
             {
-                project.LinkGoogleSheet(spreadsheet.Url);
+                if (spreadsheet != null)
+                {
+                    project.LinkGoogleSheet(spreadsheet.Url);
+                }
                 _projectRepository.Add(project);
                 await _unitOfWork.SaveChangesAsync();
 
@@ -310,9 +319,12 @@ namespace sh.be.applications.Module.Construction.Implements
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"{nameof(Create)}, spreadsheetId={spreadsheet.SpreadsheetId}");
+                _logger.LogError(ex, $"{nameof(Create)}, spreadsheetId={spreadsheet?.SpreadsheetId}");
                 await transaction.RollbackAsync();
-                await _googleSheetExternal.TryDeleteSpreadsheetAsync(account, spreadsheet.SpreadsheetId);
+                if (account != null && spreadsheet != null)
+                {
+                    await _googleSheetExternal.TryDeleteSpreadsheetAsync(account, spreadsheet.SpreadsheetId);
+                }
                 throw;
             }
 
@@ -321,7 +333,7 @@ namespace sh.be.applications.Module.Construction.Implements
             return data;
         }
 
-        // Sửa tên, ngày, trạng thái và danh sách metadata (gỡ khi chưa có văn bản, gắn lại thì khôi phục cấu hình cũ), đổi tên Google Sheet
+        // Sửa tên, ngày, trạng thái và danh sách metadata (gỡ khi chưa có văn bản, gắn lại thì khôi phục cấu hình cũ), đổi tên Google Sheet nếu có
         public async Task Update(int id, UpdateProjectDto dto)
         {
             _logger.LogInformation($"{nameof(Update)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
@@ -343,9 +355,9 @@ namespace sh.be.applications.Module.Construction.Implements
             project.Update(dto.Name, dto.StartedAt, dto.EndedAt, dto.Status, currentUserId, now);
 
             SpreadsheetAccountDto? renamedAccount = null;
-            if (project.Name != oldName)
+            if (project.Name != oldName && project.HasGoogleSheet())
             {
-                renamedAccount = await GetSpreadsheetAccountAsync();
+                renamedAccount = await _projectConfigService.GetSpreadsheetAccount();
                 await _googleSheetExternal.RenameSpreadsheetAsync(renamedAccount, project.UrlGoogleSheetSync, project.Name);
             }
 
@@ -413,7 +425,7 @@ namespace sh.be.applications.Module.Construction.Implements
             await _unitOfWork.SaveChangesAsync();
         }
 
-        // Admin xoá mềm dự án ở mọi trạng thái kèm mọi dữ liệu phụ thuộc, cùng một mốc xoá; đổi tên Google Sheet sau commit, lỗi chỉ ghi log
+        // Admin xoá mềm dự án ở mọi trạng thái kèm mọi dữ liệu phụ thuộc, cùng một mốc xoá; có Google Sheet thì đổi tên sau commit, lỗi chỉ ghi log
         public async Task DeleteCascade(int id)
         {
             _logger.LogInformation($"{nameof(DeleteCascade)}, id={id}");
@@ -445,9 +457,13 @@ namespace sh.be.applications.Module.Construction.Implements
                 throw;
             }
 
+            if (!project.HasGoogleSheet())
+            {
+                return;
+            }
             try
             {
-                var account = await GetSpreadsheetAccountAsync();
+                var account = await _projectConfigService.GetSpreadsheetAccount();
                 if (!await _googleSheetExternal.TryRenameSpreadsheetAsync(account, project.UrlGoogleSheetSync, $"{project.Name} (đã xoá)"))
                 {
                     _logger.LogWarning($"{nameof(DeleteCascade)}, id={id}, không đổi tên được Google Sheet {project.UrlGoogleSheetSync}");
@@ -466,20 +482,6 @@ namespace sh.be.applications.Module.Construction.Implements
 
             _projectRepository.AddDocumentTypes(projectDocumentTypes);
             _projectRepository.AddDocumentFields(projectDocumentTypes.SelectMany(pd => pd.AssignDocumentFields(documentFields, assignedBy, assignedDate)));
-        }
-
-        private async Task<SpreadsheetAccountDto> GetSpreadsheetAccountAsync()
-        {
-            var values = await _projectConfigDomainService.GetRequiredValuesAsync(ProjectConfigConst.GOOGLE_CLIENT_ID,
-                ProjectConfigConst.GOOGLE_CLIENT_SECRET, ProjectConfigConst.GOOGLE_REFRESH_TOKEN, ProjectConfigConst.GOOGLE_FOLDER_ID);
-
-            return new SpreadsheetAccountDto
-            {
-                ClientId = values[ProjectConfigConst.GOOGLE_CLIENT_ID],
-                ClientSecret = values[ProjectConfigConst.GOOGLE_CLIENT_SECRET],
-                RefreshToken = values[ProjectConfigConst.GOOGLE_REFRESH_TOKEN],
-                FolderId = values[ProjectConfigConst.GOOGLE_FOLDER_ID],
-            };
         }
 
         private static object ToAuditData(Project project, IEnumerable<int> documentTypeIds)

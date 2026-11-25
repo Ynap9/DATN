@@ -118,7 +118,7 @@ thì đổi `ExcelExternal` và kiểu dữ liệu của hàng, đừng xử lý
 
 Cùng bộ lọc, cùng nội dung file với `GET export-excel`, nhưng chạy trong job Hangfire `SubmissionExportJob` (queue `export`,
 [05](../architecture/05-infrastructure-external.md#backgroundjob--hangfire)): request không giữ HTTP lâu, tối đa `ExportWorkerCount` (2) workbook
-dựng cùng lúc. Không làm xuất nhanh hơn. `GET export-excel` cũ giữ song song để FE chuyển dần.
+dựng cùng lúc. Không làm xuất nhanh hơn. `GET export-excel` cũ giữ song song để FE chuyển dần. Xuất ra Google Sheet cùng khuôn: [29](29-xuat-google-sheet.md).
 
 ⚠️ Job không có user từ token: `337` và phiếu QA chỉ kiểm ở `POST export-excel/job`; job gọi `ExportExcelFromJob` (không kiểm user), đừng gọi `ExportExcel`.
 

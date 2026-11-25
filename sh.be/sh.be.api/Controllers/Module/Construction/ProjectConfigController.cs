@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using sh.be.api.Attributes;
 using sh.be.api.Base;
 using sh.be.applications.Module.Construction.Dtos.ProjectConfig;
@@ -9,6 +10,8 @@ using sh.be.applications.Module.Construction.Interfaces.Services;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Versioning;
 using sh.be.shared.HttpRequest;
+using sh.be.shared.HttpRequest.Exception;
+using sh.be.shared.Settings;
 
 namespace sh.be.api.Controllers.Module.Construction
 {
@@ -18,10 +21,22 @@ namespace sh.be.api.Controllers.Module.Construction
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ProjectConfigController : BaseController
     {
+        private const string ProjectConfigPagePath = "/admin/construction/project-config";
+        private const int GoogleErrorMessageMaxLength = 200;
+        private const string GoogleAuthorizationCanceledMessage = "Bạn đã huỷ cấp quyền Google";
+        private const string GoogleAuthorizationFailedMessage = "Kết nối Google thất bại, thử lại sau";
+        private const string GoogleAccessDeniedError = "access_denied";
+
         private readonly IProjectConfigService _projectConfigService;
-        public ProjectConfigController(ILogger<ProjectConfigController> logger, IProjectConfigService projectConfigService) : base(logger)
+        private readonly AuthServerSettings _authServerSettings;
+        private readonly ILogger<ProjectConfigController> _logger;
+
+        public ProjectConfigController(ILogger<ProjectConfigController> logger, IProjectConfigService projectConfigService,
+            IOptions<AuthServerSettings> authServerOptions) : base(logger)
         {
             _projectConfigService = projectConfigService;
+            _authServerSettings = authServerOptions.Value;
+            _logger = logger;
         }
 
         [HttpGet("")]
@@ -116,17 +131,46 @@ namespace sh.be.api.Controllers.Module.Construction
 
         [HttpGet("google-callback")]
         [AllowAnonymous]
-        public async Task<ApiResponse> CompleteGoogleAuthorization([FromQuery] GoogleAuthorizationCallbackDto dto)
+        public async Task<IActionResult> CompleteGoogleAuthorization([FromQuery] GoogleAuthorizationCallbackDto dto)
         {
+            // Chỉ access_denied là người dùng bấm Huỷ; lỗi khác của Google chỉ ghi log, không đưa mã lỗi lên URL
+            if (!string.IsNullOrWhiteSpace(dto.Error))
+            {
+                if (string.Equals(dto.Error, GoogleAccessDeniedError, StringComparison.OrdinalIgnoreCase))
+                {
+                    return RedirectToProjectConfig(GoogleAuthorizationCanceledMessage);
+                }
+                _logger.LogWarning($"{nameof(CompleteGoogleAuthorization)}, error={dto.Error}");
+                return RedirectToProjectConfig(GoogleAuthorizationFailedMessage);
+            }
+
             try
             {
                 await _projectConfigService.CompleteGoogleAuthorization(dto);
-                return new();
+                return RedirectToProjectConfig();
+            }
+            catch (UserFriendlyException ex)
+            {
+                return RedirectToProjectConfig(ex.Message);
             }
             catch (Exception ex)
             {
-                return OkException(ex);
+                _logger.LogError(ex, $"{nameof(CompleteGoogleAuthorization)}");
+                return RedirectToProjectConfig(GoogleAuthorizationFailedMessage);
             }
+        }
+
+        // Về màn Cấu hình: không lỗi → ?google=success, có lỗi → ?google=error&message=<câu lỗi tối đa 200 ký tự>
+        private RedirectResult RedirectToProjectConfig(string? errorMessage = null)
+        {
+            var url = $"{_authServerSettings.AppUrl.TrimEnd('/')}{ProjectConfigPagePath}";
+            if (errorMessage == null)
+            {
+                return Redirect($"{url}?google=success");
+            }
+
+            var message = errorMessage.Length > GoogleErrorMessageMaxLength ? errorMessage[..GoogleErrorMessageMaxLength] : errorMessage;
+            return Redirect($"{url}?google=error&message={Uri.EscapeDataString(message)}");
         }
     }
 }

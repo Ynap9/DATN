@@ -443,7 +443,7 @@ export class SubmissionQaComponent extends BaseComponent {
             return {
                 tone: 'red',
                 title: `Đã trả lại lúc ${qaText} · đang chờ người nhập sửa.`,
-                message: `Văn bản tự quay lại Chờ QA khi người nhập kiểm xong. Lý do đã gửi: “${submission.qaReason || '—'}”`,
+                message: `Văn bản tự quay lại Chưa QA khi người nhập kiểm xong. Lý do đã gửi: “${submission.qaReason || '—'}”`,
                 isFinished: true,
             };
         }

@@ -37,6 +37,7 @@
 | [26-thu-hoi-chuyen-phieu.md](26-thu-hoi-chuyen-phieu.md) | Thu hồi / chuyển phiếu nhập liệu (chỉ văn bản chưa kiểm) và phụ trách QA (văn bản chưa đạt, gộp vào phụ trách sẵn có), chống đua `UPDLOCK`, danh sách phiếu, chặn QA dự án không QA `345` |
 | [27-ai-prompt.md](27-ai-prompt.md) | Prompt OCR theo metadata (Ai): prompt chung + từng trường OCR, nháp → xuất bản → lưu trữ, khôi phục thành nháp mới, cảnh báo trường lệch, khuôn ghép prompt, 7 API, lỗi `908`–`913` |
 | [28-van-ban-dang-lam.md](28-van-ban-dang-lam.md) | Hồ sơ (Task 42A): văn bản người gọi lưu / chấm QA gần nhất còn mở được (`latest-working`), lọc trường trống `isEmpty1` / `isEmpty2` cho 11 API bộ lọc chung |
+| [29-xuat-google-sheet.md](29-xuat-google-sheet.md) | Hồ sơ (Task 56A): xuất bảng hồ sơ vào tab có sẵn của Google Sheet bằng Gmail đã kết nối, chạy nền Hangfire như xuất Excel, chặn Sheet đồng bộ của dự án |
 
 ## Thuật ngữ
 

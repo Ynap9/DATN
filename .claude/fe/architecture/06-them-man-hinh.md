@@ -1,6 +1,6 @@
 # Thêm một màn hình gọi API BE
 
-> **Phần 6/11** · trước: [05-conventions.md](05-conventions.md) · mục lục: [README.md](README.md)
+> **Phần 6/13** · trước: [05-conventions.md](05-conventions.md) · mục lục: [README.md](README.md)
 
 ⚠️ `PUT api/v1/auth/user` chỉ sửa chính người đang đăng nhập (`UpdateUserDto` không có id), nên màn Người dùng không có nút Sửa.
 
@@ -22,7 +22,7 @@ Ví dụ dưới: màn hình danh sách vai trò, gọi `GET api/v1/auth/role/pa
 5. **Component trang**: `role-list.component.ts` kế thừa `BaseComponent`, dùng `SharedImports`, `DataTable`; form tạo/sửa mở bằng `_dialogService.open`.
 6. **Route**: thêm `{ path: 'role', component: RoleListComponent }` vào `AUTH_ROUTES` trong
    `features/auth/auth.routes.ts` ⇒ URL `/admin/auth/role`.
-7. **Menu**: thêm mục vào `APP_MENU_ITEMS` ở `app/app.menu.ts`, ẩn/hiện theo key quyền BE (`Menu.Auth.Role`…).
+7. **Menu**: thêm mục vào `APP_MENU_ITEMS` ở `app/app.menu.ts`, ẩn/hiện theo `permission` = một key quyền BE (`Menu.Auth.Role`…) hoặc mảng key (có một trong số đó là hiện — `AppMenu.canView`).
 8. **Build** (xem [05-conventions.md](05-conventions.md)), chạy BE, thử trên trình duyệt.
 
 ```text

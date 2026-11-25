@@ -1,0 +1,76 @@
+<section class="overflow-hidden rounded-xl border border-[var(--app-line)] bg-[var(--app-surface)]" aria-labelledby="googleAppTitle">
+    <div class="flex flex-col gap-0.5 border-b border-[var(--app-line)] px-5 py-4">
+        <h2 id="googleAppTitle" class="m-0! text-[15px]! font-semibold!">Ứng dụng Google</h2>
+        <span class="text-[13px] text-[var(--app-muted)]">Lấy ở Google Cloud Console › APIs &amp; Services › Credentials (loại Web application).</span>
+    </div>
+
+    <form class="grid grid-cols-1 items-start gap-x-4 gap-y-2 p-5 md:grid-cols-[180px_minmax(0,1fr)] md:gap-y-[18px]" [formGroup]="form" (ngSubmit)="save()">
+        <label for="googleClientId" class="text-[13px] font-semibold md:pt-2">Client ID <span class="text-[var(--app-red)]">*</span></label>
+        <div class="flex flex-col gap-1">
+            <input pInputText id="googleClientId" class="w-full" formControlName="clientId" placeholder="xxxx.apps.googleusercontent.com" />
+            @if (isRequiredError('clientId')) {
+                <small class="text-[var(--app-red)]">Không được để trống</small>
+            }
+        </div>
+
+        <label for="googleClientSecret" class="text-[13px] font-semibold md:pt-2">Client secret <span class="text-[var(--app-red)]">*</span></label>
+        <div class="flex flex-col gap-1">
+            @if (isSecretEditing) {
+                <div class="flex gap-2">
+                    <input pInputText id="googleClientSecret" type="password" class="min-w-0 flex-1" formControlName="clientSecret" placeholder="Nhập Client secret mới"
+                        autocomplete="new-password" />
+                    @if (isChangingSecret) {
+                        <p-button label="Huỷ đổi" severity="secondary" [outlined]="true" (onClick)="cancelChangeSecret()" />
+                    }
+                </div>
+                @if (isRequiredError('clientSecret')) {
+                    <small class="text-[var(--app-red)]">Không được để trống</small>
+                }
+            } @else {
+                <div class="flex gap-2">
+                    <input pInputText id="googleClientSecret" class="min-w-0 flex-1" value="••••••" [readonly]="true" [disabled]="!canUpdate" />
+                    @if (canUpdate) {
+                        <p-button label="Đổi" severity="secondary" [outlined]="true" (onClick)="startChangeSecret()" />
+                    }
+                </div>
+                <span class="text-xs text-[var(--app-muted)]">Đã lưu, hệ thống không hiện lại.@if (canUpdate) { Bấm Đổi để nhập giá trị mới.}</span>
+            }
+        </div>
+
+        <label for="googleRedirectUri" class="text-[13px] font-semibold md:pt-2">Redirect URI <span class="text-[var(--app-red)]">*</span></label>
+        <div class="flex flex-col gap-1">
+            <input pInputText id="googleRedirectUri" class="w-full font-mono" formControlName="redirectUri" />
+            @if (isRequiredError('redirectUri')) {
+                <small class="text-[var(--app-red)]">Không được để trống</small>
+            } @else if (isRedirectUriSuspicious) {
+                <small class="text-[var(--app-amber)]">Redirect URI chưa có đoạn {{ callbackPath }}.</small>
+            }
+            <span class="text-xs text-[var(--app-muted)]">
+                Phải trùng từng ký tự với Authorized redirect URI trên Google Cloud, có đoạn {{ callbackPath }}.
+            </span>
+        </div>
+
+        <label for="googleFolderId" class="text-[13px] font-semibold md:pt-2">Thư mục Drive <span class="text-[var(--app-red)]">*</span></label>
+        <div class="flex flex-col gap-1">
+            <input pInputText id="googleFolderId" class="w-full font-mono" formControlName="folderId" placeholder="Id thư mục" />
+            @if (isRequiredError('folderId')) {
+                <small class="text-[var(--app-red)]">Không được để trống</small>
+            }
+            <span class="text-xs text-[var(--app-muted)]">
+                Phần cuối link thư mục: drive.google.com/drive/folders/<strong>&lt;Id&gt;</strong>. Sheet của mọi dự án nằm trong thư mục này.
+            </span>
+        </div>
+    </form>
+
+    @if (lastModifiedDate || canUpdate) {
+        <div class="flex flex-wrap items-center justify-end gap-2 border-t border-[var(--app-line)] bg-[#fbfcfb] px-5 py-3">
+            @if (lastModifiedDate) {
+                <span class="flex-1 text-xs text-[var(--app-muted)]">Sửa lần cuối {{ lastModifiedDate | date: 'dd/MM/yyyy HH:mm' }}</span>
+            }
+            @if (canUpdate) {
+                <p-button label="Huỷ thay đổi" severity="secondary" [outlined]="true" [disabled]="!hasChanges || saving" (onClick)="discard()" />
+                <p-button label="Lưu" [loading]="saving" [disabled]="!hasChanges" (onClick)="save()" />
+            }
+        </div>
+    }
+</section>

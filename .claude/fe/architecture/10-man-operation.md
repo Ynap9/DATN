@@ -1,8 +1,8 @@
 # Màn module Operation
 
-> **Phần 10/11** · trước: [09-man-qa.md](09-man-qa.md) · mục lục: [README.md](README.md)
+> **Phần 10/13** · trước: [09-man-qa.md](09-man-qa.md) · mục lục: [README.md](README.md)
 
-Hai màn: Thành viên dự án (Task 47), Nhóm nhân viên (Task 49), 2026-11-23; màn Chia phiếu ở [11-man-chia-phieu.md](11-man-chia-phieu.md).
+Hai màn: Thành viên dự án (Task 47), Nhóm nhân viên (Task 49), 2026-11-23; màn Chia phiếu ở [13-man-chia-phieu.md](13-man-chia-phieu.md).
 BE ở [../../be/nghiep-vu/21-thanh-vien-du-an.md](../../be/nghiep-vu/21-thanh-vien-du-an.md),
 [24-don-gia-tien-cong.md](../../be/nghiep-vu/24-don-gia-tien-cong.md) và [19-nhom-nhan-vien.md](../../be/nghiep-vu/19-nhom-nhan-vien.md).
 
@@ -60,4 +60,4 @@ mất cặp). `reload()` tải lại danh sách và **luôn** phát lại cặp 
   `removeMembers`) đặt `SKIP_ERROR_TOAST` để dialog tự báo "Dữ liệu gửi lên không hợp lệ"; gọi chúng phải tự xử lý `error`.
 - Gợi ý người gửi `excludeStaffGroupId`, nên người đã lưu vừa bỏ trong dialog không hiện lại trong gợi ý tới khi Lưu.
 
-> **Tiếp:** [11-man-chia-phieu.md](11-man-chia-phieu.md) — màn Chia phiếu: giao phiếu, phiếu của một người, chuyển / thu hồi.
+> **Tiếp:** [11-man-nhap-xuat.md](11-man-nhap-xuat.md) — màn Nhập / Xuất dữ liệu (wizard import, xuất Excel chạy nền).

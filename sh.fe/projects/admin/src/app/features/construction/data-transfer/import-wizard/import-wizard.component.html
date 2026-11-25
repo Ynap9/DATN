@@ -1,0 +1,98 @@
+<div class="flex flex-col rounded-[14px] border border-[var(--app-line)] bg-white shadow-sm">
+    <div class="flex items-center justify-between gap-3 border-b border-[#eef1ef] px-6 py-4">
+        <span class="text-base font-bold">{{ steps[step] }}</span>
+        <span class="text-[13px] text-[var(--app-muted)]">Bước {{ step + 1 }} / {{ steps.length }}</span>
+    </div>
+
+    <div class="flex flex-col md:flex-row">
+        <!-- Thanh bước chỉ để xem, không bấm nhảy bước; màn hẹp thì nằm trên -->
+        <nav aria-label="Các bước import" class="border-b border-[#eef1ef] bg-[#fbfcfb] p-6 md:w-[260px] md:flex-none md:rounded-bl-[14px] md:border-r md:border-b-0">
+            <ol class="m-0 flex list-none flex-col p-0">
+                @for (title of steps; track title; let index = $index; let last = $last) {
+                    <li class="flex gap-3.5">
+                        <div class="flex flex-col items-center">
+                            @if (index < step) {
+                                <span class="flex h-[34px] w-[34px] flex-none items-center justify-center rounded-full bg-[var(--app-accent)] text-white">
+                                    <i class="pi pi-check text-xs"></i>
+                                </span>
+                            } @else {
+                                <span class="flex h-[34px] w-[34px] flex-none items-center justify-center rounded-full text-[13px] font-bold"
+                                    [class]="index === step ? 'bg-[var(--app-accent)] text-white shadow-[0_0_0_4px_rgba(14,124,102,0.15)]' : 'border-[1.5px] border-[var(--app-line-strong)] bg-white text-[var(--app-muted)]'">
+                                    {{ index + 1 }}
+                                </span>
+                            }
+                            <span class="my-1 min-h-[18px] w-0.5 flex-auto rounded-sm" [class]="last ? 'bg-transparent' : index < step ? 'bg-[var(--app-accent)]' : 'bg-[var(--app-line)]'"></span>
+                        </div>
+                        <div class="flex min-w-0 flex-col pt-1.5 pb-[22px]">
+                            <span class="text-sm" [class]="index <= step ? 'font-bold text-[var(--app-ink)]' : 'font-semibold text-[var(--app-muted)]'">{{ title }}</span>
+                            <span class="text-xs text-[var(--app-muted)]">{{ getStepSummary(index) }}</span>
+                        </div>
+                    </li>
+                }
+            </ol>
+        </nav>
+
+        <div class="min-w-0 flex-1 px-7 py-6">
+            @if (doneMessage !== null) {
+                <div class="flex h-full flex-col items-center justify-center gap-2.5 px-4 py-6 text-center">
+                    <span class="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[var(--app-accent-soft)] text-[var(--app-accent-700)]">
+                        <i class="pi pi-check text-xl"></i>
+                    </span>
+                    <span class="text-lg font-bold">Import xong</span>
+                    <span class="max-w-[480px] text-[13px] text-[#3f4b47]">{{ doneMessage }}</span>
+                    <div class="mt-2 flex gap-2.5">
+                        <p-button label="Import tiếp" severity="secondary" [outlined]="true" (onClick)="importMore()" />
+                        <p-button label="Mở danh sách văn bản" (onClick)="openSubmissionList()" />
+                    </div>
+                </div>
+            } @else {
+                @switch (step) {
+                    @case (stepKey.SOURCE) {
+                        <app-import-source-step [urlGoogleSheetSync]="pair().urlGoogleSheetSync" [googleSheetName]="googleSheetName" [(source)]="source"
+                            [(upload)]="upload" [(sheetName)]="sheetName" />
+                    }
+                    @case (stepKey.KIND) {
+                        <div class="flex flex-col gap-2.5" role="radiogroup" aria-label="Kiểu import">
+                            @for (option of kindOptions; track option.value) {
+                                @let selected = kind === option.value;
+                                <button type="button" role="radio" [attr.aria-checked]="selected"
+                                    class="flex cursor-pointer items-start gap-3.5 rounded-xl px-[18px] py-4 text-left"
+                                    [class]="selected ? 'border-[1.5px] border-[var(--app-accent)] bg-[#f3faf7]' : 'border border-[var(--app-line-strong)] bg-white'"
+                                    (click)="kind = option.value">
+                                    <span class="mt-0.5 h-[18px] w-[18px] flex-none rounded-full"
+                                        [class]="selected ? 'border-[5px] border-[var(--app-accent)]' : 'border-[1.5px] border-[#9aa7a2]'"></span>
+                                    <span class="flex flex-col gap-0.5">
+                                        <span class="text-sm font-bold">{{ option.label }}</span>
+                                        <span class="text-[13px] text-[var(--app-muted)]">{{ option.description }}</span>
+                                    </span>
+                                </button>
+                            }
+                        </div>
+                    }
+                    @case (stepKey.COLUMN) {
+                        <app-import-column-step [kind]="kind" [source]="source" [documentTypeId]="pair().documentTypeId"
+                            [urlGoogleSheetSync]="pair().urlGoogleSheetSync" [googleSheetName]="googleSheetName" [excelHeaders]="excelHeaders"
+                            [(mapping)]="mapping" />
+                        @if (verifyError) {
+                            <div class="mt-4 max-h-60 overflow-auto rounded-md border border-[#f3c4c4] bg-[var(--app-red-soft)] p-3 text-[13px] whitespace-pre-line text-[var(--app-red)]">{{ verifyError }}</div>
+                        }
+                    }
+                    @case (stepKey.VERIFY) {
+                        @if (verifyView; as view) {
+                            <app-import-verify-step [chips]="summaryChips" [view]="view" [runningMessage]="runningMessage" [errorMessage]="importError" />
+                        }
+                    }
+                }
+            }
+        </div>
+    </div>
+
+    @if (doneMessage === null) {
+        <div class="flex justify-end gap-2.5 border-t border-[#eef1ef] px-6 py-3.5">
+            @if (step > stepKey.SOURCE) {
+                <p-button label="Quay lại" severity="secondary" [outlined]="true" [disabled]="isBusy" (onClick)="back()" />
+            }
+            <p-button [label]="primaryLabel" [disabled]="!canPrimary" [loading]="isBusy" (onClick)="onPrimary()" />
+        </div>
+    }
+</div>

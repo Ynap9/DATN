@@ -1,6 +1,6 @@
 # Màn Chia phiếu (Operation)
 
-> **Phần 11/11** · trước: [10-man-operation.md](10-man-operation.md) · mục lục: [README.md](README.md)
+> **Phần 13/13** · trước: [12-man-cau-hinh.md](12-man-cau-hinh.md) · mục lục: [README.md](README.md)
 
 Task 51 (giao phiếu) và Task 52 (phiếu của một người, chuyển, thu hồi), 2026-11-23 → 25. BE ở
 [23-chia-phieu.md](../../be/nghiep-vu/23-chia-phieu.md) và [26-thu-hoi-chuyen-phieu.md](../../be/nghiep-vu/26-thu-hoi-chuyen-phieu.md).

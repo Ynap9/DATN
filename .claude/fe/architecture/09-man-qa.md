@@ -1,6 +1,6 @@
 # Màn QA
 
-> **Phần 9/11** · trước: [08-man-nhap-lieu.md](08-man-nhap-lieu.md) · mục lục: [README.md](README.md)
+> **Phần 9/13** · trước: [08-man-nhap-lieu.md](08-man-nhap-lieu.md) · mục lục: [README.md](README.md)
 
 Task 44 (cập nhật 2026-11-23). Màn chấm của người QA: PDF bên trái, giá trị từng trường bên phải (chỉ đọc), bấm "Sai" ở
 trường không khớp rồi chấm Đạt hoặc Trả lại, xong tự sang văn bản kế trong bộ lọc.

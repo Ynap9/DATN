@@ -2,7 +2,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div class="sm:col-span-2 flex flex-col gap-1">
             <sh-input-text label="Tên dự án" formControlName="name" [required]="true" />
-            @if (!project) {
+            @if (!project && form.controls.isGoogleSheetEnabled.value) {
                 <small class="text-muted-color">Hệ thống tạo Google Sheet cho dự án, có thể mất vài giây.</small>
             }
         </div>
@@ -35,6 +35,12 @@
             <div class="sm:col-span-2 flex flex-col gap-1">
                 <label class="flex items-center gap-2"><p-toggleswitch formControlName="isQaEnabled" /> Có kiểm tra QA</label>
                 <small class="text-muted-color">Tắt thì văn bản kiểm xong là hoàn thành, không qua QA. Không đổi được sau khi tạo.</small>
+            </div>
+            <div class="sm:col-span-2 flex flex-col gap-1">
+                <label class="flex items-center gap-2"><p-toggleswitch formControlName="isGoogleSheetEnabled" /> Tạo Google Sheet đồng bộ</label>
+                <small class="text-muted-color">
+                    Tắt thì dự án chỉ nhập bằng file Excel. Bật cần đã kết nối Google ở màn Cấu hình. Không đổi được sau khi tạo.
+                </small>
             </div>
         }
     </div>

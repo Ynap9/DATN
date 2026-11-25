@@ -1,6 +1,6 @@
 # Ứng dụng admin
 
-> **Phần 2/11** · trước: [01-workspace.md](01-workspace.md) · mục lục: [README.md](README.md)
+> **Phần 2/13** · trước: [01-workspace.md](01-workspace.md) · mục lục: [README.md](README.md)
 
 `projects/admin/src/app`. Bootstrap bằng `bootstrapApplication(App, appConfig)` trong `main.ts`.
 
@@ -73,7 +73,7 @@ lặp theo dòng bảng, vì mỗi instance tạo thêm một subscription.
 vùng `router-outlet`. Tên user ở sidebar đang để cố định, chờ phần auth. `AppMenu.model` là
 `MenuItem[]` PrimeNG, hiện gán `[]` trong `setMenu()`.
 
-⚠️ Menu chưa lọc theo quyền và chưa nơi nào gọi `setCurrentUser()` — chờ đăng nhập thật
-([../plans/khop-voi-be.plan.md](../plans/khop-voi-be.plan.md)).
+`AppMenu` lọc mục theo `permission` (một key hoặc mảng key — có một là hiện) qua `SharedService.isGranted`;
+`auth.guard` gọi `setCurrentUser()` sau khi lấy thông tin người đăng nhập.
 
 > **Tiếp:** [03-lib-components.md](03-lib-components.md) — UI kit `@sh/ui`.

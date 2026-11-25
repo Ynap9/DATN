@@ -47,12 +47,15 @@ namespace sh.be.applications.Module.Construction.Implements
         private readonly IBackgroundJobExternal _backgroundJobExternal;
         private readonly IFileStorageExternal _fileStorageExternal;
         private readonly ISubmissionAssignmentService _submissionAssignmentService;
+        private readonly IProjectConfigService _projectConfigService;
+        private readonly IGoogleSheetExternal _googleSheetExternal;
 
         public SubmissionService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<SubmissionService> logger, IRequestContext requestContext, TimeProvider timeProvider,
             ISubmissionQuery submissionQuery, IProjectQuery projectQuery, ISubmissionRepository submissionRepository, IRoleRepository roleRepository, IUserRepository userRepository,
             SubmissionDomainService submissionDomainService, QaAssignmentDomainService qaAssignmentDomainService, ProjectDomainService projectDomainService,
             IDataReaderExternal dataReaderExternal, IExcelReaderExternal excelReaderExternal, IExcelExternal excelExternal, IBackgroundJobExternal backgroundJobExternal,
-            IFileStorageExternal fileStorageExternal, ISubmissionAssignmentService submissionAssignmentService
+            IFileStorageExternal fileStorageExternal, ISubmissionAssignmentService submissionAssignmentService, IProjectConfigService projectConfigService,
+            IGoogleSheetExternal googleSheetExternal
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider, roleRepository, projectDomainService)
         {
             _submissionQuery = submissionQuery;
@@ -69,6 +72,8 @@ namespace sh.be.applications.Module.Construction.Implements
             _backgroundJobExternal = backgroundJobExternal;
             _fileStorageExternal = fileStorageExternal;
             _submissionAssignmentService = submissionAssignmentService;
+            _projectConfigService = projectConfigService;
+            _googleSheetExternal = googleSheetExternal;
         }
 
         // Chạy thử import nối thêm hồ sơ mới từ Google Sheet dự án, không ghi DB
@@ -757,6 +762,87 @@ namespace sh.be.applications.Module.Construction.Implements
             });
         }
 
+        // Tên các tab của Google Sheet sẽ xuất vào, đọc bằng tài khoản Gmail đã kết nối
+        public async Task<List<string>> GetExportSheetNames(GetExportSheetNamesDto dto)
+        {
+            _logger.LogInformation($"{nameof(GetExportSheetNames)}, dto={JsonSerializer.Serialize(dto)}");
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
+            return await ReadExportSheetNamesAsync(dto.Url);
+        }
+
+        // Xếp job nền xuất hồ sơ ra Google Sheet theo bộ lọc; kiểm tài khoản Google, link, tab ngay để báo lỗi trước khi tạo job
+        public async Task<ViewSubmissionExportSheetJobDto> CreateExportSheetJob(ExportSheetSubmissionDto dto)
+        {
+            _logger.LogInformation($"{nameof(CreateExportSheetJob)}, dto={JsonSerializer.Serialize(dto)}");
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
+            await EnsureFieldFilterValidAsync(dto);
+            await EnsureQaTicketFilterVisibleAsync(dto);
+            dto.Columns = SubmissionDomainService.NormalizeExportColumns(dto.Columns);
+            SubmissionDomainService.EnsureExportStartRowValid(dto.StartRow);
+            var sheetNames = await ReadExportSheetNamesAsync(dto.Url);
+            if (!sheetNames.Contains(dto.SheetName))
+            {
+                throw new UserFriendlyException(ErrorCodes.CoreErrorSheetNotFound);
+            }
+            if (!_backgroundJobExternal.HasServerForQueue(BackgroundJobConst.QUEUE_EXPORT))
+            {
+                throw new UserFriendlyException(ErrorCodes.CoreErrorBackgroundJobUnavailable);
+            }
+
+            var jobId = _backgroundJobExternal.Enqueue<SubmissionExportJob>(job => job.ExecuteSheetAsync(dto), BackgroundJobConst.QUEUE_EXPORT,
+                new Dictionary<string, string>
+                {
+                    [BackgroundJobConst.PARAMETER_JOB_TYPE] = SubmissionConst.EXPORT_SHEET_JOB_TYPE,
+                    [BackgroundJobConst.PARAMETER_USER_ID] = getCurrentUserId(),
+                });
+
+            return new ViewSubmissionExportSheetJobDto
+            {
+                JobId = jobId,
+                Status = BackgroundJobConst.STATUS_WAITING,
+            };
+        }
+
+        // Trạng thái job xuất Google Sheet của chính người gọi; job khác loại / của người khác coi như không có
+        public Task<ViewSubmissionExportSheetJobDto> FindExportSheetJob(string jobId)
+        {
+            _logger.LogInformation($"{nameof(FindExportSheetJob)}, jobId={jobId}");
+            var job = _backgroundJobExternal.FindJob(jobId, [BackgroundJobConst.PARAMETER_JOB_TYPE, BackgroundJobConst.PARAMETER_USER_ID]);
+            if (job == null
+                || job.Parameters[BackgroundJobConst.PARAMETER_JOB_TYPE] != SubmissionConst.EXPORT_SHEET_JOB_TYPE
+                || job.Parameters[BackgroundJobConst.PARAMETER_USER_ID] != getCurrentUserId())
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorExportJobNotFound);
+            }
+
+            return Task.FromResult(new ViewSubmissionExportSheetJobDto
+            {
+                JobId = job.JobId,
+                Status = job.Status,
+                ErrorMessage = job.Status == BackgroundJobConst.STATUS_FAILED ? job.ErrorMessage ?? SubmissionConst.EXPORT_SHEET_FAILED_MESSAGE : null,
+            });
+        }
+
+        // Job nền ghi hồ sơ ra Google Sheet; quyền, phiếu QA, link và tab đã kiểm lúc CreateExportSheetJob vì job không có user từ token
+        public async Task ExportSheetFromJob(ExportSheetSubmissionDto dto)
+        {
+            _logger.LogInformation($"{nameof(ExportSheetFromJob)}, dto={JsonSerializer.Serialize(dto)}");
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            var table = await _submissionQuery.FindExportTable(dto);
+            var account = await _projectConfigService.GetSpreadsheetAccount();
+            await _googleSheetExternal.WriteTableAsync(account, dto.Url, dto.SheetName, dto.StartRow, table.Headers, table.Rows);
+        }
+
+        // Chặn Sheet đồng bộ của mọi dự án (kể cả dự án đang xuất) trước khi dùng tài khoản Gmail chung đọc tên tab
+        private async Task<List<string>> ReadExportSheetNamesAsync(string url)
+        {
+            await _projectDomainService.EnsureGoogleSheetNotUsedByProjectAsync(_googleSheetExternal.ExtractSpreadsheetId(url));
+            var account = await _projectConfigService.GetSpreadsheetAccount();
+            return await _googleSheetExternal.GetSheetNamesAsync(account, url);
+        }
+
         // Lọc trường trống phải chọn trường thuộc cấu hình dự án (không thì 311, tránh trường lạ ra mọi văn bản) và không gửi kèm giá trị lọc của cùng trường
         private async Task EnsureFieldFilterValidAsync(ISubmissionFilter filter)
         {
@@ -998,8 +1084,10 @@ namespace sh.be.applications.Module.Construction.Implements
             return new OverwriteSheetSource(project, table, columns, mapping, columnImportIndex);
         }
 
+        // Đọc Google Sheet gắn với dự án; dự án không gắn Sheet → 348
         private Task<SheetTable> ReadProjectGoogleSheetAsync(Project project)
         {
+            project.EnsureGoogleSheetLinked();
             return _dataReaderExternal.ReadTableAsync(project.UrlGoogleSheetSync, project.GoogleSheetName);
         }
 

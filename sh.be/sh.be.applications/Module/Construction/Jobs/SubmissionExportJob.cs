@@ -26,5 +26,11 @@ namespace sh.be.applications.Module.Construction.Jobs
             using var content = new MemoryStream(file.Content);
             await _fileStorageExternal.UploadPrivateAsync(content, objectKey, file.ContentType);
         }
+
+        public async Task ExecuteSheetAsync(ExportSheetSubmissionDto dto)
+        {
+            _logger.LogInformation($"{nameof(ExecuteSheetAsync)}, dto={JsonSerializer.Serialize(dto)}");
+            await _submissionService.ExportSheetFromJob(dto);
+        }
     }
 }
