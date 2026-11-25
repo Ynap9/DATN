@@ -1,0 +1,103 @@
+<!-- Dialog không có header PrimeNG: tự vẽ tiêu đề + lọc trạng thái + nút ×. Màu hex vì --app-* không có trong dialog -->
+<div class="flex flex-col gap-4 pt-5 text-[#16201c]">
+    <div class="flex items-start justify-between gap-3">
+        <div>
+            <h2 class="m-0 text-lg font-semibold">Phiếu của {{ memberName }}</h2>
+            <p class="m-0 mt-1 text-[13px] text-[#5d6b66]">{{ subtitle }}</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <sh-select class="w-44" [options]="statusOptions" optionLabel="label" optionValue="value" [ngModel]="statusFilter"
+                (ngModelChange)="onStatusChange($event)" />
+            <p-button icon="pi pi-times" [text]="true" [rounded]="true" severity="secondary" ariaLabel="Đóng" (onClick)="close()" />
+        </div>
+    </div>
+
+    <div class="overflow-hidden rounded-md border border-[#e4e8e6]">
+        <div class="max-h-[420px] overflow-auto" [class.opacity-50]="loading">
+            <table class="w-full border-collapse text-[13px]">
+                <thead class="sticky top-0 z-[1] bg-[#f6f8f7] text-xs text-[#5d6b66]">
+                    <tr>
+                        <th class="px-3 py-2 text-left font-semibold">Phiếu</th>
+                        <th class="w-16 px-3 py-2 text-right font-semibold">Văn bản</th>
+                        <th class="w-36 px-3 py-2 text-left font-semibold">Đã kiểm</th>
+                        <th class="w-16 px-3 py-2 text-right font-semibold">QA đạt</th>
+                        <th class="w-16 px-3 py-2 text-right font-semibold">Bị trả</th>
+                        <th class="px-3 py-2 text-left font-semibold">Giao bởi · ngày</th>
+                        <th class="px-3 py-2 text-right font-semibold">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (ticket of tickets; track ticket.id) {
+                        <tr class="border-t border-[#eef1ef] hover:bg-[#fafbfa]">
+                            <td class="whitespace-nowrap px-3 py-2">
+                                <span class="font-semibold">#{{ ticket.id }}</span>
+                                @if (statusFilter === allStatus) {
+                                    <span class="ml-2 rounded-full bg-[#eef1ef] px-2 py-[2px] text-xs text-[#5d6b66]">{{ getStatusLabel(ticket) }}</span>
+                                }
+                            </td>
+                            <td class="px-3 py-2 text-right">{{ ticket.documentCount }}</td>
+                            <td class="px-3 py-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="h-1.5 w-14 overflow-hidden rounded-full bg-[#e4e8e6]">
+                                        <div class="h-full rounded-full bg-[#0b7a63]" [style.width.%]="getCheckedPercent(ticket)"></div>
+                                    </div>
+                                    <span class="whitespace-nowrap text-xs">{{ ticket.checked }} / {{ ticket.total }}</span>
+                                </div>
+                            </td>
+                            <td class="px-3 py-2 text-right">{{ ticket.qaPassed }}</td>
+                            <td class="px-3 py-2 text-right" [ngClass]="{ 'text-[#b3261e]': ticket.returned > 0 }">{{ ticket.returned }}</td>
+                            <td class="px-3 py-2 text-[#5d6b66]">{{ ticket.createdByFullName || '—' }} · {{ ticket.createdDate | date: 'dd/MM/yyyy' }}</td>
+                            <td class="whitespace-nowrap px-3 py-2">
+                                <div class="flex justify-end gap-1">
+                                    <p-button size="small" [text]="true" [label]="expandedIds.has(ticket.id) ? 'Thu gọn' : 'Chi tiết'"
+                                        [ariaLabel]="'Chi tiết phiếu #' + ticket.id" (onClick)="toggleDetail(ticket)" />
+                                    @if (canMove(ticket)) {
+                                        <p-button size="small" label="Chuyển" [outlined]="true" [ariaLabel]="'Chuyển phiếu #' + ticket.id"
+                                            (onClick)="openMove(ticket, moveMode.TRANSFER)" />
+                                        <p-button size="small" label="Thu hồi" severity="danger" [outlined]="true" [ariaLabel]="'Thu hồi phiếu #' + ticket.id"
+                                            (onClick)="openMove(ticket, moveMode.REVOKE)" />
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                        @if (expandedIds.has(ticket.id)) {
+                            <tr class="bg-[#fafbfa]">
+                                <td colspan="7" class="px-3 py-2">
+                                    @if (loadingItems.has(ticket.id)) {
+                                        <span class="text-[#8a958f]">Đang tải…</span>
+                                    } @else {
+                                        <div class="flex flex-wrap gap-1.5">
+                                            @for (item of getItems(ticket); track $index) {
+                                                <span class="rounded-md border border-[#e4e8e6] bg-white px-2 py-[2px] text-xs">{{ getItemLabel(item) }}</span>
+                                            } @empty {
+                                                <span class="text-[#8a958f]">Phiếu không còn hộp / hồ sơ</span>
+                                            }
+                                        </div>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    } @empty {
+                        <tr>
+                            <td colspan="7" class="py-8 text-center text-[#8a958f]">{{ loading ? 'Đang tải…' : 'Không có phiếu' }}</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (totalRecords > pageSize) {
+            <div class="flex justify-end border-t border-[#e4e8e6] bg-[#fafbfa] px-3 py-1">
+                <p-paginator [first]="(pageNumber - 1) * pageSize" [rows]="pageSize" [totalRecords]="totalRecords" [showFirstLastIcon]="false"
+                    styleClass="!bg-transparent !p-0" (onPageChange)="onPageChange($event)" />
+            </div>
+        }
+    </div>
+
+    @if (isClosed) {
+        <div class="text-[13px] text-[#5d6b66]">Dự án đã xong / hết hạn — chỉ xem phiếu, không chuyển / thu hồi.</div>
+    }
+
+    <div class="flex justify-end border-t border-[#e4e8e6] pt-4">
+        <p-button label="Đóng" severity="secondary" [outlined]="true" (onClick)="close()" />
+    </div>
+</div>

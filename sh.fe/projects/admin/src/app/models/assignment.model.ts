@@ -94,3 +94,43 @@ export interface IAssignmentTicket {
     returned: number;
     qaPassed: number;
 }
+
+export interface IFindAssignmentTicket extends IBaseRequestPaging {
+    role: string;
+    assigneeUserId?: string;
+    status?: number;
+}
+
+// Gửi đúng một trong hai: ticketId, hoặc assigneeUserId + items
+export interface IRevokeAssignment {
+    ticketId?: number;
+    assigneeUserId?: string;
+    items?: IAssignmentItem[];
+}
+
+export interface ITransferAssignment {
+    fromUserId: string;
+    toUserId: string;
+    ticketId?: number;
+    items?: IAssignmentItem[];
+}
+
+// items bỏ trống = cả phụ trách
+export interface IRevokeQaOwnership {
+    ticketId: number;
+    items?: IAssignmentItem[];
+}
+
+export interface ITransferQaOwnership {
+    ticketId: number;
+    toUserId: string;
+    items?: IAssignmentItem[];
+}
+
+export interface IAssignmentChangeResult {
+    affectedDocuments: number;
+    cancelledTicketIds: number[];
+    doneTicketIds: number[];
+    // Phiếu nhận khi chuyển (QA gộp vào phụ trách sẵn có của người nhận); null khi thu hồi
+    newTicket: IAssignmentTicket | null;
+}

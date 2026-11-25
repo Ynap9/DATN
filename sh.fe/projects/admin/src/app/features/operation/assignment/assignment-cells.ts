@@ -1,6 +1,7 @@
 import { Component, inject, input } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
+import { IAssignmentItem, IAssignmentTicket } from '@/models/assignment.model';
 import { IViewProjectPair } from '@/models/project.model';
 import { IViewProjectMember } from '@/models/project-member.model';
 import { TBL_CUSTOM_COMP_EMIT } from '@/shared/components/data-table/data-table.component';
@@ -23,7 +24,46 @@ export const ASSIGN_DIALOG_RESULT = {
 } as const;
 
 export const ASSIGNMENT_ACTIONS = {
+    TICKETS: 'tickets',
     ASSIGN: 'assign',
+} as const;
+
+// Dialog phiếu của một người: isClosed = dự án DONE / EXPIRED (chỉ xem)
+export interface ITicketDialogData {
+    pair: IViewProjectPair;
+    member: AssignmentMemberRow;
+    role: AssignmentRole;
+    isClosed: boolean;
+}
+
+// Đóng dialog phiếu: đã chuyển / thu hồi (tải lại bảng người) / cần tải lại cặp (818, 805); undefined = không đổi gì
+export const TICKET_DIALOG_RESULT = {
+    CHANGED: 'changed',
+    RELOAD_PAIRS: 'reload-pairs',
+} as const;
+
+export const MOVE_MODE = {
+    TRANSFER: 'transfer',
+    REVOKE: 'revoke',
+} as const;
+
+export type MoveMode = (typeof MOVE_MODE)[keyof typeof MOVE_MODE];
+
+// items = nút của phiếu (API 24) nếu dialog phiếu đã tải, không thì dialog chuyển / thu hồi tự tải
+export interface IMoveDialogData {
+    pair: IViewProjectPair;
+    member: AssignmentMemberRow;
+    role: AssignmentRole;
+    ticket: IAssignmentTicket;
+    mode: MoveMode;
+    items: IAssignmentItem[] | null;
+}
+
+// Đóng dialog chuyển / thu hồi: xong / phiếu đã đổi (815, 816, 817) → tải lại bảng phiếu / dự án đóng (818, 805) → tải lại cặp
+export const MOVE_DIALOG_RESULT = {
+    DONE: 'done',
+    RELOAD_TICKETS: 'reload-tickets',
+    RELOAD_PAIRS: 'reload-pairs',
 } as const;
 
 // Các ô dưới đây là CUSTOM_COMP của DataTable: luôn nhận đủ { row, rowIndex, data }
@@ -52,24 +92,28 @@ export class AssignmentStatusCellComponent {
     data = input<unknown>();
 }
 
-// Nút khoá vẫn cần tooltip: bọc span vì nút disabled không nhận hover
+// Phiếu luôn bấm được (người tắt / dự án đóng vẫn xem); nút Chia phiếu khoá vẫn cần tooltip: bọc span vì nút disabled không nhận hover
 @Component({
     selector: 'app-assignment-actions-cell',
     imports: [ButtonModule, TooltipModule],
     template: `
-        <span class="flex justify-center" [pTooltip]="row().assignDisabledReason" tooltipPosition="left">
-            <p-button label="Chia phiếu" size="small" [disabled]="!!row().assignDisabledReason" (onClick)="emit()" />
+        <span class="flex justify-center gap-2">
+            <p-button label="Phiếu" size="small" severity="secondary" [outlined]="true" (onClick)="emit(actions.TICKETS)" />
+            <span [pTooltip]="row().assignDisabledReason" tooltipPosition="left">
+                <p-button label="Chia phiếu" size="small" [disabled]="!!row().assignDisabledReason" (onClick)="emit(actions.ASSIGN)" />
+            </span>
         </span>
     `,
 })
 export class AssignmentActionsCellComponent {
     private readonly _emit = inject(TBL_CUSTOM_COMP_EMIT);
 
+    readonly actions = ASSIGNMENT_ACTIONS;
     row = input.required<AssignmentMemberRow>();
     rowIndex = input<number>();
     data = input<unknown>();
 
-    emit() {
-        this._emit.emit({ type: ASSIGNMENT_ACTIONS.ASSIGN, row: this.row() });
+    emit(type: string) {
+        this._emit.emit({ type, row: this.row() });
     }
 }

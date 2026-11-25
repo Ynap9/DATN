@@ -1,6 +1,6 @@
 # Màn Nhập liệu và dialog Lịch sử
 
-> **Phần 8/10** · trước: [07-man-construction.md](07-man-construction.md) · mục lục: [README.md](README.md)
+> **Phần 8/11** · trước: [07-man-construction.md](07-man-construction.md) · mục lục: [README.md](README.md)
 
 Task 43, giao diện làm lại ở Task 53 (cập nhật 2026-11-23). Màn làm việc của người Data: PDF bên trái, các trường bên phải, Lưu = Kiểm tra rồi sang văn bản kế.
 

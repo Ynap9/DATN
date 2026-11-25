@@ -1,6 +1,6 @@
 # Ứng dụng admin
 
-> **Phần 2/10** · trước: [01-workspace.md](01-workspace.md) · mục lục: [README.md](README.md)
+> **Phần 2/11** · trước: [01-workspace.md](01-workspace.md) · mục lục: [README.md](README.md)
 
 `projects/admin/src/app`. Bootstrap bằng `bootstrapApplication(App, appConfig)` trong `main.ts`.
 

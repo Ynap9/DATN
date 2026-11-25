@@ -1,11 +1,10 @@
 # Màn module Operation
 
-> **Phần 10/10** · trước: [09-man-qa.md](09-man-qa.md) · mục lục: [README.md](README.md)
+> **Phần 10/11** · trước: [09-man-qa.md](09-man-qa.md) · mục lục: [README.md](README.md)
 
-Ba màn: Thành viên dự án (Task 47), Nhóm nhân viên (Task 49), Chia phiếu (Task 51), 2026-11-23. BE ở
-[../../be/nghiep-vu/21-thanh-vien-du-an.md](../../be/nghiep-vu/21-thanh-vien-du-an.md),
-[24-don-gia-tien-cong.md](../../be/nghiep-vu/24-don-gia-tien-cong.md), [19-nhom-nhan-vien.md](../../be/nghiep-vu/19-nhom-nhan-vien.md)
-và [23-chia-phieu.md](../../be/nghiep-vu/23-chia-phieu.md).
+Hai màn: Thành viên dự án (Task 47), Nhóm nhân viên (Task 49), 2026-11-23; màn Chia phiếu ở [11-man-chia-phieu.md](11-man-chia-phieu.md).
+BE ở [../../be/nghiep-vu/21-thanh-vien-du-an.md](../../be/nghiep-vu/21-thanh-vien-du-an.md),
+[24-don-gia-tien-cong.md](../../be/nghiep-vu/24-don-gia-tien-cong.md) và [19-nhom-nhan-vien.md](../../be/nghiep-vu/19-nhom-nhan-vien.md).
 
 **Picker dùng chung** `shared/components/project-pair-picker` (`app-project-pair-picker`): tải mọi cặp một lần
 (`construction/project/paging?pageSize=-1`), giữ cặp có `viewerRole` trong input `viewerRoles`, nhớ cặp trên URL
@@ -61,34 +60,4 @@ mất cặp). `reload()` tải lại danh sách và **luôn** phát lại cặp 
   `removeMembers`) đặt `SKIP_ERROR_TOAST` để dialog tự báo "Dữ liệu gửi lên không hợp lệ"; gọi chúng phải tự xử lý `error`.
 - Gợi ý người gửi `excludeStaffGroupId`, nên người đã lưu vừa bỏ trong dialog không hiện lại trong gợi ý tới khi Lưu.
 
-## Chia phiếu
-
-| Thứ | Chỗ |
-|---|---|
-| Route | `/admin/operation/assignment?projectId=&documentTypeId=&role=&isActive=&keyword=`, `permissionGuard` [`MENU_OPERATION_ASSIGNMENT`, `FUNCTION_ASSIGNMENT_MANAGE`]; menu đổi chữ "Chia phiếu" |
-| Màn | `features/operation/assignment/assignment-member-list.component.*` (bảng người = `member/paging` của Thành viên dự án) |
-| Ô bảng / dialog | `assignment-cells.ts` (tên, trạng thái, nút Chia phiếu + tooltip lý do khoá); `assign-dialog/` (860px, cây 2 cấp) |
-| Service / model | `services/assignment.service.ts` (`findTree`, `findProfiles`, `preview`, `assign`), `models/assignment.model.ts` |
-| Hằng | `shared/constants/assignment.constants.ts` (vai trò, trần 1000 nút, mã lỗi) |
-
-- Picker giữ cặp **Admin hoặc Leader**. Leader: BE chỉ trả người mình quản lý, chân bảng thêm "· Bạn chỉ thấy người mình quản lý".
-  Thiếu `FUNCTION_PROJECT_MEMBER_MANAGE` → không gọi bảng người, chỉ hiện câu xin quyền.
-- Lọc nằm trên URL; mặc định Nhập liệu + Đang hoạt động (không ghi lên URL). Tab QA ẩn khi cặp không QA. Màn nhớ khoá "cặp + lọc" lần
-  tải trước để picker và URL cùng báo đổi chỉ tải một lần; đổi lọc → trang 1.
-- Nút Chia phiếu khoá khi người đã tắt hoặc dự án `DONE` / `EXPIRED` (BE `818`). **Không** có nút "Phiếu" (Task 52).
-- **Tick lưu trong `Map`**, khoá = hộp thường hoá chữ thường + `*` (cả hộp, `profileRange: null`) hoặc `=` + hồ sơ: tick giữ qua đổi
-  trang / lọc. Tick hộp xoá tick hồ sơ con; bỏ một hồ sơ của hộp đang tick → tick các hồ sơ **đã tải** còn lại. Hộp "–" khi có hồ sơ
-  con được tick. "Chưa giao trong nút đã chọn" cộng `unassigned` lúc tick. Vượt 1000 → toast cảnh báo, không tick.
-- Hồ sơ của một hộp tải một lần khi mở (`pageSize 200` = trần BE), giữ qua đổi trang. `box ""` vẫn gửi lên (service không lọc bỏ).
-- Mọi đổi tick xoá kết quả xem trước; Giao chỉ bật khi đã xem trước và `canSave`. Lỗi khi Giao: `812 813 331 824 825 329` → tự xem
-  trước lại; `818 805` → đóng, `reload()` picker; `811 821` → đóng, tải lại bảng. Toast lỗi là câu BE (`isResponseSucceed`).
-- ⚠️ Ô tick gốc (`<input type="checkbox">`) tự đảo trạng thái khi bấm; tick bị chặn (vượt 1000) thì binding không đổi nên Angular không
-  đặt lại DOM → `syncCheckbox` gán tay `checked` / `indeterminate`. Đừng bỏ bước đó.
-- ⚠️ Hộp > 200 hồ sơ: chỉ tải 200 hồ sơ đầu, nên bỏ một hồ sơ của hộp đang tick sẽ chỉ tick lại phần đã tải. Chưa gặp trên dữ liệu
-  thật; nếu cần thì phân trang hồ sơ.
-- Sau lỗi `812` lúc Giao chỉ xem trước lại (đúng CASE 51.14), **không** tải lại cây: số "Chưa giao" của nút vừa bị giao còn cũ tới
-  khi đổi trang / lọc.
-- Đã kiểm 2026-11-23 bằng Chrome headless trên dự án test riêng (đã xoá): đủ 13 ca mục 51.3 (gồm 2 tab cùng giao → `812`, QA từng
-  nhập → `331`, dự án không QA, người đã tắt). **Chưa kiểm**: trần 1000 nút, lỗi `811 / 821` lúc Giao, dòng cảnh báo `warnings`.
-
-> **Tiếp:** hết bộ tài liệu — quay lại [README.md](README.md).
+> **Tiếp:** [11-man-chia-phieu.md](11-man-chia-phieu.md) — màn Chia phiếu: giao phiếu, phiếu của một người, chuyển / thu hồi.

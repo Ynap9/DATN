@@ -23,13 +23,17 @@ import { IColumn, ITableEvent } from '@/shared/models/data-table.models';
 import { SharedImports } from '@/shared/import.shared';
 import {
     ASSIGN_DIALOG_RESULT,
+    ASSIGNMENT_ACTIONS,
     AssignmentActionsCellComponent,
     AssignmentMemberRow,
     AssignmentNameCellComponent,
     AssignmentStatusCellComponent,
     IAssignDialogData,
+    ITicketDialogData,
+    TICKET_DIALOG_RESULT,
 } from './assignment-cells';
 import { AssignDialogComponent } from './assign-dialog/assign-dialog.component';
+import { TicketDialogComponent } from './ticket-dialog/ticket-dialog.component';
 
 const SEARCH_DEBOUNCE_MS = 400;
 const RIGHT_STYLE = 'text-align: right';
@@ -88,7 +92,7 @@ export class AssignmentMemberListComponent extends BaseComponent {
             key: 'actions',
             cellViewType: CellViewTypes.CUSTOM_COMP,
             customComponent: AssignmentActionsCellComponent,
-            headerContainerStyle: 'width: 140px; text-align: center',
+            headerContainerStyle: 'width: 200px; text-align: center',
         },
     ];
 
@@ -142,6 +146,19 @@ export class AssignmentMemberListComponent extends BaseComponent {
 
     onAction(event: ITableEvent<AssignmentMemberRow>) {
         const member = event.row!;
+        if (event.type === ASSIGNMENT_ACTIONS.TICKETS) {
+            const ticketData: ITicketDialogData = { pair: this.pair!, member, role: this.role, isClosed: this.isClosed };
+            this._dialogService
+                .open(TicketDialogComponent, { width: '860px', modal: true, showHeader: false, closable: false, closeOnEscape: false, data: ticketData })
+                ?.onClose.subscribe((result) => {
+                    if (result === TICKET_DIALOG_RESULT.RELOAD_PAIRS) {
+                        this._picker()?.reload();
+                    } else if (result) {
+                        this.loadPage();
+                    }
+                });
+            return;
+        }
         const data: IAssignDialogData = { pair: this.pair!, member, role: this.role };
         this._dialogService
             .open(AssignDialogComponent, { width: '860px', modal: true, showHeader: false, closable: false, closeOnEscape: false, data })
