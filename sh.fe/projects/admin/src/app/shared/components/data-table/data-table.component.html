@@ -3,6 +3,19 @@
     [selection]="selection()" (selectionChange)="selection.set($event)"
     (onRowReorder)="rowReorder.emit({ dragIndex: $event.dragIndex!, dropIndex: $event.dropIndex! })">
     <ng-template #header>
+        @if (columnGroups().length) {
+            <tr class="data-table-group-row">
+                @if (selectable()) {
+                    <th></th>
+                }
+                @if (reorderable()) {
+                    <th></th>
+                }
+                @for (group of columnGroups(); track $index) {
+                    <th [attr.colspan]="group.span" [class.data-table-group-start]="!!group.label">{{ group.label }}</th>
+                }
+            </tr>
+        }
         <tr>
             @if (selectable()) {
                 <th style="width: 48px"><p-tableHeaderCheckbox /></th>
@@ -13,7 +26,7 @@
             @for (col of visibleColumns(); track getColumnKey(col)) {
                 <th [style]="col.headerContainerStyle" pResizableColumn [attr.data-col-key]="getColumnKey(col)"
                     pFrozenColumn [frozen]="!!col.frozen" [alignFrozen]="col.frozen ?? 'left'"
-                    [class.data-table-frozen-left]="col.frozen === 'left'">
+                    [class.data-table-frozen-left]="col.frozen === 'left'" [class.data-table-group-start]="groupStartKeys().has(getColumnKey(col))">
                     @if (col.cellViewType === cellViewTypes.CHECKBOX) {
                         <input type="checkbox" [checked]="isAllChecked(col.field)" (change)="onHeaderCheckbox(col)" />
                     } @else if (columnSettings() && col.cellViewType === cellViewTypes.ACTIONS) {
@@ -29,7 +42,7 @@
         </tr>
     </ng-template>
     <ng-template #body let-row let-rowIndex="rowIndex">
-        <tr [pReorderableRow]="rowIndex" [pReorderableRowDisabled]="!reorderable()">
+        <tr [pReorderableRow]="rowIndex" [pReorderableRowDisabled]="!reorderable()" [class]="rowClass()?.(row) ?? ''">
             @if (selectable()) {
                 <td><p-tableCheckbox [value]="row" /></td>
             }
@@ -38,7 +51,7 @@
             }
             @for (col of visibleColumns(); track getColumnKey(col)) {
                 <td [style]="col.cellStyle" [class]="col.cellClass" pFrozenColumn [frozen]="!!col.frozen" [alignFrozen]="col.frozen ?? 'left'"
-                    [class.data-table-frozen-left]="col.frozen === 'left'">
+                    [class.data-table-frozen-left]="col.frozen === 'left'" [class.data-table-group-start]="groupStartKeys().has(getColumnKey(col))">
                     @switch (col.cellViewType) {
                         @case (cellViewTypes.INDEX) {
                             {{ getIndex(rowIndex) }}

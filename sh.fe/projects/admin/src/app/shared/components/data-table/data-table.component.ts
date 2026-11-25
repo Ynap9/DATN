@@ -59,6 +59,8 @@ export class DataTable implements OnInit, AfterViewInit {
     selection = model<any[]>([]);
     columnSettings = input(false);
     filterValues = input<IColumnFilterValue>({});
+    // Class gắn lên <tr> của từng dòng (vd tô mép dòng theo dữ liệu)
+    rowClass = input<(row: any) => string>();
 
     pageChange = output<PaginatorState>();
     action = output<ITableEvent>();
@@ -87,6 +89,27 @@ export class DataTable implements OnInit, AfterViewInit {
         return columns.map((col) => (col.locked ? col : ordered.shift()!)).filter((col) => col.locked || visibleKeys.has(this.getColumnKey(col)));
     });
     readonly hasFrozen = computed(() => this.visibleColumns().some((col) => col.frozen));
+    // Hàng tiêu đề nhóm: cột liền nhau cùng group gộp colspan, cột không group là ô trống; cột đầu mỗi nhóm có vạch trái
+    readonly columnGroups = computed(() => {
+        const columns = this.visibleColumns();
+        if (!columns.some((col) => col.group)) {
+            return [];
+        }
+        const groups: { label: string; span: number }[] = [];
+        columns.forEach((col, index) => {
+            const label = col.group ?? '';
+            if (index > 0 && label && columns[index - 1].group === label) {
+                groups[groups.length - 1].span++;
+            } else {
+                groups.push({ label, span: 1 });
+            }
+        });
+        return groups;
+    });
+    readonly groupStartKeys = computed(() => {
+        const columns = this.visibleColumns();
+        return new Set(columns.filter((col, index) => col.group && columns[index - 1]?.group !== col.group).map((col) => this.getColumnKey(col)));
+    });
 
     private columnWidths: Record<string, number> = {};
 

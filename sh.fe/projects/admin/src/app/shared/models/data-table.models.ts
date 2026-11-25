@@ -55,6 +55,8 @@ export interface IColumn<T = any> {
     locked?: boolean;
     // Ẩn mặc định khi bật cấu hình cột
     hidden?: boolean;
+    // Các cột liền nhau cùng group gộp chung một ô tiêu đề nhóm ở hàng trên; không cột nào có group thì không có hàng đó
+    group?: string;
     headerContainerStyle?: string;
     cellClass?: string;
     cellStyle?: string;

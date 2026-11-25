@@ -67,6 +67,8 @@ quá 6–7 file mới chia thư mục con (`components/`).
   là component `StatusBadge` (`shared/components/status-badge`) — chỗ khác cần cùng nhãn (vd. thẻ dự án) dùng lại nó. Task 38.
 - ⚠️ Độ rộng cột kéo xong lưu `tbl_col_widths_<tableKey>` **theo key cột**: `key` → `field` → `header`. Cột không `field` mà header
   có thể trùng / đổi chữ thì khai `key`. Cache cũ khoá theo vị trí bị bỏ qua (người dùng kéo lại một lần).
+- Cột liền nhau cùng `group: '<nhãn>'` gộp một ô tiêu đề nhóm ở hàng trên, cột đầu nhóm có vạch trái; `[rowClass]="(row) => 'cls'"`
+  gắn class lên `<tr>` (style ở scss màn bằng `:host ::ng-deep`). Không khai thì bảng y như cũ. Task 59 (Tiền công).
 - ⚠️ Căn lề ô dùng `cellStyle: 'text-align: right'` (cùng chuỗi với `headerContainerStyle`), **không** `cellClass: 'text-right'`: CSS `td` của bảng đè mất class.
 - Lọc theo cột: cột khai `filter: { type: 'text' | 'select' | 'dateRange', options? }` thì tiêu đề có phễu + popover
   (`DataTableColumnFilter`). Màn giữ state, truyền `[filterValues]` (key cột → giá trị; khoảng ngày `{ from?, to? }` dạng

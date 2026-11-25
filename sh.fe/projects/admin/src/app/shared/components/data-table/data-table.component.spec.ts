@@ -206,6 +206,41 @@ describe('DataTable', () => {
         });
     });
 
+    it('không cột nào có group thì header một hàng như cũ', () => {
+        const element = render([]);
+
+        expect(element.querySelectorAll('thead tr').length).toBe(1);
+        expect(element.querySelector('.data-table-group-start')).toBeNull();
+    });
+
+    it('cột liền nhau cùng group gộp colspan, cột đầu nhóm có vạch trái ở header và ô', () => {
+        fixture.componentRef.setInput('columns', [
+            { header: 'Tên', field: 'name' },
+            { header: 'Đơn giá', field: 'a', group: 'Thực nhận' },
+            { header: 'Thành tiền', field: 'b', group: 'Thực nhận' },
+            { header: 'Đơn giá', field: 'c', group: 'Giá công ty' },
+        ]);
+        fixture.componentRef.setInput('data', [{ id: 1, name: 'An', a: 1, b: 2, c: 3 }]);
+        fixture.detectChanges();
+
+        const groupCells: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('thead tr.data-table-group-row th'));
+        expect(groupCells.map((th) => [th.textContent!.trim(), th.getAttribute('colspan')])).toEqual([
+            ['', '1'],
+            ['Thực nhận', '2'],
+            ['Giá công ty', '1'],
+        ]);
+        const bodyStarts = Array.from(fixture.nativeElement.querySelectorAll('tbody td')).map((td) => (td as HTMLElement).classList.contains('data-table-group-start'));
+        expect(bodyStarts).toEqual([false, true, false, true]);
+    });
+
+    it('rowClass gắn class lên dòng theo dữ liệu', () => {
+        fixture.componentRef.setInput('rowClass', (row: { id: number }) => (row.id === 2 ? 'row-marked' : ''));
+        const rows = render([{ id: 1, info: { name: 'An' } }, { id: 2, info: { name: 'Bình' } }]).querySelectorAll('tbody tr');
+
+        expect(rows[0].classList).not.toContain('row-marked');
+        expect(rows[1].classList).toContain('row-marked');
+    });
+
     it('lọc cột phát cả map, xoá lọc thì bỏ key', () => {
         const events: IColumnFilterValue[] = [];
         fixture.componentInstance.filterChange.subscribe((value) => events.push(value));

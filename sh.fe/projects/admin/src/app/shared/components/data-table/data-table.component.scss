@@ -20,6 +20,20 @@
         color: var(--app-muted);
     }
 
+    .p-datatable .p-datatable-thead > tr.data-table-group-row > th {
+        padding: 8px 16px 0;
+        border-bottom: 0;
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        text-align: center;
+        color: var(--app-ink);
+    }
+
+    .p-datatable .data-table-group-start {
+        border-left: 1px solid var(--app-line);
+    }
+
     .p-datatable .p-datatable-tbody > tr > td {
         padding: 12px 16px;
         border-bottom: 1px solid var(--app-line);

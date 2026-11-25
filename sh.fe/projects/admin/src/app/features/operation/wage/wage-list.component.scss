@@ -1,0 +1,9 @@
+// Dòng chưa đặt giá (rowClass của bảng): vạch vàng 3px mép trái
+:host ::ng-deep .wage-row-price-missing > td:first-child {
+    box-shadow: inset 3px 0 0 var(--app-amber);
+}
+
+// Người đã gỡ / đang tắt: cả dòng chữ màu phụ (thiết kế)
+:host ::ng-deep .wage-row-inactive > td {
+    color: var(--app-muted);
+}

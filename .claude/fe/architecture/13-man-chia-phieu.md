@@ -1,6 +1,6 @@
 # Màn Chia phiếu (Operation)
 
-> **Phần 13/13** · trước: [12-man-cau-hinh.md](12-man-cau-hinh.md) · mục lục: [README.md](README.md)
+> **Phần 13/14** · trước: [12-man-cau-hinh.md](12-man-cau-hinh.md) · mục lục: [README.md](README.md)
 
 Task 51 (giao phiếu) và Task 52 (phiếu của một người, chuyển, thu hồi), 2026-11-23 → 25. BE ở
 [23-chia-phieu.md](../../be/nghiep-vu/23-chia-phieu.md) và [26-thu-hoi-chuyen-phieu.md](../../be/nghiep-vu/26-thu-hoi-chuyen-phieu.md).
@@ -59,4 +59,4 @@ sung: đủ 6 dạng body của 52.7 (bắt request), lỗi thật `815` (phiế
 phân trang 11 phiếu; `812`, `825`, HTTP 400 **giả lập** bằng chặn request. **Chưa kiểm**: trần 1000 nút, `811 / 821` lúc Giao, `warnings`.
 Đo trên DB dev qua tunnel: `qa/transfer` mất ~11 giây, `qa/revoke` ~6 giây (nút xoay suốt lúc chờ, không phải lỗi FE).
 
-> **Tiếp:** hết bộ tài liệu — quay lại [README.md](README.md).
+> **Tiếp:** [14-man-tien-cong.md](14-man-tien-cong.md) — màn Tiền công: chế độ xem theo vai trò, bảng nhóm cột, dải tổng.

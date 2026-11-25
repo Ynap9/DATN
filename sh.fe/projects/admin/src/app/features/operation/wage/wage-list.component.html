@@ -1,0 +1,81 @@
+<app-page-header [title]="title" [breadcrumbs]="breadcrumbs" [description]="projects.length ? description : ''">
+    @if (projects.length) {
+        <div class="flex items-center gap-2">
+            <span class="inline-flex h-7 items-center gap-1.5 rounded-full border border-[var(--app-line)] bg-[var(--app-surface)] pl-2 pr-2.5 text-xs font-semibold text-[var(--app-muted)]">
+                <span class="h-2 w-2 rounded-full bg-[var(--app-accent)]"></span>{{ scopeLabels[viewMode] }}
+            </span>
+            @if (isAdminView) {
+                <p-button label="Xuất Excel" icon="pi pi-download" severity="secondary" [outlined]="true" [loading]="isExporting" (onClick)="exportExcel()" />
+            }
+        </div>
+    }
+</app-page-header>
+
+@if (pairs && !projects.length) {
+    <div class="flex flex-col items-center gap-2 rounded-xl border border-[var(--app-line)] bg-[var(--app-surface)] px-4 py-11 text-center">
+        <span class="grid h-11 w-11 place-items-center rounded-full bg-[var(--app-bg)] text-[var(--app-muted)]"><i class="pi pi-folder-open"></i></span>
+        <span class="font-semibold">Bạn chưa tham gia dự án nào</span>
+        <span class="text-[13px] text-[var(--app-muted)]">Khi được thêm vào dự án, tiền công sẽ hiện ở đây.</span>
+    </div>
+} @else if (projectId) {
+    <div class="flex flex-col gap-4">
+        <div class="flex flex-wrap items-end gap-4">
+            <sh-select class="w-full sm:w-80" label="Dự án" [options]="projects" optionLabel="projectName" optionValue="projectId" [filter]="true"
+                [ngModel]="projectId" (ngModelChange)="onProjectChange($event)" />
+            <sh-select class="w-full sm:w-64" label="Metadata" [options]="documentTypeOptions" optionLabel="label" optionValue="value"
+                [ngModel]="documentTypeId" (ngModelChange)="onDocumentTypeChange($event)" />
+        </div>
+
+        <app-wage-summary [viewMode]="viewMode" [staffRole]="staffRole" [summary]="summary" [rows]="rows" [total]="totalRecords" [loading]="loading" />
+
+        @if (!isStaff) {
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex gap-1 border-b border-[var(--app-line)]" role="tablist">
+                    @for (tab of roleTabs; track tab.key) {
+                        <button type="button" role="tab" [attr.aria-selected]="role === tab.key"
+                            class="-mb-px cursor-pointer border-0 bg-transparent px-3 py-2 text-[13px] font-semibold"
+                            [style.border-bottom]="'2px solid ' + (role === tab.key ? 'var(--app-accent)' : 'transparent')"
+                            [style.color]="role === tab.key ? 'var(--app-accent)' : 'var(--app-muted)'" (click)="selectTab(tab.key)">
+                            {{ tab.label }}
+                        </button>
+                    }
+                </div>
+                <p-iconfield class="w-full sm:w-72">
+                    <p-inputicon class="pi pi-search" />
+                    <input pInputText class="w-full" placeholder="Tìm họ tên, tài khoản" [formControl]="keyword" />
+                </p-iconfield>
+            </div>
+        }
+
+        <div>
+            <app-data-table tableKey="operation-wage" [columns]="columns" [data]="rows" dataKey="memberId" [loading]="loading" [pageNumber]="pageNumber"
+                [pageSize]="pageSize" [rowsPerPageOptions]="pageSizeOptions" [total]="totalRecords" [rowClass]="rowClass" (pageChange)="onPageChange($event)">
+                <div tableEmpty class="flex flex-col items-center gap-2 py-6">
+                    <span class="grid h-11 w-11 place-items-center rounded-full bg-[var(--app-bg)] text-[var(--app-muted)]">
+                        <i class="pi" [class]="searchKeyword ? 'pi-search' : 'pi-inbox'"></i>
+                    </span>
+                    @if (searchKeyword) {
+                        <span class="font-semibold text-[var(--app-ink)]">Không có ai khớp “{{ searchKeyword }}”</span>
+                        <span class="text-[13px]">Thử tên khác hoặc tài khoản.</span>
+                        <p-button label="Xoá tìm kiếm" [link]="true" size="small" (onClick)="clearKeyword()" />
+                    } @else if (isStaff) {
+                        <span class="font-semibold text-[var(--app-ink)]">Bạn chưa có khối lượng ở dự án này</span>
+                    } @else {
+                        <span class="font-semibold text-[var(--app-ink)]">Chưa có thành viên Data / QA</span>
+                        <span class="text-[13px]">Thêm người ở Thành viên dự án.</span>
+                    }
+                </div>
+            </app-data-table>
+            <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--app-muted)]">
+                <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-[var(--app-amber)]"></span>Vạch vàng: chưa đặt giá, đang tính 0 đ</span>
+                @if (hasPassFailColumn) {
+                    <span class="inline-flex items-center gap-1.5">
+                        <span class="h-2.5 w-2.5 rounded-sm bg-[var(--app-green)]"></span><span class="h-2.5 w-2.5 rounded-sm bg-[var(--app-red)]"></span>
+                        Tỉ lệ lượt Đạt / Không đạt
+                    </span>
+                }
+                <span>Khối lượng có thể trễ tối đa 1 phút sau khi kiểm hoặc chấm QA.</span>
+            </div>
+        </div>
+    </div>
+}

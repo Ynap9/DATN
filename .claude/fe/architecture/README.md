@@ -72,6 +72,7 @@ URL FE `/admin/<module>/...` trùng tên module BE `api/v1/<module>/...` để t
 | [11-man-nhap-xuat.md](11-man-nhap-xuat.md) | Màn Nhập / Xuất dữ liệu: wizard import Google Sheet / Excel (chạy thử, job nền), tab Xuất Excel chọn cột thêm |
 | [12-man-cau-hinh.md](12-man-cau-hinh.md) | Màn Cấu hình: kết nối Google (quay về `?google=`), ứng dụng Google (che secret, Đổi), hạn dự án; lưu từng dòng PUT / POST, 409 / 304 |
 | [13-man-chia-phieu.md](13-man-chia-phieu.md) | Màn Chia phiếu: cây hộp / hồ sơ, xem trước, giao; phiếu của một người, chuyển / thu hồi phiếu và phụ trách QA |
+| [14-man-tien-cong.md](14-man-tien-cong.md) | Màn Tiền công: chế độ Admin / Leader / nhân viên theo cặp, nhóm cột Thực nhận / Giá công ty, dải tổng, Xuất Excel |
 
 ## Nguyên tắc không đổi
 

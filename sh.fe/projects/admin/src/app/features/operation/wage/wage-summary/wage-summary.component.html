@@ -1,0 +1,26 @@
+<div class="grid grid-cols-2 overflow-hidden rounded-xl border border-[var(--app-line)] bg-[var(--app-surface)]"
+    [class]="isStaff() ? 'lg:grid-cols-[minmax(240px,1.4fr)_repeat(2,minmax(150px,1fr))]' : 'lg:grid-cols-[minmax(240px,1.4fr)_repeat(3,minmax(150px,1fr))]'">
+    @for (tile of tiles(); track tile.label; let first = $first; let index = $index) {
+        <div class="flex min-w-0 flex-col gap-1 border-[var(--app-line)] px-5 py-4"
+            [class]="first ? 'col-span-2 bg-[var(--app-accent-soft)] lg:col-span-1' : index % 2 === 0 ? 'border-t border-l lg:border-t-0' : 'border-t lg:border-t-0 lg:border-l'">
+            <span class="text-xs font-medium text-[var(--app-muted)]">{{ tile.label }}</span>
+            @if (loading()) {
+                <p-skeleton [width]="first ? '9rem' : '6rem'" [height]="first ? '2rem' : '1.5rem'" />
+                <p-skeleton width="6rem" height="0.75rem" />
+            } @else {
+                <span class="tabular-nums leading-tight" [class]="first ? 'text-[28px] font-bold' : 'text-xl font-semibold'"
+                    [style.color]="first ? 'var(--app-accent)' : 'var(--app-ink)'">
+                    @if (tile.value === null) {
+                        <span [pTooltip]="tile.unit === 'đ' ? '' : partialTooltip" tooltipPosition="top">—</span>
+                    } @else {
+                        {{ format(tile.value) }}<span class="ml-[3px] text-[13px] font-medium text-[var(--app-muted)]">{{ tile.unit }}</span>
+                    }
+                </span>
+                <span class="text-xs text-[var(--app-muted)]">{{ tile.note }}</span>
+            }
+        </div>
+    }
+</div>
+@if (!isStaff()) {
+    <p class="mt-2 mb-0 text-xs text-[var(--app-muted)]">Tổng tính trên toàn bộ {{ total() }} dòng của bộ lọc, không theo trang đang xem.</p>
+}
