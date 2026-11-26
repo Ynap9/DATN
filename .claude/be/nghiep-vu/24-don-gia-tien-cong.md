@@ -108,7 +108,7 @@ Excel ghi mọi ô dạng chuỗi nên không SUM được (xem [ExcelExternal](
 Quyền `Price.ManageCompany` là key trong cây quyền để gán menu; API `member/price` không kiểm riêng nó, luật Admin nằm trong service
 (`809`).
 
-Mặc định gán bằng API (`PUT api/auth/role/permission`): Admin, Leader, Data, QA ([03](03-vai-tro-mac-dinh.md)). Admin có mọi key qua seeder.
+`Wage.View` mặc định có ở Admin, Leader, Data, QA, đều do seeder cấp (Admin mọi key; ba vai trò kia từ Task 57A, [03](03-vai-tro-mac-dinh.md#quyền-do-seeder-cấp-task-57a)).
 
 ## Mã lỗi
 

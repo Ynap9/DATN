@@ -56,7 +56,7 @@ khác phạm vi), Data, QA, người không có dự án; ô "—" + tooltip gi�
 đúng bộ lọc + Tổng, đổi dự án bằng ô chọn, F5 ở trang 2 và khi có từ khoá, header 8 màn khác vẫn một hàng, Xuất Excel lỗi → toast.
 Sau khi chỉnh giao diện theo thiết kế chạy lại cả ba bộ: 24/24, 17/17, 16/16. Unit test `DataTable` 20/20.
 
-⚠️ DB dev (2026-11-26) **chưa** gán `Function.Operation.Wage.View` cho Leader / Data / QA (chỉ Admin, SuperAdmin) dù tài liệu BE 24
-ghi mặc định có: họ không thấy menu, vào URL bị guard chặn. Lúc test gán tạm bằng SQL rồi gỡ; muốn dùng thật thì gán ở màn Vai trò.
+⚠️ DB dev lúc test (2026-11-26) chưa có `Function.Operation.Wage.View` cho Leader / Data / QA nên họ không thấy menu. Cùng ngày đã bổ sung
+cho ba vai trò (Task 57A, [BE 03](../../be/nghiep-vu/03-vai-tro-mac-dinh.md)); DB mới do seeder cấp.
 
 > **Tiếp:** hết bộ tài liệu — quay lại [README.md](README.md).

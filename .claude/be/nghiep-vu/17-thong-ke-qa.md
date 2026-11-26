@@ -17,7 +17,7 @@ không transaction, không audit, không đổi schema. Luồng QA tạo ra dữ
 | `GET progress-stats/daily` | `Function.Construction.Submission.ProgressStats` | Số văn bản được kiểm / QA đạt theo từng ngày (Task 46A, [mục dưới](#tiến-độ-theo-ngày--progress-statsdaily-task-46a)) |
 
 Ba API thống kê nhận `projectId`, `documentTypeId` (bắt buộc), `fromDate`, `toDate`. Key quyền `QaStats` là key mới.
-`SeedRolePermission` tự cấp key này cho `Admin`; các vai trò khác phải gán tay. Phạm vi (Task 40, chốt 14/11): Admin và Leader có
+`SeedRolePermission` tự cấp key này cho `Admin`, và cho Leader / Data / QA khi DB mới ([03](03-vai-tro-mac-dinh.md#quyền-do-seeder-cấp-task-57a)). Phạm vi (Task 40, chốt 14/11): Admin và Leader có
 `Assignment.ViewAllSubmission` thấy cả cặp; người khác (Data / QA) chỉ tính lượt chấm trên văn bản mình **đang giữ**
 (`ResolveRestrictedUserIdAsync`, cùng bộ lọc với `paging`), không là thành viên cặp → `820`. Văn bản về pool / đã gỡ người giữ thì
 lượt chấm cũ không còn trong số của người đó.
