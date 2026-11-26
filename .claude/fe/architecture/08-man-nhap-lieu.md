@@ -23,7 +23,7 @@ Task 43, giao diện làm lại ở Task 53 (cập nhật 2026-11-23). Màn làm
 - Chỉ đọc khi: thiếu `Function.Construction.Submission.Check` (Leader), dự án Xong / Hết hạn (trừ SuperAdmin), hoặc Data gặp văn
   bản đã QA Đạt. Câu `readonlyBanner.message` hiện ở dòng tóm tắt kèm icon khoá, không có khung riêng. QA vào màn này thì bị đẩy
   về danh sách.
-- Trường hiện = `isShowListView` **hoặc** bị QA đánh sai. Lưu gửi **mọi** trường: trường ẩn gửi giá trị gốc, không thì BE coi là xoá trắng.
+- Trường hiện = `isShowListView` **hoặc** bị QA đánh sai. Lưu gửi **mọi** trường: BE **giữ nguyên** trường không gửi lên (`BuildCheckPlan` chỉ duyệt trường có trong `inputs`), nhưng FE vẫn gửi đủ để log cũ → mới đầy đủ và form khớp sau lưu.
 - Quản lý sửa văn bản đã QA Đạt thì hỏi "Lưu và QA lại" trước. Lưu xong gọi `next`; hết văn bản (317) hoặc `next` lỗi thì ở lại và
   tải lại văn bản để form khớp giá trị vừa lưu.
 - Lỗi khi Lưu: luôn giữ giá trị đang gõ. 826 / 316 / 323 thì tải lại dự án + văn bản (thành chỉ đọc). 820 hiện trạng thái trống

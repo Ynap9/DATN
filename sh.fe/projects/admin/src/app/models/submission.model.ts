@@ -37,6 +37,7 @@ export interface IListSubmission {
     qaReason: string | null;
     createdDate: string | null;
     modifiedDate: string | null;
+    holderUserName: string | null;
     submissionDatas: ISubmissionData[];
 }
 
@@ -203,6 +204,17 @@ export interface ICheckSubmissionResult {
     statusQa: number;
     changedDataCount: number;
     logId: number;
+}
+
+export interface IDeleteSubmission {
+    projectId: number;
+    documentTypeId: number;
+    ids: number[];
+}
+
+export interface IDeleteSubmissionResult {
+    deletedSubmissionCount: number;
+    deletedDataCount: number;
 }
 
 export interface ISubmissionTimelineField {

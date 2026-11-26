@@ -11,6 +11,18 @@ BE ở [../../be/nghiep-vu/21-thanh-vien-du-an.md](../../be/nghiep-vu/21-thanh-v
 (`?projectId=&documentTypeId=`, merge với tham số lọc khác). Phát `pairsLoaded` (danh sách) và `pairChange` (cặp mới; `null` khi
 mất cặp). `reload()` tải lại danh sách và **luôn** phát lại cặp đang chọn với dữ liệu mới (vd sau `818` dự án vừa đóng).
 
+## Quyền hiện mục menu Vận hành (Task 57)
+
+Mục menu xét key trong `app.menu.ts`; có **bất kỳ** key trong mảng là hiện. Leader không được cấp key `Menu.Operation.*` (tick menu cấp luôn mọi key con, vd `BonusPool.View`, [BE 03](../../be/nghiep-vu/03-vai-tro-mac-dinh.md)) nên menu phải nhận cả key `Function`.
+
+- **57.1 Chia phiếu:** `[MENU_OPERATION_ASSIGNMENT, FUNCTION_ASSIGNMENT_MANAGE]`, giống `ASSIGNMENT_PERMISSIONS` của route. Leader có `Assignment.Manage` thấy menu, mở được, picker tự chọn cặp mình là Leader.
+- **57.2 Thành viên dự án:** Task 57 giữ chỉ `MENU_OPERATION_PROJECT_MEMBER`; Task 60 (M2-F08) mở màn cho Leader nên menu đổi sang
+  `[MENU_OPERATION_PROJECT_MEMBER, FUNCTION_PROJECT_MEMBER_MANAGE]`, Leader có `ProjectMember.Manage` thấy menu.
+- **57.3 Nhóm nhân viên:** giữ nguyên. `Menu.Operation.StaffGroup` chỉ có một con nên Leader có `StaffGroup.Manage` là menu tự bật (`ResolveGrantedKeys`).
+- **57.4:** mảng key viết tại chỗ trong `app.menu.ts`, không export từ `operation.routes.ts` (menu không phụ thuộc module lazy).
+
+Đã test trình duyệt 2026-11-26 (user tạm, đã xoá): Leader thấy Chia phiếu + Nhóm nhân viên, chưa thấy Thành viên dự án (Task 60 đã mở); Data / QA không thấy cả ba mục Vận hành trừ Tiền công; Admin đủ mục.
+
 ## Thành viên dự án
 
 | Thứ | Chỗ |

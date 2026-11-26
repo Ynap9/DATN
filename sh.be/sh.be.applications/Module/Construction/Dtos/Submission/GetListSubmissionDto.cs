@@ -13,6 +13,7 @@ namespace sh.be.applications.Module.Construction.Dtos.Submission
         public string? QaReason { get; set; }
         public DateTime? CreatedDate { get; set; }
         public DateTime? ModifiedDate { get; set; }
+        public string? HolderUserName { get; set; }
         public List<SubmissionDataDto> SubmissionDatas { get; set; } = new();
     }
 }

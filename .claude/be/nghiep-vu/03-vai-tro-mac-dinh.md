@@ -10,34 +10,54 @@ Hằng số trong `RoleConstants`; `SeedRole` tạo các vai trò còn thiếu k
 |---|---|---|---|
 | `ROLE_SUPER_ADMIN` | `SuperAdmin` | Super Administrator | Mọi quyền (bỏ qua kiểm quyền khi gọi API) |
 | `ROLE_ADMIN` | `Admin` | Admin | Mọi quyền (`SeedRolePermission`) |
-| `ROLE_LEADER` | `Leader` | Quản lý | Chưa có |
-| `ROLE_DATA` | `Data` | Nhân viên nhập liệu | Chưa có |
-| `ROLE_QA` | `QA` | Nhân viên QA | Chưa có |
+| `ROLE_LEADER` | `Leader` | Quản lý | 15 key Function (`SeedRolePermission`, [mục dưới](#quyền-do-seeder-cấp-task-57a)) |
+| `ROLE_DATA` | `Data` | Nhân viên nhập liệu | 9 key Function (cùng mục) |
+| `ROLE_QA` | `QA` | Nhân viên QA | 9 key Function (cùng mục) |
 | `ROLE_USER` | `User` | Người dùng | Chưa có |
 
 Một user không được giữ cùng lúc `Data` và `QA` (`RoleConstants.EXCLUSIVE_STAFF_ROLES`) — tạo / gán vai trò như vậy lỗi `109`
 (từ Task 10, 2026-10-26; DB dev lúc đó không có user nào vi phạm). Các tổ hợp khác (`Data` + `Leader`…) vẫn được.
 
-Bốn vai trò `Leader`, `Data`, `QA`, `User` chưa có quyền nào sau khi seed. Muốn dùng phải gán quyền bằng API
-`PUT api/auth/role/permission`.
+## Quyền do seeder cấp (Task 57A)
+
+`SeedRolePermission.SeedDefaultPermissionRolesAsync` cấp bộ quyền mặc định cho `Leader`, `Data`, `QA` để DB mới (máy demo, máy chấm) dùng
+được ngay, khỏi gán tay qua `PUT api/auth/role/permission`. `User` vẫn chưa có quyền nào.
+
+| Key `Function.*` | Leader | Data | QA |
+|---|:-:|:-:|:-:|
+| `Project.View`, `DocumentType.View`, `DocumentField.View`, `Submission.View` | x | x | x |
+| `Submission.ProgressStats`, `Submission.QaStats`, `Operation.Wage.View` | x | x | x |
+| `Submission.Import`, `Submission.Export` | x | | |
+| `Submission.Check` | x | x | |
+| `Submission.Qa` | | | x |
+| `StaffGroup.Manage`, `ProjectMember.Manage`, `Price.ManageActual`, `Assignment.Manage`, `Assignment.ViewAllSubmission` | x | | |
+| `Assignment.ViewOwn` | | x | x |
+
+- Seed **từng vai trò** khi vai trò đó chưa có dòng `RolePermission` nào, **kể cả dòng xoá mềm** (khoá chính là `(RoleId, PermissionKey)`,
+  thêm trùng dòng xoá mềm sẽ lỗi khoá). Đã có ≥ 1 dòng thì bỏ qua hẳn: DB dev đã gán tay không bị đổi, thiếu key nào phải gán tay.
+- Chỉ liệt kê key `Function`, rồi qua `Role.AssignPermissions` như API gán quyền nên menu cha chỉ tự bật khi đủ **mọi** con: Leader có thêm
+  `Menu.Operation.StaffGroup`, Data / QA không có key `Menu.*`. Key không có trong bảng `Permission` bị bỏ qua.
+- Mỗi vai trò được seed ghi một `AuditLog` (`ACTION_SEED_ROLE_PERMISSION`, "Khởi tạo quyền mặc định cho vai trò <Tên>").
+- Leader **không** có: `Project.Accept / Create / Update / Delete / Deadline`, `Submission.Delete / AssignQa / Qa`, `Price.ManageCompany`,
+  `BonusPool.View`, mọi key `Menu.*` khác. Quyền chỉ mở cửa API; phạm vi vẫn do service (Task 30, 36, 40).
 
 `Function.Construction.Project.Accept` (nghiệm thu dự án, Task 23) chỉ Admin có qua seeder. Gán thêm cho Leader thì Leader bắt
 đầu / hoàn tất được khi **đủ** điều kiện và chỉ ở dự án mình đang là Leader (`337`); cho vào khi chưa đủ và trả dự án về đang triển khai vẫn
 chỉ Admin / SuperAdmin (`400`, [22](22-nghiem-thu-du-an.md)).
 
-`Function.Construction.Submission.ProgressStats` (tiến độ theo ngày, Task 46A) chỉ Admin có qua seeder. **Leader cần gán tay** bằng
-`PUT api/auth/role/permission` mới vào được màn Báo cáo tiến độ (Task 46); DB dev chưa gán cho Leader id 2 ([17](17-thong-ke-qa.md#tiến-độ-theo-ngày--progress-statsdaily-task-46a)).
+`Function.Construction.Submission.ProgressStats` (tiến độ theo ngày, Task 46A): từ Task 57A seeder cấp cho Leader / Data / QA nên DB mới vào được
+màn Báo cáo tiến độ (Task 46). DB dev đã bổ sung ngày 2026-11-26 (Task 57A, bước bù key thiếu bằng SQL cho Leader id 2, Data id 3, QA id 4; seeder bỏ qua vì đã có quyền) ([17](17-thong-ke-qa.md#tiến-độ-theo-ngày--progress-statsdaily-task-46a)).
 
 `Function.Construction.Project.View` gán cho Leader id 2, Data id 3, QA id 4 bằng `PUT api/auth/role/permission` trên DB dev ngày
-2026-11-13 (Task 29): paging dự án giờ lọc theo thành viên nên mọi vai trò cần quyền này ([25](25-xoa-du-an-danh-sach-cap.md)). Môi trường mới phải gán lại.
+2026-11-13 (Task 29): paging dự án giờ lọc theo thành viên nên mọi vai trò cần quyền này ([25](25-xoa-du-an-danh-sach-cap.md)); DB mới do seeder cấp.
 Từ Task 30, Leader / Data / QA chỉ thấy dự án mình được phân ở **mọi** API cần quyền này (danh sách, dropdown, chi tiết, nghiệm thu; ngoài
 phạm vi `303`), Data / QA không thấy link Google Sheet ([07](07-du-an.md#phạm-vi-xem--task-30)).
 
 `Function.Construction.DocumentType.View` gán cho Leader id 2, Data id 3, QA id 4 cùng cách trên ngày 2026-11-14 (Task 36), để lọc
 metadata ở màn Dự án. Năm API đọc loại văn bản lọc theo dự án được phân ([05](05-loai-van-ban.md#phạm-vi-xem--task-36)); menu / màn
-Metadata hiện cho ba vai trò này nhưng chỉ đọc. Môi trường mới phải gán lại.
+Metadata hiện cho ba vai trò này nhưng chỉ đọc; DB mới do seeder cấp.
 
-### Quyền Operation gán mặc định (bằng API, không qua seeder)
+### Quyền Operation mặc định (seeder cấp từ Task 57A)
 
 | Key | Admin | Leader | Data | QA |
 |---|:-:|:-:|:-:|:-:|
@@ -48,12 +68,12 @@ Metadata hiện cho ba vai trò này nhưng chỉ đọc. Môi trường mới p
 | `Assignment.ViewOwn` | x | | x | x |
 | `Wage.View` (thống kê tiền công, Task 12) | x | x | x | x |
 
-Đã gán trên DB dev ngày 2026-10-26 (Leader id 2, Data id 3, trước đó chưa có quyền nào); QA id 4 gán `ViewOwn` ngày 2026-11-12. `Wage.View` gán cho Leader id 2, Data id 3, QA id 4 bằng `PUT api/auth/role/permission` ngày 2026-11-13 (spec 12.2, Task 12). Admin tự có **mọi** key qua `SeedRolePermission`, kể cả `ViewOwn` — vô hại vì Admin không giữ phiếu.
+Trước Task 57A đã gán tay trên DB dev ngày 2026-10-26 (Leader id 2, Data id 3, trước đó chưa có quyền nào); QA id 4 gán `ViewOwn` ngày 2026-11-12. `Wage.View` gán cho Leader id 2, Data id 3, QA id 4 bằng `PUT api/auth/role/permission` ngày 2026-11-13 (spec 12.2, Task 12). Admin tự có **mọi** key qua `SeedRolePermission`, kể cả `ViewOwn` — vô hại vì Admin không giữ phiếu.
 
 ⚠️ Bẫy: tick một menu là `SyncChecked` cấp **mọi** con của nó. Tick `Menu.Operation.ProjectMember` cho Leader là Leader có luôn
 `Price.ManageCompany`; tick `Menu.Operation.Assignment` là có `BonusPool.View`. Chỉ tick key `Function` (menu tự bật khi đủ mọi con).
 Leader vì vậy không có key hai menu này — FE phải hiện menu khi có **bất kỳ** key con, đừng đòi key `Menu.*`. Từ Task 13 QA xem đợt QA
-của mình ở `my-assignment` ([23](23-chia-phieu.md)) nên **cần** `ViewOwn` (thiếu thì QA nhận `403`); môi trường mới phải gán lại. Leader vẫn bị chặn ở service nếu không phải `ProjectMember`
+của mình ở `my-assignment` ([23](23-chia-phieu.md)) nên **cần** `ViewOwn` (thiếu thì QA nhận `403`; seeder đã cấp). Leader vẫn bị chặn ở service nếu không phải `ProjectMember`
 vai trò `Leader` của đúng (dự án, loại văn bản) — quyền chỉ mở cửa API.
 
 ## Tài khoản khởi tạo

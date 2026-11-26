@@ -54,6 +54,7 @@ namespace sh.be.domain.Module.Construction.Submissions.Entities
         [MaxLength(450)]
         public string? QaBy { get; private set; }
         public DateTime? QaDate { get; private set; }
+        public int? PageCount { get; private set; }
         public string? CreatedBy { get; private set; }
         public DateTime? CreatedDate { get; private set; }
         public string? ModifiedBy { get; private set; }
@@ -99,6 +100,16 @@ namespace sh.be.domain.Module.Construction.Submissions.Entities
         public bool IsChecked()
         {
             return StatusCheck == SubmissionConst.CHECKED;
+        }
+
+        // Chỉ job đếm trang gọi: null = chưa đếm, 0 = đã thử nhưng không đọc được file
+        public void SetPageCount(int pageCount)
+        {
+            if (pageCount < 0)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Số trang không được âm");
+            }
+            PageCount = pageCount;
         }
 
         public SubmissionLog Check(string checkedBy, string userName, string? note, List<SubmissionDataChange> changes, DateTime checkedDate)

@@ -1705,6 +1705,9 @@ namespace sh.be.infrastructure.data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<int?>("PageCount")
+                        .HasColumnType("int");
+
                     b.Property<string>("ProfileRange")
                         .IsRequired()
                         .HasMaxLength(100)

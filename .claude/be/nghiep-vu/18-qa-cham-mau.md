@@ -28,6 +28,9 @@ hiện chỉ Admin có `ProjectConfig.Update`; gán quyền này cho Leader thì
   nội dung "Đặt chế độ {mode} cho {userName} ở dự án {project}".
 - `GET reviewer-mode` sắp theo `userName`; `modifiedDate` = lần đặt gần nhất (chưa sửa lần nào thì là ngày tạo). User đã mất role QA
   vẫn hiện, không lọc lại.
+- ⚠️ `SAMPLE` tạm chặn: `PUT reviewer-mode` với `mode = SAMPLE` → `349`, kiểm ngay đầu `QaAssignmentService.UpdateReviewerMode` (trước tìm dự án,
+  không ghi DB, không audit) tới khi làm 18C. Chưa chặn ở `QaReviewerMode` và vẫn giữ `MODE_SAMPLE` / `MODES`: mở lại chỉ cần xoá một dòng ở service (Task 61).
+  DB dev 2026-11-26 không có dòng `SAMPLE` nào. Dòng `SAMPLE` đã có (nếu có) phải tự đặt lại `FULL` bằng chính API này.
 - Đổi chế độ chỉ áp cho phiếu giao **sau** đó: phiếu chụp chế độ lúc giao (18C). Task 11 thêm QA vào dự án **không** đặt chế độ.
 
 ## R2. Cấu hình mẫu theo dự án (không bắt buộc)
@@ -113,6 +116,7 @@ dùng cho Data. Unique `(SubmissionId, Role)` **không** filter, nên DB tự ch
 | `337` | `ConstructionErrorProjectNotManaged` | Bạn không được phân quản lý dự án / loại văn bản này (18C) |
 | `338` | `ConstructionErrorQaReviewerNotMember` | Người QA không phải thành viên QA đang hoạt động của dự án / loại văn bản (Task 11) |
 | `339` | `ConstructionErrorQaReviewerNotManaged` | Leader chỉ giao phiếu QA cho QA mình quản lý (Task 11) |
+| `349` | `ConstructionErrorQaSampleNotSupported` | Chế độ chấm mẫu chưa được hỗ trợ, chỉ dùng chế độ chấm toàn bộ (Task 61) |
 
 Key quyền `Function.Construction.Submission.AssignQa` ("Giao QA cho văn bản") đã seed sẵn cho 18C. Admin tự có; Admin gán thêm cho Leader.
 

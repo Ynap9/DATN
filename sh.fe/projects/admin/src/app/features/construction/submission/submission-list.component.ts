@@ -10,10 +10,10 @@ import { InputIconModule } from 'primeng/inputicon';
 import { TabsModule } from 'primeng/tabs';
 import { TagModule } from 'primeng/tag';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { debounceTime, finalize, forkJoin } from 'rxjs';
+import { debounceTime, finalize, forkJoin, Subscription } from 'rxjs';
 import { IDocumentFieldDropdown } from '@/models/document-field.model';
 import { IViewProject } from '@/models/project.model';
-import { ILatestWorkingSubmission, IListQaSubmission, IQaCount, ISubmissionColumn, ISubmissionFilter } from '@/models/submission.model';
+import { IDeleteSubmissionResult, ILatestWorkingSubmission, IListQaSubmission, IQaCount, ISubmissionColumn, ISubmissionFilter } from '@/models/submission.model';
 import { DocumentFieldService } from '@/services/document-field.service';
 import { DocumentTypeService } from '@/services/document-type.service';
 import { ProjectService } from '@/services/project.service';
@@ -22,9 +22,10 @@ import { SubmissionService } from '@/services/submission.service';
 import { BaseComponent } from '@/shared/base/base.component';
 import { DataTable } from '@/shared/components/data-table/data-table.component';
 import { PageHeader } from '@/shared/components/page-header/page-header.component';
+import { AuthConstants } from '@/shared/constants/auth.constants';
 import { TableEventTypes } from '@/shared/constants/data-table.constants';
 import { PermissionConstants } from '@/shared/constants/permission.constants';
-import { PROJECT_URL } from '@/shared/constants/project.constants';
+import { PROJECT_STATUS, PROJECT_URL } from '@/shared/constants/project.constants';
 import {
     LATEST_WORKING_TYPE,
     SUBMISSION_CHECK_STATUS,
@@ -42,6 +43,7 @@ import { SharedImports } from '@/shared/import.shared';
 import { IColumn, ITableAction, ITableEvent } from '@/shared/models/data-table.models';
 import { IBaseResponse } from '@/shared/models/request-paging.base.models';
 import { buildCheckColumns, buildQaColumns, SUBMISSION_ACTIONS, SubmissionRow } from './submission-columns';
+import { SubmissionDeleteDialogComponent } from './submission-delete-dialog/submission-delete-dialog.component';
 import { openSubmissionHistory } from './submission-history-dialog/submission-history-dialog.component';
 import { DOCUMENT_TYPE_NAME_PARAM, readSubmissionQuery, SubmissionQuery } from './submission-query';
 
@@ -81,7 +83,7 @@ const EMPTY_OPTION: IFieldValueOption = { value: '(Trống)', isEmpty: true };
 
 @Component({
     selector: 'app-submission-list',
-    imports: [SharedImports, AutoCompleteModule, IconFieldModule, InputIconModule, TabsModule, TagModule, ToggleSwitchModule, ShSelectComponent, DataTable, PageHeader],
+    imports: [SharedImports, AutoCompleteModule, IconFieldModule, InputIconModule, TabsModule, TagModule, ToggleSwitchModule, ShSelectComponent, DataTable, PageHeader, SubmissionDeleteDialogComponent],
     templateUrl: './submission-list.component.html',
 })
 export class SubmissionListComponent extends BaseComponent {
@@ -94,6 +96,7 @@ export class SubmissionListComponent extends BaseComponent {
 
     private readonly _projectId = Number(this._activatedRoute.snapshot.paramMap.get('id'));
     private readonly _documentTypeId = Number(this._activatedRoute.snapshot.paramMap.get('documentTypeId'));
+    readonly documentTypeId = this._documentTypeId;
 
     project?: IViewProject;
     // null: không có vai trò ở metadata này (chưa được giao)
@@ -114,8 +117,13 @@ export class SubmissionListComponent extends BaseComponent {
     // BE trả 820 (chưa được giao văn bản nào) ở paging / count / latest-working
     isNotAssigned = false;
     latestWorking: ILatestWorkingSubmission | null = null;
+    selectedRows: SubmissionRow[] = [];
+    deleteDialogVisible = false;
     // Chế độ của lần tải "Tiếp tục văn bản đang làm" gần nhất: chỉ gọi lại khi đổi chế độ hoặc Làm mới
     private _latestWorkingView?: SubmissionView;
+    // Request paging / count đang chờ: gọi lại thì huỷ lần trước để response cũ về sau không đè kết quả mới
+    private _pageSubscription?: Subscription;
+    private _countSubscription?: Subscription;
 
     // Không có vai trò ở metadata (42.3) hoặc BE báo chưa được giao → thay vùng tab + bảng bằng trạng thái trống
     get isUnassigned() {
@@ -133,6 +141,14 @@ export class SubmissionListComponent extends BaseComponent {
     // Chỉ Quản lý đổi được chế độ, và chỉ khi dự án bật QA
     get canToggleQaView() {
         return this.role === SUBMISSION_ROLE.MANAGER && !!this.project?.isQaEnabled;
+    }
+
+    // Chỉ Admin / SuperAdmin có quyền xoá, ở chế độ Nhập liệu; dự án Đã xong / Hết hạn thì chỉ SuperAdmin còn xoá được
+    get canDelete() {
+        const isSuperAdmin = this._sharedService.isSuperAdmin();
+        const isAdmin = isSuperAdmin || this._sharedService.roles.includes(AuthConstants.ADMIN_ROLE);
+        const isProjectClosed = this.project!.status === PROJECT_STATUS.DONE || this.project!.status === PROJECT_STATUS.EXPIRED;
+        return isAdmin && this._sharedService.isGranted(PermissionConstants.FUNCTION_SUBMISSION_DELETE) && !this.isQaView && (isSuperAdmin || !isProjectClosed);
     }
 
     get view(): SubmissionView {
@@ -161,6 +177,13 @@ export class SubmissionListComponent extends BaseComponent {
     get pageSize() {
         return this.query.pageSize ?? DEFAULT_PAGE_SIZE;
     }
+
+    // Lý do khoá ô chọn: Đã kiểm chỉ SuperAdmin xoá được, Trả lại không ai xoá được (BE vẫn kiểm lại 325 / 336)
+    readonly deleteDisabledReason = (row: SubmissionRow) => {
+        if (row.statusCheck === SUBMISSION_CHECK_STATUS.RETURNED) return 'Trả lại: đang chờ người nhập sửa, không xoá được';
+        if (row.statusCheck === SUBMISSION_CHECK_STATUS.CHECKED && !this._sharedService.isSuperAdmin()) return 'Đã kiểm: chỉ SuperAdmin xoá được';
+        return null;
+    };
 
     // Data → Nhập liệu, QA → QA; Quản lý có cả hai (QA khi dự án bật QA); mọi vai trò có Lịch sử
     get rowActions(): ITableAction[] {
@@ -212,7 +235,9 @@ export class SubmissionListComponent extends BaseComponent {
         });
     }
 
+    // Mọi nơi đổi tab / bộ lọc / trang / chế độ, Làm mới và xoá xong đều qua đây nên bỏ chọn ở đây (58.5)
     load() {
+        this.selectedRows = [];
         if (this.isUnassigned) return;
         this.loadCounts();
         this.loadPage();
@@ -236,6 +261,36 @@ export class SubmissionListComponent extends BaseComponent {
         }
         const type = event.type === TableEventTypes.CELL_CLICK ? (this.isQaView ? SUBMISSION_ACTIONS.QA : SUBMISSION_ACTIONS.CHECK) : event.type;
         this.openSubmission(type, row.id);
+    }
+
+    onDeleted(result: IDeleteSubmissionResult) {
+        this.deleteDialogVisible = false;
+        this._messageService.add({
+            closable: true,
+            severity: 'success',
+            summary: `Đã xoá ${result.deletedSubmissionCount} văn bản`,
+            detail: `và ${result.deletedDataCount} ô dữ liệu đã nhập`,
+            life: 4000,
+        });
+        this.refresh();
+    }
+
+    // Dự án vừa Đã xong / Hết hạn: tải lại dự án để canDelete ẩn cột chọn; lỗi khác dialog đã toast, giữ nguyên lựa chọn
+    onDeleteFailed(code: number) {
+        if (code !== SUBMISSION_ERROR_CODE.PROJECT_DONE && code !== SUBMISSION_ERROR_CODE.PROJECT_EXPIRED) return;
+        this.deleteDialogVisible = false;
+        this._projectService
+            .findById(this._projectId)
+            .pipe(takeUntilDestroyed(this._destroyRef))
+            .subscribe((res) => {
+                if (this.isResponseSucceed(res)) {
+                    this.project = res.data;
+                }
+            });
+    }
+
+    onUnselect(ids: number[]) {
+        this.selectedRows = this.selectedRows.filter((row) => !ids.includes(row.id));
     }
 
     backToProject() {
@@ -391,10 +446,11 @@ export class SubmissionListComponent extends BaseComponent {
     // Nhập liệu: cột động dựng lại theo customData mỗi lần paging trả về; QA: cột cố định
     private loadPage() {
         const query = { ...this.buildFilter(), statusCheck: this.activeTab.statusCheck, statusQa: this.activeTab.statusQa, pageNumber: this.pageNumber, pageSize: this.pageSize };
+        this._pageSubscription?.unsubscribe();
         this.loading = true;
         if (this.isQaView) {
             this.columns = buildQaColumns(this.rowActions);
-            this._submissionService
+            this._pageSubscription = this._submissionService
                 .qaPaging(query)
                 .pipe(finalize(() => (this.loading = false)), takeUntilDestroyed(this._destroyRef))
                 .subscribe((res) => {
@@ -404,7 +460,7 @@ export class SubmissionListComponent extends BaseComponent {
                 });
             return;
         }
-        this._submissionService
+        this._pageSubscription = this._submissionService
             .paging(query)
             .pipe(finalize(() => (this.loading = false)), takeUntilDestroyed(this._destroyRef))
             .subscribe((res) => {
@@ -421,8 +477,9 @@ export class SubmissionListComponent extends BaseComponent {
 
     // Nhập liệu: count bỏ trạng thái. QA: Chờ QA đếm trong tập đã kiểm, Đạt / Không đạt đếm trên toàn bộ (customData của qa/paging)
     private loadCounts() {
+        this._countSubscription?.unsubscribe();
         if (!this.isQaView) {
-            this._submissionService
+            this._countSubscription = this._submissionService
                 .count(this.buildFilter())
                 .pipe(takeUntilDestroyed(this._destroyRef))
                 .subscribe((res) => {
@@ -431,7 +488,7 @@ export class SubmissionListComponent extends BaseComponent {
                 });
             return;
         }
-        forkJoin([
+        this._countSubscription = forkJoin([
             this._submissionService.qaPaging({ ...this.buildFilter(), statusCheck: SUBMISSION_CHECK_STATUS.CHECKED, ...COUNT_PAGE }),
             this._submissionService.qaPaging({ ...this.buildFilter(), ...COUNT_PAGE }),
         ])
