@@ -42,7 +42,7 @@ export const APP_MENU_ITEMS: MenuItem[] = [
         items: [
             { label: 'Nhóm nhân viên', icon: 'pi pi-users', routerLink: ['/admin/operation/staff-group'], permission: PermissionConstants.MENU_OPERATION_STAFF_GROUP },
             { label: 'Thành viên dự án', icon: 'pi pi-id-card', routerLink: ['/admin/operation/project-member'], permission: PermissionConstants.MENU_OPERATION_PROJECT_MEMBER },
-            { label: 'Chia phiếu', icon: 'pi pi-send', routerLink: ['/admin/operation/assignment'], permission: PermissionConstants.MENU_OPERATION_ASSIGNMENT },
+            { label: 'Chia phiếu', icon: 'pi pi-send', routerLink: ['/admin/operation/assignment'], permission: [PermissionConstants.MENU_OPERATION_ASSIGNMENT, PermissionConstants.FUNCTION_ASSIGNMENT_MANAGE] },
             { label: 'Tiền công', icon: 'pi pi-wallet', routerLink: ['/admin/operation/wage'], permission: PermissionConstants.FUNCTION_WAGE_VIEW },
         ],
     },
