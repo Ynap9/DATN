@@ -5,13 +5,14 @@ import { IViewProjectMember } from '@/models/project-member.model';
 import { TBL_CUSTOM_COMP_EMIT } from '@/shared/components/data-table/data-table.component';
 import { MEMBER_ROLE, MEMBER_ROLE_LABELS } from '@/shared/constants/project-member.constants';
 
-// Dòng bảng thành viên: canEdit = hiện nút Sửa / Gỡ (dự án chưa đóng)
-export type ProjectMemberRow = IViewProjectMember & { canEdit: boolean };
+// Dòng bảng thành viên: canEdit = hiện nút Sửa / Gỡ; isSelf = dòng của người đang xem; isLeaderView = người xem là Leader của cặp
+export type ProjectMemberRow = IViewProjectMember & { canEdit: boolean; isSelf: boolean; isLeaderView: boolean };
 
 // Data mở dialog Thêm / Sửa; onMemberError báo màn danh sách tải lại cặp / bảng khi BE trả 805 / 806 / 818, dialog vẫn mở
 export interface IProjectMemberDialogData {
     pair: IViewProjectPair;
     member?: ProjectMemberRow;
+    isLeaderView: boolean;
     onMemberError: (code: number) => void;
 }
 
@@ -56,7 +57,12 @@ export class MemberAvatarComponent {
         <span class="flex items-center gap-2.5">
             <app-member-avatar [member]="row()" />
             <span class="flex min-w-0 flex-col">
-                <span class="font-semibold">{{ row().fullName || row().userName }}</span>
+                <span class="font-semibold">
+                    {{ row().fullName || row().userName }}
+                    @if (row().isSelf && row().isLeaderView) {
+                        <span class="ml-1.5 rounded bg-[var(--app-accent)] px-1.5 py-px align-[1px] text-[11px] font-bold text-white">Bạn</span>
+                    }
+                </span>
                 <span class="text-xs text-muted-color">{{ row().userName }}</span>
             </span>
         </span>
@@ -104,6 +110,11 @@ export class MemberManagerCellComponent {
 
 const PRICE_FORMAT = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
 
+// null / undefined = chưa đặt giá
+export function formatMemberPrice(price: number | null | undefined) {
+    return price === null || price === undefined ? null : PRICE_FORMAT.format(price);
+}
+
 // Dùng cho cả Giá công ty và Giá thực nhận (data = giá trị cột); Leader không có giá
 @Component({
     selector: 'app-member-price-cell',
@@ -123,10 +134,55 @@ export class MemberPriceCellComponent {
     data = input<unknown>();
 
     isLeader = computed(() => this.row().role === MEMBER_ROLE.LEADER);
-    priceText = computed(() => {
-        const price = this.data() as number | null | undefined;
-        return price === null || price === undefined ? null : PRICE_FORMAT.format(price);
-    });
+    priceText = computed(() => formatMemberPrice(this.data() as number | null | undefined));
+}
+
+// Giá công ty khi Leader xem: chỉ xem (icon khoá); dòng Leader (chính mình) không có giá
+@Component({
+    selector: 'app-member-company-price-cell',
+    template: `
+        @if (isLeader()) {
+            <span class="text-[var(--app-faint)]">—</span>
+        } @else if (priceText() === null) {
+            <span class="text-[var(--app-muted)]">Chưa đặt</span>
+        } @else {
+            <span class="inline-flex items-center gap-1.5 tabular-nums text-[var(--app-muted)]">
+                <i class="pi pi-lock text-[11px]"></i>{{ priceText() }} đ
+            </span>
+        }
+    `,
+})
+export class MemberCompanyPriceCellComponent {
+    row = input.required<ProjectMemberRow>();
+    rowIndex = input<number>();
+    data = input<unknown>();
+
+    isLeader = computed(() => this.row().role === MEMBER_ROLE.LEADER);
+    priceText = computed(() => formatMemberPrice(this.row().companyPrice));
+}
+
+// Giá thực nhận khi Leader xem: chưa đặt mà đã có giá công ty = Leader cần đặt; chưa có giá công ty = chờ Admin
+@Component({
+    selector: 'app-member-actual-price-cell',
+    template: `
+        @if (isLeader()) {
+            <span class="text-[var(--app-muted)]">Leader không có giá</span>
+        } @else if (priceText() !== null) {
+            <span class="font-semibold tabular-nums">{{ priceText() }} đ</span>
+        } @else {
+            <span class="rounded-full bg-[#fdf3e3] px-2 py-0.5 text-xs font-semibold text-[#8a5a12]">
+                {{ row().companyPrice === null ? 'Chờ Admin đặt giá công ty' : 'Chưa đặt giá' }}
+            </span>
+        }
+    `,
+})
+export class MemberActualPriceCellComponent {
+    row = input.required<ProjectMemberRow>();
+    rowIndex = input<number>();
+    data = input<unknown>();
+
+    isLeader = computed(() => this.row().role === MEMBER_ROLE.LEADER);
+    priceText = computed(() => formatMemberPrice(this.row().actualPrice));
 }
 
 @Component({
@@ -155,6 +211,8 @@ export class MemberStatusCellComponent {
                 <p-button icon="pi pi-trash" size="small" severity="danger" [text]="true" [ariaLabel]="'Gỡ ' + (row().fullName || row().userName)"
                     (onClick)="emit(actions.REMOVE)" />
             </span>
+        } @else if (row().isSelf && row().isLeaderView) {
+            <span class="block text-center text-[var(--app-faint)]" title="Không thao tác với chính mình">—</span>
         }
     `,
 })

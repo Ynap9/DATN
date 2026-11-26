@@ -13,24 +13,46 @@
                 <span class="text-xs font-semibold uppercase tracking-wide text-muted-color">Đơn giá</span>
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div class="flex flex-col gap-1">
-                        <sh-input-number label="Giá công ty" formControlName="companyPrice" suffix=" đ" [min]="0" [max]="priceMax"
-                            [isShowMessageInvalid]="false" />
-                        @if (companyPriceError) {
-                            <small class="text-red-600">{{ companyPriceError }}</small>
+                        @if (isLeaderView) {
+                            <label>Giá công ty</label>
+                            <span class="flex h-7 items-center justify-between rounded-md border border-[#d4dad7] bg-[#f3f5f4] px-2.5 text-xs">
+                                <span [class.text-muted-color]="companyPriceText === null">{{ companyPriceText === null ? 'Chưa đặt' : companyPriceText + ' đ' }}</span>
+                                <i class="pi pi-lock text-xs text-muted-color"></i>
+                            </span>
+                            @if (companyPriceText !== null) {
+                                <small class="text-muted-color">Admin đặt</small>
+                            }
+                        } @else {
+                            <sh-input-number label="Giá công ty" formControlName="companyPrice" suffix=" đ" [min]="0" [max]="priceMax"
+                                [isShowMessageInvalid]="false" />
+                            @if (companyPriceError) {
+                                <small class="text-red-600">{{ companyPriceError }}</small>
+                            }
                         }
                     </div>
                     <div class="flex flex-col gap-1">
                         <sh-input-number label="Giá thực nhận" formControlName="actualPrice" suffix=" đ" [min]="0" [max]="priceMax"
-                            [isShowMessageInvalid]="false" />
+                            [placeholder]="isLeaderView ? '—' : 'Giá thực nhận'" [isShowMessageInvalid]="false" />
                         @if (actualPriceError) {
                             <small class="text-red-600">{{ actualPriceError }}</small>
+                        } @else if (isLeaderView && companyPriceText !== null) {
+                            <small class="text-muted-color">Từ 0 tới {{ companyPriceText }} đ</small>
                         }
                     </div>
                 </div>
-                <small class="text-muted-color">{{ priceHint }}</small>
+                @if (isLeaderView && companyPriceText === null) {
+                    <div class="flex items-start gap-2 rounded-md bg-[#fbf2e2] px-3 py-2.5 text-[13px] text-[#8a5a12]">
+                        <i class="pi pi-exclamation-triangle mt-0.5"></i>
+                        <span>Admin cần đặt giá công ty trước, sau đó bạn mới đặt được giá thực nhận.</span>
+                    </div>
+                } @else {
+                    <small class="text-muted-color">{{ priceHint }}</small>
+                }
             </section>
 
-            <sh-select label="Leader quản lý" formControlName="managedByUserId" [options]="managers" optionLabel="label" optionValue="userId" />
+            @if (!isLeaderView) {
+                <sh-select label="Leader quản lý" formControlName="managedByUserId" [options]="managers" optionLabel="label" optionValue="userId" />
+            }
         }
 
         <div class="flex items-start justify-between gap-4">

@@ -8,6 +8,7 @@ import { PaginatorState } from 'primeng/paginator';
 import { debounceTime, finalize, forkJoin } from 'rxjs';
 import { IViewProjectPair } from '@/models/project.model';
 import { ProjectMemberService } from '@/services/project-member.service';
+import { SharedService } from '@/services/shared.service';
 import { BaseComponent } from '@/shared/base/base.component';
 import { DataTable } from '@/shared/components/data-table/data-table.component';
 import { PageHeader } from '@/shared/components/page-header/page-header.component';
@@ -29,6 +30,8 @@ import {
     IProjectMemberDialogData,
     MEMBER_ACTIONS,
     MemberActionsCellComponent,
+    MemberActualPriceCellComponent,
+    MemberCompanyPriceCellComponent,
     MemberManagerCellComponent,
     MemberNameCellComponent,
     MemberPriceCellComponent,
@@ -53,19 +56,20 @@ const MEMBER_TABS = [
     selector: 'app-project-member-list',
     imports: [SharedImports, DataTable, PageHeader, ProjectPairPicker, StatusBadge, IconFieldModule, InputIconModule],
     templateUrl: './project-member-list.component.html',
+    styleUrl: './project-member-list.component.scss',
 })
 export class ProjectMemberListComponent extends BaseComponent {
     private readonly _projectMemberService = inject(ProjectMemberService);
+    private readonly _sharedService = inject(SharedService);
     private readonly _destroyRef = inject(DestroyRef);
     private readonly _picker = viewChild(ProjectPairPicker);
 
     readonly breadcrumbs: MenuItem[] = [{ label: 'Vận hành' }, { label: 'Thành viên dự án' }];
-    readonly tabs = MEMBER_TABS;
     readonly pageSize = MEMBER_PAGE_SIZE;
     readonly keyword = new FormControl('', { nonNullable: true });
 
-    // Chỉ các cặp người xem là Admin (màn chỉ dành cho Admin); null = picker chưa tải xong
-    readonly viewerRoles = [MEMBER_VIEWER_ADMIN];
+    // Cặp người xem là Admin hoặc Leader (viewerRole do BE tính); null = picker chưa tải xong
+    readonly viewerRoles = [MEMBER_VIEWER_ADMIN, MEMBER_ROLE.LEADER];
     pairs: IViewProjectPair[] | null = null;
     pair: IViewProjectPair | null = null;
     role = '';
@@ -74,7 +78,7 @@ export class ProjectMemberListComponent extends BaseComponent {
     override totalRecords = 0;
     counts: Record<string, number> = {};
 
-    readonly columns: IColumn<ProjectMemberRow>[] = [
+    private readonly _adminColumns: IColumn<ProjectMemberRow>[] = [
         { header: 'Thành viên', key: 'member', cellViewType: CellViewTypes.CUSTOM_COMP, customComponent: MemberNameCellComponent },
         { header: 'Vai trò', key: 'role', cellViewType: CellViewTypes.CUSTOM_COMP, customComponent: MemberRoleCellComponent },
         { header: 'Leader quản lý', key: 'manager', cellViewType: CellViewTypes.CUSTOM_COMP, customComponent: MemberManagerCellComponent },
@@ -104,6 +108,29 @@ export class ProjectMemberListComponent extends BaseComponent {
         },
     ];
 
+    // Leader: bỏ cột Leader quản lý (luôn là mình), giá công ty chỉ xem, giá thực nhận có nhãn chờ Admin
+    private readonly _leaderColumns: IColumn<ProjectMemberRow>[] = this._adminColumns
+        .filter((column) => column.key !== 'manager')
+        .map((column) =>
+            column.field === 'companyPrice'
+                ? { ...column, customComponent: MemberCompanyPriceCellComponent }
+                : column.field === 'actualPrice'
+                  ? { ...column, customComponent: MemberActualPriceCellComponent }
+                  : column,
+        );
+
+    // Gán lại khi đổi cặp (không dùng getter để DataTable không nhận mảng mới mỗi lần render)
+    tabs = MEMBER_TABS;
+    columns = this._adminColumns;
+
+    // Dòng của chính mình khi Leader xem: nền accent nhạt
+    readonly rowClass = (row: ProjectMemberRow) => (row.isSelf && row.isLeaderView ? 'member-row-self' : '');
+
+    // Theo vai trò của người xem ở cặp đang chọn, không theo vai trò hệ thống (một người có thể vừa là Admin)
+    get isLeaderView() {
+        return this.pair?.viewerRole === MEMBER_ROLE.LEADER;
+    }
+
     // Dự án đã xong / hết hạn: chỉ xem (BE chặn 818 cả SuperAdmin)
     get isClosed() {
         return this.pair?.status === PROJECT_STATUS.DONE || this.pair?.status === PROJECT_STATUS.EXPIRED;
@@ -128,6 +155,8 @@ export class ProjectMemberListComponent extends BaseComponent {
             this.rows = [];
             return;
         }
+        this.tabs = this.isLeaderView ? MEMBER_TABS.filter((tab) => tab.key !== MEMBER_ROLE.LEADER) : MEMBER_TABS;
+        this.columns = this.isLeaderView ? this._leaderColumns : this._adminColumns;
         if (isPairChanged) {
             this.role = '';
             this.pageNumber = this.START_PAGE_NUMBER;
@@ -152,7 +181,7 @@ export class ProjectMemberListComponent extends BaseComponent {
         this.loadPage();
     }
 
-    // Số trên tab = totalItems của 4 lần paging pageSize 1, cùng từ khoá
+    // Số trên tab = totalItems của mỗi tab đang hiện (paging pageSize 1), cùng từ khoá
     loadCounts() {
         if (!this.pair) return;
         const { projectId, documentTypeId } = this.pair;
@@ -188,7 +217,15 @@ export class ProjectMemberListComponent extends BaseComponent {
             )
             .subscribe((res) => {
                 if (!this.isResponseSucceed(res)) return this.handleMemberError(res.code);
-                this.rows = res.data.items.map((member) => ({ ...member, canEdit: !this.isClosed }));
+                // Leader: BE trả chính mình + người mình quản lý; dòng của mình lên đầu trang, không thao tác
+                const isLeaderView = this.isLeaderView;
+                const currentUserId = this._sharedService.currentUser?.id;
+                this.rows = res.data.items
+                    .map((member) => {
+                        const isSelf = member.userId === currentUserId;
+                        return { ...member, isSelf, isLeaderView, canEdit: !this.isClosed && !(isLeaderView && isSelf) };
+                    })
+                    .sort((a, b) => Number(isLeaderView && b.isSelf) - Number(isLeaderView && a.isSelf));
                 this.totalRecords = res.data.totalItems;
             });
     }
@@ -202,7 +239,11 @@ export class ProjectMemberListComponent extends BaseComponent {
     }
 
     openAddForm() {
-        const data: IProjectMemberDialogData = { pair: this.pair!, onMemberError: (code) => this.handleMemberError(code) };
+        const data: IProjectMemberDialogData = {
+            pair: this.pair!,
+            isLeaderView: this.isLeaderView,
+            onMemberError: (code) => this.handleMemberError(code),
+        };
         this._dialogService
             .open(ProjectMemberAddComponent, { header: 'Thêm thành viên', width: '520px', modal: true, closable: true, data })
             ?.onClose.subscribe((changed) => changed && this.load());
@@ -218,7 +259,12 @@ export class ProjectMemberListComponent extends BaseComponent {
     }
 
     private openEditForm(member: ProjectMemberRow) {
-        const data: IProjectMemberDialogData = { pair: this.pair!, member, onMemberError: (code) => this.handleMemberError(code) };
+        const data: IProjectMemberDialogData = {
+            pair: this.pair!,
+            member,
+            isLeaderView: this.isLeaderView,
+            onMemberError: (code) => this.handleMemberError(code),
+        };
         this._dialogService
             .open(ProjectMemberEditComponent, { header: 'Sửa thành viên', width: '480px', modal: true, closable: true, data })
             ?.onClose.subscribe((changed) => changed && this.loadPage());

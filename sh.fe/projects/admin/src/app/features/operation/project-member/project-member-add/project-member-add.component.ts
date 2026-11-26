@@ -39,7 +39,9 @@ export class ProjectMemberAddComponent extends BaseComponent {
     private readonly _destroyRef = inject(DestroyRef);
 
     readonly pair = this._data.pair;
-    readonly roleButtons = ROLE_BUTTONS;
+    // Leader chỉ thêm Nhập liệu / QA, người thêm vào BE tự gán do Leader đó quản lý
+    readonly isLeaderView = this._data.isLeaderView;
+    readonly roleButtons = this.isLeaderView ? ROLE_BUTTONS.filter((button) => button.role !== MEMBER_ROLE.LEADER) : ROLE_BUTTONS;
     readonly qaRole = MEMBER_ROLE.QA;
     readonly canPickGroup = this._sharedService.isGranted(PermissionConstants.FUNCTION_STAFF_GROUP_MANAGE);
 
@@ -74,7 +76,9 @@ export class ProjectMemberAddComponent extends BaseComponent {
     override ngOnInit(): void {
         this.loadCandidates('');
         this.loadStaffGroups();
-        this.loadManagers();
+        if (!this.isLeaderView) {
+            this.loadManagers();
+        }
     }
 
     // Đổi vai trò → xoá người / nhóm đã chọn, tải lại gợi ý theo vai trò mới
@@ -108,7 +112,7 @@ export class ProjectMemberAddComponent extends BaseComponent {
             ? this._projectMemberService.addLeaders(projectId, { documentTypeId, userIds })
             : this._projectMemberService.addMembers(projectId, {
                   documentTypeId,
-                  managedByUserId: this.managedByUserId.value === MANAGER_BY_ADMIN ? undefined : this.managedByUserId.value,
+                  managedByUserId: this.isLeaderView || this.managedByUserId.value === MANAGER_BY_ADMIN ? undefined : this.managedByUserId.value,
                   users: userIds.map((userId) => ({ userId, role: this.role })),
                   staffGroupIds: this.hasGroup ? [this.staffGroupId.value] : [],
               });

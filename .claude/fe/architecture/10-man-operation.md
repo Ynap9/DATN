@@ -2,7 +2,7 @@
 
 > **Phần 10/13** · trước: [09-man-qa.md](09-man-qa.md) · mục lục: [README.md](README.md)
 
-Hai màn: Thành viên dự án (Task 47), Nhóm nhân viên (Task 49), 2026-11-23; màn Chia phiếu ở [13-man-chia-phieu.md](13-man-chia-phieu.md).
+Hai màn: Thành viên dự án (Task 47, mở cho Leader ở Task 60 ngày 2026-11-27), Nhóm nhân viên (Task 49), 2026-11-23; màn Chia phiếu ở [13-man-chia-phieu.md](13-man-chia-phieu.md).
 BE ở [../../be/nghiep-vu/21-thanh-vien-du-an.md](../../be/nghiep-vu/21-thanh-vien-du-an.md),
 [24-don-gia-tien-cong.md](../../be/nghiep-vu/24-don-gia-tien-cong.md) và [19-nhom-nhan-vien.md](../../be/nghiep-vu/19-nhom-nhan-vien.md).
 
@@ -15,22 +15,31 @@ mất cặp). `reload()` tải lại danh sách và **luôn** phát lại cặp 
 
 | Thứ | Chỗ |
 |---|---|
-| Route | `/admin/operation/project-member?projectId=&documentTypeId=`, `permissionGuard` [`MENU_OPERATION_PROJECT_MEMBER`, `FUNCTION_PROJECT_MEMBER_MANAGE`] |
+| Route | `/admin/operation/project-member?projectId=&documentTypeId=`, `permissionGuard` và mục menu cùng [`MENU_OPERATION_PROJECT_MEMBER`, `FUNCTION_PROJECT_MEMBER_MANAGE`] |
 | Màn | `features/operation/project-member/project-member-list.component.*` |
-| Ô bảng | `project-member-cells.ts`: vòng chữ cái, chip vai trò, Leader quản lý, giá, trạng thái, nút Sửa / Gỡ (phát qua `TBL_CUSTOM_COMP_EMIT`) |
+| Ô bảng | `project-member-cells.ts`: vòng chữ cái, chip vai trò, Leader quản lý, giá (Admin / 2 ô riêng của Leader), trạng thái, nút Sửa / Gỡ (phát qua `TBL_CUSTOM_COMP_EMIT`) |
 | Dialog | `project-member-add/` (Thêm), `project-member-edit/` (Sửa); Gỡ dùng `ConfirmationService` ngay trong màn |
 | Service / model | `services/project-member.service.ts`, `services/staff-group.service.ts` (dùng paging); `models/project-member.model.ts`, `models/staff-group.model.ts` |
 | Hằng | `shared/constants/project-member.constants.ts`; 4 key `Function.Operation.*` trong `permission.constants.ts` |
 
-- **Chỉ Admin** (quyết định 2026-11-23, khác bảng CASE của task cho cả Leader): chỉ giữ cặp `viewerRole = 'Admin'` từ
-  `construction/project/paging?pageSize=-1`. Không còn cặp nào → "Chỉ Admin quản lý thành viên dự án", ẩn bảng và nút Thêm.
-- Cặp qua picker dùng chung (`viewerRoles = ['Admin']`); thiếu / sai cặp trên URL → cặp đầu tiên (dự án sắp theo tên).
+- Cặp qua picker dùng chung (`viewerRoles = ['Admin', 'Leader']`); thiếu / sai cặp trên URL → cặp đầu tiên (dự án sắp theo tên).
+  Không có cặp nào → "Bạn chưa là Leader của dự án nào", ẩn bảng và nút Thêm.
+- **Chế độ Leader** = `pair.viewerRole === 'Leader'` (theo cặp, không theo vai trò hệ thống). Admin giữ nguyên giao diện Task 47.
+  Leader: chip "Người bạn quản lý" + banner xanh, tab Tất cả / Nhập liệu / QA, bỏ cột Leader quản lý; BE chỉ trả chính mình + người
+  mình quản lý. Dòng của mình lên đầu trang, nền accent (`rowClass`), nhãn "Bạn", không thao tác. Giá công ty chỉ xem (khoá);
+  giá thực nhận trống → "Chưa đặt giá" hoặc "Chờ Admin đặt giá công ty" khi chưa có giá công ty.
+- Dialog của Leader (`isLeaderView` trong `IProjectMemberDialogData`): Thêm chỉ Nhập liệu / QA, không gửi `managedByUserId` (BE ép
+  là mình), nhóm chỉ nhóm mình là trưởng (BE lọc). Sửa chỉ gửi `actualPrice` (gửi `companyPrice` là `809`), không đổi Leader quản lý;
+  chưa có giá công ty thì khoá ô giá thực nhận + hộp vàng (BE `808`).
+- Cột và tab gán lại khi đổi cặp, không dùng getter: getter trả mảng mới mỗi lần render làm `DataTable` dựng lại cột.
 - Dự án `DONE` / `EXPIRED` → banner xám chỉ xem, ẩn Thêm và Sửa / Gỡ (BE chặn `818` cả SuperAdmin).
 - Số trên 4 tab = `totalItems` của 4 lần paging `pageSize 1` cùng từ khoá; tải lại khi đổi cặp / từ khoá / sau Thêm, Gỡ.
 - Sửa chỉ gửi phần đã đổi: giá qua `member/price`, rồi Leader quản lý / Đang làm qua `member/{id}`. Giá lưu được mà bước sau lỗi →
   giữ dialog, lần bấm sau chỉ gửi phần còn lại; đóng bằng Huỷ vẫn tải lại bảng.
 - Giá đã có không xoá được (BE: `null` = giữ nguyên) → lỗi tại ô, khoá Lưu. Thực nhận cần giá công ty và không vượt giá công ty.
-- Lỗi trong dialog giữ dialog; `onMemberError` báo màn tải lại cặp (`805`, `818`) hoặc bảng (`806`).
+- Lỗi trong dialog giữ dialog; `onMemberError` báo màn tải lại cặp (`805`, `818`) hoặc bảng (`806`). `821` / `808` / `809` toast câu BE.
+- Đã kiểm 2026-11-27 trên dự án test `ZZTEST60` (đã xoá): 24/24 lần kiểm phủ 12 ca bảng 60.2 — Admin, 2 Leader cùng cặp,
+  Leader không có cặp, dự án Đã xong, dự án không QA (nút QA khoá), lỗi `821` giả lập (toast câu BE, dialog giữ).
 - ⚠️ Ô "Admin quản lý" / "Không chọn" dùng giá trị giả `'admin'` / `0` vì `p-select` coi option có value `null` là chưa chọn. Id thật
   là GUID / số dương nên không trùng; lúc gửi BE phải đổi lại thành không gửi (`clearManager` khi sửa).
 - ⚠️ Ô chọn người tìm qua server (`onFilter` của `sh-multi-select`): mỗi lần tìm thay `options`, nên phải ghép lại người đã chọn kèm nhãn

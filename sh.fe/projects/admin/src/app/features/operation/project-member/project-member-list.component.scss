@@ -1,0 +1,4 @@
+// Dòng của chính mình khi Leader xem (rowClass của bảng)
+:host ::ng-deep .member-row-self > td {
+    background: var(--app-accent-soft);
+}

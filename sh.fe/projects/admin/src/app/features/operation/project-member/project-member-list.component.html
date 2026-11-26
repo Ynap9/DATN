@@ -1,10 +1,17 @@
 <app-page-header title="Thành viên dự án" [breadcrumbs]="breadcrumbs">
-    @if (pair && !isClosed) {
-        <p-button icon="pi pi-plus" label="Thêm thành viên" (onClick)="openAddForm()" />
-    }
+    <div class="flex items-center gap-2">
+        @if (pair && isLeaderView) {
+            <span class="inline-flex h-7 items-center gap-1.5 rounded-full border border-[var(--app-line)] bg-[var(--app-surface)] pl-2 pr-2.5 text-xs font-semibold text-[var(--app-muted)]">
+                <span class="h-2 w-2 rounded-full bg-[var(--app-accent)]"></span>Người bạn quản lý
+            </span>
+        }
+        @if (pair && !isClosed) {
+            <p-button icon="pi pi-plus" label="Thêm thành viên" (onClick)="openAddForm()" />
+        }
+    </div>
 </app-page-header>
 
-<!-- Picker luôn render (nó tự tải danh sách cặp); không có cặp Admin nào thì ẩn và hiện câu báo -->
+<!-- Picker luôn render (nó tự tải danh sách cặp); không có cặp Admin / Leader nào thì ẩn và hiện câu báo -->
 <div class="flex flex-wrap items-end gap-4 rounded-md border border-[var(--app-line)] bg-[var(--app-surface)] p-4" [class.hidden]="pairs && !pairs.length">
     <app-project-pair-picker [viewerRoles]="viewerRoles" (pairsLoaded)="pairs = $event" (pairChange)="onPairChange($event)" />
     @if (pair) {
@@ -18,11 +25,18 @@
 </div>
 
 @if (pairs && !pairs.length) {
-    <div class="flex flex-col items-center gap-3 py-12">
-        <span class="text-muted-color">Chỉ Admin quản lý thành viên dự án</span>
+    <div class="flex flex-col items-center gap-1.5 rounded-md border border-[var(--app-line)] bg-[var(--app-surface)] px-4 py-11 text-center">
+        <span class="font-semibold">Bạn chưa là Leader của dự án nào</span>
+        <span class="max-w-[40ch] text-[13px] text-[var(--app-muted)]">Khi Admin thêm bạn làm Leader của một dự án, bạn sẽ quản lý thành viên ở đây.</span>
     </div>
 } @else if (pair) {
     <div class="mt-4 flex flex-col gap-4">
+        @if (isLeaderView) {
+            <div class="flex items-start gap-2.5 rounded-md bg-[var(--app-blue-soft)] px-3.5 py-2.5 text-[13px] text-[var(--app-blue)]">
+                <i class="pi pi-info-circle mt-0.5"></i>
+                <span>Bạn thấy chính mình và những người bạn quản lý. Thêm Leader, đổi Leader quản lý và đặt giá công ty do Admin làm.</span>
+            </div>
+        }
 
         @if (isClosed) {
             <div class="flex items-start gap-2 rounded-md border border-gray-200 bg-gray-50 p-3 text-[13px]">
@@ -50,12 +64,18 @@
 
         <div>
             <app-data-table tableKey="operation-project-member" [columns]="columns" [data]="rows" [loading]="loading" [pageNumber]="pageNumber"
-                [pageSize]="pageSize" [rowsPerPageOptions]="[pageSize]" [total]="totalRecords" (pageChange)="onPageChange($event)"
+                [pageSize]="pageSize" [rowsPerPageOptions]="[pageSize]" [total]="totalRecords" [rowClass]="rowClass" (pageChange)="onPageChange($event)"
                 (action)="onAction($event)" />
             <div class="flex flex-wrap justify-between gap-2 border-t border-[var(--app-line)] bg-[#fafbfa] px-4 py-2.5 text-xs text-[var(--app-muted)]">
                 <span>{{ totalRecords }} thành viên</span>
                 <span>Giá Nhập liệu tính theo trường có dữ liệu · QA theo lượt chấm · Leader không có giá</span>
             </div>
         </div>
+
+        @if (isLeaderView) {
+            <p class="m-0 text-xs text-[var(--app-muted)]">
+                <i class="pi pi-lock text-[11px]"></i> Giá công ty do Admin đặt, Leader chỉ xem. “Chưa đặt giá” (vàng) = Leader cần đặt giá thực nhận; “Chờ Admin đặt giá công ty” = Leader chưa đặt được.
+            </p>
+        }
     </div>
 }

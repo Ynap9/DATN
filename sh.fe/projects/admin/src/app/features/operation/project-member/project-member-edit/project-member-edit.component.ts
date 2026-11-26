@@ -11,7 +11,7 @@ import { BaseComponent } from '@/shared/base/base.component';
 import { MEMBER_PRICE_MAX, MEMBER_ROLE, MEMBER_ROLE_LABELS } from '@/shared/constants/project-member.constants';
 import { SharedImports } from '@/shared/import.shared';
 import { MANAGER_BY_ADMIN } from '../project-member-add/project-member-add.component';
-import { IProjectMemberDialogData, MemberAvatarComponent } from '../project-member-cells';
+import { formatMemberPrice, IProjectMemberDialogData, MemberAvatarComponent } from '../project-member-cells';
 
 const LIST_PAGE_SIZE = 200;
 const PRICE_NOT_CLEARABLE = 'Không xoá được giá đã đặt, chỉ sửa số';
@@ -29,10 +29,14 @@ export class ProjectMemberEditComponent extends BaseComponent {
 
     readonly member = this._data.member!;
     readonly isLeader = this.member.role === MEMBER_ROLE.LEADER;
+    // Leader xem: giá công ty chỉ xem, chỉ sửa giá thực nhận (BE 809 nếu gửi giá công ty), không đổi Leader quản lý
+    readonly isLeaderView = this._data.isLeaderView;
     readonly roleLabel = MEMBER_ROLE_LABELS[this.member.role] ?? this.member.role;
     readonly priceMax = MEMBER_PRICE_MAX;
-    readonly priceHint =
-        'Theo mỗi trường có dữ liệu (Nhập liệu) / mỗi lượt chấm (QA). Thực nhận không vượt giá công ty.';
+    readonly companyPriceText = formatMemberPrice(this.member.companyPrice);
+    readonly priceHint = this.isLeaderView
+        ? `${this.member.role === MEMBER_ROLE.QA ? 'Mỗi lượt chấm' : 'Mỗi trường có dữ liệu'}. Giá mới áp cho cả phần đã làm.`
+        : 'Theo mỗi trường có dữ liệu (Nhập liệu) / mỗi lượt chấm (QA). Thực nhận không vượt giá công ty.';
 
     // Giá đang lưu trên BE: lưu giá xong mà bước sau lỗi thì cập nhật để lần bấm sau chỉ gửi phần còn lại
     private _savedCompanyPrice = this.member.companyPrice;
@@ -45,8 +49,9 @@ export class ProjectMemberEditComponent extends BaseComponent {
     submitting = false;
 
     override form = new FormGroup({
-        companyPrice: new FormControl<number | null>(this.member.companyPrice),
-        actualPrice: new FormControl<number | null>(this.member.actualPrice),
+        companyPrice: new FormControl<number | null>({ value: this.member.companyPrice, disabled: this.isLeaderView }),
+        // Leader chưa có giá công ty thì chưa đặt được giá thực nhận (BE 808)
+        actualPrice: new FormControl<number | null>({ value: this.member.actualPrice, disabled: this.isLeaderView && this.member.companyPrice === null }),
         managedByUserId: new FormControl<string>(this._savedManager, { nonNullable: true }),
         isActive: new FormControl<boolean>(this.member.isActive, { nonNullable: true }),
     });
@@ -73,7 +78,7 @@ export class ProjectMemberEditComponent extends BaseComponent {
     }
 
     override ngOnInit(): void {
-        if (!this.isLeader) {
+        if (!this.isLeader && !this.isLeaderView) {
             this.loadManagers();
         }
     }
@@ -88,12 +93,12 @@ export class ProjectMemberEditComponent extends BaseComponent {
         const { companyPrice, actualPrice, managedByUserId, isActive } = this.form.getRawValue();
 
         const priceItem: IUpdateMemberPriceItem = { memberId: this.member.id };
-        if (!this.isLeader && companyPrice !== this._savedCompanyPrice) priceItem.companyPrice = companyPrice!;
+        if (!this.isLeader && !this.isLeaderView && companyPrice !== this._savedCompanyPrice) priceItem.companyPrice = companyPrice!;
         if (!this.isLeader && actualPrice !== this._savedActualPrice) priceItem.actualPrice = actualPrice!;
         const isPriceChanged = priceItem.companyPrice !== undefined || priceItem.actualPrice !== undefined;
 
         const update: IUpdateProjectMember = { clearManager: false };
-        if (!this.isLeader && managedByUserId !== this._savedManager) {
+        if (!this.isLeader && !this.isLeaderView && managedByUserId !== this._savedManager) {
             if (managedByUserId === MANAGER_BY_ADMIN) {
                 update.clearManager = true;
             } else {
