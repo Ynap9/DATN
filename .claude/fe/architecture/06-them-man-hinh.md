@@ -55,7 +55,7 @@ export class RoleService {
 | `core` | **Nhật ký**, job nền | `api/v1/core/audit-log`, `.../background-job` |
 | `construction` | **Loại / trường văn bản**, **dự án**, cấu hình dự án, **danh sách văn bản**, giao QA | `api/v1/construction/...` |
 | `digital-signature` | Mẫu chữ ký, lô ký, plugin | `api/v1/digital-signature/...` |
-| `packaging` | Cấu hình đóng gói TT05 | `api/v1/packaging/...` |
+| `packaging` | **Cấu hình đóng gói TT05** | `api/v1/packaging/...` |
 | `operation` | Nhóm nhân viên, thành viên dự án | `api/v1/operation/...` |
 | `ai` | Nhà cung cấp AI, **Prompt OCR** (tab trong chi tiết Metadata) | `api/v1/ai/...` (`ai/prompt-template`) |
 
@@ -63,6 +63,14 @@ Route và quyền chi tiết của từng action: controller trong `sh.be/sh.be.
 [../../be/nghiep-vu/README.md](../../be/nghiep-vu/README.md).
 
 Ghi chú riêng của từng màn module `construction` (Metadata, Dự án, Danh sách văn bản): [07-man-construction.md](07-man-construction.md).
+
+**Cấu hình đóng gói** (Task 37, `features/packaging/package-config/`, quyền `Function.Packaging.Config.View` cho cả xem và xuất):
+chỉ đọc. Chuẩn và sheet lấy từ `config/dropdown`, không viết cứng, không ghi lên URL. Bảng `pageSize = -1`, không phân trang.
+Dải sheet theo loại metadata dính đáy; đổi chuẩn thì giữ sheet cùng `metadataType` và xoá từ khoá. Danh mục mã / Mô tả là ô
+cắt 1 dòng + `pTooltip`. Xuất Excel gửi `metadataTypes` lặp lại (`HttpParams`), mỗi loại một sheet. Lệch quy ước: cột Bắt buộc
+dùng `STATUS` (p-tag) theo CASE 37.8, không dùng `StatusBadge`. Tên chuẩn BE có đuôi `(mã)`, FE bỏ đuôi khi hiển thị.
+⚠️ PrimeNG gắn `overflow: auto` **inline** vào `.p-datatable-table-container`, nên CSS ghi đè thành `visible` không ăn. Muốn bảng
+cuộn trong khung với tiêu đề dính thì cho chính khung đó giãn flex (`min-height: 0`), đừng đẩy cuộn ra `app-data-table`.
 
 ## Checklist
 

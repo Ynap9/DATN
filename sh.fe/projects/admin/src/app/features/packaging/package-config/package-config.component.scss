@@ -1,0 +1,100 @@
+// Trang cao đúng khung nhìn (trừ topbar + đệm của layout-main-container / layout-main): bảng cuộn trong khung,
+// dải sheet luôn thấy ở đáy mà không phải cuộn trang
+:host {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    height: calc(100vh - var(--app-topbar-h) - 3.25rem);
+    min-height: 32rem;
+}
+
+.package-config-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    padding: 14px 18px;
+    border: 1px solid var(--app-line);
+    border-left: 4px solid var(--app-accent);
+    border-radius: 8px;
+    background: var(--app-surface);
+    font-size: 15px;
+}
+
+// Bảng giãn hết chiều cao còn lại; hộp cuộn là .p-datatable-table-container (PrimeNG đặt sẵn overflow: auto inline),
+// tiêu đề cột dính trên. Bỏ bo góc dưới để liền khối với dải sheet
+:host ::ng-deep app-data-table.package-config-table {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    border-bottom: 0;
+    border-radius: 12px 12px 0 0;
+    box-shadow: none;
+
+    p-table {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    .p-datatable-table-container {
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+
+    .p-datatable .p-datatable-thead > tr > th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        font-size: 13px;
+        font-weight: 700;
+    }
+}
+
+.package-config-sheets {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    display: flex;
+    flex: none;
+    gap: 6px;
+    margin-top: -14px;
+    padding: 10px 12px 0;
+    overflow-x: auto;
+    border: 1px solid var(--app-line);
+    border-top: 0;
+    border-radius: 0 0 10px 10px;
+    background: #eef2f6;
+    box-shadow: 0 -4px 12px rgba(16, 24, 40, 0.06);
+}
+
+.package-config-sheet {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    min-height: 52px;
+    padding: 0 28px;
+    border: 1px solid transparent;
+    border-bottom: 0;
+    border-radius: 10px 10px 0 0;
+    background: transparent;
+    color: var(--app-muted);
+    font-size: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:hover {
+        color: var(--app-ink);
+    }
+
+    &.is-active {
+        border-color: var(--app-line);
+        background: var(--app-surface);
+        color: var(--app-accent);
+        font-weight: 700;
+        box-shadow: inset 0 3px 0 0 var(--app-accent);
+    }
+}

@@ -43,6 +43,7 @@ export const PermissionConstants = {
     FUNCTION_ASSIGNMENT_MANAGE: 'Function.Operation.Assignment.Manage',
     MENU_OPERATION_ASSIGNMENT: 'Menu.Operation.Assignment',
     FUNCTION_WAGE_VIEW: 'Function.Operation.Wage.View',
+    FUNCTION_PACKAGE_CONFIG_VIEW: 'Function.Packaging.Config.View',
     MENU_AI_PROVIDER: 'Menu.Ai.Provider',
     MENU_AI_PROMPT_TEMPLATE: 'Menu.Ai.PromptTemplate',
     FUNCTION_AI_PROMPT_TEMPLATE_VIEW: 'Function.Ai.PromptTemplate.View',

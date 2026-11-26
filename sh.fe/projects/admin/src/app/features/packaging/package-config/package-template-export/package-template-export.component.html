@@ -1,0 +1,37 @@
+<div class="flex flex-col gap-5">
+    <div class="flex flex-col gap-2.5">
+        <span class="text-sm font-bold">Chuẩn đóng gói</span>
+        <div class="flex flex-wrap gap-2">
+            @for (item of packageTypes; track item.packageType) {
+                <p-button size="small" [label]="item.code" [outlined]="item.packageType !== packageType" [pTooltip]="item.name" tooltipPosition="top"
+                    (onClick)="selectPackageType(item.packageType)" />
+            }
+        </div>
+    </div>
+
+    <div class="flex flex-col gap-2.5">
+        <span class="flex items-baseline gap-2 text-sm font-bold">
+            Loại đối tượng <span class="text-xs font-normal text-[#5d6b66]">mỗi loại xuất thành một sheet riêng</span>
+        </span>
+        <div class="grid grid-cols-2 gap-2">
+            @for (schema of current?.schemas; track schema.packageSchemaId) {
+                @let checked = checkedTypes.has(schema.metadataType);
+                <label class="flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2.5 text-sm"
+                    [class]="checked ? 'border-[#0e7c66] bg-[#0e7c66]/[.06] font-semibold' : 'border-[#d4dad7]'">
+                    <input type="checkbox" class="size-4 accent-[#0e7c66]" [checked]="checked" (change)="toggle(schema.metadataType)" />
+                    {{ schema.name }}
+                </label>
+            }
+        </div>
+    </div>
+
+    <div class="flex items-center gap-2 rounded-md bg-[#f3f5f4] px-3 py-2.5 text-[13px] text-[#5d6b66]">
+        <i class="pi pi-file-excel text-[#0e7c66]"></i>
+        <span>Mau metadata {{ current?.code }}_template.xlsx</span>
+    </div>
+</div>
+
+<div class="mt-6 flex justify-end gap-2">
+    <p-button label="Huỷ" severity="secondary" [outlined]="true" (onClick)="close()" />
+    <p-button label="Xuất" icon="pi pi-download" [disabled]="!checkedTypes.size" [loading]="submitting" (onClick)="onSubmit()" />
+</div>

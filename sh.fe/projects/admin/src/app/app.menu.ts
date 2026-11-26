@@ -35,7 +35,7 @@ export const APP_MENU_ITEMS: MenuItem[] = [
     },
     {
         label: 'Đóng gói',
-        items: [{ label: 'Cấu hình đóng gói', icon: 'pi pi-box', routerLink: ['/admin/packaging/config'], permission: PermissionConstants.MENU_PACKAGE_CONFIG }],
+        items: [{ label: 'Cấu hình đóng gói', icon: 'pi pi-box', routerLink: ['/admin/packaging/config'], permission: PermissionConstants.FUNCTION_PACKAGE_CONFIG_VIEW }],
     },
     {
         label: 'Vận hành',

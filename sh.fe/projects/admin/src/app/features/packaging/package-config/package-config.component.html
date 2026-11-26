@@ -1,0 +1,53 @@
+<app-page-header title="Cấu hình đóng gói" [breadcrumbs]="breadcrumbs" />
+
+<div class="flex flex-wrap items-end gap-4">
+    <sh-select class="w-full sm:w-80" label="Chuẩn đóng gói" [options]="packageTypes" optionLabel="label" optionValue="packageType"
+        [ngModel]="packageType" (ngModelChange)="onPackageTypeChange($event)">
+        <ng-template #selectedItemTemplate let-item>
+            <span class="flex min-w-0 items-center gap-1.5"><span class="font-mono font-semibold">{{ item.code }}</span><span class="truncate">· {{ item.name }}</span></span>
+        </ng-template>
+        <ng-template #itemTemplate let-item>
+            <span class="flex flex-col">
+                <span class="font-mono font-semibold">{{ item.code }}</span>
+                <small class="text-[var(--app-muted)]">{{ item.name }}</small>
+            </span>
+        </ng-template>
+    </sh-select>
+    <div class="flex w-full flex-col sm:w-80">
+        <label class="label mb-2" for="package-config-keyword">Tìm kiếm</label>
+        <p-iconfield>
+            <p-inputicon class="pi pi-search" />
+            <input id="package-config-keyword" pInputText class="w-full" placeholder="Tên trường hoặc thẻ EAD..." [formControl]="keyword" />
+        </p-iconfield>
+    </div>
+    <p-button class="ml-auto" label="Xuất Excel" icon="pi pi-file-excel" [disabled]="!packageTypes.length" (onClick)="openExport()" />
+</div>
+
+@if (currentPackageType; as current) {
+    <div class="package-config-summary">
+        <span class="whitespace-nowrap text-[17px] font-bold text-[var(--app-accent)]">{{ current.code }} — {{ current.name }}</span>
+        <span class="text-[var(--app-muted)]">Bộ trường metadata theo Thông tư 05/2025/TT-BNV</span>
+        <span class="ml-auto whitespace-nowrap rounded-full bg-[var(--app-accent-soft)] px-3 py-1 font-bold text-[var(--app-accent)]">{{ totalRecords }} trường</span>
+    </div>
+
+    <app-data-table class="package-config-table" [columns]="columns" [data]="rows" [loading]="loading" [paginator]="false">
+        <div tableEmpty class="flex flex-col items-center gap-2.5">
+            <i class="pi pi-inbox !text-[40px] text-[var(--app-line-strong)]"></i>
+            @if (searchKeyword) {
+                <span class="font-semibold text-[var(--app-ink)]">Không có trường khớp từ khoá “{{ searchKeyword }}”</span>
+                <span class="text-sm">Thử từ khác, hoặc đổi sang sheet khác của chuẩn này.</span>
+            } @else {
+                <span class="font-semibold text-[var(--app-ink)]">Chuẩn này chưa có cấu hình trường</span>
+            }
+        </div>
+    </app-data-table>
+
+    <nav class="package-config-sheets" role="tablist">
+        @for (schema of current.schemas; track schema.packageSchemaId) {
+            <button type="button" role="tab" class="package-config-sheet" [class.is-active]="schema.metadataType === metadataType"
+                [attr.aria-selected]="schema.metadataType === metadataType" (click)="onSheetChange(schema.metadataType)">
+                {{ schema.name }}
+            </button>
+        }
+    </nav>
+}
