@@ -3,6 +3,8 @@ import { inject, Injectable } from "@angular/core";
 import {
     ICheckSubmission,
     ICheckSubmissionResult,
+    IDeleteSubmission,
+    IDeleteSubmissionResult,
     IExportSheetNamesQuery,
     IExportSheetSubmission,
     IExportSubmission,
@@ -84,6 +86,11 @@ export class SubmissionService {
 
     check(body: ICheckSubmission) {
         return this.http.put<IBaseResponseWithData<ICheckSubmissionResult>>(`${this.api}/check`, body);
+    }
+
+    // Tất cả hoặc không: một Id sai là không xoá Id nào
+    delete(body: IDeleteSubmission) {
+        return this.http.delete<IBaseResponseWithData<IDeleteSubmissionResult>>(this.api, { body });
     }
 
     findQaById(id: number, query: IFindSubmissionDetail) {

@@ -30,6 +30,7 @@ export const PermissionConstants = {
     FUNCTION_SUBMISSION_PROGRESS_STATS: 'Function.Construction.Submission.ProgressStats',
     FUNCTION_SUBMISSION_IMPORT: 'Function.Construction.Submission.Import',
     FUNCTION_SUBMISSION_EXPORT: 'Function.Construction.Submission.Export',
+    FUNCTION_SUBMISSION_DELETE: 'Function.Construction.Submission.Delete',
     MENU_TEMPLATE: 'Menu.DigitalSignature.Template',
     MENU_SIGNING_BATCH: 'Menu.DigitalSignature.SigningBatch',
     MENU_PACKAGE_CONFIG: 'Menu.Packaging.Config',

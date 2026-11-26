@@ -43,6 +43,8 @@ nên `count.total` luôn bằng `paging.totalItems`, và vị trí, hồ sơ li�
 - `pageSize` phải từ `1` đến `200` (`SubmissionConst.MAX_PAGE_SIZE`), không nhận `-1` → `400`.
 - `customData`: trường thuộc cấu hình dự án + loại văn bản và có `IsShowTableView = true`, sắp theo `OrderTableView`.
 - Mỗi dòng (và chi tiết `GET {id}`, `next`, `previous`) có `statusCheck`, `statusQa`, `qaReason`.
+- Mỗi dòng có `holderUserName`: `UserName` người đang giữ Data của văn bản (`SubmissionUser` vai trò `Data`), `null` khi chưa giao hoặc người đó đã bị xoá
+  (Task 58, FE dùng ở dialog xoá văn bản). Chỉ danh sách này có; `GET {id}`, `next`, `previous` không trả.
 - Mỗi dòng có `submissionDatas` theo thứ tự cột: `id`, `documentFieldId`, `data`, `indexRow`, `indexGoogleSheet` và `documentField`
   đầy đủ (khuôn `GetListDocumentFieldDto`, lấy **một lần** cho cả trang rồi gắn vào từng ô). Trường chưa có dữ liệu thì không có phần tử.
 

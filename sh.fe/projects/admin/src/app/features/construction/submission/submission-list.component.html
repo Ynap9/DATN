@@ -69,6 +69,15 @@
                 </div>
             }
 
+            @if (canDelete && selectedRows.length) {
+                <div class="flex flex-wrap items-center gap-3 rounded-lg bg-primary-50 px-3 py-2" role="status">
+                    <span><b>Đã chọn {{ selectedRows.length }} văn bản</b> trong trang này</span>
+                    <p-button label="Bỏ chọn" [text]="true" size="small" (onClick)="selectedRows = []" />
+                    <p-button class="ml-auto" [label]="'Xoá ' + selectedRows.length + ' văn bản'" icon="pi pi-trash" severity="danger" size="small"
+                        (onClick)="deleteDialogVisible = true" />
+                </div>
+            }
+
             <!-- Hai thẻ riêng: DataTable chỉ đọc cấu hình cột theo tableKey lúc khởi tạo -->
             @if (isQaView) {
                 <app-data-table [tableKey]="tableKey" [columns]="columns" [data]="rows" [loading]="loading" [pageNumber]="pageNumber" [pageSize]="pageSize"
@@ -77,11 +86,17 @@
                 </app-data-table>
             } @else {
                 <app-data-table [tableKey]="tableKey" [columns]="columns" [data]="rows" [loading]="loading" [pageNumber]="pageNumber" [pageSize]="pageSize"
-                    [total]="totalRecords" [columnSettings]="true" (pageChange)="onPageChange($event)" (action)="onAction($event)">
+                    [total]="totalRecords" [columnSettings]="true" [selectable]="canDelete" [(selection)]="selectedRows" [rowDisabledReason]="deleteDisabledReason"
+                    (pageChange)="onPageChange($event)" (action)="onAction($event)">
                     <div tableEmpty><ng-container [ngTemplateOutlet]="emptyState" /></div>
                 </app-data-table>
             }
         </div>
+
+        @if (canDelete) {
+            <app-submission-delete-dialog [(visible)]="deleteDialogVisible" [rows]="selectedRows" [projectId]="project.id" [documentTypeId]="documentTypeId"
+                (deleted)="onDeleted($event)" (failed)="onDeleteFailed($event)" (unselect)="onUnselect($event)" />
+        }
     }
 }
 

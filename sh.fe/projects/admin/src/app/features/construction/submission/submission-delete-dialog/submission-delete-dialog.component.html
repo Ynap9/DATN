@@ -1,0 +1,41 @@
+<p-dialog [header]="error ? 'Chưa xoá văn bản nào' : 'Xoá ' + rows().length + ' văn bản?'" [(visible)]="visible" [modal]="true" [draggable]="false"
+    [closable]="!loading" [closeOnEscape]="!loading" [style]="{ width: '540px' }" [breakpoints]="{ '640px': '95vw' }" (onHide)="error = null">
+    <div class="flex flex-col gap-3 text-sm">
+        @if (error; as failure) {
+            <p class="m-0">{{ failure.rows.length }} văn bản đang được QA hoặc vừa được kiểm xong nên không xoá được. Các văn bản còn lại chưa bị xoá.</p>
+            <ul class="m-0 max-h-44 list-none overflow-auto rounded-lg border border-surface p-0">
+                @for (row of failure.rows; track row.id) {
+                    <li class="flex items-center justify-between gap-3 border-b border-surface px-3 py-1.5 last:border-b-0">
+                        <span>{{ row.fileName }}</span>
+                        <p-tag [value]="failure.chip.label" [severity]="failure.chip.severity" [rounded]="true" />
+                    </li>
+                }
+            </ul>
+        } @else {
+            <ul class="m-0 max-h-44 list-none overflow-auto rounded-lg border border-surface p-0">
+                @for (row of rows(); track row.id) {
+                    <li class="flex justify-between gap-3 border-b border-surface px-3 py-1.5 last:border-b-0">
+                        <span>{{ row.fileName }}</span>
+                        <span class="text-muted-color">{{ row.profileRange }} · {{ row.holderUserName ?? 'Chưa giao' }}</span>
+                    </li>
+                }
+            </ul>
+            <p class="m-0 font-semibold">Khi xoá:</p>
+            <ul class="m-0 flex list-disc flex-col gap-1 pl-5">
+                @for (consequence of consequences; track consequence) {
+                    <li>{{ consequence }}</li>
+                }
+            </ul>
+            <p-message severity="warn" size="small">Không hoàn tác được trên giao diện.</p-message>
+        }
+    </div>
+    <ng-template #footer>
+        @if (error) {
+            <p-button label="Đóng" severity="secondary" (onClick)="close()" />
+            <p-button [label]="'Bỏ chọn ' + error.rows.length + ' văn bản này'" (onClick)="unselectFailed()" />
+        } @else {
+            <p-button label="Huỷ" severity="secondary" [disabled]="loading" (onClick)="close()" />
+            <p-button [label]="'Xoá ' + rows().length + ' văn bản'" severity="danger" [loading]="loading" (onClick)="confirm()" />
+        }
+    </ng-template>
+</p-dialog>

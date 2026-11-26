@@ -94,4 +94,19 @@ Task 42, `/admin/construction/project/:id/metadata/:documentTypeId` (`features/c
   đổi URL: sự kiện `change` dò lại danh sách rỗng rồi `clear()`, xoá luôn giá trị vừa chọn. "Phải chọn từ gợi ý" giữ bằng việc chỉ
   `onSelect` mới ghi lên URL.
 
+### Xoá văn bản (Task 58)
+
+`DELETE construction/submission` (BE [14](../../be/nghiep-vu/14-ho-so-xoa-xuat.md#xoá-hồ-sơ)), tất cả hoặc không. Dialog ở `submission-delete-dialog/`, gọi API ngay trong dialog.
+
+- **58.1 Ai thấy:** `canDelete` = Admin / SuperAdmin **và** `Submission.Delete` **và** không ở "Xem theo QA" **và** (SuperAdmin hoặc dự án không `DONE` / `EXPIRED`). Sai thì màn y như cũ (không cột tick, không thanh chọn). Admin nhận biết bằng `roles.includes(AuthConstants.ADMIN_ROLE)`.
+- **58.2 / 58.3 Cột tick:** chỉ thẻ `app-data-table` thường gắn `selectable` + `[(selection)]` + `[rowDisabledReason]` ([05](05-conventions.md)). Ô khoá theo `statusCheck`: Chưa kiểm ai cũng tick; Đã kiểm chỉ SuperAdmin; Trả lại không ai. Tick header chỉ chọn dòng tick được.
+- **58.4 Thanh chọn:** có ≥ 1 dòng chọn thì hiện trên bảng "Đã chọn n văn bản trong trang này", "Bỏ chọn", nút đỏ "Xoá n văn bản".
+- **58.5 Phạm vi:** chỉ trang đang xem. `load()` đặt `selectedRows = []` nên đổi tab / lọc / từ khoá / trang / chế độ, Làm mới và xoá xong đều bỏ chọn.
+- **58.6 Xác nhận:** dialog liệt kê file (`Hồ sơ · người giữ` lấy từ `holderUserName` của `paging`, trống thì "Chưa giao"), 3 hệ quả và cảnh báo không hoàn tác. Đang gọi API thì Huỷ và nút đóng bị khoá.
+- **58.7 Xong:** toast "Đã xoá n văn bản" + "và m ô dữ liệu đã nhập", rồi `refresh()` (bảng, số đếm tab, "Tiếp tục văn bản đang làm").
+- **58.8 Lỗi 325 / 336:** BE trả **một** mã mỗi lần (336 kiểm trước 325) và Id ở cuối câu (`/Id = ([\d,\s]+)$/`). Dialog đổi sang "Chưa xoá văn bản nào" liệt kê file lỗi kèm chip "Đang sửa / QA" (336) hoặc "Đã kiểm" (325); "Bỏ chọn k văn bản này" chỉ bỏ các Id đó khỏi lựa chọn, **không** gọi lại API. Không bắt được Id thì xử lý như 58.9. Admin không gặp 325 vì ô Đã kiểm đã khoá.
+- **58.9 Lỗi khác:** toast câu của BE, giữ lựa chọn, dialog vẫn mở. 316 / 323 thì đóng dialog và tải lại dự án để `canDelete` ẩn cột tick.
+
+Đã test trình duyệt 2026-11-26 (dự án ZZTEST58, đã dọn): 12/12 ca, kể cả tooltip ô khoá, tick header chỉ 20/37 dòng, xoá thật 3 văn bản (37 → 34), SuperAdmin xoá Đã kiểm, 336 với văn bản trong phiếu QA, màn Metadata xoá trường nhanh vẫn chạy.
+
 > **Tiếp:** [08-man-nhap-lieu.md](08-man-nhap-lieu.md) — màn Nhập liệu và dialog Lịch sử.

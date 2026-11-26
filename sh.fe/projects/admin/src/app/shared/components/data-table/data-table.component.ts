@@ -61,6 +61,8 @@ export class DataTable implements OnInit, AfterViewInit {
     filterValues = input<IColumnFilterValue>({});
     // Class gắn lên <tr> của từng dòng (vd tô mép dòng theo dữ liệu)
     rowClass = input<(row: any) => string>();
+    // Lý do khoá ô chọn của dòng (null: chọn được). Dòng khoá bị bỏ qua khi tick cả trang; không khai thì mọi dòng chọn được
+    rowDisabledReason = input<((row: any) => string | null) | null>(null);
 
     pageChange = output<PaginatorState>();
     action = output<ITableEvent>();
@@ -88,6 +90,7 @@ export class DataTable implements OnInit, AfterViewInit {
         const visibleKeys = new Set(settings.filter((setting) => setting.visible).map((setting) => setting.key));
         return columns.map((col) => (col.locked ? col : ordered.shift()!)).filter((col) => col.locked || visibleKeys.has(this.getColumnKey(col)));
     });
+    readonly isRowSelectable = (event: { data: any }) => !this.rowDisabledReason()?.(event.data);
     readonly hasFrozen = computed(() => this.visibleColumns().some((col) => col.frozen));
     // Hàng tiêu đề nhóm: cột liền nhau cùng group gộp colspan, cột không group là ô trống; cột đầu mỗi nhóm có vạch trái
     readonly columnGroups = computed(() => {

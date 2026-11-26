@@ -76,6 +76,10 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                     QaReason = s.QaReason,
                     CreatedDate = s.CreatedDate,
                     ModifiedDate = s.ModifiedDate,
+                    HolderUserName = (from u in _shDbContext.SubmissionUsers
+                                      join user in _shDbContext.Users on u.UserId equals user.Id
+                                      where u.SubmissionId == s.Id && u.Role == RoleConstants.ROLE_DATA
+                                      select user.UserName).FirstOrDefault(),
                 })
                 .ToListAsync();
 

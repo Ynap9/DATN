@@ -1,6 +1,6 @@
 <p-table [value]="data() || []" [dataKey]="dataKey()" [loading]="loading()" [rowHover]="true" [stripedRows]="true" [scrollable]="hasFrozen()"
     [resizableColumns]="true" columnResizeMode="expand" (onColResize)="onColumnResize($event)"
-    [selection]="selection()" (selectionChange)="selection.set($event)"
+    [selection]="selection()" (selectionChange)="selection.set($event)" [rowSelectable]="isRowSelectable"
     (onRowReorder)="rowReorder.emit({ dragIndex: $event.dragIndex!, dropIndex: $event.dropIndex! })">
     <ng-template #header>
         @if (columnGroups().length) {
@@ -44,7 +44,10 @@
     <ng-template #body let-row let-rowIndex="rowIndex">
         <tr [pReorderableRow]="rowIndex" [pReorderableRowDisabled]="!reorderable()" [class]="rowClass()?.(row) ?? ''">
             @if (selectable()) {
-                <td><p-tableCheckbox [value]="row" /></td>
+                @let disabledReason = rowDisabledReason()?.(row);
+                <td>
+                    <span [pTooltip]="disabledReason ?? ''" tooltipPosition="top"><p-tableCheckbox [value]="row" [disabled]="!!disabledReason" /></span>
+                </td>
             }
             @if (reorderable()) {
                 <td><span class="pi pi-bars cursor-move text-muted-color" pReorderableRowHandle></span></td>
