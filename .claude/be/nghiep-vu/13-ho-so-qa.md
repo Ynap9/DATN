@@ -109,6 +109,9 @@ Ngày 2026-11-13 (Task 28, dự án tạm `ZZTEST28D`, xoá sạch) — **19/19*
 `PUT config` (cả cỡ mẫu sai), `PUT reviewer-mode` (cả user không tồn tại), `POST ticket/{id}/cancel` → `345`, không ghi gì; 6 API đọc QA
 → 200; dự án có QA 4 API chạy như cũ (user sai vẫn `103`).
 
+Ngày 2026-11-26 (Task 61, dự án tạm `ZZTEST61`, xoá sạch): `PUT reviewer-mode` ⚠️ `SAMPLE` tạm chặn bằng `349` tới khi làm 18C ([18](18-qa-cham-mau.md#r1-chế-độ-chấm-theo-từng-qa-trong-từng-dự-án)) —
+`SAMPLE` (chưa có dòng / đang `FULL` / dự án không tồn tại) → `349`, bảng `QaReviewerMode` và audit không đổi; `FULL` → `200` như cũ; `XYZ` → `400` lỗi cũ.
+
 ## Giới hạn
 
 ⚠️ **Chưa đo tốc độ** trên 20.000 hồ sơ (mục tiêu `qa/paging` < 250 ms, `{id}/qa` < 80 ms, `PUT` < 100 ms, `qa-logs` < 50 ms).

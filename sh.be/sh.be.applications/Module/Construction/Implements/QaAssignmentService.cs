@@ -96,6 +96,8 @@ namespace sh.be.applications.Module.Construction.Implements
         public async Task UpdateReviewerMode(UpdateQaReviewerModeDto dto)
         {
             _logger.LogInformation($"{nameof(UpdateReviewerMode)}, dto={JsonSerializer.Serialize(dto)}");
+            // Tạm chặn tới khi làm Task 18C chấm mẫu
+            if (dto.Mode == QaAssignmentConst.MODE_SAMPLE) throw new UserFriendlyException(ErrorCodes.ConstructionErrorQaSampleNotSupported);
             var project = await _projectRepository.FindByIdAsync(dto.ProjectId)
                 ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
             project.EnsureQaEnabled();

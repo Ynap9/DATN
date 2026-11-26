@@ -89,6 +89,7 @@ namespace sh.be.shared.HttpRequest.Error
             { ErrorCodes.ConstructionErrorDocumentTypeInUse, "Loại văn bản đang được dự án sử dụng, không thể xoá" },
             { ErrorCodes.ConstructionErrorDocumentTypeHasSubmissions, "Metadata đã có văn bản trong dự án, không gỡ được" },
             { ErrorCodes.ConstructionErrorProjectGoogleSheetNotLinked, "Dự án không gắn Google Sheet, hãy nhập bằng file Excel" },
+            { ErrorCodes.ConstructionErrorQaSampleNotSupported, "Chế độ chấm mẫu chưa được hỗ trợ, chỉ dùng chế độ chấm toàn bộ" },
             { ErrorCodes.DigitalSignatureErrorTemplateNotFound, "Mẫu chữ ký không tồn tại" },
             { ErrorCodes.DigitalSignatureErrorInvalidTemplatePositionKind, "Loại khối chữ ký không hợp lệ" },
             { ErrorCodes.DigitalSignatureErrorTemplatePositionOutOfPage, "Tọa độ khối chữ ký nằm ngoài trang hoặc có kích thước bằng 0" },

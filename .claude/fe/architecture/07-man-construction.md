@@ -87,6 +87,8 @@ Task 42, `/admin/construction/project/:id/metadata/:documentTypeId` (`features/c
 - Cột động từ `customData` của `paging`, khai `locked` để metadata thêm / bớt trường không xoá cấu hình các cột cố định. `tableKey`
   tách `construction-submission-<id>` / `construction-submission-qa-<id>` và hai thẻ `app-data-table` riêng (`@if`): DataTable chỉ đọc
   cấu hình cột theo `tableKey` lúc khởi tạo, dùng chung một thẻ thì bảng QA không nạp cấu hình của nó.
+- Đổi tab / lọc / trang / chế độ huỷ request `paging` / `qa/paging` / `count` cũ (`_pageSubscription`, `_countSubscription`, Task 61): chỉ response lần gọi cuối
+  được áp. Huỷ **trước** rồi mới đặt `loading = true`, vì `finalize` của request cũ chạy khi huỷ và sẽ tắt spinner của request mới.
 - Mở văn bản: Nhập liệu sang màn ở [08-man-nhap-lieu.md](08-man-nhap-lieu.md) (mang bộ lọc + tab, `state.fromList` để nút ← quay
   lại bằng `location.back()`); QA sang màn ở [09-man-qa.md](09-man-qa.md), cũng mang bộ lọc; Lịch sử mở dialog. Đường dẫn ở hằng `WORK_PATHS`.
 - ⚠️ `p-autocomplete` không khai `optionValue` thì model phát `option.value` khi gợi ý có trường `value` (DTO `field-values` có) —

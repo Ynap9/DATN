@@ -10,7 +10,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { TabsModule } from 'primeng/tabs';
 import { TagModule } from 'primeng/tag';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { debounceTime, finalize, forkJoin } from 'rxjs';
+import { debounceTime, finalize, forkJoin, Subscription } from 'rxjs';
 import { IDocumentFieldDropdown } from '@/models/document-field.model';
 import { IViewProject } from '@/models/project.model';
 import { IDeleteSubmissionResult, ILatestWorkingSubmission, IListQaSubmission, IQaCount, ISubmissionColumn, ISubmissionFilter } from '@/models/submission.model';
@@ -121,6 +121,9 @@ export class SubmissionListComponent extends BaseComponent {
     deleteDialogVisible = false;
     // Chế độ của lần tải "Tiếp tục văn bản đang làm" gần nhất: chỉ gọi lại khi đổi chế độ hoặc Làm mới
     private _latestWorkingView?: SubmissionView;
+    // Request paging / count đang chờ: gọi lại thì huỷ lần trước để response cũ về sau không đè kết quả mới
+    private _pageSubscription?: Subscription;
+    private _countSubscription?: Subscription;
 
     // Không có vai trò ở metadata (42.3) hoặc BE báo chưa được giao → thay vùng tab + bảng bằng trạng thái trống
     get isUnassigned() {
@@ -443,10 +446,11 @@ export class SubmissionListComponent extends BaseComponent {
     // Nhập liệu: cột động dựng lại theo customData mỗi lần paging trả về; QA: cột cố định
     private loadPage() {
         const query = { ...this.buildFilter(), statusCheck: this.activeTab.statusCheck, statusQa: this.activeTab.statusQa, pageNumber: this.pageNumber, pageSize: this.pageSize };
+        this._pageSubscription?.unsubscribe();
         this.loading = true;
         if (this.isQaView) {
             this.columns = buildQaColumns(this.rowActions);
-            this._submissionService
+            this._pageSubscription = this._submissionService
                 .qaPaging(query)
                 .pipe(finalize(() => (this.loading = false)), takeUntilDestroyed(this._destroyRef))
                 .subscribe((res) => {
@@ -456,7 +460,7 @@ export class SubmissionListComponent extends BaseComponent {
                 });
             return;
         }
-        this._submissionService
+        this._pageSubscription = this._submissionService
             .paging(query)
             .pipe(finalize(() => (this.loading = false)), takeUntilDestroyed(this._destroyRef))
             .subscribe((res) => {
@@ -473,8 +477,9 @@ export class SubmissionListComponent extends BaseComponent {
 
     // Nhập liệu: count bỏ trạng thái. QA: Chờ QA đếm trong tập đã kiểm, Đạt / Không đạt đếm trên toàn bộ (customData của qa/paging)
     private loadCounts() {
+        this._countSubscription?.unsubscribe();
         if (!this.isQaView) {
-            this._submissionService
+            this._countSubscription = this._submissionService
                 .count(this.buildFilter())
                 .pipe(takeUntilDestroyed(this._destroyRef))
                 .subscribe((res) => {
@@ -483,7 +488,7 @@ export class SubmissionListComponent extends BaseComponent {
                 });
             return;
         }
-        forkJoin([
+        this._countSubscription = forkJoin([
             this._submissionService.qaPaging({ ...this.buildFilter(), statusCheck: SUBMISSION_CHECK_STATUS.CHECKED, ...COUNT_PAGE }),
             this._submissionService.qaPaging({ ...this.buildFilter(), ...COUNT_PAGE }),
         ])
