@@ -5,7 +5,7 @@
 Mỗi ngày job nền `ProjectDeadlineJob` (Hangfire, [../architecture/05-infrastructure-external.md](../architecture/05-infrastructure-external.md#backgroundjob--hangfire))
 xét các dự án có `EndedAt`: dự án đã quá ngày kết thúc chuyển sang **hết hạn** (`EXPIRED = 5`), dự án sắp tới hạn được báo mail
 cho SuperAdmin và Admin. Bản gốc `nhaplieu.be` có job tương tự nhưng bị comment, gửi mail lặp mỗi lần chạy; sh.be làm lại.
-Cập nhật 2026-10-25.
+Cập nhật 2026-11-27 (gia hạn dự án, Task 68).
 
 ## Các chức năng
 
@@ -34,10 +34,32 @@ Gốc `api/v1/construction/project`, mọi API cần `Function.Construction.Proj
 | `daysLeft > warningDays` | Không làm gì | – |
 
 - Ngày kết thúc vẫn được làm việc: hết hạn từ ngày **sau** `EndedAt`.
-- Job **không** tự mở lại dự án. Người quản lý mở lại bằng `PUT project/{id}` (đổi `EndedAt` và chọn `status`). `PUT` dự án
-  không bị chặn khi dự án hết hạn.
+- Job **không** tự mở lại dự án. Người quản lý mở lại bằng `PUT project/{id}` dời `EndedAt` từ hôm nay trở đi ([Gia hạn dự án](#gia-hạn-dự-án--task-68)).
+  `PUT` dự án không bị chặn khi dự án hết hạn.
 - Dự án `EXPIRED`: import (6 API) → `323`; check, QA, xoá hồ sơ → `323`, trừ SuperAdmin (`Project.EnsureEditable`); xem
   hồ sơ vẫn được. Dự án `DONE` vẫn giữ mã `313` / `316`.
+
+## Gia hạn dự án — Task 68
+
+Chốt 2026-11-27, như 5sdb: `EXPIRED` do hệ thống đặt theo ngày kết thúc, người dùng không chọn tay (5sdb không cho sửa trạng thái
+trong form dự án); gia hạn = dời `EndedAt`. `Project.Update` kiểm theo thứ tự: trạng thái hợp lệ → kỳ hạn hợp lệ → luật nghiệm thu →
+bảng dưới. "Hôm nay" là `modifiedDate.Date` giờ VN, cùng mốc với `Project.Expire` (chỉ hết hạn khi `EndedAt.Date` < hôm nay), nên
+gia hạn tới đúng hôm nay thì sáng mai mới hết.
+
+| Dự án đang | Body gửi | Kết quả |
+|---|---|---|
+| `DOING` | `status = 5` | `342` "Trạng thái Hết hạn do hệ thống đặt khi qua ngày kết thúc, không chọn tay"; không lưu, không audit |
+| `DOING` | `EndedAt` về trước hôm nay | Lưu, giữ `DOING`; job 07:00 hôm sau chuyển `EXPIRED` như cũ |
+| `EXPIRED` | `EndedAt` trống hoặc từ hôm nay trở đi, `status` 2 hoặc 5 | Lưu, tự về `DOING` (audit thấy `Status` 5 → 2) |
+| `EXPIRED` | `EndedAt` vẫn trước hôm nay, `status = 2` | `342` "Ngày kết thúc đã qua. Dời ngày kết thúc từ hôm nay trở đi để gia hạn dự án"; không lưu |
+| `EXPIRED` | `EndedAt` vẫn trước hôm nay, `status = 5` | Lưu bình thường (tên, ngày bắt đầu, metadata), vẫn `EXPIRED` |
+| `ACCEPTING` / `DONE` | status khác trạng thái hiện tại | Luật nghiệm thu cũ: `342` "Dùng chức năng nghiệm thu" ([22](22-nghiem-thu-du-an.md)) |
+
+Mã `342` dùng lại với câu mới; route, DTO, `ProjectDeadlineJob`, `Project.Expire` không đổi. Body sửa vẫn gửi `status` (FE gửi lại
+trạng thái hiện tại của dự án).
+
+Đã kiểm 2026-11-27 bằng API thật trên DB dev chung (`ZZTEST68`, đã dọn; tắt `DeadlineMailEnabled` trước khi gọi `deadline-check/run`):
+22/22 ca, gồm đặt `EXPIRED` bằng job rồi gia hạn đủ các nhánh trong bảng, job chạy ngay sau khi gia hạn tới hôm nay vẫn giữ `DOING`.
 
 ## Gửi mail và chống trùng
 
@@ -90,8 +112,9 @@ script (tìm chữ trong thân mail mã hoá base64); thân mail giải mã ra �
 
 Lưu ý: Mail gửi xong mà `SaveChanges` lịch sử lỗi thì lần sau có thể gửi trùng: chấp nhận, vì không giữ transaction khi chờ SMTP.
 
-Lưu ý: `Project.Update` cho phép đặt tay `status = 5`; job coi dự án `EXPIRED` như đã hết hạn và gửi mail loại `2` kể cả khi
-`EndedAt` còn ở tương lai.
+Lưu ý: `Project.Update` chỉ chặn đi **vào** `ACCEPTING` / `DONE` và ra khỏi `ACCEPTING`, không chặn đi ra khỏi `DONE`: dự án `DONE`
+gửi `status = 5` (hoặc `2`) vẫn lưu được, và `status = 5` kèm `EndedAt` còn ở tương lai khiến job gửi mail loại `2`. Chốt 2026-11-27: để
+nguyên theo Task 68 (các luật gia hạn không áp cho `DONE`), không tự thêm chặn khi chưa hỏi PM.
 
 Lưu ý: Múi giờ `SE Asia Standard Time` là tên trên Windows. Chạy Docker Linux thì cả `GetVietnamTime()` lẫn lịch job lỗi; khi
 triển khai phải đổi sang `Asia/Ho_Chi_Minh` ở một chỗ (`BaseService.VietnamTimeZone`).

@@ -1041,13 +1041,14 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                    select new DaySubmission { Day = l.CreatedDate!.Value.Date, SubmissionId = l.SubmissionId };
         }
 
-        // Lượt chấm QA Đạt; restrictedUserId khác null thì chỉ văn bản người đó đang giữ
+        // Lượt chuyển văn bản sang QA Đạt (chấm Đạt lại văn bản đang Đạt không tính); restrictedUserId khác null thì chỉ văn bản người đó đang giữ
         private IQueryable<DaySubmission> QueryQaPassedDays(int projectId, int documentTypeId, DateTime fromDate, DateTime toDateExclusive,
             string? restrictedUserId)
         {
             return from q in _shDbContext.SubmissionQaLogs.AsNoTracking()
                    join s in _shDbContext.Submissions.AsNoTracking() on q.SubmissionId equals s.Id
-                   where q.ProjectId == projectId && q.DocumentTypeId == documentTypeId && q.NewStatusQa == SubmissionConst.QA_PASSED
+                   where q.ProjectId == projectId && q.DocumentTypeId == documentTypeId
+                       && q.NewStatusQa == SubmissionConst.QA_PASSED && q.OldStatusQa != SubmissionConst.QA_PASSED
                        && q.CreatedDate >= fromDate && q.CreatedDate < toDateExclusive
                        && (restrictedUserId == null || _shDbContext.SubmissionUsers.Any(u => u.SubmissionId == s.Id && u.UserId == restrictedUserId))
                    select new DaySubmission { Day = q.CreatedDate!.Value.Date, SubmissionId = q.SubmissionId };

@@ -98,7 +98,7 @@ phạm vi người xem, văn bản đã xoá và mã lỗi giống hệt 3 API t
 - **Đã kiểm** trong ngày = số văn bản **khác nhau** có lượt `SubmissionLog` đưa văn bản **vào** Đã kiểm (`NewStatus = CHECKED`,
   `OldStatus <> CHECKED`): kiểm lần đầu hoặc kiểm lại văn bản bị trả. Tái kiểm văn bản đang Đã kiểm **không** tính (chốt 2026-11-21,
   chặt hơn spec 46A.1), vì `Submission.Check` ghi log `CHECKED` cho mọi lần lưu, kể cả lưu lại không sửa gì.
-- **QA đạt** trong ngày = số văn bản khác nhau có `SubmissionQaLog` với `NewStatusQa = QA_PASSED`. Dự án không QA trả `0`, không ném `345`.
+- **QA đạt** trong ngày = số văn bản khác nhau có `SubmissionQaLog` đưa văn bản **sang** Đạt (`NewStatusQa = QA_PASSED`, `OldStatusQa <> QA_PASSED`): Đạt lần đầu, hoặc Đạt lại sau Không đạt. Admin chấm Đạt lại văn bản đang Đạt **không** tính (Task 68, cùng luật với Đã kiểm). Dự án không QA trả `0`, không ném `345`.
 - `totalChecked` / `totalQaPassed` đếm văn bản khác nhau của **cả khoảng**, không cộng các ngày: kiểm ngày D1, bị trả, kiểm lại ngày D2
   → mỗi ngày `1`, tổng `1`.
 - `days` có đủ mọi ngày từ `fromDate` tới `toDate`, tăng dần, ngày trống trả `0`. FE vẽ thẳng, không tự bù ngày.

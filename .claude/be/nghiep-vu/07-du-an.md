@@ -25,7 +25,7 @@ Body tạo: `{ "name", "startedAt", "endedAt", "isQaEnabled", "isGoogleSheetEnab
 và `googleSheetName = name`; FE không gửi hai trường này. Tạo xong trả `data` cùng dạng `GET {id}` (`FindProjectByIdDto`:
 `id`, `name`, `startedAt`, `endedAt`, `status`, `urlGoogleSheetSync`, `googleSheetName`, `isQaEnabled`, `documentTypeIds`).
 Body sửa: `{ "name", "startedAt", "endedAt", "status", "documentTypeIds": [] }` — **không** sửa được `urlGoogleSheetSync`,
-`googleSheetName`, `isQaEnabled` (gửi kèm thì bị bỏ qua); đổi `name` thì tên file Google Sheet đổi theo (nếu dự án có Sheet).
+`googleSheetName`, `isQaEnabled` (gửi kèm thì bị bỏ qua); đổi `name` thì tên file Google Sheet đổi theo (nếu dự án có Sheet). `status` chỉ giữ trạng thái hiện tại: Hết hạn ↔ Đang triển khai do `endedAt` quyết định, không chọn tay ([15](15-han-du-an.md#gia-hạn-dự-án--task-68)).
 
 Dropdown trả `[{ id, name }]` sắp theo `name`. Danh sách không phân trang (`GetListProjectDto`: `id`, `name`, `startedAt`,
 `endedAt`, `status`, `urlGoogleSheetSync`, `isQaEnabled`) sắp mới tạo trước (`CreatedDate` giảm dần, rồi `Id` giảm dần). Paging từ Task 29
@@ -100,7 +100,7 @@ Lưu ý: Khoá ghép + xoá mềm (cả hai bảng): gán lại cặp đã xoá 
 
 Vào / ra `ACCEPTING` và sang `DONE` **chỉ** qua API nghiệm thu hoặc tự chuyển khi văn bản cuối QA đạt (dự án không QA: văn bản cuối được kiểm) — bảng chuyển, luật và mã
 `340`–`342` ở [22-nghiem-thu-du-an.md](22-nghiem-thu-du-an.md).
-| `EXPIRED` | `5` | Hết hạn: job tự chuyển khi qua `EndedAt`, chặn thao tác hồ sơ như `DONE` (mã `323`); mở lại bằng `PUT` |
+| `EXPIRED` | `5` | Hết hạn: job tự chuyển khi qua `EndedAt`, chặn thao tác hồ sơ như `DONE` (mã `323`). Không chọn tay: `PUT` dự án `DOING` gửi `status = 5` → `342`. Mở lại bằng dời `EndedAt` từ hôm nay trở đi (hoặc để trống) → tự về `DOING`; ngày vẫn đã qua thì gửi `2` → `342`, gửi `5` → lưu, vẫn `EXPIRED` (Task 68, [15](15-han-du-an.md#gia-hạn-dự-án--task-68)) |
 
 ## Có / không QA — `IsQaEnabled`
 

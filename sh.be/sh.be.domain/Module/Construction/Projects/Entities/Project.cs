@@ -71,11 +71,29 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
             {
                 throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectStatusTransitionInvalid, "Dùng chức năng nghiệm thu");
             }
+            if (Status == ProjectConst.DOING && status == ProjectConst.EXPIRED)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectStatusTransitionInvalid,
+                    "Trạng thái Hết hạn do hệ thống đặt khi qua ngày kết thúc, không chọn tay");
+            }
+
+            // Như 5sdb: Hết hạn ↔ Đang triển khai do ngày kết thúc quyết định; gia hạn = dời ngày kết thúc từ hôm nay trở đi (cùng mốc với Expire)
+            var newStatus = status;
+            if (Status == ProjectConst.EXPIRED)
+            {
+                var isEndedAtNotPassed = !endedAt.HasValue || endedAt.Value.Date >= modifiedDate.Date;
+                if (!isEndedAtNotPassed && status == ProjectConst.DOING)
+                {
+                    throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectStatusTransitionInvalid,
+                        "Ngày kết thúc đã qua. Dời ngày kết thúc từ hôm nay trở đi để gia hạn dự án");
+                }
+                newStatus = isEndedAtNotPassed ? ProjectConst.DOING : ProjectConst.EXPIRED;
+            }
 
             Name = name;
             StartedAt = startedAt;
             EndedAt = endedAt;
-            Status = status;
+            Status = newStatus;
             ModifiedBy = modifiedBy;
             ModifiedDate = modifiedDate;
         }

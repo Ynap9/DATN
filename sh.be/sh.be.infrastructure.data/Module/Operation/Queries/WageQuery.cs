@@ -73,9 +73,11 @@ namespace sh.be.infrastructure.data.Module.Operation.Queries
                     .GroupBy(x => new { x.DocumentTypeId, x.UserId })
                     .Select(g => new { g.Key.DocumentTypeId, g.Key.UserId, DocumentCount = g.Count(), FieldCount = g.Sum(x => x.FieldCount) })
                     .ToListAsync();
+                // Lượt Admin chấm Đạt lại văn bản đang Đạt (Đạt → Đạt) không tính tiền; Không đạt và chấm lại sau khi văn bản bị trả về vẫn tính
                 var reviewCounts = await _shDbContext.SubmissionQaLogs
                     .AsNoTracking()
-                    .Where(l => l.ProjectId == projectId && _shDbContext.Submissions.Any(s => s.Id == l.SubmissionId))
+                    .Where(l => l.ProjectId == projectId && _shDbContext.Submissions.Any(s => s.Id == l.SubmissionId)
+                        && (l.OldStatusQa != SubmissionConst.QA_PASSED || l.NewStatusQa != SubmissionConst.QA_PASSED))
                     .GroupBy(l => new { l.DocumentTypeId, l.UserId })
                     .Select(g => new
                     {

@@ -287,7 +287,7 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
 
         private static bool IsBlankImportChar(char character)
         {
-            return char.IsWhiteSpace(character) || character == '​' || character == '﻿';
+            return char.IsWhiteSpace(character) || character == '\u200B' || character == '\uFEFF';
         }
 
         public static string GetImportCell(SheetRow row, int columnIndex)
