@@ -59,7 +59,7 @@
   Cổng ra bên thứ ba: `I<Ten>External` → `<NhaCungCap><Ten>External`, field `_<ten>External` (không dùng `Service`, `Client`, `Writer`…).
 - Factory entity: `static Create(...)`. Đổi trạng thái: động từ nghiệp vụ (`Delete`, `AssignRoles`).
 - Field private dạng `_camelCase`. Method async có hậu tố `Async` ở repository / domain service.
-- ⚠️ `BaseService.getCurrentUserId()` viết thường chữ đầu (quy ước cũ). Giữ nguyên, đừng đổi tên lan khắp nơi.
+- Lưu ý: `BaseService.getCurrentUserId()` viết thường chữ đầu (quy ước cũ). Giữ nguyên, đừng đổi tên lan khắp nơi.
 
 ## Entity
 

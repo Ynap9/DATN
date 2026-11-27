@@ -1,6 +1,6 @@
 # Plan: khớp sh.fe với hợp đồng sh.be
 
-> **Trạng thái:** 📝 chờ duyệt — ghi nhận 2026-10-11, cập nhật 2026-10-28 sau khi dựng lại kiến trúc FE (mục 10,
+> **Trạng thái:** chờ duyệt — ghi nhận 2026-10-11, cập nhật 2026-10-28 sau khi dựng lại kiến trúc FE (mục 10,
 > 11, 12 đã xong). BE là nguồn chân lý; FE sửa theo BE. Hợp đồng BE:
 > [../../be/architecture/01-api.md](../../be/architecture/01-api.md), [../../be/architecture/06-shared.md](../../be/architecture/06-shared.md).
 
@@ -23,9 +23,9 @@
 | 7 | User hiện tại | `GET api/v1/auth/user/me` → `ViewMeDto` (`id`, `userName`, `fullName`, `email`, `roles[].permissions[]`) | `ICurrentUser` đủ 4 trường đầu, chưa ai gọi `setCurrentUser` | Không có thông tin user |
 | 8 | Quyền / menu | Key `Menu.*`, `Function.*` trong `PermissionConstants` | Menu rỗng, chưa có hằng quyền phía FE | Chưa ẩn/hiện theo quyền |
 | 9 | Mã lỗi | `ErrorCodes` theo dải module (101–109, 301–339…) | Chưa có bảng mã phía FE | Chỉ hiện được `message` BE trả |
-| 10 | 403 | Body rỗng | ✅ Toast câu cố định trong `httpErrorInterceptor` | — |
-| 11 | Alias import | — | ✅ `@/*`, `@sh/ui`, `@env/*` | — |
-| 12 | Đăng xuất | — | ✅ `AuthService.logout()` xoá token + user | — |
+| 10 | 403 | Body rỗng | (xong) Toast câu cố định trong `httpErrorInterceptor` | — |
+| 11 | Alias import | — | (xong) `@/*`, `@sh/ui`, `@env/*` | — |
+| 12 | Đăng xuất | — | (xong) `AuthService.logout()` xoá token + user | — |
 
 ## Steps
 
@@ -47,16 +47,16 @@ từ BE; sẵn sàng làm màn hình theo [../architecture/06-them-man-hinh.md](
 
 ## Còn thiếu API
 
-🔬 Ghi từ Task 38 (2026-11-19, danh sách dự án V2). FE đã chừa chỗ: BE trả đúng tên field là cột tự hiện số, không sửa giao diện.
+Nghiên cứu, ghi từ Task 38 (2026-11-19, danh sách dự án V2). FE đã chừa chỗ: BE trả đúng tên field là cột tự hiện số, không sửa giao diện.
 
 | Việc | BE cần làm | FE đang hiện |
 |---|---|---|
 | Số trang | Nơi lưu số trang mỗi văn bản (`Submission` chưa có) — hỏi chủ đồ án về schema, rồi paging trả `totalPages` | Cột "Số trang" = "—" |
 | Đã OCR / Chưa OCR | Chờ module AI ghi kết quả OCR theo văn bản; paging trả `ocrDoneCount` / `ocrPendingCount` | Hai cột = "—", không lên thẻ |
 | Số đếm trên tab trạng thái | API đếm theo `status` (1 câu `GROUP BY`), cùng phạm vi xem với paging | Tab không có số |
-| Sort dữ liệu theo cột | Paging nhận tham số sort | "Sắp xếp" chỉ là thứ tự cột trong dialog ⚙ |
+| Sort dữ liệu theo cột | Paging nhận tham số sort | "Sắp xếp" chỉ là thứ tự cột trong dialog bánh răng |
 
-⚠️ `ocrDoneCount` đếm **văn bản** đã OCR xong, không đếm số lần gọi OCR — dự án tham chiếu từng đếm cả lần OCR lại nên
+Lưu ý: `ocrDoneCount` đếm **văn bản** đã OCR xong, không đếm số lần gọi OCR — dự án tham chiếu từng đếm cả lần OCR lại nên
 "Đã OCR" lớn hơn "Số văn bản". Đừng lấy số dòng log gọi AI làm số này.
 
 ## Điểm cần chú ý

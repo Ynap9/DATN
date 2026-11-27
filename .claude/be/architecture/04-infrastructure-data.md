@@ -26,7 +26,7 @@ repository, `IUnitOfWork`).
 | Lưu | Không tự `SaveChanges`; để `IUnitOfWork` | Không ghi gì |
 
 `UserRepository` bọc `UserManager<AppUser>`, dịch `IdentityResult` lỗi sang mã `102` (tạo), `106` (sửa), `107` (xoá), `108` (đổi mật
-khẩu). ⚠️ `UserManager` **tự `SaveChanges`**, nên audit thêm trước `UpdateAsync`/`ChangePasswordAsync` được lưu cùng lúc — đừng
+khẩu). Lưu ý: `UserManager` **tự `SaveChanges`**, nên audit thêm trước `UpdateAsync`/`ChangePasswordAsync` được lưu cùng lúc — đừng
 gọi thêm `SaveChanges` trong các luồng đó.
 
 ## Schema
@@ -43,12 +43,12 @@ gọi thêm `SaveChanges` trong các luồng đó.
   Cột chuỗi có index thành `nvarchar(450)` — giá trị dài hơn sẽ lỗi khi lưu.
 - Unique index có filter: attribute khai index + `IsUnique`, `OnModelCreating` gọi `HasIndex([...], <tên>).HasFilter("[Deleted] = 0")` theo
   **cùng tên** (hằng `Submission.UniqueKeyIndexName`, `SubmissionData.UniqueFieldIndexName`, `PackageSchema.UniqueTypeIndexName`,
-  `PackageSchemaField.UniqueElementIndexName`, `PackageCodeValue.UniqueCodeIndexName`, `QaSamplingConfig.UniqueProjectIndexName`, `QaReviewerMode.UniqueReviewerIndexName`, `StaffGroup.UniqueOwnerNameIndexName`, `ProjectMember.UniqueMemberIndexName`, `AiProvider` / `AiModel.UniqueCodeIndexName`, `PromptFieldConfig.UniqueFieldIndexName` / `UniqueOutputKeyIndexName`, `ProjectAiConfig.UniqueProjectDocumentTypeIndexName` — filter để gỡ thành viên / xoá nhóm rồi thêm lại không vướng bản ghi đã xoá mềm; `ProjectDeadlineNotification.UniqueSentIndexName` lọc `[IsSuccess] = 1 AND [Deleted] = 0`, `SubmissionUser.UniqueRoleIndexName` lọc `[Deleted] = 0` (Task 29); `PromptTemplate.UniqueVersionIndexName` **không** filter vì số phiên bản không dùng lại; `PromptTemplate.UniquePublishedIndexName` lọc `[Status] = 'PUBLISHED' AND [Deleted] = 0` — mỗi loại văn bản một bản đang dùng). ⚠️ Khoá index nonclustered tối đa 1700 byte:
+  `PackageSchemaField.UniqueElementIndexName`, `PackageCodeValue.UniqueCodeIndexName`, `QaSamplingConfig.UniqueProjectIndexName`, `QaReviewerMode.UniqueReviewerIndexName`, `StaffGroup.UniqueOwnerNameIndexName`, `ProjectMember.UniqueMemberIndexName`, `AiProvider` / `AiModel.UniqueCodeIndexName`, `PromptFieldConfig.UniqueFieldIndexName` / `UniqueOutputKeyIndexName`, `ProjectAiConfig.UniqueProjectDocumentTypeIndexName` — filter để gỡ thành viên / xoá nhóm rồi thêm lại không vướng bản ghi đã xoá mềm; `ProjectDeadlineNotification.UniqueSentIndexName` lọc `[IsSuccess] = 1 AND [Deleted] = 0`, `SubmissionUser.UniqueRoleIndexName` lọc `[Deleted] = 0` (Task 29); `PromptTemplate.UniqueVersionIndexName` **không** filter vì số phiên bản không dùng lại; `PromptTemplate.UniquePublishedIndexName` lọc `[Status] = 'PUBLISHED' AND [Deleted] = 0` — mỗi loại văn bản một bản đang dùng). Lưu ý: Khoá index nonclustered tối đa 1700 byte:
   `Submission (ProjectId, DocumentTypeId, FileName 255, ProfileRange 100, Box 100)` ≈ 918 byte; đừng nới các cột này lên `nvarchar(500)`.
 - `Deleted` mặc định `0`, `CreatedDate` mặc định `getdate()` (cấu hình trong `OnModelCreating`).
 - EF map được setter/constructor `private` của entity, nên entity giàu hành vi không đổi schema.
 
-⚠️ Bẫy: cột `int` có `HasDefaultValue(x)` thì EF bỏ qua giá trị bằng `0` (giá trị mặc định CLR) khi insert, nên DB tự
+Bẫy: cột `int` có `HasDefaultValue(x)` thì EF bỏ qua giá trị bằng `0` (giá trị mặc định CLR) khi insert, nên DB tự
 điền `x` → gán `0` thành `x`. `DocumentType.DefaultView` vì vậy dùng `HasDefaultValue(1).HasSentinel(-1)`. Cột `bool` default `true` cũng vậy:
 `DocumentField.IsShowTableView` / `IsShowListView`, `Project.IsQaEnabled` dùng `HasDefaultValue(true).HasSentinel(true)`. Đừng bỏ `HasSentinel`.
 `Template` cũng vậy: các cột số có default dùng `HasSentinel(-1)` (`WetSignatureStrokeWidth = 0` là hợp lệ), `IsShowDigitalSignature` dùng `HasSentinel(true)`; `WetSignatureColor` **không** có default (`null` = giữ màu mực ảnh gốc).
@@ -56,9 +56,9 @@ gọi thêm `SaveChanges` trong các luồng đó.
 `DocumentTypeRepository.LockAsync` khoá dòng loại văn bản (`UPDLOCK, HOLDLOCK`) để tuần tự hoá việc ghi thứ tự trường;
 chỉ có tác dụng **bên trong transaction** (xem [../nghiep-vu/06-truong-van-ban.md](../nghiep-vu/06-truong-van-ban.md)).
 `ProjectRepository.TryLockDeadlineCheckAsync` dùng `sp_getapplock` mức **phiên** (tự mở connection, chờ 0 ms; nhả + đóng ở `ReleaseDeadlineCheckLockAsync`) để khoá giữ qua nhiều transaction. `SubmissionRepository.LockImportAsync` khoá dòng `ProjectDocumentType` bằng `UPDLOCK, HOLDLOCK` (`SET LOCK_TIMEOUT` 5 giây, lỗi `1222` → `310`); `AssignmentRepository.LockPairAsync` (Task 13) khoá **cùng dòng** đó (lỗi `1222` → `812`) nên giao phiếu và import cùng cặp chạy lần lượt; `ProjectRepository.LockAsync` khoá dòng `Project` cùng cách (không timeout) để tự chuyển nghiệm thu đếm sau khi request QA song song commit — DB bật `READ_COMMITTED_SNAPSHOT` nên đếm không khoá sẽ không thấy nhau; bulk (`EFCore.BulkExtensions`) chạy trên cùng `ShDbContext` nên tự vào transaction của `UnitOfWork`.
-⚠️ Bulk và đọc cột `nvarchar(max)` số lượng lớn: dùng API **sync**, connection string **tắt MARS** — lý do và số đo ở [../nghiep-vu/11-ho-so-import.md](../nghiep-vu/11-ho-so-import.md#hiệu-năng--sheet-20000-dòng--30-trường-600000-dữ-liệu).
-⚠️ So hộp / hồ sơ trong SQL dựa collation CI của DB, trong C# dùng `AssignmentDomainService.ToNodeKey` (trim + upper) — đừng so `==` thô; khoá hiển thị lấy `MIN(... COLLATE Latin1_General_BIN2)`. Chốt chặn cuối khi hai người giao trùng là unique index `SubmissionUser` + `BulkInsert` (`2601`/`2627` → `812`).
-⚠️ Bảng có filtered index (`Submission`, `SubmissionData`) chỉ ghi được khi `QUOTED_IDENTIFIER ON` (EF bật sẵn); `sqlcmd` tắt → `Msg 1934`, dùng `sqlcmd -I`.
+Lưu ý: Bulk và đọc cột `nvarchar(max)` số lượng lớn: dùng API **sync**, connection string **tắt MARS** — lý do và số đo ở [../nghiep-vu/11-ho-so-import.md](../nghiep-vu/11-ho-so-import.md#hiệu-năng--sheet-20000-dòng--30-trường-600000-dữ-liệu).
+Lưu ý: So hộp / hồ sơ trong SQL dựa collation CI của DB, trong C# dùng `AssignmentDomainService.ToNodeKey` (trim + upper) — đừng so `==` thô; khoá hiển thị lấy `MIN(... COLLATE Latin1_General_BIN2)`. Chốt chặn cuối khi hai người giao trùng là unique index `SubmissionUser` + `BulkInsert` (`2601`/`2627` → `812`).
+Lưu ý: Bảng có filtered index (`Submission`, `SubmissionData`) chỉ ghi được khi `QUOTED_IDENTIFIER ON` (EF bật sẵn); `sqlcmd` tắt → `Msg 1934`, dùng `sqlcmd -I`.
 
 ## Xoá mềm — global query filter
 
@@ -71,10 +71,10 @@ Mọi truy vấn LINQ (kể cả `join`, subquery, `Any`, `Count`) tự loại b
 - Cần thấy cả bản ghi đã xoá ⇒ `.IgnoreQueryFilters()`. Hiện dùng ở: `ReplacePermissionsAsync`, `TemplateRepository.ReplacePositionsAsync`,
   `DeleteUserRolesAsync` (xoá cứng theo khoá ghép), `DocumentFieldRepository.GetMaxOrderAsync` (thứ tự mới tính cả trường đã xoá), `SigningBatchRepository.GetLastFileOrderAsync` (key nguồn MinIO theo thứ tự, không được dùng lại; các hàm runner `ClaimFilesAsync` / `MarkFile*Async` / `PauseInterruptedAsync` ghi bằng `ExecuteUpdate`, không qua UnitOfWork), `SeedPermission` (khôi phục quyền), `SeedRolePermission`, `SeedUser` (kiểm cặp khoá đã có).
 
-⚠️ Bẫy: `ExecuteDeleteAsync` cũng bị filter lọc. Xoá cứng mà quên `IgnoreQueryFilters()` thì bản ghi xoá mềm
+Bẫy: `ExecuteDeleteAsync` cũng bị filter lọc. Xoá cứng mà quên `IgnoreQueryFilters()` thì bản ghi xoá mềm
 còn nằm lại và lần `Add` sau trùng khoá ghép. Đừng "sửa" bằng cách bỏ filter khỏi entity. Ngược lại `ExecuteUpdateAsync` bị lọc là **có chủ đích**
 ở `ProjectRepository.SoftDeleteDependentsAsync` (xoá mềm 16 bảng, kể cả Operation / Ai, cùng mốc): dòng đã xoá từ trước giữ mốc cũ.
-⚠️ Bẫy: `IgnoreQueryFilters()` gỡ filter của **cả câu**, không riêng một bảng join — cần dòng đã xoá của một bảng thì tách câu riêng.
+Bẫy: `IgnoreQueryFilters()` gỡ filter của **cả câu**, không riêng một bảng join — cần dòng đã xoá của một bảng thì tách câu riêng.
 
 ## Migration
 

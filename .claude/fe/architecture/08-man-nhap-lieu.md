@@ -17,7 +17,7 @@ Task 43, giao diện làm lại ở Task 53 (cập nhật 2026-11-23). Màn làm
 
 ## Quyết định
 
-- Bộ lọc đi theo query string (cùng tên tham số với danh sách, bỏ trang, giữ `view`). ◀ ▶ gọi `previous` / `next` rồi đổi
+- Bộ lọc đi theo query string (cùng tên tham số với danh sách, bỏ trang, giữ `view`). nút trước / sau gọi `previous` / `next` rồi đổi
   `:submissionId` bằng `replaceUrl`. Đầu / cuối bộ lọc thì **tắt** nút (không ẩn, không toast) theo `position` / `totalItems`
   (`isFilterEdge`), 317 cũng tắt chiều đó. `position = null` thì hiện tag "Ngoài bộ lọc".
 - Chỉ đọc khi: thiếu `Function.Construction.Submission.Check` (Leader), dự án Xong / Hết hạn (trừ SuperAdmin), hoặc Data gặp văn
@@ -35,11 +35,11 @@ Task 43, giao diện làm lại ở Task 53 (cập nhật 2026-11-23). Màn làm
 ## Giao diện (Task 53)
 
 - Thanh trên cao 56px. Trái: nút ←, khối 2 dòng gồm tên file (cắt "…", tooltip tên đủ) + tag trạng thái, rồi `locationText`
-  = Hồ sơ · Hộp · tên metadata. Tên metadata đi theo query `documentTypeName` từ danh sách, ◀ ▶ giữ lại tham số này. Mở link
+  = Hồ sơ · Hộp · tên metadata. Tên metadata đi theo query `documentTypeName` từ danh sách, nút trước / sau giữ lại tham số này. Mở link
   trực tiếp không có tham số thì dòng 2 bỏ phần đó.
-- ⚠️ Hồ sơ / Hộp import có khi đã kèm tiền tố ("HS 114", "Hộp 12") → ghép thêm "Hồ sơ " / "Hộp " ra "Hộp Hộp 12". Dùng
+- Lưu ý: Hồ sơ / Hộp import có khi đã kèm tiền tố ("HS 114", "Hộp 12") → ghép thêm "Hồ sơ " / "Hộp " ra "Hộp Hộp 12". Dùng
   `buildLocationText` (`submission-location.ts`, chung màn Nhập liệu và QA): giá trị đã bắt đầu bằng hồ sơ / hs / hộp thì giữ nguyên.
-- Phải: cụm [◀ | x / y | ▶], các nút text Chia / A− / A+ / Lịch sử, nút Lưu. Văn bản đang bị trả thì nhãn nút là
+- Phải: cụm [trước | x / y | sau], các nút text Chia / A− / A+ / Lịch sử, nút Lưu. Văn bản đang bị trả thì nhãn nút là
   "Lưu · gửi QA lại". Chỉ đọc thì ẩn nút Lưu, chân form bỏ vế "Ctrl + Enter: Lưu".
 - Tiêu đề form có dòng tóm tắt (`formSummary`). Chỉ đọc → xám + khoá. Trả lại còn trường sai → đỏ "Còn X / Y trường QA đánh sai".
   Trả lại và đã sửa hết → cam. Các trường hợp khác → "N trường".
@@ -52,15 +52,15 @@ Task 43, giao diện làm lại ở Task 53 (cập nhật 2026-11-23). Màn làm
 
 ## Bẫy
 
-- ⚠️ Phím tắt (Ctrl+Enter, Ctrl+↑/↓) phải nghe ở `document:keydown`, đừng nghe ở host component. Lý do: đóng hộp hỏi xong focus
+- Lưu ý: Phím tắt (Ctrl+Enter, Ctrl+↑/↓) phải nghe ở `document:keydown`, đừng nghe ở host component. Lý do: đóng hộp hỏi xong focus
   rơi về `body`, sự kiện không đi qua host nên phím tắt chết đến khi người dùng bấm vào ô nhập. Phím đến từ trong `.p-dialog` thì
   bỏ qua, kẻo Ctrl+Enter lưu ngầm sau dialog. Focus nằm trong iframe PDF thì không bắt được, giới hạn của trình duyệt.
-- ⚠️ Kéo thanh chia mà iframe nuốt sự kiện chuột thì thanh "dính". Lúc kéo phải gắn `pointer-events-none` lên khung PDF.
-- ⚠️ Nút ← cạnh khối tên bị co còn 21–29px khi tên file dài. Nguyên nhân: nút trong flex mặc định `shrink: 1`. Cách tránh: thêm
+- Lưu ý: Kéo thanh chia mà iframe nuốt sự kiện chuột thì thanh "dính". Lúc kéo phải gắn `pointer-events-none` lên khung PDF.
+- Lưu ý: Nút ← cạnh khối tên bị co còn 21–29px khi tên file dài. Nguyên nhân: nút trong flex mặc định `shrink: 1`. Cách tránh: thêm
   `shrink-0` cho nút (đã thêm ở cả màn Nhập liệu và màn QA).
-- ⚠️ `SplitterResizeEndEvent.sizes` có kiểu `(string | number)[]`, phải `Number()` trước khi lưu.
-- ⚠️ Đổi hướng chia phải dựng lại Splitter (`@for` trên `[layout.direction]`). Chỉ đổi `[layout]` thì kích thước cũ còn kẹt.
-- ⚠️ `proxy-file` lỗi vẫn trả HTTP 200 kèm JSON (315 / 305), nên luôn đọc qua `readErrorResponse`. BE chỉ kiểm URL có thuộc một
+- Lưu ý: `SplitterResizeEndEvent.sizes` có kiểu `(string | number)[]`, phải `Number()` trước khi lưu.
+- Lưu ý: Đổi hướng chia phải dựng lại Splitter (`@for` trên `[layout.direction]`). Chỉ đổi `[layout]` thì kích thước cũ còn kẹt.
+- Lưu ý: `proxy-file` lỗi vẫn trả HTTP 200 kèm JSON (315 / 305), nên luôn đọc qua `readErrorResponse`. BE chỉ kiểm URL có thuộc một
   văn bản nào không, **không** kiểm người gọi có được giao văn bản đó.
 
 > **Tiếp:** [09-man-qa.md](09-man-qa.md) — màn QA chấm Đạt / Trả lại.

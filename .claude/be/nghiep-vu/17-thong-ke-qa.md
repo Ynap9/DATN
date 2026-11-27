@@ -30,7 +30,7 @@ lượt chấm cũ không còn trong số của người đó.
 - **Một văn bản = một lượt trong kỳ**, kể cả khi QA chấm nhiều lần (chốt với người dùng ngày 2026-10-26, khác spec gốc "mỗi lần chấm
   một lượt"). Kết quả, trường sai và người nhập của lượt lấy từ **lần chấm cuối trong kỳ** (`Id` lớn nhất).
   Bản sửa spec ngày 2026-10-26 lại ghi "mỗi lần chấm một lượt", nhưng người dùng giữ nguyên quyết định trên.
-  ⚠️ Khi có chấm mẫu (Task 18C), văn bản đạt nhờ phiếu QA đạt không có `SubmissionQaLog`, nên không vào `ReviewCount` hay số ô. Đây là
+  Lưu ý: Khi có chấm mẫu (Task 18C), văn bản đạt nhờ phiếu QA đạt không có `SubmissionQaLog`, nên không vào `ReviewCount` hay số ô. Đây là
   chủ ý: tỉ lệ đúng chỉ đo trên văn bản đã được QA xem. Số liệu phiếu sẽ do 18C bổ sung vào `summary`.
 - **Người nhập** của một lần chấm = `UserId` của `SubmissionLog` mới nhất của cùng văn bản có `CreatedDate <=` lúc chấm (bằng nhau
   thì lấy `Id` lớn nhất). Không có dòng nào thì là `null`, hiển thị "Không xác định". Không dùng `Submission.ModifiedBy`, vì
@@ -127,7 +127,7 @@ trước. Thời gian: cặp nhiều log nhất DB dev (36 log), 366 ngày, buil
 (subquery `TOP 1` trên index `SubmissionLog (SubmissionId, CreatedDate)`) và `IsFirstReview` (`NOT EXISTS` lần chấm có `Id` nhỏ hơn).
 Câu 2 nạp các trường sai bằng `JOIN` với cùng điều kiện, không dùng `Contains` danh sách id vì SQL Server giới hạn 2100 tham số. Sau
 đó gộp theo văn bản và tính chỉ số trong bộ nhớ (`BuildQaStats`).
-⚠️ Đừng `GroupBy` theo `EntryUserId` trong SQL: đó là cột tính từ subquery, EF dịch lỗi hoặc sinh SQL chậm.
+Lưu ý: Đừng `GroupBy` theo `EntryUserId` trong SQL: đó là cột tính từ subquery, EF dịch lỗi hoặc sinh SQL chậm.
 
 ## Đã kiểm thực tế
 
@@ -161,20 +161,20 @@ V1: d1 kiểm tra → Không đạt (F1, F2) → d1 kiểm tra lại → Đạt.
 Chưa đạt mục tiêu, nhưng **không phải do SQL**. Câu nạp lần chấm chạy trên server mất ~130 ms (đo bằng `SYSDATETIME` trong `sqlcmd`).
 Phần còn lại là thời gian kéo ~48.000 dòng qua tunnel `cloudflared` tới DB dev: riêng việc kéo 50.000 dòng `Id, SubmissionId, UserId`
 (1,2 MB) bằng `sqlcmd` đã mất ~3,5 s. API và DB đặt cùng mạng LAN thì phải đo lại.
-⚠️ Nếu môi trường thật vẫn chậm, hướng sửa là gộp theo văn bản ngay trong SQL để giảm số dòng trả về, **đừng** thêm index
+Lưu ý: Nếu môi trường thật vẫn chậm, hướng sửa là gộp theo văn bản ngay trong SQL để giảm số dòng trả về, **đừng** thêm index
 `SubmissionQaLog (ProjectId, DocumentTypeId, CreatedDate)` khi chưa đo: phía server không phải nút cổ chai. Thêm index là đổi schema, phải hỏi trước.
 
 ## Giới hạn
 
-⚠️ Mẫu số dùng cấu hình và cờ `IsChargeable` **hiện tại**. Đổi cấu hình hoặc cờ tính tiền giữa kỳ thì số của cả quá khứ đổi theo
+Lưu ý: Mẫu số dùng cấu hình và cờ `IsChargeable` **hiện tại**. Đổi cấu hình hoặc cờ tính tiền giữa kỳ thì số của cả quá khứ đổi theo
 (`ChargeableFieldCount` không ghi lại theo thời điểm chấm).
 
-⚠️ Thống kê theo lượt là lần chấm cuối **trong kỳ**: đổi khoảng ngày có thể đổi kết quả của cùng một văn bản (ví dụ kỳ chỉ chứa lần
+Lưu ý: Thống kê theo lượt là lần chấm cuối **trong kỳ**: đổi khoảng ngày có thể đổi kết quả của cùng một văn bản (ví dụ kỳ chỉ chứa lần
 Không đạt đầu tiên của V1).
 
-⚠️ Toàn bộ lần chấm trong kỳ được nạp vào bộ nhớ rồi mới gộp. Kỳ 366 ngày trên dự án rất lớn sẽ tốn RAM theo số lần chấm.
+Lưu ý: Toàn bộ lần chấm trong kỳ được nạp vào bộ nhớ rồi mới gộp. Kỳ 366 ngày trên dự án rất lớn sẽ tốn RAM theo số lần chấm.
 
-⚠️ Dữ liệu test dựng tay phải dời `CreatedDate` của **cả** `SubmissionLog` lẫn `SubmissionQaLog`. Chỉ dời lần chấm QA về trước lần
+Lưu ý: Dữ liệu test dựng tay phải dời `CreatedDate` của **cả** `SubmissionLog` lẫn `SubmissionQaLog`. Chỉ dời lần chấm QA về trước lần
 kiểm tra thì người nhập thành "Không xác định".
 
 > **Tiếp:** [18-qa-cham-mau.md](18-qa-cham-mau.md) — chấm mẫu QA: chế độ chấm `FULL` / `SAMPLE`, cấu hình mẫu theo dự án, cỡ mẫu và ngưỡng.

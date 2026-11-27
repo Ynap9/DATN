@@ -77,7 +77,7 @@ rảnh) bằng `isSessionLost = true` → server đóng phiên, lô tự `PAUSED
 | `digital-signature/signing-batch/{id}/source/{order:D6}.pdf` | Tải lên (riêng tư, đẩy song song 4 trước `SaveChanges`); **xoá ngay khi file `DONE`** |
 | `digital-signature/signing-batch/{id}/signed/{order:D6}.pdf` | Bản ký, riêng tư; tải qua link ký sẵn có `Content-Disposition` mang tên gốc |
 
-⚠️ Bẫy đã sập: lấy `Order = TotalFiles + 1` thì xoá một file xong thêm file mới **trùng số thứ tự và ghi đè object
+Bẫy đã sập: lấy `Order = TotalFiles + 1` thì xoá một file xong thêm file mới **trùng số thứ tự và ghi đè object
 nguồn** của file khác. `Order` mới = `Order` lớn nhất của lô **kể cả file đã xoá mềm**
 (`SigningBatchRepository.GetLastFileOrderAsync`, `IgnoreQueryFilters`) — đừng quay lại đếm theo `TotalFiles`.
 
@@ -93,9 +93,9 @@ Runner **không** ghi nhật ký từng file (lô 1000 file sẽ là 1000 dòng)
 
 ## Giới hạn đã biết
 
-- ⚠️ Hàng đợi phiên và runner nằm trong RAM: chỉ chạy **một instance**; restart thì lô phải ký tiếp.
-- ⚠️ Revocation đang `NoCheck`: chứng thư đã thu hồi vẫn mở được phiên. Chưa có WYSIWYS: plugin ký mọi yêu cầu nhận được.
-- ⚠️ Hai lượt thêm file **đồng thời** vào cùng lô có thể lấy trùng `Order`; FE phải gửi tuần tự từng đợt.
+- Lưu ý: Hàng đợi phiên và runner nằm trong RAM: chỉ chạy **một instance**; restart thì lô phải ký tiếp.
+- Lưu ý: Revocation đang `NoCheck`: chứng thư đã thu hồi vẫn mở được phiên. Chưa có WYSIWYS: plugin ký mọi yêu cầu nhận được.
+- Lưu ý: Hai lượt thêm file **đồng thời** vào cùng lô có thể lấy trùng `Order`; FE phải gửi tuần tự từng đợt.
 - Huỷ lô chưa dọn bản nguồn còn lại; lô `NEW` bỏ dở không bị dọn; chưa có API xoá lô, danh sách lô.
 - Luồng đầy đủ qua API với USB token thật **chưa chạy thử**; phần mật mã đã ký thật qua TSA và OpenSSL xác nhận
   (chương trình thử gọi thẳng `PdfSignerExternal`, chứng thư tự ký).

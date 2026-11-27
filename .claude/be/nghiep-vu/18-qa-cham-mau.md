@@ -28,7 +28,7 @@ hiện chỉ Admin có `ProjectConfig.Update`; gán quyền này cho Leader thì
   nội dung "Đặt chế độ {mode} cho {userName} ở dự án {project}".
 - `GET reviewer-mode` sắp theo `userName`; `modifiedDate` = lần đặt gần nhất (chưa sửa lần nào thì là ngày tạo). User đã mất role QA
   vẫn hiện, không lọc lại.
-- ⚠️ `SAMPLE` tạm chặn: `PUT reviewer-mode` với `mode = SAMPLE` → `349`, kiểm ngay đầu `QaAssignmentService.UpdateReviewerMode` (trước tìm dự án,
+- Lưu ý: `SAMPLE` tạm chặn: `PUT reviewer-mode` với `mode = SAMPLE` → `349`, kiểm ngay đầu `QaAssignmentService.UpdateReviewerMode` (trước tìm dự án,
   không ghi DB, không audit) tới khi làm 18C. Chưa chặn ở `QaReviewerMode` và vẫn giữ `MODE_SAMPLE` / `MODES`: mở lại chỉ cần xoá một dòng ở service (Task 61).
   DB dev 2026-11-26 không có dòng `SAMPLE` nào. Dòng `SAMPLE` đã có (nếu có) phải tự đặt lại `FULL` bằng chính API này.
 - Đổi chế độ chỉ áp cho phiếu giao **sau** đó: phiếu chụp chế độ lúc giao (18C). Task 11 thêm QA vào dự án **không** đặt chế độ.
@@ -76,7 +76,7 @@ MaxFailed = floor(n × ThresholdPercent / 100)
   Không còn interface / DI riêng (gộp 2026-11-10 theo luật một tên `<Aggregate>DomainService`).
 - `QaAssignmentService.UpdateConfig` gọi `ValidateStrategy` **trước** khi lưu. Task 18D sửa thẳng hàm này để kiểm theo danh sách
   thuật toán thật, **không** sửa service.
-- ⚠️ Khi 18D sửa hàm phải giữ kiểm độ dài `StrategyCode` (30) và `StrategyParamsJson` (1000). Entity không kiểm lại hai cột này;
+- Lưu ý: Khi 18D sửa hàm phải giữ kiểm độ dài `StrategyCode` (30) và `StrategyParamsJson` (1000). Entity không kiểm lại hai cột này;
   giá trị dài hơn sẽ lỗi khi lưu DB.
 
 ## Schema (migration `Add_QaAssignment`)
@@ -93,11 +93,11 @@ MaxFailed = floor(n × ThresholdPercent / 100)
 dùng cho Data. Unique `(SubmissionId, Role)` **không** filter, nên DB tự chặn giao trùng. Bảng `Submission` không thêm cột nào
 (chốt 2026-10-26: `Submission` chỉ giữ dữ liệu văn bản).
 
-⚠️ `TicketId` không có FK vì trỏ sang hai bảng tuỳ `Role`, nên luôn lọc kèm `Role`. **Đừng** "sửa" bằng cách thêm FK.
+Lưu ý: `TicketId` không có FK vì trỏ sang hai bảng tuỳ `Role`, nên luôn lọc kèm `Role`. **Đừng** "sửa" bằng cách thêm FK.
 
-⚠️ `SubmissionUser` không xoá mềm: thu hồi hoặc huỷ phiếu là **xoá cứng** dòng; lịch sử nằm ở phiếu và audit. Thêm xoá mềm sẽ làm unique không filter chặn lần giao lại.
+Lưu ý: `SubmissionUser` không xoá mềm: thu hồi hoặc huỷ phiếu là **xoá cứng** dòng; lịch sử nằm ở phiếu và audit. Thêm xoá mềm sẽ làm unique không filter chặn lần giao lại.
 
-⚠️ Operation Task 9 dùng `SubmissionUser` với role `Data` và không thêm cột vào `Submission`, nên phải merge task này **trước** Task 9.
+Lưu ý: Operation Task 9 dùng `SubmissionUser` với role `Data` và không thêm cột vào `Submission`, nên phải merge task này **trước** Task 9.
 
 ## Mã lỗi khai sẵn cho 18C
 
@@ -138,7 +138,7 @@ Chặng 1–3 (2026-10-26) xong phần **FULL**; phiếu `SAMPLE` chờ 18D. M�
 
 Giao QA qua `POST operation/.../assignment` ([23](23-chia-phieu.md)); API `POST ticket` đã xoá 2026-11-12 (Task 26).
 
-**Giao (R1).** ⚠️ Luật của API `POST ticket` đã xoá, giữ lại vì code vẫn ở `QaAssignmentDomainService` (`SelectAssignableAsync`,
+**Giao (R1).** Lưu ý: Luật của API `POST ticket` đã xoá, giữ lại vì code vẫn ở `QaAssignmentDomainService` (`SelectAssignableAsync`,
 `EnsureAssignableModeAsync`, `EnsureQaMemberAsync`) cho 18D dùng lại. Gửi **đúng một** trong `items` / `count`, sai → `400`. `items`: `box` bắt buộc, `profileRange` bỏ trống = cả hộp, có thì
 chỉ hồ sơ đó trong hộp đó. `count` `1`–`5000`: lấy N văn bản đầu theo `Box`, `ProfileRange`, `Id`.
 - Văn bản phù hợp: chưa xoá, `StatusCheck = 1`, `StatusQa = 0`, chưa có dòng `SubmissionUser` Role `QA`. Không có → `328`, > 5000 → `329`.
@@ -152,7 +152,7 @@ chỉ hồ sơ đó trong hộp đó. `count` `1`–`5000`: lấy N văn bản �
   `SubmissionIds`). Bảng `Submission` **không** đổi.
 - Hai người giao trùng văn bản cùng lúc: unique `(SubmissionId, Role)` chặn, lỗi SQL `2601` / `2627` → `330`, rollback cả phiếu. Request đến sau khi phiếu kia đã commit thì không còn văn bản phù hợp → `328`.
 
-⚠️ Sắp `Box`, `ProfileRange` theo **chuỗi** (như 5sdb): `"10"` trước `"2"`. Đừng ép kiểu số — thứ tự phải khớp cây Hộp → Hồ sơ.
+Lưu ý: Sắp `Box`, `ProfileRange` theo **chuỗi** (như 5sdb): `"10"` trước `"2"`. Đừng ép kiểu số — thứ tự phải khớp cây Hộp → Hồ sơ.
 
 **Phạm vi (R10).** Admin = role `Admin` hoặc `SuperAdmin`: mọi dự án. Người khác chỉ thao tác trên cặp (dự án, loại văn bản) mình là
 `operation.ProjectMember` Role `Leader`, `IsActive`, chưa gỡ (Construction đọc thẳng bảng này trong `QaTicketRepository`):

@@ -64,7 +64,7 @@ Task 39 (2026-11-20): `GET paging` trả thêm (chỉ thêm, trường cũ `id`,
 | `projectCount` | Số dự án **khác nhau** chưa xoá đang gắn loại (`ProjectDocumentType` chưa xoá), mọi trạng thái kể cả `DONE` / `EXPIRED` — cùng luật chặn xoá `IsUsedByProjectAsync`: `> 0` thì xoá trả `346`. Người khác Admin chỉ đếm dự án mình là thành viên chưa gỡ của đúng cặp đó (cùng điều kiện `FilterViewable`) |
 | `createdDate` | `DocumentType.CreatedDate`, có thể `null` |
 
-⚠️ Vì người khác Admin chỉ đếm trong phạm vi mình, metadata còn dự án khác dùng vẫn có thể ra `projectCount = 0` với họ. FE ẩn nút
+Lưu ý: Vì người khác Admin chỉ đếm trong phạm vi mình, metadata còn dự án khác dùng vẫn có thể ra `projectCount = 0` với họ. FE ẩn nút
 Xóa theo số này nên nếu sau này gán `DocumentType.Delete` cho Leader / Data / QA, họ thấy Xóa rồi nhận `346`. Hiện chỉ Admin có quyền
 Delete nên không gặp (chốt 2026-11-20 giữ đúng spec); đừng "sửa" bằng cách đếm mọi dự án cho người khác — lộ số dự án ngoài phạm vi.
 
@@ -86,9 +86,9 @@ không token → `401`.
 
 ## Giới hạn
 
-⚠️ Chưa có unique index trong DB cho `Name`; hai request tạo cùng tên gần như đồng thời vẫn có thể lọt. Muốn chặn hẳn
+Lưu ý: Chưa có unique index trong DB cho `Name`; hai request tạo cùng tên gần như đồng thời vẫn có thể lọt. Muốn chặn hẳn
 cần index có lọc `Deleted = 0` — là đổi schema, hỏi trước.
 
-⚠️ Chưa kiểm `Name` rỗng; `POST` với `name` rỗng hiện vẫn tạo được bản ghi.
+Lưu ý: Chưa kiểm `Name` rỗng; `POST` với `name` rỗng hiện vẫn tạo được bản ghi.
 
 > **Tiếp:** [06-truong-van-ban.md](06-truong-van-ban.md) — các trường của một loại văn bản.

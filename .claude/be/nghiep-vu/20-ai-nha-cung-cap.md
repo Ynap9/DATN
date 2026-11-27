@@ -54,7 +54,7 @@ Luật R1–R6, R12 nằm trong `AiProvider.Create` / `Update`; R7 ở `AiProvid
 **Khác spec (đã chốt 2026-10-27):** tải key chỉ kiểm quyền `Function.Ai.Provider.DownloadApiKey`, **không** kiểm thêm vai trò Admin trong service
 (người dùng: Admin hiếm khi giao quyền này cho role khác) — nên service không gọi `PermissionDomainService.IsAdmin`. BaseUrl chặn thêm `user:pass@`.
 
-⚠️ Khoá DataProtection phải lưu ra volume (`DataProtection:KeysPath`, [../architecture/05-infrastructure-external.md](../architecture/05-infrastructure-external.md)):
+Lưu ý: Khoá DataProtection phải lưu ra volume (`DataProtection:KeysPath`, [../architecture/05-infrastructure-external.md](../architecture/05-infrastructure-external.md)):
 mất khoá thì mọi key đã lưu thành rác, tải key báo `907`, Admin phải nhập lại. Đừng "sửa" bằng cách lưu key chữ thường.
 
 ## API — `api/v1/ai/provider`
@@ -72,7 +72,7 @@ mất khoá thì mọi key đã lưu thành rác, tải key báo `907`, Admin ph
 
 Không tìm thấy (kể cả đã xoá) → `901`. Mọi thao tác ghi có audit `ACTION_AI_PROVIDER_*`, snapshot không có `ApiKeyEncrypted` / `ApiKeyHash`.
 Sửa / xoá / đặt key / tải key: một `SaveChanges`, không mở transaction tay. Tạo mới mở transaction, `SaveChanges` hai lần (lấy `Id` thật
-rồi mới dựng audit) — ⚠️ `AddAuditLog` serialize `newData` ngay lúc gọi, gọi trước `SaveChanges` thì audit ghi `Id = 0`.
+rồi mới dựng audit) — Lưu ý: `AddAuditLog` serialize `newData` ngay lúc gọi, gọi trước `SaveChanges` thì audit ghi `Id = 0`.
 
 ## Mã lỗi
 
@@ -109,6 +109,6 @@ không lộ key hay hash đầy đủ; tải key đủ 11 trường, `no-store`,
 restart app cùng `KeysPath` vẫn giải mã đúng; Data → `403`, không token → `401`; Swagger `v1-ai` đủ 8 route.
 Chưa kiểm: xác thực lại Google sau khi bật `KeysPath` (cần đăng nhập Google tay).
 
-⚠️ `IDataProtector.Unprotect` gặp chuỗi không phải Base64Url ném `FormatException`, **không** phải `CryptographicException` — `TryUnprotect` bắt cả hai.
+Lưu ý: `IDataProtector.Unprotect` gặp chuỗi không phải Base64Url ném `FormatException`, **không** phải `CryptographicException` — `TryUnprotect` bắt cả hai.
 
 > **Tiếp:** [21-thanh-vien-du-an.md](21-thanh-vien-du-an.md) — thành viên dự án: Admin / Leader phân người vào (dự án, loại văn bản), gỡ tự thu hồi văn bản.

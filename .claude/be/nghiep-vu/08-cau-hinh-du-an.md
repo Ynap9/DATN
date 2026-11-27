@@ -25,10 +25,10 @@ Body tạo / sửa: `{ "name", "value", "description" }`. Danh sách trả `{ id
 | `Name` | Giá trị | Bí mật |
 |---|---|---|
 | `GoogleClientId` | OAuth Client ID (Web application) | |
-| `GoogleClientSecret` | OAuth Client secret | ✔ |
-| `GoogleRedirectUri` | URL callback ở trên (có version: `.../api/v1/construction/project-config/google-callback`), **trùng từng ký tự** với Authorized redirect URI trên Google Cloud. ⚠️ Giá trị cũ không có `v1` giờ trả `404` — sửa cả dòng cấu hình lẫn Google Cloud | |
+| `GoogleClientSecret` | OAuth Client secret | Có |
+| `GoogleRedirectUri` | URL callback ở trên (có version: `.../api/v1/construction/project-config/google-callback`), **trùng từng ký tự** với Authorized redirect URI trên Google Cloud. Lưu ý: Giá trị cũ không có `v1` giờ trả `404` — sửa cả dòng cấu hình lẫn Google Cloud | |
 | `GoogleFolderId` | Id thư mục Drive chứa sheet dự án | |
-| `GoogleRefreshToken` | Hệ thống tự ghi khi xác thực xong; cũng nhập tay được | ✔ |
+| `GoogleRefreshToken` | Hệ thống tự ghi khi xác thực xong; cũng nhập tay được | Có |
 
 Hai key hạn dự án, thiếu thì job dùng mặc định ([15-han-du-an.md](15-han-du-an.md#cấu-hình)): `DeadlineWarningDays` (số ngày báo trước,
 mặc định `3`), `DeadlineMailEnabled` (`true` / `false`, mặc định `true`).
@@ -60,10 +60,10 @@ mặc định `3`), `DeadlineMailEnabled` (`true` / `false`, mặc định `true
 | Lỗi nghiệp vụ (`400` / `207` / `304`) | `?google=error&message=<câu lỗi>` (cắt 200 ký tự rồi mới `EscapeDataString`) |
 | Lỗi khác | Log lỗi, `?google=error&message=Kết nối Google thất bại, thử lại sau`, không đưa stack lên URL |
 
-⚠️ Callback không cần token nên chỉ được tin `state` đã ký: đừng bỏ bước kiểm `state`, nếu không ai cũng có thể gắn tài khoản Google
+Lưu ý: Callback không cần token nên chỉ được tin `state` đã ký: đừng bỏ bước kiểm `state`, nếu không ai cũng có thể gắn tài khoản Google
 của họ vào hệ thống. Khoá Data Protection lưu trong hồ sơ người dùng Windows chạy app; đổi máy / user chạy app thì link cũ hết hiệu lực.
 
-⚠️ `AuthServer:AppUrl` chỉ khai trong `appsettings.json` = `http://localhost:4200`. Deploy mà không ghi đè (vd. biến môi trường
+Lưu ý: `AuthServer:AppUrl` chỉ khai trong `appsettings.json` = `http://localhost:4200`. Deploy mà không ghi đè (vd. biến môi trường
 `AuthServer__AppUrl`) thì callback đưa người dùng về localhost. Đừng thêm key cấu hình riêng cho callback: dùng chung `AppUrl`.
 
 ## Đã kiểm thực tế
@@ -87,8 +87,8 @@ thử lại sau", log có `error=server_error`, URL không chứa mã lỗi.
 
 ## Giới hạn
 
-⚠️ `Value` lưu **dạng rõ** trong DB (kể cả secret, refresh token); chỉ API và audit được che. Ai đọc được DB là dùng được tài khoản Google.
+Lưu ý: `Value` lưu **dạng rõ** trong DB (kể cả secret, refresh token); chỉ API và audit được che. Ai đọc được DB là dùng được tài khoản Google.
 
-⚠️ Đổi tên một dòng cấu hình Google (ví dụ `GoogleFolderId`) làm tạo dự án báo `304` — tên là khoá mà code tra cứu.
+Lưu ý: Đổi tên một dòng cấu hình Google (ví dụ `GoogleFolderId`) làm tạo dự án báo `304` — tên là khoá mà code tra cứu.
 
 > **Tiếp:** [09-mau-chu-ky.md](09-mau-chu-ky.md) — mẫu chữ ký cho lô ký số: cấu hình, ảnh dấu đỏ / chữ ký tay, toạ độ khối.

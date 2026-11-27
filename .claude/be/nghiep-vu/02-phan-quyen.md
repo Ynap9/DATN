@@ -166,14 +166,14 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 
 ## Quyền người dùng: đang lệch so với cây
 
-⚠️ **Bốn key `Function.Auth.User.*` đã được seed nhưng không controller nào dùng.** Mọi thao tác user (tạo, sửa, xoá, gán vai trò,
+Lưu ý: **Bốn key `Function.Auth.User.*` đã được seed nhưng không controller nào dùng.** Mọi thao tác user (tạo, sửa, xoá, gán vai trò,
 danh sách) kiểm bằng `Menu.Auth`: ai có `Menu.Auth` (ví dụ `Admin`) làm được hết, kể cả xoá, không tách được quyền xem / tạo / xoá.
 
 Cách sửa là đổi key trong `[Permission]` sang `Function.Auth.User.*` — **đổi hành vi phân quyền**, phải hỏi trước, kèm gán key mới cho vai trò đang có: `SeedRolePermission` chỉ cấp quyền đầy đủ cho `SuperAdmin` và `Admin`, các vai trò khác phải gán tay.
 
 ## Đừng đổi tên key đã seed
 
-⚠️ `SeedPermission` chạy mỗi lần khởi động: key nào **không có** trong `DefaultPermissions` bị xoá cứng **kèm mọi `RolePermission`
+Lưu ý: `SeedPermission` chạy mỗi lần khởi động: key nào **không có** trong `DefaultPermissions` bị xoá cứng **kèm mọi `RolePermission`
 gắn key đó** — đổi tên một hằng trong `PermissionConstants` làm mất quyền đã gán cho vai trò, không báo lỗi. Muốn đổi tên: thêm key mới,
 gán lại cho vai trò, rồi mới bỏ key cũ khỏi `DefaultPermissions` — nên hỏi trước vì đây là thay đổi dữ liệu đang chạy.
 

@@ -1,6 +1,6 @@
 # Chuẩn AIP — PREMIS và tài liệu liên kết
 
-> **Phần 6/8** · trước: [05-aip.md](05-aip.md) · mục lục: [README.md](README.md)
+> **Phần 6/10** · trước: [05-aip.md](05-aip.md) · mục lục: [README.md](README.md)
 
 ## 6. PREMIS — siêu dữ liệu bảo quản
 

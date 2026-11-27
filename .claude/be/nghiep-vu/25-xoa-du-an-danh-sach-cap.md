@@ -72,7 +72,7 @@ chi tiết dự án (Task 30). Không cache. Phạm vi "được phân" ở đâ
 `filledFieldCount` từ Task 30 (case 30.11, như 5sdb, cùng luật tiền công [24](24-don-gia-tien-cong.md)) đọc cờ `IsChargeable` **hiện tại**:
 đổi cờ một trường thì số đổi theo cho mọi văn bản đã kiểm.
 
-⚠️ Bẫy: `IgnoreQueryFilters()` gỡ filter của **cả câu truy vấn**, không riêng bảng join. Muốn lấy tên loại văn bản đã xoá mềm mà vẫn
+Bẫy: `IgnoreQueryFilters()` gỡ filter của **cả câu truy vấn**, không riêng bảng join. Muốn lấy tên loại văn bản đã xoá mềm mà vẫn
 giữ filter dự án / thành viên thì tách câu riêng (như `documentTypeNames`), đừng gắn `IgnoreQueryFilters()` vào câu chính.
 
 ## Đã kiểm thực tế
@@ -94,8 +94,8 @@ Ngày 2026-11-13, DB dev, dữ liệu tạm `ZZTEST29` đã dọn, audit test đ
 
 ## Giới hạn
 
-⚠️ Không có API khôi phục dự án đã xoá; khôi phục tay phải lọc đúng `DeletedDate` của lần xoá để không bật lại dòng đã xoá từ trước.
+Lưu ý: Không có API khôi phục dự án đã xoá; khôi phục tay phải lọc đúng `DeletedDate` của lần xoá để không bật lại dòng đã xoá từ trước.
 
-⚠️ Đổi tên Google Sheet là bước ngoài transaction: lỗi thì tên file không đổi, chỉ có log.
+Lưu ý: Đổi tên Google Sheet là bước ngoài transaction: lỗi thì tên file không đổi, chỉ có log.
 
 > **Tiếp:** [26-thu-hoi-chuyen-phieu.md](26-thu-hoi-chuyen-phieu.md) — thu hồi / chuyển phiếu nhập liệu và phụ trách QA, danh sách phiếu.

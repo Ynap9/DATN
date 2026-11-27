@@ -50,10 +50,10 @@ Luật:
 
 Sau khi xoá, import lại cùng khoá sẽ tạo hồ sơ mới: snapshot lúc import và unique index (`[Deleted] = 0`) đều bỏ qua bản đã xoá.
 
-⚠️ Xoá **không** xoá file trên MinIO (`FileUrlS3Object`): object vẫn nằm trong kho. Muốn dọn kho thì thêm bước xoá object riêng, và
+Lưu ý: Xoá **không** xoá file trên MinIO (`FileUrlS3Object`): object vẫn nằm trong kho. Muốn dọn kho thì thêm bước xoá object riêng, và
 hỏi trước vì không khôi phục được. Đừng gắn việc này vào `Delete` khi chưa được duyệt.
 
-⚠️ Lịch sử kiểm tra và QA của hồ sơ đã xoá vẫn nằm trong DB. Lịch sử toàn dự án (`logs`) vẫn hiện tên file nhờ `IgnoreQueryFilters`,
+Lưu ý: Lịch sử kiểm tra và QA của hồ sơ đã xoá vẫn nằm trong DB. Lịch sử toàn dự án (`logs`) vẫn hiện tên file nhờ `IgnoreQueryFilters`,
 còn các API theo `{id}` của hồ sơ đã xoá trả `305`.
 
 ## Xuất Excel
@@ -90,7 +90,7 @@ FE gửi lặp `?columns=checkStatus&columns=checkedBy` (hộp tick, mặc đị
   (`SubmissionDomainService.NormalizeExportColumns`). Mã lạ → `400` "Cột xuất không hợp lệ: {mã}", kiểm sau `337`, trước khi tạo job.
 - `SubmissionLog` chỉ được đọc khi chọn `checkedBy` / `checkedDate`.
 - Sửa sau QA đưa `StatusQa` về `Chưa QA` nhưng giữ `QaBy` / `QaDate` ([13](13-ho-so-qa.md)): cột Người QA vẫn là người chấm gần nhất. Đúng dữ liệu.
-- ⚠️ Không gửi `columns` thì file không còn 8 cột trạng thái / người như trước Task 27; FE phải thêm hộp tick.
+- Lưu ý: Không gửi `columns` thì file không còn 8 cột trạng thái / người như trước Task 27; FE phải thêm hộp tick.
 
 | Lỗi | Mã |
 |---|---|
@@ -102,16 +102,16 @@ FE gửi lặp `?columns=checkStatus&columns=checkedBy` (hộp tick, mặc đị
 Lỗi nghiệp vụ không trả file: controller trả `ApiResponse` JSON với HTTP 200. FE phải kiểm `Content-Type` của response như
 `proxy-file` ([11-ho-so-import.md](11-ho-so-import.md#xem-file--proxy)).
 
-⚠️ Toàn bộ dòng và các ô trường được nạp vào bộ nhớ, dựng workbook ClosedXML trong bộ nhớ rồi mới trả về; không stream. Số đo ở
+Lưu ý: Toàn bộ dòng và các ô trường được nạp vào bộ nhớ, dựng workbook ClosedXML trong bộ nhớ rồi mới trả về; không stream. Số đo ở
 [mục chạy nền](#đã-kiểm-thực-tế-xuất-nền).
 
-⚠️ Bẫy plan cache (đo 2026-10-25, chưa sửa): câu đọc `SubmissionData` trong `FindExportTable` có `SubmissionId IN (subquery Submission)`.
+Bẫy plan cache (đo 2026-10-25, chưa sửa): câu đọc `SubmissionData` trong `FindExportTable` có `SubmissionId IN (subquery Submission)`.
 Plan dựng lần đầu cho dự án nhỏ (15 hồ sơ) là nested loops; dùng lại cho 20.000 hồ sơ × 30 trường thì chạy **hơn 10 phút** (quét
 600.000 × 20.000), chỉ dừng ở `CommandTimeout = 600`. Xoá plan thì còn ~10 s. Thử ở SQL với plan dự án nhỏ: câu gốc > 60 s, bỏ điều kiện
 `SubmissionId IN` (lọc theo danh sách `submissions` đã nạp, trong RAM) còn 2,5 s. Đề xuất sửa theo hướng đó, chờ người dùng duyệt vì đổi
 `FindExportTable`; đừng "sửa" bằng `DBCC FREEPROCCACHE`.
 
-⚠️ Mọi ô được ghi dạng chuỗi (`SetValue(string)`), kể cả `STT`. Excel sẽ coi số là văn bản và không tính được tổng. Muốn ô số
+Lưu ý: Mọi ô được ghi dạng chuỗi (`SetValue(string)`), kể cả `STT`. Excel sẽ coi số là văn bản và không tính được tổng. Muốn ô số
 thì đổi `ExcelExternal` và kiểu dữ liệu của hàng, đừng xử lý ở FE.
 
 ## Xuất Excel chạy nền
@@ -120,7 +120,7 @@ Cùng bộ lọc, cùng nội dung file với `GET export-excel`, nhưng chạy 
 [05](../architecture/05-infrastructure-external.md#backgroundjob--hangfire)): request không giữ HTTP lâu, tối đa `ExportWorkerCount` (2) workbook
 dựng cùng lúc. Không làm xuất nhanh hơn. `GET export-excel` cũ giữ song song để FE chuyển dần. Xuất ra Google Sheet cùng khuôn: [29](29-xuat-google-sheet.md).
 
-⚠️ Job không có user từ token: `337` và phiếu QA chỉ kiểm ở `POST export-excel/job`; job gọi `ExportExcelFromJob` (không kiểm user), đừng gọi `ExportExcel`.
+Lưu ý: Job không có user từ token: `337` và phiếu QA chỉ kiểm ở `POST export-excel/job`; job gọi `ExportExcelFromJob` (không kiểm user), đừng gọi `ExportExcel`.
 
 1. FE gọi `POST export-excel/job` + bộ lọc. BE kiểm `303` / `301` / `312` / `337` / `400` mã cột (không tạo job), chốt tên file `{Tên dự án}_{Tên loại văn bản}_{yyyyMMddHHmm}.xlsx`
    theo giờ VN lúc bấm, xếp job, trả `{ jobId, status: 0, fileName }`. Không kiểm `322` lúc này: job tự báo.
@@ -145,9 +145,9 @@ dựng cùng lúc. Không làm xuất nhanh hơn. `GET export-excel` cũ giữ s
 - File: `construction/submission-export/{yyyyMMdd}/{guid}.xlsx`, private. `SubmissionExportCleanupJob` chạy `BackgroundJob:Jobs:SubmissionExportCleanup`
   (`0 2 * * *` giờ VN), xoá thư mục ngày cách hôm nay 2–8 ngày (giữ hôm nay + hôm qua, quét lại 7 ngày nếu job lỡ chạy); dọn cả file Excel
   tải lên để import (`construction/submission-import`, [11](11-ho-so-import.md#import-từ-file-excel-chạy-nền)) cùng thời hạn.
-- Job Succeeded / Deleted Hangfire tự xoá sau 24 giờ → API 2 trả `326`. ⚠️ Job **Failed thì Hangfire không tự xoá**, nằm mãi ở dashboard.
+- Job Succeeded / Deleted Hangfire tự xoá sau 24 giờ → API 2 trả `326`. Lưu ý: Job **Failed thì Hangfire không tự xoá**, nằm mãi ở dashboard.
 
-⚠️ Mọi app trỏ cùng DB là một server Hangfire. Khi đo, máy đồng đội chạy code cũ (không có `SubmissionExportJob`) đã lấy job đang chờ retry,
+Lưu ý: Mọi app trỏ cùng DB là một server Hangfire. Khi đo, máy đồng đội chạy code cũ (không có `SubmissionExportJob`) đã lấy job đang chờ retry,
 báo `Could not load type` và đánh retry theo mặc định 10 lần của nó. Cả nhóm phải chạy cùng bản code, hoặc máy dev đặt `BackgroundJob:Enabled = false`.
 
 ## Đã kiểm thực tế (xuất nền)

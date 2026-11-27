@@ -52,9 +52,9 @@ Mục menu xét key trong `app.menu.ts`; có **bất kỳ** key trong mảng là
 - Lỗi trong dialog giữ dialog; `onMemberError` báo màn tải lại cặp (`805`, `818`) hoặc bảng (`806`). `821` / `808` / `809` toast câu BE.
 - Đã kiểm 2026-11-27 trên dự án test `ZZTEST60` (đã xoá): 24/24 lần kiểm phủ 12 ca bảng 60.2 — Admin, 2 Leader cùng cặp,
   Leader không có cặp, dự án Đã xong, dự án không QA (nút QA khoá), lỗi `821` giả lập (toast câu BE, dialog giữ).
-- ⚠️ Ô "Admin quản lý" / "Không chọn" dùng giá trị giả `'admin'` / `0` vì `p-select` coi option có value `null` là chưa chọn. Id thật
+- Lưu ý: Ô "Admin quản lý" / "Không chọn" dùng giá trị giả `'admin'` / `0` vì `p-select` coi option có value `null` là chưa chọn. Id thật
   là GUID / số dương nên không trùng; lúc gửi BE phải đổi lại thành không gửi (`clearManager` khi sửa).
-- ⚠️ Ô chọn người tìm qua server (`onFilter` của `sh-multi-select`): mỗi lần tìm thay `options`, nên phải ghép lại người đã chọn kèm nhãn
+- Lưu ý: Ô chọn người tìm qua server (`onFilter` của `sh-multi-select`): mỗi lần tìm thay `options`, nên phải ghép lại người đã chọn kèm nhãn
   đã nhớ, nếu không chip hiện GUID.
 
 ## Nhóm nhân viên
@@ -77,7 +77,7 @@ Mục menu xét key trong `app.menu.ts`; có **bất kỳ** key trong mảng là
   người hơn, hoà thì không chọn; người lệch có chip vàng, ô Thêm người khoá tới khi còn một vai trò (BE `804`).
 - Lưu Sửa chỉ gửi phần đổi: `PUT {id}` → `DELETE {id}/members` → `POST {id}/members` (bỏ trước thêm sau). Bước giữa lỗi giữ dialog,
   lần sau chỉ gửi phần còn lại. `802` → lỗi tại ô Tên; `801` → toast, đóng, tải lại bảng.
-- ⚠️ HTTP 400 của `[ApiController]` bị `httpErrorInterceptor` báo câu chung. Bốn API ghi (`create`, `update`, `addMembers`,
+- Lưu ý: HTTP 400 của `[ApiController]` bị `httpErrorInterceptor` báo câu chung. Bốn API ghi (`create`, `update`, `addMembers`,
   `removeMembers`) đặt `SKIP_ERROR_TOAST` để dialog tự báo "Dữ liệu gửi lên không hợp lệ"; gọi chúng phải tự xử lý `error`.
 - Gợi ý người gửi `excludeStaffGroupId`, nên người đã lưu vừa bỏ trong dialog không hiện lại trong gợi ý tới khi Lưu.
 

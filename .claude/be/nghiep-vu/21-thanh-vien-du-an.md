@@ -73,7 +73,7 @@ Gỡ (API 14) = xoá mềm + **tự thu hồi** văn bản chưa làm của ngư
   phụ trách nút (`AssignmentTicket` Role `QA`) → trả thêm `cancelledQaOwnershipTicketIds` ([23](23-chia-phieu.md)).
 - Chống đua: lệnh xoá có điều kiện trạng thái văn bản **ngay trong câu SQL** (`ExecuteDelete` + `Any` trên `Submissions`), không đọc trước
   rồi xoá sau — văn bản người đó vừa bấm Kiểm tra / vừa chấm Đạt ở lại người đó.
-  ⚠️ DB bật `READ_COMMITTED_SNAPSHOT`, `Any` đọc thường thấy bản đã commit cũ của dòng Kiểm tra đang ghi dở. Từ Task 31 câu xoá khi gỡ
+  Lưu ý: DB bật `READ_COMMITTED_SNAPSHOT`, `Any` đọc thường thấy bản đã commit cũ của dòng Kiểm tra đang ghi dở. Từ Task 31 câu xoá khi gỡ
   (`ReleaseEntryNotCheckedAsync`) đọc `Submission` `WITH (UPDLOCK, ROWLOCK)` như thu hồi / chuyển ([26](26-thu-hoi-chuyen-phieu.md#chống-đua-với-kiểm-tra--qa)):
   Kiểm tra ghi trước → văn bản ở lại người đó; gỡ trước → Kiểm tra `820`, rollback (cả dự án không QA).
 - Trả `revokedDocumentCount`, `keptDocumentCount` (dòng còn lại của **các phiếu vừa xét**), `cancelledAssignmentTicketIds`,
@@ -82,7 +82,7 @@ Gỡ (API 14) = xoá mềm + **tự thu hồi** văn bản chưa làm của ngư
   mới nhất (Task 12B, [24](24-don-gia-tien-cong.md)); khác vai trò thì giá trống.
 
 Phụ thuộc giữa module chỉ một chiều Operation → Construction (2026-11-10): luật huỷ phiếu QA chỉ có một bản ở
-[18C](18-qa-cham-mau.md#18c--phiếu-qa). ⚠️ Construction không được `using` gì của Operation — cần dữ liệu `ProjectMember` thì
+[18C](18-qa-cham-mau.md#18c--phiếu-qa). Lưu ý: Construction không được `using` gì của Operation — cần dữ liệu `ProjectMember` thì
 repository Construction chiếu ra record riêng (`QaMember`), đừng trả entity Operation.
 
 ## API — `api/v1/operation/project/{projectId:int}`, quyền `Function.Operation.ProjectMember.Manage`

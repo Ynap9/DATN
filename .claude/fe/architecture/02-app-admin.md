@@ -16,7 +16,7 @@
 | `features/home/` | Trang chủ `/admin` |
 | `features/<module>/` | `auth`, `core`, `construction`, `digital-signature`, `packaging`, `operation`, `ai` — mỗi module một `<module>.routes.ts` |
 
-⚠️ `core/` (hạ tầng FE) khác `features/core/` (màn hình của module BE `Core`: nhật ký, job nền). Đừng đặt màn hình
+Lưu ý: `core/` (hạ tầng FE) khác `features/core/` (màn hình của module BE `Core`: nhật ký, job nền). Đừng đặt màn hình
 nhật ký vào `app/core/`.
 
 ## app.config.ts cung cấp gì
@@ -33,7 +33,7 @@ nhật ký vào `app/core/`.
 | `ErrorHandler` → `GlobalErrorHandler` | Lỗi tải chunk lazy (deploy bản mới khi tab cũ còn mở) thì reload trang |
 | `MessageService`, `DialogService`, `ConfirmationService` | Một instance cho toast / dialog / confirm |
 
-⚠️ `provideAnimationsAsync` bị đánh dấu deprecated từ Angular 20.2 nhưng vẫn chạy; đừng gỡ khi `sh-table` còn
+Lưu ý: `provideAnimationsAsync` bị đánh dấu deprecated từ Angular 20.2 nhưng vẫn chạy; đừng gỡ khi `sh-table` còn
 dùng `trigger()`.
 
 ## Routing
@@ -45,7 +45,7 @@ dùng `trigger()`.
 | `admin` | `authGuard` | `AppLayout`, con: `''` = `HomeComponent`, mỗi module BE một nhánh lazy |
 | `**` | — | `ShNotFoundComponent` |
 
-⚠️ Route `admin` có `children` thì **phải** có con `path: ''`, nếu không vào `/admin` sẽ rơi xuống trang 404.
+Lưu ý: Route `admin` có `children` thì **phải** có con `path: ''`, nếu không vào `/admin` sẽ rơi xuống trang 404.
 Vì vậy mới có `HomeComponent`; đừng xoá nó khi chưa có trang mặc định khác.
 
 ## Lớp nền
@@ -64,7 +64,7 @@ Vì vậy mới có `HomeComponent`; đừng xoá nó khi chưa có trang mặc 
 | `onRouteActivated` | Lớp con override để tải lại khi quay về route |
 | `designToString`, `stringToDesign` | Đổi design JSON sang chuỗi và ngược lại |
 
-⚠️ `BaseComponent` đăng ký router event trong constructor: chỉ kế thừa ở component trang, không kế thừa ở component
+Lưu ý: `BaseComponent` đăng ký router event trong constructor: chỉ kế thừa ở component trang, không kế thừa ở component
 lặp theo dòng bảng, vì mỗi instance tạo thêm một subscription.
 
 ## Layout

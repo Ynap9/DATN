@@ -1,11 +1,11 @@
 # PDF/A hai lớp — định dạng tệp nội dung trong gói
 
-> **Phần 8/8** · trước: [07-dip.md](07-dip.md) · mục lục: [README.md](README.md)
+> **Phần 8/10** · trước: [07-dip.md](07-dip.md) · mục lục: [README.md](README.md)
 
 > PDF/A hai lớp là gì, thông tư đòi tới đâu, gói mẫu làm ra sao — và vì sao trong luồng đóng gói của dự án
 > này nó là **tuỳ chọn** chứ không phải cổng chặn. Cập nhật 2026-09-08.
 
-> 🎯 **Chốt: sinh PDF/A là TUỲ CHỌN.** Gói vẫn hợp lệ khi tệp nội dung không phải PDF/A — xem
+> **Chốt: sinh PDF/A là TUỲ CHỌN.** Gói vẫn hợp lệ khi tệp nội dung không phải PDF/A — xem
 > [§3](#3-vì-sao-là-tuỳ-chọn). Bật hay không quyết định theo nguồn tài liệu ([§4](#4-khi-nào-nên-bật)),
 > không bật mặc định.
 
@@ -83,19 +83,19 @@ Hai điều rút ra:
 
 ## 6. Bẫy phải biết trước khi bật
 
-⚠️ **Chuyển PDF/A sau khi ký là mất chữ ký.** Chữ ký số phủ một dải byte cố định của file (`/ByteRange`); mọi
+Lưu ý: **Chuyển PDF/A sau khi ký là mất chữ ký.** Chữ ký số phủ một dải byte cố định của file (`/ByteRange`); mọi
 công cụ chuyển PDF/A đều ghi lại toàn bộ file nên dải byte đó không còn trỏ đúng vào đâu nữa — chữ ký thành
 vô hiệu, và dấu thời gian TSA đã đóng cũng mất theo. Thứ tự bắt buộc là **chuyển PDF/A trước, ký sau** (ký
 bằng incremental update thì bản PDF/A vẫn giữ nguyên tuân thủ). **Đừng** xếp khâu chuyển đổi xuống sau khâu
 ký để tiện tái dùng file đã ký.
 
-⚠️ **sh.be hiện chưa có công cụ nào sinh hay kiểm PDF/A** — mới có `PdfRevisionReader`, `PdfSignatureReader`
+Lưu ý: **sh.be hiện chưa có công cụ nào sinh hay kiểm PDF/A** — mới có `PdfRevisionReader`, `PdfSignatureReader`
 (đọc chữ ký) ở `infrastructure.external/DigitalSignature/Base`. Thư viện PDF đọc/ghi thông thường không chuẩn hoá sang PDF/A:
 không nhúng `/OutputIntent`, không ép nhúng font, không dựng được lớp text. Bật tuỳ chọn này nghĩa là **thêm
 phụ thuộc ngoài** — Ghostscript, hoặc OCRmyPDF + Tesseract kèm dữ liệu tiếng Việt như gói mẫu đã dùng. Đó
 chính là lý do nó nằm sau một cờ chứ không bật sẵn.
 
-⚠️ **Đừng suy định dạng ra từ `confidenceLevel`.** `confidenceLevel = 02` nói tài liệu **được số hóa**,
+Lưu ý: **Đừng suy định dạng ra từ `confidenceLevel`.** `confidenceLevel = 02` nói tài liệu **được số hóa**,
 không bảo đảm tệp đang cầm đã là PDF/A. Muốn biết thì đọc `pdfaid:part` trong XMP của chính file, như bảng §5.
 
 ## 7. Nếu bật thì phải đạt
@@ -108,3 +108,5 @@ không bảo đảm tệp đang cầm đã là PDF/A. Muốn biết thì đọc 
 4. Lớp chữ vô hình (`3 Tr`) đè đúng vị trí chữ trên ảnh — sai vị trí thì bôi đen và tìm kiếm lệch.
 5. Không mã hoá, không JavaScript, không liên kết tệp ngoài.
 6. Ảnh nền giữ đúng thể thức Điều 8: ≥24 bit màu, **200 dpi** hành chính / **300 dpi** bản đồ, bản vẽ.
+
+> **Tiếp:** [09-goi-mau-chi-tiet.md](09-goi-mau-chi-tiet.md) — gói mẫu phân tích từng file, bản sao trong repo.

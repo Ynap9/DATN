@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<simpledc>
+    <issuedDate>02/01/2001</issuedDate>
+    <confidenceLevel>02</confidenceLevel>
+    <process/>
+    <docId>H49.64.33.2001.160.1</docId>
+    <subject>Tờ khai đăng ký kết hôn của ông (bà) Nguyễn Hữu Nam và ông (bà) Vũ Thị Nhuận</subject>
+    <inforSign>kết hôn</inforSign>
+    <typeName>32</typeName>
+    <format>02</format>
+    <docCode>H49.64.33.1994.160.0000001</docCode>
+    <description>Phường Hà Tu, Thành phố Hạ Long</description>
+    <language>01</language>
+    <autograph/>
+    <riskRecoveryStatus>02</riskRecoveryStatus>
+    <codeNumber>1</codeNumber>
+    <numberOfPage>2</numberOfPage>
+    <mode>01</mode>
+    <organName>Nguyễn Hữu Nam và Vũ Thị Nhuận</organName>
+    <codeNotation>/TK</codeNotation>
+    <keyword>đăng ký kết hôn</keyword>
+    <maintenance>01</maintenance>
+    <riskRecovery>0</riskRecovery>
+</simpledc>

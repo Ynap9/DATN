@@ -5,7 +5,7 @@
 `projects/lib-components/src/my-lib-components`, cổng duy nhất là `src/public-api.ts`, import qua alias `@sh/ui`.
 Chỉ chứa thứ **hiển thị và nhập liệu**: không token, không router-guard, không gọi API, không biết module BE nào.
 
-⚠️ Đừng đưa lại vào lib: service gọi `HttpClient`, đọc localStorage token, toast (`MessageService`) hay bất cứ
+Lưu ý: Đừng đưa lại vào lib: service gọi `HttpClient`, đọc localStorage token, toast (`MessageService`) hay bất cứ
 gì import từ `admin`. Những thứ đó thuộc `admin/src/app/core/`.
 
 ## Component
@@ -25,11 +25,11 @@ tooltip, thông báo lỗi để form nào cũng giống nhau.
 `isLoading`, `columnCacheName` (lưu cấu hình cột). Kiểu cột ở `shared/interfaces/sh-table.interface.ts`, hằng ở
 `shared/const/sh-table.const.ts` — cả hai đã export qua `public-api.ts`.
 
-⚠️ `sh-table` import từng directive (`NgIf`, `NgClass`…) thay vì `CommonModule`, vì pipe `currency` của lib trùng tên
+Lưu ý: `sh-table` import từng directive (`NgIf`, `NgClass`…) thay vì `CommonModule`, vì pipe `currency` của lib trùng tên
 `CurrencyPipe` trong `CommonModule`. Đừng "gọn lại" bằng `CommonModule` ở component nào dùng `| currency`.
-⚠️ Directive dạng thuộc tính trơn (`pRipple`, `pTemplate`, `pButton`) thiếu import thì Angular **bỏ qua im lặng**,
+Lưu ý: Directive dạng thuộc tính trơn (`pRipple`, `pTemplate`, `pButton`) thiếu import thì Angular **bỏ qua im lặng**,
 build vẫn qua; thêm vào template thì thêm module PrimeNG tương ứng vào `imports`.
-⚠️ `sh-input-text` gửi `trim() || firstValue`; `firstValue` chỉ được gán khi giá trị đầu rỗng, nên xoá trắng ô **vốn có chữ**
+Lưu ý: `sh-input-text` gửi `trim() || firstValue`; `firstValue` chỉ được gán khi giá trị đầu rỗng, nên xoá trắng ô **vốn có chữ**
 làm control nhận `undefined` → `.trim()` / `.length` ở màn lỗi, BE nhận `null` cho chuỗi bắt buộc (500). Đọc ô chữ qua hàm chuẩn hoá
 (vd. `toText` ở tab Prompt OCR); đừng sửa lib theo kiểu đổi `firstValue` vì màn cũ đang dựa vào nó.
 
@@ -54,8 +54,8 @@ thông điệp — vì vậy validator nằm cùng UI kit chứ không ở app.
 
 `shared/models/page.ts`: `pageNumber` đếm từ 0 trong FE, `getPageNumber()` trả số **từ 1** để gửi API (khớp
 `GetSkip()` của BE). `pageSize` mặc định 25, lựa chọn `[25, 50, 100, 200]`, `keyword` cho ô tìm kiếm.
-⚠️ "Lấy tất cả" dùng `pageSizeAll = 9999999`, còn BE quy ước `pageSize = -1`.
-⚠️ `Utils.setParamGetList` gửi `page` / `limit` (dự án cũ), BE đọc `pageNumber` / `pageSize`: tự dựng `HttpParams`
+Lưu ý: "Lấy tất cả" dùng `pageSizeAll = 9999999`, còn BE quy ước `pageSize = -1`.
+Lưu ý: `Utils.setParamGetList` gửi `page` / `limit` (dự án cũ), BE đọc `pageNumber` / `pageSize`: tự dựng `HttpParams`
 như mẫu ở [06-them-man-hinh.md](06-them-man-hinh.md) cho tới khi sửa hàm này.
 
 ## Hằng số và tiện ích
@@ -66,10 +66,10 @@ như mẫu ở [06-them-man-hinh.md](06-them-man-hinh.md) cho tới khi sửa h�
 | `shared/interfaces/base.interface.ts` | `IDialogConfirmConfig`, `IType`, `IEventSubmitForm`… |
 | `utils.ts` | `Utils` duy nhất của FE, ưu tiên bản SMS: storage, token (`getAccessToken`, `getRefreshToken`, `getDecodedJwtPayload`), PKCE, tải file, định dạng tiền / ngày, so sánh / clone dữ liệu, `mapDTO`, `setParamGetList`, `log` |
 
-⚠️ `getSessionStorage` / `setSessionStorage` đọc ghi chuỗi thô, muốn lưu object thì tự `JSON.stringify` / `JSON.parse`. `getLocalStorage` trả `{}` khi chưa có key, không trả `null`.
-⚠️ Hàm token trong `Utils` là ngoại lệ của luật "lib không biết token", giữ theo khuôn SMS để cả app dùng một `Utils`.
+Lưu ý: `getSessionStorage` / `setSessionStorage` đọc ghi chuỗi thô, muốn lưu object thì tự `JSON.stringify` / `JSON.parse`. `getLocalStorage` trả `{}` khi chưa có key, không trả `null`.
+Lưu ý: Hàm token trong `Utils` là ngoại lệ của luật "lib không biết token", giữ theo khuôn SMS để cả app dùng một `Utils`.
 
-⚠️ `base.consts.ts` và `utils.ts` còn nhiều hằng / hàm của dự án cũ (`LOGO_EPIC`, `StatusResonse`…); dọn theo danh
+Lưu ý: `base.consts.ts` và `utils.ts` còn nhiều hằng / hàm của dự án cũ (`LOGO_EPIC`, `StatusResonse`…); dọn theo danh
 sách được duyệt, không xoá đại trà.
 
 > **Tiếp:** [04-http-auth.md](04-http-auth.md) — xác thực, interceptor và xử lý lỗi HTTP.

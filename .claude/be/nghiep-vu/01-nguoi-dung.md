@@ -59,22 +59,22 @@ Các grant khác (`refresh_token`, `client_credentials`, `authorization_code`) v
 
 ## Giới hạn hiện tại
 
-⚠️ **Không chặn xoá chính mình, cũng không chặn xoá SuperAdmin cuối cùng.** `UserService.Delete` không kiểm tra
+Lưu ý: **Không chặn xoá chính mình, cũng không chặn xoá SuperAdmin cuối cùng.** `UserService.Delete` không kiểm tra
 người gọi hay vai trò của user bị xoá, nên một admin có thể tự khoá mình khỏi hệ thống. Cách tránh: thêm kiểm tra vào
 domain (`UserDomainService`), đừng chỉ chặn ở FE.
 
-⚠️ **Không có API sửa hồ sơ người khác.** `UpdateUserDto` không có `Id`; `Update` luôn lấy user từ token. Muốn admin sửa
+Lưu ý: **Không có API sửa hồ sơ người khác.** `UpdateUserDto` không có `Id`; `Update` luôn lấy user từ token. Muốn admin sửa
 user khác phải thêm endpoint có `Id` và đổi DTO — đổi DTO là đổi contract với FE, hỏi trước.
 
-⚠️ **Mật khẩu được gửi qua email dạng rõ.** `SendAccountCreatedAsync` nhận mật khẩu gốc để đưa vào mail. Đây là hành vi
+Lưu ý: **Mật khẩu được gửi qua email dạng rõ.** `SendAccountCreatedAsync` nhận mật khẩu gốc để đưa vào mail. Đây là hành vi
 hiện tại, không phải lỗi cú pháp; đừng "sửa" bằng cách bỏ mail mà không hỏi lại luồng cấp tài khoản.
 
-⚠️ **Thông báo đăng nhập tiết lộ tên đăng nhập có tồn tại hay không.** Trả `404` riêng cho tên sai và `101` cho mật khẩu sai
+Lưu ý: **Thông báo đăng nhập tiết lộ tên đăng nhập có tồn tại hay không.** Trả `404` riêng cho tên sai và `101` cho mật khẩu sai
 cho phép đoán tên hợp lệ. Đổi mã lỗi là đổi contract FE; hỏi trước.
 
-⚠️ **Chưa thấy cơ chế khoá tài khoản khi sai mật khẩu nhiều lần.** `Exchange` không đếm lần sai, và `Program.cs` không
+Lưu ý: **Chưa thấy cơ chế khoá tài khoản khi sai mật khẩu nhiều lần.** `Exchange` không đếm lần sai, và `Program.cs` không
 có cấu hình lockout (đã tìm, không thấy). Đây là ghi nhận từ đọc code, chưa kiểm thử tấn công thực tế.
 
-⚠️ Mail gửi **trước** `CommitAsync` trong `Create` — xem bẫy đã ghi trong [../architecture/02-applications.md](../architecture/02-applications.md).
+Lưu ý: Mail gửi **trước** `CommitAsync` trong `Create` — xem bẫy đã ghi trong [../architecture/02-applications.md](../architecture/02-applications.md).
 
 > **Tiếp:** [02-phan-quyen.md](02-phan-quyen.md) — cây quyền và luật kiểm quyền.

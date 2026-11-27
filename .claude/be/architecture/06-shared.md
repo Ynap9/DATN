@@ -31,7 +31,7 @@ Phần dùng chung cho mọi project. Không tham chiếu project nào khác.
 | `Settings/` | `AuthServerSettings`, `EmailSettings`, `GoogleSheetSettings`, `S3Settings` (section `S3`, khoá `S3_URL`…), `PluginSettings` (section `Plugin`, `SupportedVersions`), `ApiVersionSettings` (section `ApiVersion`, `Sunsets[]`), `BackgroundJobSettings` (section `BackgroundJob`: `Enabled`, `WorkerCount`, `ExportWorkerCount`, `Jobs.ProjectDeadlineCheck`, `Jobs.SubmissionExportCleanup`) |
 | `Ultils/` | `TreeUtils`, `ValidationUtils`, `CryptoUtils`, `AuditLogUtils`, `DateTimeUtils` |
 
-⚠️ Thư mục tên `Ultils` (sai chính tả) nhưng namespace là `sh.be.shared.Utils`. Đừng đổi tên thư mục nếu không
+Lưu ý: Thư mục tên `Ultils` (sai chính tả) nhưng namespace là `sh.be.shared.Utils`. Đừng đổi tên thư mục nếu không
 được yêu cầu.
 
 ## Mã lỗi
@@ -58,7 +58,7 @@ Thêm mã mới: hằng trong `ErrorCodes` (đúng dải module) + message trong
 | `CryptoUtils.GenerateRandomString` | Sinh mật khẩu bằng `RandomNumberGenerator` (an toàn mật mã) |
 | `DateTimeUtils.GetVietnamTime` | Chỉ cho code tĩnh (seeder); service dùng `BaseService.GetVietnamTime()` |
 
-⚠️ Đừng quay lại `System.Random` để sinh mật khẩu: chuỗi của nó đoán được.
+Lưu ý: Đừng quay lại `System.Random` để sinh mật khẩu: chuỗi của nó đoán được.
 
 ## Thoả hiệp đã biết
 

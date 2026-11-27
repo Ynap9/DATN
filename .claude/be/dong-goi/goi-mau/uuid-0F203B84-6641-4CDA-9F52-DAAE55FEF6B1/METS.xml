@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<mets xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:sip="https://DILCIS.eu/XML/METS/SIPExtensionMETS" xmlns="http://www.loc.gov/METS/" xmlns:csip="https://DILCIS.eu/XML/METS/CSIPExtensionMETS" xmlns:xlink="http://www.w3.org/1999/xlink" OBJID="uuid-0F203B84-6641-4CDA-9F52-DAAE55FEF6B1" LABEL="Tập tờ khai đăng ký kết hôn của công dân trên địa bàn phường Hà Tu năm 2001 Từ số: 01 đến số: 40" TYPE="Mixed" csip:CONTENTINFORMATIONTYPE="MIXED" PROFILE="https://earkcsip.dilcis.eu/profile/E-ARK-CSIP.xml" xsi:schemaLocation="http://www.loc.gov/METS/ schemas/mets1_12.xsd http://www.w3.org/1999/xlink schemas/xlink.xsd https://dilcis.eu/XML/METS/CSIPExtensionMETS schemas/DILCISExtensionMETS.xsd https://dilcis.eu/XML/METS/SIPExtensionMETS schemas/DILCISExtensionSIPMETS.xsd">
+    <metsHdr CREATEDATE="2026-06-12T11:45:37.690+07:00" LASTMODDATE="2026-06-12T11:45:37.690+07:00" RECORDSTATUS="NEW" csip:OAISPACKAGETYPE="SIP">
+        <agent ROLE="CREATOR" TYPE="OTHER" OTHERTYPE="SOFTWARE">
+            <name>ArchiveNex</name>
+            <note csip:NOTETYPE="IDENTIFICATIONCODE">P_KHCN</note>
+        </agent>
+        <altRecordID TYPE="SUBMISSIONAGREEMENT">H49.64.33.2001.160</altRecordID>
+    </metsHdr>
+    <dmdSec ID="uuid-8BC7F9A2-2649-49BE-A144-4BF948F769DB" CREATED="2026-06-12T11:45:37.707+07:00" STATUS="CURRENT">
+        <mdRef ID="uuid-0557193D-01CE-4F25-994E-B3BE0E909819" LOCTYPE="URL" MDTYPE="DC" MDTYPEVERSION="1.0.0" xlink:type="simple" xlink:href="metadata/descriptive/EAD.xml" MIMETYPE="application/xml" SIZE="764" CREATED="2026-06-12T11:45:37.707+07:00" CHECKSUM="5FBB70A256C0D28354181A9F3E1302FD4E8916D3B0172EF4585EBBD975B03A4D" CHECKSUMTYPE="SHA-256"/>
+    </dmdSec>
+    <amdSec ID="uuid-71688E38-8052-4854-BDB1-08E7DCCB08B8"/>
+    <fileSec ID="uuid-D955F237-A497-4962-9EA2-B513692861A2">
+        <fileGrp ID="uuid-4CFDE8DF-40BB-4000-B498-040AB9455829" USE="Schemas">
+            <file ID="ID-A562176B-8631-44AB-986C-DF03AE508351" MIMETYPE="application/octet-stream" SIZE="2038" CREATED="2026-06-12T11:45:37.912+07:00" CHECKSUM="B4A13747DDE7644122DC14DC7F7333FC51B12DE43039A73BA111A6E0E8204FCC" CHECKSUMTYPE="SHA-256">
+                <FLocat xlink:type="simple" xlink:href="schemas/DILCISExtensionMETS.xsd" LOCTYPE="URL"/>
+            </file>
+            <file ID="ID-11A7F5B0-3318-455D-8BA7-964A21E0B66C" MIMETYPE="application/octet-stream" SIZE="499" CREATED="2026-06-12T11:45:37.913+07:00" CHECKSUM="43AC3F08DBECB74C069D1687187A1AEAED800E77581FE0D418468AE3AD20EF86" CHECKSUMTYPE="SHA-256">
+                <FLocat xlink:type="simple" xlink:href="schemas/DILCISExtensionSIPMETS.xsd" LOCTYPE="URL"/>
+            </file>
+            <file ID="ID-E80E1E69-CBF0-4701-B4D9-9E4239DEFFA1" MIMETYPE="application/octet-stream" SIZE="135322" CREATED="2026-06-12T11:45:37.913+07:00" CHECKSUM="6ADA516313F0B3EF0E8771BDA1D77D57A36F4FAA42F790A3E753B4F22C65333B" CHECKSUMTYPE="SHA-256">
+                <FLocat xlink:type="simple" xlink:href="schemas/mets1_12.xsd" LOCTYPE="URL"/>
+            </file>
+            <file ID="ID-2534D60E-25AA-4576-8EA7-4E14450D211F" MIMETYPE="application/octet-stream" SIZE="3180" CREATED="2026-06-12T11:45:37.913+07:00" CHECKSUM="F1F5BB6003165CDD8F6C1FCC32F8FD1F965E1681010F3B9806D9460BCFFA8A3C" CHECKSUMTYPE="SHA-256">
+                <FLocat xlink:type="simple" xlink:href="schemas/xlink.xsd" LOCTYPE="URL"/>
+            </file>
+            <file ID="ID-06853829-6543-48FC-9C53-FAFDCD7F0267" MIMETYPE="application/octet-stream" SIZE="1452" CREATED="2026-06-12T11:45:37.914+07:00" CHECKSUM="B81F369E715F78BB1B4069C72D5CB5CEADDF165DAC678490EDA7448DF01A5791" CHECKSUMTYPE="SHA-256">
+                <FLocat xlink:type="simple" xlink:href="schemas/ead.xsd" LOCTYPE="URL"/>
+            </file>
+            <file ID="ID-30EABCAC-446A-4434-A003-AB6ACB757F42" MIMETYPE="application/octet-stream" SIZE="1629" CREATED="2026-06-12T11:45:37.914+07:00" CHECKSUM="712F59BFC8F57BC1B0FC4348E744E2CF6A810FE0E20C6842AF324405BEC08390" CHECKSUMTYPE="SHA-256">
+                <FLocat xlink:type="simple" xlink:href="schemas/ead_doc.xsd" LOCTYPE="URL"/>
+            </file>
+            <file ID="ID-826C2C95-5547-4470-BA5A-48E2A4AF6508" MIMETYPE="application/octet-stream" SIZE="1453" CREATED="2026-06-12T11:45:37.915+07:00" CHECKSUM="7B9ED683695AD2364976E706F33ED8BF6088A11BED4F678D30EFD38DA362154F" CHECKSUMTYPE="SHA-256">
+                <FLocat xlink:type="simple" xlink:href="schemas/ead_pic.xsd" LOCTYPE="URL"/>
+            </file>
+            <file ID="ID-4BBBBC2B-4F28-4C17-9269-E28685AD6B9C" MIMETYPE="application/octet-stream" SIZE="1513" CREATED="2026-06-12T11:45:37.915+07:00" CHECKSUM="93E5F07DB3072AF8553A3D22D9AE8B945C7B005627FADF4F6F3871CA167A56B5" CHECKSUMTYPE="SHA-256">
+                <FLocat xlink:type="simple" xlink:href="schemas/ead_media.xsd" LOCTYPE="URL"/>
+            </file>
+        </fileGrp>
+        <fileGrp ID="uuid-EC53E4D4-8C31-4FAF-A149-D678463155DE" USE="Representations/rep1">
+            <file ID="ID-F8220486-2440-40A3-8375-33511C54DC86" MIMETYPE="application/xml" SIZE="155480" CREATED="2026-06-12T11:45:42.883+07:00" CHECKSUM="565B856B07C1E6879D5B2AB55F1EBA3ED60720466D0DE77E67145FFB400A83D2" CHECKSUMTYPE="SHA-256">
+                <FLocat xlink:type="simple" xlink:href="representations/rep1/METS.xml" LOCTYPE="URL"/>
+            </file>
+        </fileGrp>
+    </fileSec>
+    <structMap ID="uuid-73B1162A-D620-45C8-86B5-870533584BC7" TYPE="PHYSICAL" LABEL="CSIP">
+        <div ID="uuid-B5F24463-09A2-4693-B34B-1F97D3A2D3B3" LABEL="uuid-0F203B84-6641-4CDA-9F52-DAAE55FEF6B1">
+            <div ID="uuid-412E3A66-BF17-4CEA-A430-9A772C65C056" DMDID="uuid-8BC7F9A2-2649-49BE-A144-4BF948F769DB" LABEL="Metadata"/>
+            <div ID="uuid-96228DBB-D357-43CC-8076-C89F2BA1FAC2" LABEL="Schemas">
+                <fptr FILEID="uuid-4CFDE8DF-40BB-4000-B498-040AB9455829"/>
+            </div>
+            <div ID="uuid-3EE91B99-9E93-4400-A3B2-A23DD45009E8" LABEL="Representations/rep1">
+                <mptr xlink:type="simple" xlink:href="representations/rep1/METS.xml" xlink:title="uuid-EC53E4D4-8C31-4FAF-A149-D678463155DE" LOCTYPE="URL"/>
+            </div>
+        </div>
+    </structMap>
+</mets>

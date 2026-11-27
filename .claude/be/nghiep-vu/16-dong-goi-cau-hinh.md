@@ -39,7 +39,7 @@ PackageCodeValue ──(CodeGroup)── PackageSchemaField >──(PackageSchem
 | `AIP_tailieu` | 4 | 19 | 18 | 19 | `.xsd` trang 173–177 |
 | `SIP_hoso` | 18 | 21 | 18 | 19 | **gói mẫu** (thông tư `.xsd` chỉ 16 ở cấp gói, thiếu `riskRecovery*`) |
 | `SIP_tailieu` | 5 | 21 | 18 | 19 | cấp gói trang 284; tài liệu cùng hình dạng `SIP_hoso` |
-| `DIP` | 7 | 20 | 18 | 19 | `.xsd` trang 349–353 |
+| `DIP` | 7 | 20 | 18 | 19 | `.xsd` trang 348–353 |
 
 Tổng 333 trường, 82 mã. Danh sách phần tử đúng thứ tự nằm ở `PackagingSeedData.Schemas`.
 
@@ -80,11 +80,11 @@ Các chỗ chốt cần nhớ:
 `ConditionElement` / `ConditionValues` chỉ có giá trị ở dòng `CONDITIONAL`; nhiều mã cách nhau dấu phẩy. Điều kiện thắng `(nếu có)`
 khi thông tư ghi rõ lúc nào bắt buộc.
 
-⚠️ Vì `DisplayName` theo đúng từng phụ lục nên mức bắt buộc cũng lệch theo phụ lục: `codeNumber`, `codeNotation` là `REQUIRED` ở
+Lưu ý: Vì `DisplayName` theo đúng từng phụ lục nên mức bắt buộc cũng lệch theo phụ lục: `codeNumber`, `codeNotation` là `REQUIRED` ở
 `SIP_hoso` (bảng không ghi "nếu có") nhưng `OPTIONAL` ở `SIP_tailieu`, AIP; `confidenceLevel` cấp gói `REQUIRED` ở `AIP_hoso`,
 `OPTIONAL` ở `SIP_hoso`. Đây là chữ của thông tư, đừng "sửa cho đồng bộ".
 
-⚠️ AIP cho phép `startDate`, `endDate`, `issuedDate` dạng `MM/YYYY`, `YYYY`: mới ghi ở `Description`, chưa có chỗ nào kiểm.
+Lưu ý: AIP cho phép `startDate`, `endDate`, `issuedDate` dạng `MM/YYYY`, `YYYY`: mới ghi ở `Description`, chưa có chỗ nào kiểm.
 
 ## Bảng mã — 13 nhóm (`PackageCodeGroupConst`)
 
@@ -118,7 +118,7 @@ khi thông tư ghi rõ lúc nào bắt buộc.
 **Chỉ thêm cái thiếu, không sửa bản ghi đã có** (người dùng có thể đã chỉnh tay). Muốn đổi dữ liệu đã seed thì sửa thẳng DB hoặc
 chờ API ghi; sửa `PackagingSeedData` không tác động lên DB đang chạy.
 
-⚠️ Dòng bị xoá mềm không tính là "đã có": khởi động lại sẽ seed bù một dòng mới (unique index có filter cho phép).
+Lưu ý: Dòng bị xoá mềm không tính là "đã có": khởi động lại sẽ seed bù một dòng mới (unique index có filter cho phép).
 
 ## API — `api/packaging/config`
 
@@ -165,11 +165,11 @@ API, gọi thật bằng `admin` / `viewer` cùng ngày:
 - Không token → `401`; `viewer` (không có quyền) → `403` cả 3 API; Swagger nhóm `packaging` đủ 3 route.
 
 Thời gian (máy dev, SQL Server trong Docker, build Debug, đo từ client, 5 lần sau khi warm-up): `dropdown` 330–380 ms, `paging` 590–660 ms,
-`excel-template` ~400 ms. ⚠️ Không đạt mục tiêu 30 / 50 / 300 ms của bản task, nhưng nền của môi trường cũng vậy: API sẵn có
+`excel-template` ~400 ms. Lưu ý: Không đạt mục tiêu 30 / 50 / 300 ms của bản task, nhưng nền của môi trường cũng vậy: API sẵn có
 `document-type/dropdown` 380–450 ms, `user/me` 220–350 ms. Thời gian gần như tỉ lệ với số lượt đi – về DB (`[Permission]` truy vấn quyền
 mỗi request + 1 / 3 câu của API), nên phải đo lại trên môi trường deploy trước khi kết luận chậm.
 
-## 🔬 Chưa thi công
+## Chưa thi công
 
 API ghi cấu hình, phiên kiểm tra metadata, đóng gói ZIP / METS / EAD / PREMIS.
 

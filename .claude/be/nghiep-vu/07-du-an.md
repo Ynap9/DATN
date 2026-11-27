@@ -87,7 +87,7 @@ Trường văn bản theo dự án: bảng `construction.ProjectDocumentTypeDocu
 index `IX_ProjectDocumentTypeDocumentField_DocumentFieldId`; migration `Add_ProjectDocumentTypeDocumentField`. Chưa có
 khoá ngoại; chưa có API riêng — chỉ được ghi qua CRUD dự án (xem trên).
 
-⚠️ Khoá ghép + xoá mềm (cả hai bảng): gán lại cặp đã xoá mềm bằng `Add` sẽ trùng khoá chính — phải khôi phục dòng cũ
+Lưu ý: Khoá ghép + xoá mềm (cả hai bảng): gán lại cặp đã xoá mềm bằng `Add` sẽ trùng khoá chính — phải khôi phục dòng cũ
 (`GetDeletedDocumentTypesAsync` / `GetDeletedDocumentFieldsAsync` dùng `IgnoreQueryFilters()`), đừng thêm dòng mới, đừng quay lại xoá cứng.
 
 ## Trạng thái — `ProjectConst`
@@ -171,10 +171,10 @@ paging và SQL, QA 4 / 1 = 25%; nghiệm thu Data / QA giống Leader. 2026-11-1
 
 ## Giới hạn
 
-⚠️ Chưa có unique index cho `Name` (index `IX_Project_Name` không unique); hai request tạo cùng tên đồng thời vẫn có thể lọt.
-⚠️ Xoá dự án không xoá file Google Sheet. Muốn đồng bộ thêm thì thêm method vào `IGoogleSheetExternal`, đừng gọi Google API thẳng từ service.
+Lưu ý: Chưa có unique index cho `Name` (index `IX_Project_Name` không unique); hai request tạo cùng tên đồng thời vẫn có thể lọt.
+Lưu ý: Xoá dự án không xoá file Google Sheet. Muốn đồng bộ thêm thì thêm method vào `IGoogleSheetExternal`, đừng gọi Google API thẳng từ service.
 
-⚠️ Xoá file khi tạo lỗi và đổi tên ngược khi sửa lỗi là **bù trừ**, không phải transaction: nếu cả lưu DB lẫn bước bù trừ
+Lưu ý: Xoá file khi tạo lỗi và đổi tên ngược khi sửa lỗi là **bù trừ**, không phải transaction: nếu cả lưu DB lẫn bước bù trừ
 đều lỗi thì file mồ côi hoặc lệch tên (đã ghi log `TryDeleteSpreadsheetAsync` / `RenameSpreadsheetAsync`).
 
 > **Tiếp:** [08-cau-hinh-du-an.md](08-cau-hinh-du-an.md) — cấu hình dự án và xác thực tài khoản Google.

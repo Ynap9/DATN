@@ -114,12 +114,12 @@ Quyền `Price.ManageCompany` là key trong cây quyền để gán menu; API `m
 
 Không thêm mã mới. Dùng `808`, `809`, `806`, `805`, `818`, `821`, `303`, `312`, và `400` cho lỗi đầu vào. Đã bỏ `810`, `822`.
 
-## ⚠️ Cache 60 giây
+## Lưu ý: Cache 60 giây
 
 `IMemoryCache` khoá `wage:{projectId}`, 60 giây (`PriceConst.WAGE_CACHE_SECONDS`). Chỉ cache khối lượng; tiền và phạm vi xem tính lại
 mỗi lần gọi, nên đổi giá thấy ngay. Kiểm văn bản hay chấm QA mới có thể trễ tới 60 giây.
 
-⚠️ Bẫy khi test: cache không biết dữ liệu test đã bị xoá. Chạy lại test trong vòng 60 giây sau lần trước có thể thấy khối lượng cũ của
+Bẫy khi test: cache không biết dữ liệu test đã bị xoá. Chạy lại test trong vòng 60 giây sau lần trước có thể thấy khối lượng cũ của
 dự án đó. Đợi quá 60 giây rồi chạy lại.
 
 ## Đã kiểm thực tế

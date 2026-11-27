@@ -34,7 +34,7 @@ Task 59, 2026-11-26. Chỉ đọc: khối lượng, đơn giá, thành tiền th
 - Ô tổng Admin / Leader lấy `summary` (cả bộ lọc). Nhân viên: tiền / khối lượng lấy `summary`; văn bản, Đạt / Không đạt, số metadata
   chưa giá cộng từ dòng, nên khi `totalItems` > số dòng của trang thì hiện "—" + tooltip "Xem đủ các trang để có tổng".
 - Xuất Excel: `DownloadService.get(exportExcelUrl(lọc hiện tại))`, lỗi BE nằm trong blob → `readErrorResponse` → toast.
-  ⚠️ BE trả lỗi nghiệp vụ bằng `OkException` = **HTTP 200** + JSON; giả lập lỗi khi test phải dùng 200, không phải 400.
+  Lưu ý: BE trả lỗi nghiệp vụ bằng `OkException` = **HTTP 200** + JSON; giả lập lỗi khi test phải dùng 200, không phải 400.
 - Người đã gỡ / đang tắt: nhãn viền nhỏ cạnh tên + cả dòng chữ màu phụ (`rowClass` thêm `wage-row-inactive`).
 - Đang tải: skeleton chỉ ở dải tổng, bảng giữ vòng xoay của PrimeNG.
 
@@ -56,7 +56,7 @@ khác phạm vi), Data, QA, người không có dự án; ô "—" + tooltip gi�
 đúng bộ lọc + Tổng, đổi dự án bằng ô chọn, F5 ở trang 2 và khi có từ khoá, header 8 màn khác vẫn một hàng, Xuất Excel lỗi → toast.
 Sau khi chỉnh giao diện theo thiết kế chạy lại cả ba bộ: 24/24, 17/17, 16/16. Unit test `DataTable` 20/20.
 
-⚠️ DB dev lúc test (2026-11-26) chưa có `Function.Operation.Wage.View` cho Leader / Data / QA nên họ không thấy menu. Cùng ngày đã bổ sung
+Lưu ý: DB dev lúc test (2026-11-26) chưa có `Function.Operation.Wage.View` cho Leader / Data / QA nên họ không thấy menu. Cùng ngày đã bổ sung
 cho ba vai trò (Task 57A, [BE 03](../../be/nghiep-vu/03-vai-tro-mac-dinh.md)); DB mới do seeder cấp.
 Link "Chưa đặt giá" sang Thành viên dự án giữ chỉ ở chế độ Admin, kể cả sau Task 60 (quyết định 2026-11-27).
 

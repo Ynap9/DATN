@@ -54,7 +54,7 @@ nhóm **không** dùng để tính tiền hay giao phiếu. Task 10, 2026-10-26.
 API 9 (Task 49A) đổ ô lọc "Chủ nhóm" ở màn Nhóm nhân viên, rồi FE gửi `ownerUserId` vào API 1. Chủ nhóm đã bị xoá khỏi `Users`
 tự rơi khỏi danh sách (join `Users`).
 
-- ⚠️ `GroupBy` rồi `join` thẳng trên nhóm (`group g by … into owner join u …`) → EF báo "could not be translated" lúc chạy,
+- Lưu ý: `GroupBy` rồi `join` thẳng trên nhóm (`group g by … into owner join u …`) → EF báo "could not be translated" lúc chạy,
   build vẫn qua. Nguyên nhân: EF không join được trên chính `IGrouping`. Cách tránh: `Select` ra `{ key, Count() }` trước rồi
   mới join, như `StaffGroupQuery.FindOwners`.
 
@@ -87,6 +87,6 @@ API 9 (2026-11-23, Task 49A): **6/6 đạt** — Admin thấy Admin + L1 (`group
 mình, L2 chưa có nhóm → `[]`, không token → 401, `Data` → 403, Swagger `v1-operation` có `owners` và `GET {id}` vẫn chạy.
 Dùng user `t10_la` / `t10_lb` / `t10_d1`, xoá các nhóm test sau khi xong.
 
-⚠️ Bẫy khi viết script kiểm thử PowerShell: biến không phân biệt hoa thường — `$LA` (userId) đè `$la` (token) làm mọi lời gọi thành 401.
+Bẫy khi viết script kiểm thử PowerShell: biến không phân biệt hoa thường — `$LA` (userId) đè `$la` (token) làm mọi lời gọi thành 401.
 
 > **Tiếp:** [20-ai-nha-cung-cap.md](20-ai-nha-cung-cap.md) — module Ai: nhà cung cấp AI và bảo mật API key.

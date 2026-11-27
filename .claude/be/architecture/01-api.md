@@ -44,7 +44,7 @@ public ApiResponse FindById([FromRoute] int id)
 - Controller chỉ inject **interface trong `Interfaces/Services/`** của applications.
 - Không inject repository, query, `ShDbContext`, `UserManager` vào controller nghiệp vụ.
 - `OkException` lấy message theo thứ tự: `MessageLocalize` của exception → `ErrorMessages.GetMessage(code)`. Exception lạ trả `500` + `"Internal server error"`.
-- ⚠️ Thuộc tính `string` không `?` trong DTO `[FromQuery]` bị ASP.NET tự coi là bắt buộc: gửi rỗng / thiếu ra HTTP 400 `ProblemDetails`, không vào được envelope → khai `string?` rồi tự kiểm trong service (gặp ở `latest-working`, Task 42A).
+- Lưu ý: Thuộc tính `string` không `?` trong DTO `[FromQuery]` bị ASP.NET tự coi là bắt buộc: gửi rỗng / thiếu ra HTTP 400 `ProblemDetails`, không vào được envelope → khai `string?` rồi tự kiểm trong service (gặp ở `latest-working`, Task 42A).
 
 ## Phân quyền
 
@@ -53,7 +53,7 @@ public ApiResponse FindById([FromRoute] int id)
   `PermissionDomainService` (domain): SuperAdmin luôn qua; quyền cha được chọn ⇒ quyền con cũng được.
 - Thiếu token ⇒ `401`; có token nhưng thiếu quyền ⇒ `403` (`ForbidResult`).
 
-⚠️ Attribute truy vấn DB mỗi request (vai trò + quyền + danh sách permission), chưa cache. Đừng gắn
+Lưu ý: Attribute truy vấn DB mỗi request (vai trò + quyền + danh sách permission), chưa cache. Đừng gắn
 `[Permission]` vào endpoint gọi dày đặc mà không tính tới chi phí này.
 
 ## Version API
@@ -71,8 +71,8 @@ gọi `api/v1/...` (`v1.0` cũng nhận). Thư viện `Asp.Versioning.Mvc.ApiExp
 Vòng đời: **(1)** thêm `V2` vào `ApiVersionConstants` + controller / action v2 (`[MapToApiVersion]`), v1 vẫn chạy → **(2)** v2 ổn định:
 `[ApiVersion(V1, Deprecated = true)]`, `DEFAULT_VERSION = V2` → **(3)** khai `ApiVersion:Sunsets`, báo FE → **(4)** qua ngày đó mới xoá code v1.
 
-⚠️ `IApiVersionDescriptionProvider` trả một mô tả cho **mỗi cặp (module, version)**: lặp thẳng nó thì Swagger đẻ 25 tài liệu. Luôn gom theo
-`ApiVersion` rồi đặt tên qua `SwaggerDocumentName.BuildApiVersionGroupName`. ⚠️ Version không có (`api/v2/...`) trả **404**, không phải 400 — với URL segment, đường dẫn không khớp route nào.
+Lưu ý: `IApiVersionDescriptionProvider` trả một mô tả cho **mỗi cặp (module, version)**: lặp thẳng nó thì Swagger đẻ 25 tài liệu. Luôn gom theo
+`ApiVersion` rồi đặt tên qua `SwaggerDocumentName.BuildApiVersionGroupName`. Lưu ý: Version không có (`api/v2/...`) trả **404**, không phải 400 — với URL segment, đường dẫn không khớp route nào.
 
 ## Xác thực — OpenIddict
 
@@ -84,7 +84,7 @@ Vòng đời: **(1)** thêm `V2` vào `ApiVersionConstants` + controller / actio
 | Claim vai trò | Lấy qua `IUserService.GetRoleNames` — đã loại vai trò xoá mềm |
 | Phiên web | `client-web2`: token trả qua cookie `HttpOnly`, không nằm trong body (`Services/WebSessionCookies.cs`); `POST /connect/logout` xoá cookie |
 
-⚠️ `AuthorizationController` còn nhận trực tiếp `UserManager<AppUser>` (`[FromServices]`) để kiểm mật khẩu
+Lưu ý: `AuthorizationController` còn nhận trực tiếp `UserManager<AppUser>` (`[FromServices]`) để kiểm mật khẩu
 khi cấp token. Đây là chỗ còn dính Identity ở tầng api, đã biết; đừng nhân bản kiểu này sang controller khác.
 
 ## Composition root — Program.cs
@@ -96,6 +96,6 @@ khi cấp token. Đây là chỗ còn dính Identity ở tầng api, đã biết
 - Connection string tên `SO_HOA_DB`, `MultipleActiveResultSets=False` (bật MARS làm bulk import treo transaction — xem
   [../nghiep-vu/11-ho-so-import.md](../nghiep-vu/11-ho-so-import.md)); CORS lấy từ `AllowedHosts` (phân cách `;`), riêng hub dùng `SignalRPolicy`.
 
-⚠️ `UseRequestLocalization` ép culture **invariant**: form-data bind số theo culture của máy, máy `vi-VN` đọc `0.6` thành `6` nên toạ độ mẫu chữ ký bị báo `603`. Đừng gỡ dòng này khi dọn `Program.cs`.
+Lưu ý: `UseRequestLocalization` ép culture **invariant**: form-data bind số theo culture của máy, máy `vi-VN` đọc `0.6` thành `6` nên toạ độ mẫu chữ ký bị báo `603`. Đừng gỡ dòng này khi dọn `Program.cs`.
 
 > **Tiếp:** [02-applications.md](02-applications.md) — service điều phối use case.

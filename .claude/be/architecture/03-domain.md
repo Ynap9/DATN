@@ -16,7 +16,7 @@ Module/{Construction,Ai}/<NghiepVu>/ module lớn: gom theo nghiệp vụ trư�
   DocumentTypes/ DocumentFields/ Projects/ Submissions/ QaAssignments/ · Ai: Providers/ Models/ Prompts/ ProjectConfigs/   mỗi thư mục có Entities/ Repositories/ Services/
 ```
 
-⚠️ Thư mục nghiệp vụ đặt tên **số nhiều** (`Submissions/`, không `Submission/`): namespace `...Construction.Submission`
+Lưu ý: Thư mục nghiệp vụ đặt tên **số nhiều** (`Submissions/`, không `Submission/`): namespace `...Construction.Submission`
 sẽ che entity `Submission` trong code domain (CS0118).
 
 ## Entity giàu hành vi
@@ -65,7 +65,7 @@ thì setter phải mở `public` — entity thành anemic model, ai cũng gán �
 - Aggregate **không** giữ collection con (không có navigation property, để khỏi đổi schema). Method gốc **sinh ra**
   danh sách con hợp lệ, repository lưu danh sách đó (`ReplacePermissionsAsync`, `AddUserRoles`).
 
-⚠️ `RolePermission.Create` / `UserRole.Create` là `public`, nên vẫn tạo được con mà không qua gốc. Quy ước: chỉ
+Lưu ý: `RolePermission.Create` / `UserRole.Create` là `public`, nên vẫn tạo được con mà không qua gốc. Quy ước: chỉ
 gọi chúng bên trong method của aggregate gốc hoặc seeder; đừng gọi từ service.
 
 ## Entity hay domain service?
@@ -94,7 +94,7 @@ Entity **không** giữ repository; domain service nhận repository qua constru
 
 ## Lỗi nghiệp vụ
 
-Domain ném `UserFriendlyException(ErrorCodes.X)` từ shared. ⚠️ Mã lỗi này cũng là mã API trả về, nên domain
+Domain ném `UserFriendlyException(ErrorCodes.X)` từ shared. Lưu ý: Mã lỗi này cũng là mã API trả về, nên domain
 đang biết mã của tầng ngoài — thoả hiệp đã biết; muốn tách thì thêm `DomainException` và map ở api.
 
 > **Tiếp:** [04-infrastructure-data.md](04-infrastructure-data.md) — implement repository, query bằng EF Core.
