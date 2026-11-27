@@ -97,4 +97,4 @@ Q1–Q7 ([10 §4](../dong-goi/10-yeu-cau-tung-mau.md)) đã trả lời 27/11 �
 
 1. (xong) Ghi trả lời Q1–Q5 + X1 vào plan + 10 §4.
 2. (xong) Viết Task 65 (kiểm: C1–C14, N1–N13) và Task 66 (dựng: C5–C14, D1–D12) — mỗi case trỏ mã luật của plan.
-3. Ánh: mỗi task làm Bước 0 (đọc tài liệu + ghi mục "Thi công Task 6x" vào cuối plan), PM duyệt, rồi code.
+3. Ánh: mỗi task làm Bước 0 (đọc tài liệu + ghi mục "Thi công Task 6x"), PM duyệt, rồi code. Task 65 (xong): [dong-goi-tt05-thi-cong-65.plan.md](dong-goi-tt05-thi-cong-65.plan.md).

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using sh.be.applications.Base.Dtos.DataReader;
 using sh.be.applications.Module.Packaging.Dtos.PackageConfig;
 using sh.be.applications.Module.Packaging.Interfaces.Queries;
+using sh.be.domain.Module.Packaging.Services;
 using sh.be.infrastructure.data.Base;
 using sh.be.infrastructure.data.Persistence.Db;
 using sh.be.shared.HttpRequest.BaseRequest;
@@ -127,6 +128,36 @@ namespace sh.be.infrastructure.data.Module.Packaging.Queries
                     Headers = g.Select(h => h.DisplayName).ToList(),
                 })
                 .ToList();
+        }
+
+        public async Task<PackageVerifyConfig> GetVerifyConfig(int packageType, List<int> metadataTypes)
+        {
+            var schemas = await _shDbContext.PackageSchemas
+                .AsNoTracking()
+                .Where(s => s.PackageType == packageType && metadataTypes.Contains(s.MetadataType))
+                .OrderBy(s => s.MetadataType)
+                .ToListAsync();
+            var schemaIds = schemas.Select(s => s.Id).ToList();
+            var fields = await _shDbContext.PackageSchemaFields
+                .AsNoTracking()
+                .Where(f => schemaIds.Contains(f.PackageSchemaId))
+                .OrderBy(f => f.SortOrder)
+                .ThenBy(f => f.Id)
+                .ToListAsync();
+            var codeGroups = fields
+                .Where(f => f.CodeGroup != null)
+                .Select(f => f.CodeGroup!)
+                .Distinct()
+                .ToList();
+            var codeValues = await _shDbContext.PackageCodeValues
+                .AsNoTracking()
+                .Where(c => codeGroups.Contains(c.CodeGroup))
+                .Select(c => new { c.CodeGroup, c.Code })
+                .ToListAsync();
+
+            return new PackageVerifyConfig(
+                schemas.Select(s => new PackageVerifySchema(s.MetadataType, s.Name, fields.Where(f => f.PackageSchemaId == s.Id).ToList())).ToList(),
+                codeValues.GroupBy(c => c.CodeGroup).ToDictionary(g => g.Key, g => g.Select(c => c.Code).ToHashSet()));
         }
     }
 }

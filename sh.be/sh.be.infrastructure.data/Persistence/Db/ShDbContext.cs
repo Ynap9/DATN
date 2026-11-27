@@ -61,6 +61,9 @@ namespace sh.be.infrastructure.data.Persistence.Db
         public DbSet<PackageSchema> PackageSchemas { get; set; }
         public DbSet<PackageSchemaField> PackageSchemaFields { get; set; }
         public DbSet<PackageCodeValue> PackageCodeValues { get; set; }
+        public DbSet<PackageSession> PackageSessions { get; set; }
+        public DbSet<PackageDossier> PackageDossiers { get; set; }
+        public DbSet<PackageDocument> PackageDocuments { get; set; }
         public DbSet<StaffGroup> StaffGroups { get; set; }
         public DbSet<StaffGroupMember> StaffGroupMembers { get; set; }
         public DbSet<ProjectMember> ProjectMembers { get; set; }
@@ -295,6 +298,24 @@ namespace sh.be.infrastructure.data.Persistence.Db
                 entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
                 entity.HasIndex([nameof(PackageCodeValue.CodeGroup), nameof(PackageCodeValue.Code)], PackageCodeValue.UniqueCodeIndexName)
                     .HasFilter("[Deleted] = 0");
+            });
+            modelBuilder.Entity<PackageSession>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
+            modelBuilder.Entity<PackageDossier>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+            });
+            modelBuilder.Entity<PackageDocument>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
             });
             modelBuilder.Entity<StaffGroup>(entity =>
             {

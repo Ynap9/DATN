@@ -15,7 +15,7 @@ repository, `IUnitOfWork`).
 | `Module/<TenModule>/Queries/` | Implement `I...Query` của applications, trả DTO |
 | `Persistence/Db/ShDbContext.cs` | `IdentityUserContext<AppUser>` + `DbSet` + cấu hình model + OpenIddict |
 | `Persistence/Seeder/` | `SeedRole`, `SeedPermission`, `SeedUser`, `SeedRolePermission`, `SeedPackaging` (+ dữ liệu `PackagingSeedData`) |
-| `Migrations/Auth/`, `Core/`, `Construction/`, `DigitalSignature/`, `Packaging/`, `Operation/`, `Ai/` | Migration tách theo module; `ShDbContextModelSnapshot.cs` chung |
+| `Migrations/Auth/`, `Core/`, `Construction/`, `DigitalSignature/`, `Packaging/`, `Operation/`, `Ai/` | Migration tách theo module; `ShDbContextModelSnapshot.cs` chung. Lưu ý: `SO_HOA_DB` dev là DB chung của nhóm, đừng `database update` migration chưa merge |
 
 ## Repository vs Query
 

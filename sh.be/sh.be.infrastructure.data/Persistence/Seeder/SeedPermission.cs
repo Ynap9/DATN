@@ -93,6 +93,9 @@ namespace sh.be.infrastructure.data.Persistence.Seeder
             Permission.Create(PermissionConstants.MENU_PACKAGE_CONFIG, "Menu cấu hình metadata đóng gói", PermissionConstants.MENU_PACKAGING, PermissionConstants.MODULE_PACKAGING, null),
             Permission.Create(PermissionConstants.FUNCTION_PACKAGE_CONFIG_VIEW, "Xem cấu hình metadata và tải Excel mẫu", PermissionConstants.MENU_PACKAGE_CONFIG, PermissionConstants.MODULE_PACKAGING, null),
 
+            Permission.Create(PermissionConstants.MENU_PACKAGE_BUILD, "Menu đóng gói tài liệu", PermissionConstants.MENU_PACKAGING, PermissionConstants.MODULE_PACKAGING, null),
+            Permission.Create(PermissionConstants.FUNCTION_PACKAGE_BUILD, "Tải thư mục lên, kiểm tra và dựng gói", PermissionConstants.MENU_PACKAGE_BUILD, PermissionConstants.MODULE_PACKAGING, null),
+
             Permission.Create(PermissionConstants.MENU_OPERATION, "Menu vận hành", null, PermissionConstants.MODULE_OPERATION, null),
 
             Permission.Create(PermissionConstants.MENU_OPERATION_STAFF_GROUP, "Menu nhóm nhân viên", PermissionConstants.MENU_OPERATION, PermissionConstants.MODULE_OPERATION, null),

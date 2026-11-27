@@ -93,6 +93,9 @@ namespace sh.be.shared.Constants.Auth
         public const string MENU_PACKAGE_CONFIG = "Menu.Packaging.Config";
         public const string FUNCTION_PACKAGE_CONFIG_VIEW = "Function.Packaging.Config.View";
 
+        public const string MENU_PACKAGE_BUILD = "Menu.Packaging.Package";
+        public const string FUNCTION_PACKAGE_BUILD = "Function.Packaging.Package.Build";
+
         public const string MODULE_OPERATION = "Operation";
 
         public const string MENU_OPERATION = "Menu.Operation";
