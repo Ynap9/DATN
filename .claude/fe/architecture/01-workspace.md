@@ -19,7 +19,7 @@ Build `admin`:
 - production thay `admin/src/environments/environment.ts` bằng `environment.prod.ts`, staging bằng `environment.staging.ts`;
 - budget production: initial cảnh báo 2 MB / lỗi 3 MB; style mỗi component cảnh báo 8 kB / lỗi 16 kB.
 
-⚠️ `ng build lib-components` không chạy được: `ng-packagr` chưa cài. Không cần cài — lib chỉ được dùng qua alias.
+Lưu ý: `ng build lib-components` không chạy được: `ng-packagr` chưa cài. Không cần cài — lib chỉ được dùng qua alias.
 
 ## Alias import (`tsconfig.json`)
 
@@ -36,7 +36,7 @@ import { environment } from '@env/environment';
 ```
 
 Trong cùng một tầng (cùng tính năng, cùng thư mục `core/auth`…) vẫn import tương đối `./`, `../`.
-⚠️ Bên trong `lib-components` **không** dùng alias nào và không import `public-api` của chính nó (dễ vòng import);
+Lưu ý: Bên trong `lib-components` **không** dùng alias nào và không import `public-api` của chính nó (dễ vòng import);
 import trực tiếp file, ví dụ `'../../shared/models/page'`.
 
 ## Environment
@@ -48,7 +48,7 @@ import trực tiếp file, ví dụ `'../../shared/models/page'`.
 | `admin/src/environments/environment.staging.ts` | `''` (cùng origin) | `npm run build:staging` |
 | `app/shared/models/environment.models.ts` | — | Interface `IEnvironment` |
 
-⚠️ `IEnvironment` phải ở file riêng: bản prod thay chỗ `environment.ts`, nếu prod import `./environment` thì nó tự
+Lưu ý: `IEnvironment` phải ở file riêng: bản prod thay chỗ `environment.ts`, nếu prod import `./environment` thì nó tự
 import chính nó và build production lỗi `TS2724`.
 
 ## Lệnh

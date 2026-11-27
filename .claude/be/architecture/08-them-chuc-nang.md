@@ -62,7 +62,7 @@ builder.Services.AddScoped<ICatalogService, CatalogService>();
 
 Dịch vụ ngoài mới: xem bước ở [05-infrastructure-external.md](05-infrastructure-external.md#thêm-một-dịch-vụ-ngoài).
 
-⚠️ Quên đăng ký thì build vẫn qua nhưng request đầu tiên lỗi `Unable to resolve service`. Chạy app và gọi thử
+Lưu ý: Quên đăng ký thì build vẫn qua nhưng request đầu tiên lỗi `Unable to resolve service`. Chạy app và gọi thử
 ít nhất một API của phần vừa thêm.
 
 ## Checklist

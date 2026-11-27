@@ -27,7 +27,7 @@ Mọi file kỹ thuật nằm ở `infrastructure.external/DigitalSignature/` (`
 ## Pipeline của một lô
 
 ```text
-ClaimAsync ──► PrepareAsync ──► SignAsync ──────────► FinishAsync
+ClaimAsync ──> PrepareAsync ──> SignAsync ──────────> FinishAsync
 DB: PENDING→SIGNING  tải PDF, dựng signedAttributes   chờ plugin ký   TSA → ghép CMS → lưu MinIO → DB DONE
    1 worker          PREPARE_WORKERS = 4              REQUEST_BATCH_SIZE = 8   TSA_CONNECTIONS = 4
 ```
@@ -71,19 +71,19 @@ Hết file: lô `DONE`, `CloseSession`. Lô dừng giữa chừng thì `Pause` h
 hai nhánh: G1 (`rootca` + Sub-CA `cp`) hoặc G2 (`rootcag2` + `cpg2`, `dcscag2`); `CustomRootTrust` nên **không** tin kho chứng thư
 Windows, revocation `NoCheck` (chứng thư bị thu hồi vẫn qua). Plugin liệt kê chứng thư ở máy người dùng, server không đọc kho chứng thư.
 
-⚠️ PDFsharp giữ font resolver + cache toàn tiến trình, dùng chung với `PdfExternal` (biên bản nghiệm thu, Task 34): mọi lệnh đo / vẽ khoá `PdfSharpSetup.Lock`,
-resolver chỉ gán qua `PdfSharpSetup.EnsureFontResolver` (bỏ qua khi đã có — đổi sau lần dùng font đầu là lỗi); đừng gán `GlobalFontSettings` thẳng. ⚠️ Model `PdfIndirectObject` không được đặt tên `PdfObject` (trùng `PdfSharp.Pdf.PdfObject`).
+Lưu ý: PDFsharp giữ font resolver + cache toàn tiến trình, dùng chung với `PdfExternal` (biên bản nghiệm thu, Task 34): mọi lệnh đo / vẽ khoá `PdfSharpSetup.Lock`,
+resolver chỉ gán qua `PdfSharpSetup.EnsureFontResolver` (bỏ qua khi đã có — đổi sau lần dùng font đầu là lỗi); đừng gán `GlobalFontSettings` thẳng. Lưu ý: Model `PdfIndirectObject` không được đặt tên `PdfObject` (trùng `PdfSharp.Pdf.PdfObject`).
 
-⚠️ Phiên ký (`SigningQueueExternal`) và slot của `SigningRunner` nằm trong bộ nhớ tiến trình. Hệ thống chỉ chạy đúng với
+Lưu ý: Phiên ký (`SigningQueueExternal`) và slot của `SigningRunner` nằm trong bộ nhớ tiến trình. Hệ thống chỉ chạy đúng với
 **một** instance API. Muốn scale ngang phải đưa hàng đợi và trạng thái phiên ra ngoài (Redis hoặc DB). Đừng nhân bản API
 mà không sửa phần này.
 
-⚠️ `SaveSignedFileAsync` upload MinIO **trước**, ghi DB **sau** trong scope khác. Nếu ghi DB lỗi, file thành `FAILED` nhưng
+Lưu ý: `SaveSignedFileAsync` upload MinIO **trước**, ghi DB **sau** trong scope khác. Nếu ghi DB lỗi, file thành `FAILED` nhưng
 object đã có trên MinIO. Key xác định theo (lô, thứ tự) nên lần ký lại ghi đè đúng object đó. Đừng đổi sang key ngẫu nhiên
 mà không xét lại chuyện này.
 
-⚠️ Đừng dùng `GetSession(...).Certificate` ngoài phiên. Dùng `CopySessionCertificate`, vì pipeline dispose bản
+Lưu ý: Đừng dùng `GetSession(...).Certificate` ngoài phiên. Dùng `CopySessionCertificate`, vì pipeline dispose bản
 copy của nó khi kết thúc (`using var certificate`).
 
-⚠️ Thời gian có hai dạng: `signedAt` theo giờ Việt Nam đưa vào appearance, `signedAtUtc` đưa vào signed attributes.
+Lưu ý: Thời gian có hai dạng: `signedAt` theo giờ Việt Nam đưa vào appearance, `signedAtUtc` đưa vào signed attributes.
 Đừng gộp một giá trị cho cả hai.

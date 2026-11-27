@@ -1,6 +1,6 @@
 # Gói mẫu SIP_hoso — chốt theo gói mẫu
 
-> **Phần 4/8** · trước: [03-sip-metadata.md](03-sip-metadata.md) · mục lục: [README.md](README.md)
+> **Phần 4/11** · trước: [03-sip-metadata.md](03-sip-metadata.md) · mục lục: [README.md](README.md)
 
 Các `§` trong file này trỏ về [02-sip-cau-truc-mets.md](02-sip-cau-truc-mets.md) (§1–§3) và
 [03-sip-metadata.md](03-sip-metadata.md) (§4–§9). Bản giải nén của gói mẫu:
@@ -62,18 +62,18 @@ Hai điểm gói mẫu làm **đúng y thông tư**, đáng ghi để khỏi ngh
 Gói mẫu là chuẩn cho **hình dạng**, không phải chuẩn cho **ba chỗ tự mâu thuẫn** sau. Cả ba đều kiểm được bằng
 chính dữ liệu trong gói:
 
-⚠️ **1. `docCode` sai năm ở toàn bộ 137 file.** `fileCode` của hồ sơ là `H49.64.33.**2001**.160` và `docId` là
+Lưu ý: **1. `docCode` sai năm ở toàn bộ 137 file.** `fileCode` của hồ sơ là `H49.64.33.**2001**.160` và `docId` là
 `H49.64.33.**2001**.160.1`, nhưng `docCode` lại ghi `H49.64.33.**1994**.160.0000001`. Theo §5.1, `docCode` phải
 là `fileCode` + số thứ tự 7 ký tự, tức đúng ra là `H49.64.33.2001.160.0000001`. Lệch **137/137 file**, luôn là
 năm `1994` — một hằng số bị ghi cứng ở đâu đó trong bộ sinh. **Khi sinh gói mới thì lấy năm từ `fileCode`**,
 đừng chép hằng số này.
 
-⚠️ **2. Dữ liệu không hợp lệ với chính schema đi kèm.** `schemas/ead_doc.xsd` khai phần tử **`arcDocCode`** (tên
+Lưu ý: **2. Dữ liệu không hợp lệ với chính schema đi kèm.** `schemas/ead_doc.xsd` khai phần tử **`arcDocCode`** (tên
 của AIP), trong khi cả **137/137** file `EAD_DOC_*.xml` đều ghi **`docCode`** (tên của SIP). Đem validate là
 trượt hết. Thông tư đứng về phía dữ liệu — SIP dùng `docCode`. Vậy **giữ `docCode` trong dữ liệu và sửa
 `ead_doc.xsd` thành `docCode`**, đừng đổi ngược lại.
 
-⚠️ **3. `paperFileCode` để trống dù hồ sơ là bản số hóa.** `EAD.xml` có `confidenceLevel = 02` (số hóa), mà
+Lưu ý: **3. `paperFileCode` để trống dù hồ sơ là bản số hóa.** `EAD.xml` có `confidenceLevel = 02` (số hóa), mà
 theo §4.1 thì `paperFileCode` **bắt buộc nhập với hồ sơ số hóa**; trong gói mẫu thẻ này rỗng. Cùng kiểu:
 `inforSign` và `description` của hồ sơ cũng rỗng (hai trường này thì không bắt buộc nên chấp nhận được), và
 `process`/`autograph` rỗng ở cả 137 tài liệu (đúng luật, vì `confidenceLevel = 02` không thuộc diện bắt buộc

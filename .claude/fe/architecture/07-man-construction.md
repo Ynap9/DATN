@@ -24,7 +24,7 @@ Quyết định và bẫy riêng của từng màn đã làm (cập nhật 2026-
   hoặc chưa có nháp (hay ghi chú trong dialog khác form — BE publish giữ note cũ khi rỗng) thì hỏi trước rồi lưu nháp + publish (Huỷ
   không tạo nháp); lỗi 909 / 910 chỉ báo, không tự tải lại. Rời tab / trang
   khi form dirty hỏi qua `confirmDiscardPrompt` (Promise có nhánh từ chối — `confirmAction` không có) + `CanDeactivateFn` ở route `metadata/:id`.
-  ⚠️ Lưới trường dựng lại `FormArray` mỗi lần tải editor: `@for` phải `track group` (đối tượng), đừng track `documentFieldId` —
+  Lưu ý: Lưới trường dựng lại `FormArray` mỗi lần tải editor: `@for` phải `track group` (đối tượng), đừng track `documentFieldId` —
   DOM được giữ lại nên `formControlName` vẫn gắn control cũ, bấm vào form không ghi nhận và lưu gửi giá trị cũ.
 
 ## Dự án
@@ -68,7 +68,7 @@ Task 46, `/admin/construction/project/:id` (`project/project-report/`), chỉ đ
 - Nghiệm thu: luật nút / chặn / dialog lý do / PDF chuyển nguyên từ màn chi tiết cũ (`a` = tổng − đã kiểm, `b` = đã kiểm − QA đạt, khớp
   `340`); chuyển xong khối phát `changed`, trang tải lại dự án + acceptance. Câu "Tự vào nghiệm thu khi …" chỉ hiện ở bước Đang triển khai.
 - Màu dữ liệu khai một lần ở `REPORT_COLORS`; số định dạng `Intl` vi-VN (`formatNumber`, `formatPercent`), không đăng ký locale `vi`.
-- ⚠️ chart.js vẽ canvas nên đọc token bằng `readCssVar(element, name)` trên phần tử của khối; đừng đọc `document.documentElement`
+- Lưu ý: chart.js vẽ canvas nên đọc token bằng `readCssVar(element, name)` trên phần tử của khối; đừng đọc `document.documentElement`
   — token `--app-*` không ở `:root`, ra chuỗi rỗng và chart tô đen.
 
 ## Danh sách văn bản
@@ -91,7 +91,7 @@ Task 42, `/admin/construction/project/:id/metadata/:documentTypeId` (`features/c
   được áp. Huỷ **trước** rồi mới đặt `loading = true`, vì `finalize` của request cũ chạy khi huỷ và sẽ tắt spinner của request mới.
 - Mở văn bản: Nhập liệu sang màn ở [08-man-nhap-lieu.md](08-man-nhap-lieu.md) (mang bộ lọc + tab, `state.fromList` để nút ← quay
   lại bằng `location.back()`); QA sang màn ở [09-man-qa.md](09-man-qa.md), cũng mang bộ lọc; Lịch sử mở dialog. Đường dẫn ở hằng `WORK_PATHS`.
-- ⚠️ `p-autocomplete` không khai `optionValue` thì model phát `option.value` khi gợi ý có trường `value` (DTO `field-values` có) —
+- Lưu ý: `p-autocomplete` không khai `optionValue` thì model phát `option.value` khi gợi ý có trường `value` (DTO `field-values` có) —
   đừng bắt `ngModelChange` để lấy object, dùng `(onSelect)` / `(onClear)`. Cũng đừng bật `forceSelection` khi gợi ý dựng lại sau mỗi lần
   đổi URL: sự kiện `change` dò lại danh sách rỗng rồi `clear()`, xoá luôn giá trị vừa chọn. "Phải chọn từ gợi ý" giữ bằng việc chỉ
   `onSelect` mới ghi lên URL.

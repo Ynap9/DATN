@@ -68,9 +68,9 @@ Xoá mềm mẫu (bỏ luôn link ảnh) và toàn bộ toạ độ trong cùng 
 
 ## Giới hạn đã biết
 
-- ⚠️ Không kiểm tên rỗng hay trùng tên (giữ như kssm); `Update` không đổi được `Description`.
-- ⚠️ Đẩy ảnh xong mà commit DB lỗi thì object mới nằm lại trên MinIO; key cố định theo `templateId` nên lần lưu sau ghi đè.
-- ⚠️ Mẫu đang được lô ký dùng vẫn xoá được (kssm cũng vậy); lô sẽ báo `601` lúc bắt đầu ký.
-- 🔬 Xem trước file của dự án trên màn cấu hình (FE muốn chọn dự án để xem submission) **chưa làm**: ĐATN chưa có bảng tài liệu / submission.
+- Lưu ý: Không kiểm tên rỗng hay trùng tên (giữ như kssm); `Update` không đổi được `Description`.
+- Lưu ý: Đẩy ảnh xong mà commit DB lỗi thì object mới nằm lại trên MinIO; key cố định theo `templateId` nên lần lưu sau ghi đè.
+- Lưu ý: Mẫu đang được lô ký dùng vẫn xoá được (kssm cũng vậy); lô sẽ báo `601` lúc bắt đầu ký.
+- Chưa làm: Xem trước file của dự án trên màn cấu hình (FE muốn chọn dự án để xem submission) **chưa làm**: ĐATN chưa có bảng tài liệu / submission.
 
 > **Tiếp:** [10-lo-ky.md](10-lo-ky.md) — lô ký: tạo lô, tải / xoá file PDF, lô đang dở.

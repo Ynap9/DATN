@@ -1,11 +1,11 @@
 # Chuẩn SIP — cấu trúc gói và METS (Phụ lục III & IV)
 
-> **Phần 2/8** · trước: [01-thong-tu.md](01-thong-tu.md) · mục lục: [README.md](README.md)
+> **Phần 2/11** · trước: [01-thong-tu.md](01-thong-tu.md) · mục lục: [README.md](README.md)
 
 > Hai hình dạng gói khi thu nộp **khác Hệ thống**. `SIP_hoso` = Phụ lục III (trang 182–238), `SIP_tailieu` =
 > Phụ lục IV (trang 239–291). Cập nhật 2026-09-08.
 
-> 🎯 **Gói mẫu là hàng chuẩn.** `b6acafed-a809-4b78-ae9f-0373d50d52f0.zip` → thư mục
+> **Gói mẫu là hàng chuẩn.** `b6acafed-a809-4b78-ae9f-0373d50d52f0.zip` → thư mục
 > `uuid-0F203B84-6641-4CDA-9F52-DAAE55FEF6B1` (137 tài liệu, do `ArchiveNex` sinh 12/6/2026) là **`SIP_hoso`**
 > và là bản mẫu để học theo. **Chỗ nào gói mẫu khác câu chữ thông tư thì làm theo gói mẫu** — trừ ba lỗi thật.
 > Đối chiếu đầy đủ ở [04-sip-goi-mau.md](04-sip-goi-mau.md). Bản giải nén có ở
@@ -20,7 +20,7 @@ Cả hai đều là SIP, khác nhau ở **gói nói về cái gì**, quyết đ�
 | Đơn vị đóng gói | Một **hồ sơ** cùng các tài liệu trong nó | Một **lô tài liệu rời lẻ** |
 | Điều kiện dùng | Cơ quan đã lập hồ sơ | Chưa lập hồ sơ; Hệ thống có tìm kiếm thông minh |
 | `EAD.xml` cấp gói | **18 trường** — mô tả hồ sơ đầy đủ | **5 trường** — chỉ là đầu lô |
-| Tài liệu liên kết `.fetch.txt` | Có quy định | **Không quy định** (xem ⚠️ [03-sip-metadata.md §6](03-sip-metadata.md)) |
+| Tài liệu liên kết `.fetch.txt` | Có quy định | **Không quy định** (xem lưu ý [03-sip-metadata.md §6](03-sip-metadata.md)) |
 | `mets/@TYPE` | `Mixed` | `Collection` |
 
 Phần còn lại — cây thư mục, bộ phần tử METS, metadata từng tài liệu, schema, mimetype, quy tắc ZIP — **giống nhau**.
@@ -65,7 +65,7 @@ và tên file schema viết **thường** (`ead.xsd`, không phải `EAD.xsd` nh
 
 Thông tư mô tả năm phần tử: `mets` → `metsHdr` → `dmdSec` → `fileSec` → `structMap`.
 
-⚠️ **Gói mẫu phát thêm `<amdSec ID="uuid-…"/>` rỗng**, ở **cả METS gốc lẫn METS của rep1**, đặt giữa `dmdSec`
+Lưu ý: **Gói mẫu phát thêm `<amdSec ID="uuid-…"/>` rỗng**, ở **cả METS gốc lẫn METS của rep1**, đặt giữa `dmdSec`
 và `fileSec`. Thông tư không kể `amdSec` trong bộ phần tử của SIP, nhưng đây là chỗ chốt theo gói mẫu: **sinh
 một `amdSec` rỗng có `@ID`**. Giữ nó rỗng — SIP không có PREMIS để trỏ tới.
 

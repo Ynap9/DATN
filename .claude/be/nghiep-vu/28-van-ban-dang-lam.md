@@ -35,11 +35,11 @@ Bộ lọc chung thêm `isEmpty1` / `isEmpty2` (`bool?`) đi cặp với `docume
   `export-excel/job`. Job xuất nhận nguyên `ExportSubmissionDto` (kế thừa `SubmissionFilterDto`) nên lọc trống đi theo vào Hangfire.
 - `field-values` vẫn bỏ cặp lọc của chính trường đang lấy gợi ý (lọc liên hoàn như [12](12-ho-so-kiem-tra.md#tra-cứu-và-thống-kê)).
 
-⚠️ `311` cho trường lạ được thêm lúc tự review: bản đầu bỏ qua bước này nên `isEmpty=true` với trường ngoài cấu hình (id sai, trường của loại khác,
+Lưu ý: `311` cho trường lạ được thêm lúc tự review: bản đầu bỏ qua bước này nên `isEmpty=true` với trường ngoài cấu hình (id sai, trường của loại khác,
 hoặc trường thêm sau trước khi sửa #15 ở [06](06-truong-van-ban.md#luật-nghiệp-vụ)) trả **mọi** văn bản, vì không văn bản nào có dữ liệu của trường đó. Lọc theo giá trị với trường lạ
 thì ra 0 dòng nên không cần chặn. Đừng bỏ lời gọi `EnsureDocumentFieldInProjectAsync` để tiết kiệm một lượt DB.
 
-⚠️ `Trim()` dịch ra `LTRIM(RTRIM())` của SQL Server, chỉ cắt dấu cách: ô chỉ có tab / xuống dòng vẫn tính là **có** dữ liệu (chốt giữ đúng spec).
+Lưu ý: `Trim()` dịch ra `LTRIM(RTRIM())` của SQL Server, chỉ cắt dấu cách: ô chỉ có tab / xuống dòng vẫn tính là **có** dữ liệu (chốt giữ đúng spec).
 
 ## Đã kiểm thực tế
 
@@ -57,7 +57,7 @@ job xuất chỉ chạy tới bước kiểm (không có Hangfire server).
 
 ## Giới hạn
 
-⚠️ `SubmissionLog` chỉ có index `(ProjectId, DocumentTypeId, CreatedDate)`, `SubmissionQaLog` chỉ có `(SubmissionId, CreatedDate)`: `latest-working`
+Lưu ý: `SubmissionLog` chỉ có index `(ProjectId, DocumentTypeId, CreatedDate)`, `SubmissionQaLog` chỉ có `(SubmissionId, CreatedDate)`: `latest-working`
 lọc thêm `UserId` nên quét nhiều khi log lớn (phát hiện #13). DB dev nhỏ chưa thấy chậm; thêm index `(ProjectId, DocumentTypeId, UserId, CreatedDate)` cần migration, chưa chốt.
 
 > **Tiếp:** [29-xuat-google-sheet.md](29-xuat-google-sheet.md) — xuất hồ sơ ra Google Sheet chạy nền.

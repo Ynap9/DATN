@@ -1,6 +1,6 @@
 # Chuẩn AIP — gói hồ sơ, tài liệu lưu trữ (Phụ lục I & II)
 
-> **Phần 5/8** · trước: [04-sip-goi-mau.md](04-sip-goi-mau.md) · mục lục: [README.md](README.md)
+> **Phần 5/11** · trước: [04-sip-goi-mau.md](04-sip-goi-mau.md) · mục lục: [README.md](README.md)
 
 > Hình dạng gói **được bảo quản trong Hệ thống**. `AIP_hoso` = Phụ lục I (trang 33–109), `AIP_tailieu` =
 > Phụ lục II (trang 110–181). Cập nhật 2026-09-08.
@@ -30,15 +30,15 @@ Và AIP là **cấu trúc duy nhất được dùng để bảo quản** (Điề
 ├── metadata/
 │   ├── descriptive/
 │   │   └── EAD.xml                       bắt buộc, 01
-│   └── preservation/                     ★ bắt buộc, 01 — SIP KHÔNG CÓ
-│       └── PREMIS.xml                    ★ bắt buộc, 01 — thông tin bảo quản của cả gói
+│   └── preservation/                     (*) bắt buộc, 01 — SIP KHÔNG CÓ
+│       └── PREMIS.xml                    (*) bắt buộc, 01 — thông tin bảo quản của cả gói
 ├── representations/rep1/
 │   ├── METS.xml                          bắt buộc, 01
 │   ├── metadata/
 │   │   ├── descriptive/
 │   │   │   └── EAD_doc_File1.xml …       ≥01 — [Tiêu chuẩn]_[Loại tài liệu]_[Tên file]
-│   │   └── preservation/                 ★ bắt buộc, 01
-│   │       └── PREMIS_rep1.xml           ★ bắt buộc, 01 — thông tin bảo quản của bản đại diện
+│   │   └── preservation/                 (*) bắt buộc, 01
+│   │       └── PREMIS_rep1.xml           (*) bắt buộc, 01 — thông tin bảo quản của bản đại diện
 │   └── data/
 │       ├── File1.pdf …                   ≥01 tài liệu
 │       └── File2.pdf.fetch.txt           chỉ AIP_hoso — tài liệu liên kết
@@ -48,10 +48,10 @@ Và AIP là **cấu trúc duy nhất được dùng để bảo quản** (Điề
 └── documentation/UserManual.pdf          KHÔNG bắt buộc
 ```
 
-★ = bốn mục AIP có mà SIP không có. Ngoài ra `AIP_hoso` cho phép `data/` chứa `.fetch.txt`, còn `AIP_tailieu`
+(*) = bốn mục AIP có mà SIP không có. Ngoài ra `AIP_hoso` cho phép `data/` chứa `.fetch.txt`, còn `AIP_tailieu`
 chỉ ghi "mỗi File tương ứng với 1 tài liệu **hoặc các tài liệu đính kèm**".
 
-⚠️ Trong bảng cấu trúc của cả hai phụ lục, dòng `metadata/preservation/PREMIS.xml` bị ghi nhầm cột "Định dạng"
+Lưu ý: Trong bảng cấu trúc của cả hai phụ lục, dòng `metadata/preservation/PREMIS.xml` bị ghi nhầm cột "Định dạng"
 là **Thư mục** trong khi nó là **Tệp**. Đọc theo nghĩa, đừng tạo thư mục tên `PREMIS.xml`.
 
 ## 3. METS — ba chỗ khác SIP
@@ -67,17 +67,20 @@ là **Thư mục** trong khi nó là **Tệp**. Đọc theo nghĩa, đừng tạ
       xsi:schemaLocation="http://www.loc.gov/METS/ schemas/mets_1_11.xsd …">
 ```
 
+Lưu ý: Khối trên chép **nguyên ví dụ tr.37**, trong đó hai chỗ lệch bảng mô tả: `TYPE="AIP"` (bảng tr.38: mặc định
+`Mixed`) và OBJID chữ thường thiếu mã phông (bảng: `urn:{mã phông}:uuid:{UUID HOA}`). Sinh gói theo bảng.
+
 | Điểm | SIP | **AIP** |
 |---|---|---|
 | `csip:OAISPACKAGETYPE` | `SIP` | **`AIP`** |
 | `PROFILE` gốc | `earkcsip.dilcis.eu/…/E-ARK-CSIP.xml` | **`http://www.ra.ee/METS/v01/IP.xml`** (profile của Lưu trữ quốc gia Estonia) |
 | `PROFILE` rep1 | như trên | `earkcsip.dilcis.eu/…/E-ARK-CSIP.xml` — **quay lại CSIP** |
-| `OBJID` | `uuid-{UUID}` | **`urn:uuid:{UUID}`** hoặc **`urn:{mã phông}:uuid-{UUID}`**, vd `urn:Phong_BNV:uuid-DB15CB0C-…` |
+| `OBJID` | `uuid-{UUID}` | **`urn:{mã phông}:uuid:{UUID viết hoa}`** theo bảng mô tả tr.38 / tr.115, vd `urn:G09:uuid:7D0D1987-…`. Ví dụ XML tr.37 (`urn:uuid:…` chữ thường) và tr.39 (`urn:Phong_BNV:uuid-…`) lệch bảng — theo bảng ([10 §3](10-yeu-cau-tung-mau.md)) |
 | Tên thư mục gói | lấy nguyên `OBJID` | lấy `OBJID` rồi **đổi mọi ký tự `:` thành `_`** → `urn_G09_uuid_9C13E70E-…` |
 | `amdSec` | thông tư không kể; **gói mẫu vẫn phát một `amdSec` rỗng** | **có và có nội dung** — trỏ tới `PREMIS.xml` |
 | `schemaLocation` | `mets1_12.xsd` | ví dụ dùng cả `mets_1_11.xsd` (gốc) lẫn `mets1_12.xsd` (các ví dụ sau) |
 
-⚠️ Chính TT05 dùng lẫn `mets_1_11.xsd` và `mets1_12.xsd` giữa các ví dụ trong cùng phụ lục. Bám theo file
+Lưu ý: Chính TT05 dùng lẫn `mets_1_11.xsd` và `mets1_12.xsd` giữa các ví dụ trong cùng phụ lục. Bám theo file
 `schemas/METS.xsd` thật nằm trong gói, đừng ghi cứng số hiệu bản.
 
 Bộ phần tử METS của AIP có **sáu** phần: `mets` · `metsHdr` · `dmdSec` · **`amdSec`** · `fileSec` · `structMap`.
@@ -106,7 +109,7 @@ Cùng bộ trường với `SIP_hoso` ([03-sip-metadata.md §4.1](03-sip-metadat
 Hai khác biệt nhỏ so với bản SIP: `startDate`/`endDate` của AIP cho phép thêm dạng rút gọn `MM/YYYY` và `YYYY`;
 và `format` được liệt kê giá trị rõ ràng `01` Tốt · `02` Bình thường · `03` Hỏng.
 
-⚠️ Ở `AIP_hoso`, `numberOfPaper` **có mặt trong cả khung XML lẫn bảng mô tả** (mục #10) — tức bản AIP không dính
+Lưu ý: Ở `AIP_hoso`, `numberOfPaper` **có mặt trong cả khung XML lẫn bảng mô tả** (mục #10) — tức bản AIP không dính
 lỗi thiếu dòng như bản `SIP_hoso`. Khi nghi ngờ trường này, lấy `AIP_hoso` làm trọng tài.
 
 ### 4.2. `AIP_tailieu` — 4 trường
@@ -124,13 +127,13 @@ lỗi thiếu dòng như bản `SIP_hoso`. Khi nghi ngờ trường này, lấy 
 | `source` | Nguồn gốc | **String** | **100** | `0` = văn bản đi · `1` = văn bản đến |
 | `description` | Ghi chú (nếu có) | String | 2000 | |
 
-⚠️ `AIP_tailieu` **không có `totalDoc`**, trong khi `SIP_tailieu` có (5 trường). Và `source` ở đây khai kiểu
+Lưu ý: `AIP_tailieu` **không có `totalDoc`**, trong khi `SIP_tailieu` có (5 trường). Và `source` ở đây khai kiểu
 `String(100)` còn bên `SIP_tailieu` khai `Boolean(1)` — cùng một ý nghĩa, hai kiểu dữ liệu. Khi chuyển
 SIP_tailieu → AIP_tailieu phải **bỏ `totalDoc` và ép kiểu `source`**, đừng bê nguyên.
 
 ## 5. Metadata từng tài liệu — KHÔNG phải bản SIP đổi tên
 
-⚠️ **Đừng suy `EAD_doc` của AIP từ bản SIP.** Đây là bộ trường **khác hẳn**, đọc thẳng từ schema trong thông tư
+Lưu ý: **Đừng suy `EAD_doc` của AIP từ bản SIP.** Đây là bộ trường **khác hẳn**, đọc thẳng từ schema trong thông tư
 (Phụ lục I trang 103, Phụ lục II trang 175 — hai phụ lục khai giống nhau). **19 trường**, theo đúng thứ tự:
 
 ```xml
@@ -152,14 +155,14 @@ So với `EAD_doc` của SIP: **không có `docId`, `maintenance`, `riskRecovery
 Tức AIP tách cặp **`arcFileCode` + `docOrdinal`** thay cho một chuỗi `arcDocCode` ghép sẵn — khớp với quy tắc
 `arcDocCode` = *Mã hồ sơ + Số thứ tự tài liệu* ở trang 82.
 
-⚠️ **`docOrdinal` không có bảng mô tả nào trong toàn thông tư** — nó chỉ xuất hiện ở bốn trang định nghĩa schema
+Lưu ý: **`docOrdinal` không có bảng mô tả nào trong toàn thông tư** — nó chỉ xuất hiện ở bốn trang định nghĩa schema
 (103, 104, 105, 175). Kiểu và độ dài phải tự chọn.
 
-⚠️ **`arcDocCode` vẫn tồn tại, nhưng không nằm ở đây**: nó là mã lưu trữ tài liệu (String 100, *Mã cơ quan lưu
+Lưu ý: **`arcDocCode` vẫn tồn tại, nhưng không nằm ở đây**: nó là mã lưu trữ tài liệu (String 100, *Mã cơ quan lưu
 trữ + Mã hồ sơ + số thứ tự 7 ký tự*) dùng trong `EAD_pic`/`EAD_media` của **`AIP_tailieu`** và trong cả ba
 schema cấp tài liệu của **DIP**.
 
-⚠️ **Phụ lục I và II mâu thuẫn nhau về `EAD_pic`/`EAD_media`.** PL-I (`AIP_hoso`) dùng `arcFileCode` +
+Lưu ý: **Phụ lục I và II mâu thuẫn nhau về `EAD_pic`/`EAD_media`.** PL-I (`AIP_hoso`) dùng `arcFileCode` +
 `docOrdinal`, bỏ `maintenance`/`riskRecovery`; PL-II (`AIP_tailieu`) dùng `arcDocCode` + `maintenance` +
 `riskRecovery`/`riskRecoveryStatus`. Không có gói mẫu AIP để phân xử, nên **giữ hai bộ riêng theo đúng phụ lục**.
 

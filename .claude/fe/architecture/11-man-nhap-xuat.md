@@ -51,11 +51,11 @@ Nhập chưa kiểm trên trình duyệt; xuất Google Sheet đã kiểm (xem c
 - "Lấy danh sách sheet": lỗi hiện đỏ dưới ô link (không toast, `isResponseSucceed(res, false)`), sửa link thì danh sách + tên sheet + lỗi bị xoá và lượt gọi dở bị huỷ; thành công tự chọn sheet đầu.
 - Nút "Xuất Google Sheet" khoá khi: chưa có văn bản, đang tạo job, thiếu link / tên sheet / dòng bắt đầu, hoặc (người dùng chốt, thêm vào 56.8) **còn dòng "Đang ghi…" cùng link + tên sheet** trong danh sách. Bấm → hộp xác nhận xoá-rồi-ghi (không hoàn tác) → tạo job; dòng Sheet lên đầu "Đã xuất" kèm số văn bản lúc bấm, hỏi job mỗi `JOB_POLL_MS`. Nút Excel và Sheet dùng chung cờ `isCreating`.
 
-⚠️ Bẫy: `[class]` binding đi kèm `class` tĩnh trên cùng thẻ thì Angular gộp hai bên; đừng lặp class trạng thái ở cả hai.
+Bẫy: `[class]` binding đi kèm `class` tĩnh trên cùng thẻ thì Angular gộp hai bên; đừng lặp class trạng thái ở cả hai.
 
-⚠️ Bẫy: khung lỗi dùng `whitespace-pre-line` phải đặt `{{ }}` sát thẻ mở / đóng, xuống dòng trong template sẽ thành dòng trống.
+Bẫy: khung lỗi dùng `whitespace-pre-line` phải đặt `{{ }}` sát thẻ mở / đóng, xuống dòng trong template sẽ thành dòng trống.
 
-⚠️ Bẫy: "Tải về" sau 15 phút mở link **sau** khi API trả, trình duyệt có thể chặn popup — bấm lại là mở (chưa kiểm).
+Bẫy: "Tải về" sau 15 phút mở link **sau** khi API trả, trình duyệt có thể chặn popup — bấm lại là mở (chưa kiểm).
 
 ## Chưa làm / chưa kiểm
 

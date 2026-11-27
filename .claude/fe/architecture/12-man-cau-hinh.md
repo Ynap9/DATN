@@ -40,7 +40,7 @@ Google, hạn dự án. Nghiệp vụ BE ở [../../be/nghiep-vu/08-cau-hinh-du-
 - Rời màn trong app khi một trong hai khối có sửa → hỏi "Có thay đổi chưa lưu. Rời trang?". Không gắn `beforeunload`
   (người dùng chốt).
 
-⚠️ Bẫy: style toàn cục đặt `h2 { font-size: 2rem; margin: 1.5rem 0 1rem }` và `.pi { font-size: var(--p-icon-size) }` thắng
+Bẫy: style toàn cục đặt `h2 { font-size: 2rem; margin: 1.5rem 0 1rem }` và `.pi { font-size: var(--p-icon-size) }` thắng
 class Tailwind thường → tiêu đề khối dùng `m-0! text-[15px]! font-semibold!`, icon dùng `text-xl!`.
 
 ## Đã kiểm (2026-11-24, trình duyệt + DB dev, đã trả bảng về như cũ)

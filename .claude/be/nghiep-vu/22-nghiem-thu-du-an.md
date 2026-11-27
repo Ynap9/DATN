@@ -18,7 +18,7 @@ cuối cùng QA đạt — dự án không QA (Task 28, `Project.IsQaEnabled`, [
 | — | Dự án 0 văn bản | **Chặn hẳn** (`340`), kể cả Admin `isForced` |
 | 23.3 | Khoá gì khi `ACCEPTING` | Khoá import (`341`); kiểm tra / QA vẫn làm (làm nốt, sửa lỗi nghiệm thu) |
 | — | Văn bản của loại văn bản đã gỡ khỏi dự án | **Tính hết** — không lọc theo `ProjectDocumentType` |
-| — | Chế độ QA `SAMPLE` | Vẫn đòi mọi văn bản `QA_PASSED`; để Task 18D quyết lại (⚠️ dưới) |
+| — | Chế độ QA `SAMPLE` | Vẫn đòi mọi văn bản `QA_PASSED`; để Task 18D quyết lại (lưu ý: dưới) |
 
 ## Chuyển trạng thái
 
@@ -89,7 +89,7 @@ trạng thái nguồn `342` (entity `StartAcceptance` / `FinishAcceptance` / `Re
 mới gọi `project.StartAcceptance`, rồi ghi audit `IsAutomatic = true`, người ghi = người vừa QA / kiểm / xoá. Khối này là private
 `SubmissionService.TryStartAcceptanceAutomaticallyAsync`, mỗi chỗ gọi giữ điều kiện riêng.
 
-⚠️ Bẫy: DB bật `READ_COMMITTED_SNAPSHOT`, nên hai request QA đạt **song song** hai văn bản cuối cùng thấy văn bản kia "chưa đạt" và
+Bẫy: DB bật `READ_COMMITTED_SNAPSHOT`, nên hai request QA đạt **song song** hai văn bản cuối cùng thấy văn bản kia "chưa đạt" và
 **không ai** chuyển (đã tái hiện 1/3 vòng trên DB dev). Khoá dòng dự án trước khi đếm buộc request sau chờ request trước commit;
 đừng bỏ khoá hay dời việc đếm lên trước khoá. UPDATE có điều kiện giữ đúng 1 request chuyển.
 
@@ -100,11 +100,11 @@ Action `Bắt đầu nghiệm thu` / `Hoàn tất nghiệm thu` / `Trả dự á
 lúc chuyển, `Summary` = dòng tổng của `GET` lúc chuyển. `GET acceptance` đọc audit mới nhất để ra `lastTransition` (`action`,
 `createdDate`, `userName`, `fullName`, `oldStatus`, `newStatus`, `isForced`, `isAutomatic`, `reason`).
 
-⚠️ Lịch sử nghiệm thu (timeline + biên bản PDF) lọc audit theo **đúng chuỗi** `Action`. Task 38 đổi chữ reopen từ "Trả dự án về đang
+Lưu ý: Lịch sử nghiệm thu (timeline + biên bản PDF) lọc audit theo **đúng chuỗi** `Action`. Task 38 đổi chữ reopen từ "Trả dự án về đang
 làm" sang "đang triển khai" ⇒ dòng cũ biến khỏi lịch sử. DB nào còn dòng cũ thì chạy tay `UPDATE core.AuditLog SET Action = N'Trả dự án
 về đang triển khai' WHERE Action = N'Trả dự án về đang làm'`; đừng thêm hằng chữ cũ vào code (chốt 2026-11-19).
 
-⚠️ `AuditLog` không có cột `ProjectId`: lần chuyển gần nhất lọc `NewData LIKE '{"ProjectId":<id>,%'`. `ProjectId` **phải** là trường
+Lưu ý: `AuditLog` không có cột `ProjectId`: lần chuyển gần nhất lọc `NewData LIKE '{"ProjectId":<id>,%'`. `ProjectId` **phải** là trường
 **đầu tiên** của `newData` (serializer PascalCase của `AuditLogUtils`); thêm trường lên trước là `lastTransition` thành `null`.
 
 ## Biên bản nghiệm thu (PDF) — Task 34
@@ -154,11 +154,11 @@ bản xen với ký số lô (người dùng bỏ qua, cần token).
 
 ## Giới hạn
 
-⚠️ Hai Admin bấm "Bắt đầu" cùng lúc: bấm tay không khoá như tự chuyển, có thể ra 2 audit (trạng thái vẫn đúng). Chấp nhận vì hiếm.
+Lưu ý: Hai Admin bấm "Bắt đầu" cùng lúc: bấm tay không khoá như tự chuyển, có thể ra 2 audit (trạng thái vẫn đúng). Chấp nhận vì hiếm.
 
-⚠️ QA chế độ `SAMPLE` không QA hết văn bản nên dự án không tự vào nghiệm thu, phải Admin force — Task 18D quyết định lại "đủ điều kiện".
+Lưu ý: QA chế độ `SAMPLE` không QA hết văn bản nên dự án không tự vào nghiệm thu, phải Admin force — Task 18D quyết định lại "đủ điều kiện".
 
-⚠️ Khoá dòng dự án làm các lần QA đạt trên cùng dự án `DOING` xếp hàng ở bước cuối (khoá giữ tới commit, ngắn).
+Lưu ý: Khoá dòng dự án làm các lần QA đạt trên cùng dự án `DOING` xếp hàng ở bước cuối (khoá giữ tới commit, ngắn).
 Từ Task 28 khoá này **cũng chạy ở mỗi lần Check** của dự án không QA đang `DOING`. Thứ tự khoá ở `Check`: cặp dự án +
 loại văn bản (`AssignCheckedToQaAsync`, chỉ khi có QA phụ trách) rồi mới dự án; `Delete` cũng cặp (`LockImportAsync`) rồi dự án; `ReviewQa`
 nhánh Đạt chỉ khoá dự án — không ngược chiều.

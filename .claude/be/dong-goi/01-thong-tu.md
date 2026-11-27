@@ -1,11 +1,11 @@
 # Thông tư 05/2025/TT-BNV — nghiệp vụ lưu trữ tài liệu lưu trữ số
 
-> **Phần 1/8** · mục lục: [README.md](README.md)
+> **Phần 1/11** · mục lục: [README.md](README.md)
 
 Luật gốc của mọi việc đóng gói SIP/AIP/DIP. Tổng hợp từ bản PDF chính thức trên `moha.gov.vn` (364 trang);
 thân thông tư Điều 1–52 nằm ở trang 1–32.
 
-> 🎯 **Khi thông tư và gói mẫu lệch nhau thì theo gói mẫu.** Gói `b6acafed-a809-4b78-ae9f-0373d50d52f0` (loại
+> **Khi thông tư và gói mẫu lệch nhau thì theo gói mẫu.** Gói `b6acafed-a809-4b78-ae9f-0373d50d52f0` (loại
 > `SIP_hoso`, 137 tài liệu) là bản chuẩn để học theo; bảng đối chiếu 15 điểm lệch và 3 lỗi của chính gói mẫu
 > nằm ở [04-sip-goi-mau.md §10–§11](04-sip-goi-mau.md).
 
@@ -68,7 +68,7 @@ Yêu cầu chung (Điều 8.1): tỷ lệ số hóa **100%**; rõ ràng, trung t
 **tên cơ quan + thời gian ký** (ngày tháng năm, giờ phút giây, múi giờ Việt Nam theo ISO 8601), trình bày bằng
 **Times New Roman, in thường, đứng, cỡ 10, màu đen**, và **không hiển thị hình ảnh dấu** của cơ quan.
 
-⚠️ Áp vào sh.be: khối chữ ký số (module DigitalSignature) phải theo đúng ràng buộc trên — Times New Roman,
+Lưu ý: Áp vào sh.be: khối chữ ký số (module DigitalSignature) phải theo đúng ràng buộc trên — Times New Roman,
 cỡ 10, đen, không kèm hình dấu; giờ ký in kèm `+07:00` **ghi cứng** (dùng `zzz` thì máy chủ chạy UTC in ra
 `+00:00`); máy chủ phải có font Times New Roman thật. Dấu đỏ và chữ ký tươi là **tùy chọn nghiệp vụ riêng**,
 không phải thứ TT05 đòi trên bản số hóa.
@@ -129,7 +129,7 @@ metadata từng tài liệu, schema, mimetype) gần như trùng nhau:
 
 | Trục | SIP | AIP | DIP |
 |---|---|---|---|
-| **Siêu dữ liệu bảo quản** | **không có** PREMIS (`amdSec` vẫn phát nhưng **rỗng** — theo gói mẫu) | `PREMIS.xml` ở gốc + `PREMIS_rep1.xml` ở rep1, **bắt buộc**; `amdSec` có nội dung | có PREMIS nhưng **không bắt buộc** |
+| **Siêu dữ liệu bảo quản** | **không có** PREMIS (`amdSec` vẫn phát nhưng **rỗng** — theo gói mẫu) | `PREMIS.xml` ở gốc + `PREMIS_rep1.xml` ở rep1, **bắt buộc**; `amdSec` có nội dung | cây thư mục ghi không bắt buộc, bảng phần tử METS đòi `digiprovMD` (tr.302) ⇒ sh.be **luôn sinh** (Q5, 27/11) |
 | **Mã định danh nghiệp vụ** | `fileCode` / `docCode` | `arcFileCode` / `arcDocCode` — **cộng thêm mã cơ quan lưu trữ** ở đầu | `arcDocCode` (dùng lại của AIP) |
 | **Metadata cấp gói mô tả cái gì** | hồ sơ (18 trường) hoặc lô tài liệu nộp (5 trường) | hồ sơ lưu trữ (18 trường) hoặc gói tài liệu lưu trữ (4 trường) | **yêu cầu khai thác của người dùng** (7 trường) — không mô tả tài liệu |
 
@@ -142,7 +142,7 @@ metadata từng tài liệu, schema, mimetype) gần như trùng nhau:
 | `PROFILE` gốc | E-ARK-**CSIP** | `ra.ee/METS/v01/IP.xml` | E-ARK-**DIP** |
 | `PROFILE` rep1 | E-ARK-CSIP | E-ARK-CSIP | E-ARK-CSIP |
 | `mets/@TYPE` | `Mixed` / `Collection` | `Mixed` / `Collection` | `MIXED` |
-| `OBJID` | `uuid-…` | `urn:uuid:…` hoặc `urn:{mã phông}:uuid-…` | `uuid-…` |
+| `OBJID` | `uuid-…` | `urn:{mã phông}:uuid:{UUID}` (bảng tr.38, 115) | `uuid-…` |
 | Tên thư mục | nguyên `OBJID` | `OBJID` đổi `:` → `_` | `OBJID` đổi `:` → `_` |
 | `amdSec` | có nhưng **rỗng** (theo gói mẫu) | **có, trỏ PREMIS** | có |
 | `metadata/preservation/` + PREMIS | **không có** | **bắt buộc** | **tùy chọn** |

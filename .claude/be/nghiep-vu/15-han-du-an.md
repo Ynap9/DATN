@@ -88,15 +88,15 @@ script (tìm chữ trong thân mail mã hoá base64); thân mail giải mã ra �
 
 ## Giới hạn
 
-⚠️ Mail gửi xong mà `SaveChanges` lịch sử lỗi thì lần sau có thể gửi trùng: chấp nhận, vì không giữ transaction khi chờ SMTP.
+Lưu ý: Mail gửi xong mà `SaveChanges` lịch sử lỗi thì lần sau có thể gửi trùng: chấp nhận, vì không giữ transaction khi chờ SMTP.
 
-⚠️ `Project.Update` cho phép đặt tay `status = 5`; job coi dự án `EXPIRED` như đã hết hạn và gửi mail loại `2` kể cả khi
+Lưu ý: `Project.Update` cho phép đặt tay `status = 5`; job coi dự án `EXPIRED` như đã hết hạn và gửi mail loại `2` kể cả khi
 `EndedAt` còn ở tương lai.
 
-⚠️ Múi giờ `SE Asia Standard Time` là tên trên Windows. Chạy Docker Linux thì cả `GetVietnamTime()` lẫn lịch job lỗi; khi
+Lưu ý: Múi giờ `SE Asia Standard Time` là tên trên Windows. Chạy Docker Linux thì cả `GetVietnamTime()` lẫn lịch job lỗi; khi
 triển khai phải đổi sang `Asia/Ho_Chi_Minh` ở một chỗ (`BaseService.VietnamTimeZone`).
 
-⚠️ DB dev có dự án `EndedAt` đã qua và một admin có email thật: bật app với `BackgroundJob:Enabled = true` là 07:00 job sẽ
+Lưu ý: DB dev có dự án `EndedAt` đã qua và một admin có email thật: bật app với `BackgroundJob:Enabled = true` là 07:00 job sẽ
 chuyển dự án sang `EXPIRED` và gửi mail thật. Máy dev không muốn vậy thì đặt `Enabled = false` hoặc `DeadlineMailEnabled = false`.
 
 > **Tiếp:** [16-dong-goi-cau-hinh.md](16-dong-goi-cau-hinh.md) — cấu hình metadata đóng gói theo TT05: loại gói, schema, trường, bảng mã.

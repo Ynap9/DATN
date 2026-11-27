@@ -52,7 +52,7 @@ Mọi thao tác ghi nghiệp vụ để lại một `AuditLog`. Module `Core` ch
 - `AuditLogService.Create` là public trên service nhưng **không có endpoint nào** gọi nó từ ngoài. Chỉ
   `AuthorizationController` gọi nội bộ. Đừng mở endpoint ghi nhật ký từ FE mà không hỏi: nhật ký giả là rủi ro.
 
-⚠️ Đổi mật khẩu: `AddAuditLog` được gọi trước `UserManager.ChangePasswordAsync`, và `UserManager` tự `SaveChanges`.
+Lưu ý: Đổi mật khẩu: `AddAuditLog` được gọi trước `UserManager.ChangePasswordAsync`, và `UserManager` tự `SaveChanges`.
 Audit được lưu cùng lần đó. Đừng thêm `SaveChanges` tay vào luồng này (đã ghi ở
 [../architecture/04-infrastructure-data.md](../architecture/04-infrastructure-data.md)).
 

@@ -43,5 +43,5 @@ cho dự án), user `tester` (role QA, được cấp tạm `Submission.View` + 
 sqlcmd -C -I -f 65001 -S 127.0.0.1,14330 -U sa -P <mật khẩu> -d SO_HOA_DB -i .claude/be/db/test-data-ho-so.sql
 ```
 
-⚠️ Thiếu `-f 65001` thì `sqlcmd` đọc file theo bảng mã ANSI, tiếng Việt lưu vào DB bị lỗi font.
-⚠️ Vừa `migrations add` xong mà chạy `database update` / `has-pending-model-changes` với `--no-build` thì DLL chưa có migration mới, EF báo "pending changes" sai. Build lại trước rồi mới dùng `--no-build`.
+Lưu ý: Thiếu `-f 65001` thì `sqlcmd` đọc file theo bảng mã ANSI, tiếng Việt lưu vào DB bị lỗi font.
+Lưu ý: Vừa `migrations add` xong mà chạy `database update` / `has-pending-model-changes` với `--no-build` thì DLL chưa có migration mới, EF báo "pending changes" sai. Build lại trước rồi mới dùng `--no-build`.

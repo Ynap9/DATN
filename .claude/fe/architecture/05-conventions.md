@@ -38,7 +38,7 @@ quá 6–7 file mới chia thư mục con (`components/`).
   class PascalCase + hậu tố (`RoleListComponent`, `RoleService`); interface tiền tố `I` (`IRole`).
 - `core/layout/` giữ kiểu Sakai gốc (`app-topbar.ts`, class `AppTopbar`); code mới dùng kiểu có hậu tố.
 - Selector: `app-` cho component của admin, `sh-` cho component UI kit (class `Sh...Component`, file
-  `sh-<ten>/sh-<ten>.ts`). Biến theme SCSS dùng `$sh-*` / `--sh-*`. ⚠️ Đừng bỏ trắng tiền tố: thẻ tự tạo bắt buộc
+  `sh-<ten>/sh-<ten>.ts`). Biến theme SCSS dùng `$sh-*` / `--sh-*`. Lưu ý: Đừng bỏ trắng tiền tố: thẻ tự tạo bắt buộc
   có `-`, và `button`, `select`, `table` sẽ trùng thẻ HTML gốc.
 - Hằng route của module: `<MODULE>_ROUTES` (`CONSTRUCTION_ROUTES`).
 - Field inject private: `private readonly _camelCase = inject(...)` (`_roleService`).
@@ -65,43 +65,43 @@ quá 6–7 file mới chia thư mục con (`components/`).
   `blue` / `amber` / `green` / `red` / `gray` theo biến `--app-<tone>` / `--app-<tone>-soft`), `frozen: 'left' | 'right'` (có cột
   frozen thì bảng tự bật cuộn ngang; dưới 768px cột `left` thôi dính để còn chỗ cuộn, cột `right` vẫn dính), `NUMBER` (số vi-VN 1.234, thiếu / null → "—" mờ; `CURRENCY` rỗng ra ô trống). Nhãn BADGE
   là component `StatusBadge` (`shared/components/status-badge`) — chỗ khác cần cùng nhãn (vd. thẻ dự án) dùng lại nó. Task 38.
-- ⚠️ Độ rộng cột kéo xong lưu `tbl_col_widths_<tableKey>` **theo key cột**: `key` → `field` → `header`. Cột không `field` mà header
+- Lưu ý: Độ rộng cột kéo xong lưu `tbl_col_widths_<tableKey>` **theo key cột**: `key` → `field` → `header`. Cột không `field` mà header
   có thể trùng / đổi chữ thì khai `key`. Cache cũ khoá theo vị trí bị bỏ qua (người dùng kéo lại một lần).
 - Cột liền nhau cùng `group: '<nhãn>'` gộp một ô tiêu đề nhóm ở hàng trên, cột đầu nhóm có vạch trái; `[rowClass]="(row) => 'cls'"`
   gắn class lên `<tr>` (style ở scss màn bằng `:host ::ng-deep`). Không khai thì bảng y như cũ. Task 59 (Tiền công).
 - `[rowDisabledReason]="(row) => string | null"` (đi với `selectable`): trả chữ thì ô tick của dòng bị khoá mờ, di chuột hiện chữ đó, tick cả trang bỏ qua dòng khoá (`rowSelectable` của `p-table`); trả `null` là chọn được. Không khai thì mọi dòng như cũ (màn Metadata). Task 58.
-- ⚠️ Căn lề ô dùng `cellStyle: 'text-align: right'` (cùng chuỗi với `headerContainerStyle`), **không** `cellClass: 'text-right'`: CSS `td` của bảng đè mất class.
+- Lưu ý: Căn lề ô dùng `cellStyle: 'text-align: right'` (cùng chuỗi với `headerContainerStyle`), **không** `cellClass: 'text-right'`: CSS `td` của bảng đè mất class.
 - Lọc theo cột: cột khai `filter: { type: 'text' | 'select' | 'dateRange', options? }` thì tiêu đề có phễu + popover
   (`DataTableColumnFilter`). Màn giữ state, truyền `[filterValues]` (key cột → giá trị; khoảng ngày `{ from?, to? }` dạng
   `yyyy-MM-dd`), nhận `(filterChange)` = **toàn bộ** map sau mỗi lần Áp dụng / Xoá (key rỗng bị bỏ). Màn tự về trang 1 và tải lại.
-- Cấu hình cột: `[columnSettings]="true"` + `tableKey` → cột `ACTIONS` thay chữ bằng ⚙ mở dialog `DataTableColumnSettings`
+- Cấu hình cột: `[columnSettings]="true"` + `tableKey` → cột `ACTIONS` thay chữ bằng biểu tượng bánh răng mở dialog `DataTableColumnSettings`
   (ẩn / hiện, kéo thứ tự, đặt lại). Cột `locked` luôn hiện, giữ chỗ cũ; `hidden` = ẩn mặc định. Lưu `tbl_cols_<tableKey>` =
   `[{ key, visible }]` của các cột không khoá; tập key khác cột hiện tại thì về mặc định. Không bật thì `hidden` bị bỏ qua.
 - Cột thao tác: header `Thao tác`, `width: 100px; text-align: center`. `TblAction` là nút ⋯ mở dropdown; mỗi `ITableAction` bắt buộc
   có `icon`, thao tác xoá đặt `severity: 'danger'` (chữ đỏ); ẩn theo từng dòng bằng `visible: (row) => boolean` (vd. "Mở Google Sheet").
   Ngoài bảng (vd. thẻ) dùng lại `TblAction` với cùng mảng `ITableAction`, đổi nút qua input `icon` (mặc định `pi pi-ellipsis-h`).
 - Cột `CUSTOM_COMP` luôn truyền `{ row, rowIndex, data }` — component ô phải khai đủ ba input, thiếu thì Angular báo lỗi console khi gán input không tồn tại.
-- ⚠️ `ng test` (Karma) **không** kiểm strict template như `ng build` / `ng serve`: truyền `number` vào pipe khai `string` vẫn
+- Lưu ý: `ng test` (Karma) **không** kiểm strict template như `ng build` / `ng serve`: truyền `number` vào pipe khai `string` vẫn
   qua test nhưng build đỏ. Sửa template xong luôn chạy `npm run build:admin`, đừng chỉ chạy test.
 - Style: Tailwind cho bố cục; style riêng component dưới 8 kB.
 - Chuẩn kích cỡ (chốt 23/11): chữ thân 14px, chữ phụ / nhãn trường / tag 12px, tiêu đề khối 13–14px đậm 600. Ô nhập và nút
   thường cao ~36px, nút / ô `size="small"` ~28px chữ 12px. Khoảng cách theo bội 4px (`gap-2` = 8px, `p-4` = 16px). Thiết kế
   ghi số px nào thì dùng đúng lớp Tailwind tương ứng (`text-xs` = 12px, `h-9` = 36px), không cần `text-[12px]`.
-- ⚠️ `html { font-size: 14px }` (`shared/assets/layout/_core.scss`) làm mọi cỡ theo rem co 12,5% (`text-xs` ra 10,5px, nút
+- Lưu ý: `html { font-size: 14px }` (`shared/assets/layout/_core.scss`) làm mọi cỡ theo rem co 12,5% (`text-xs` ra 10,5px, nút
   nhỏ 22px). Đã chặn ở gốc: `tailwind.css` khai `--spacing` / `--text-*` / `--radius-*` bằng px, `variables/_theme.scss` đặt
   token cỡ PrimeNG (`--p-form-field-*`, `--p-inputtext-*`, `--p-button-*`, `--p-tag-*`) bằng px. Đừng đổi gốc sang 16px:
   PrimeNG đặt cứng `font-size: 1rem` cho ô nhập / nút nên chữ trong ô sẽ thành 16px. Cần cỡ mới thì thêm token px ở hai chỗ trên.
-- ⚠️ Lớp Tailwind đặt trên nút / ô PrimeNG có thể không ăn (vd. `px-2` trên `pButton` vẫn ra padding mặc định). Lý do:
+- Lưu ý: Lớp Tailwind đặt trên nút / ô PrimeNG có thể không ăn (vd. `px-2` trên `pButton` vẫn ra padding mặc định). Lý do:
   `providePrimeNG` không bật `cssLayer`, nên style PrimeNG nằm ngoài layer và thắng lớp Tailwind. Cách tránh: chỉ thêm `!`
   (`px-2!`, `text-[13px]!`) cho thuộc tính PrimeNG tự đặt, như padding, gap, cỡ chữ nút, độ rộng nút chỉ có icon, độ đậm nhãn
   nút. Height, cỡ icon `.pi` thì không cần `!`. Ví dụ ở thanh trên màn Nhập liệu ([08-man-nhap-lieu.md](08-man-nhap-lieu.md)).
-- ⚠️ Biến `--app-*` (`--app-line`, `--app-ink`…) trong dialog mở bằng `DialogService` không có giá trị → viền thành đen, màu chữ
+- Lưu ý: Biến `--app-*` (`--app-line`, `--app-ink`…) trong dialog mở bằng `DialogService` không có giá trị → viền thành đen, màu chữ
   rơi về mặc định. Lý do: biến khai báo ở `.layout-wrapper` (`shared/assets/layout/_main.scss`), còn dialog gắn thẳng vào `body`.
   Cách tránh: trong dialog dùng mã màu (`border-[#e4e8e6]`, `text-[#8a958f]`…), như dialog Nhóm nhân viên. Cũng đừng dùng `-mt-*`
   cho dòng đầu nội dung dialog: nó bị header che mất nửa.
 - Bảng: cột chữ dài không khai `width` thì đặt `min-width` (vd. cột trường động của bảng văn bản 180px); cột ngắn (mã, hồ sơ,
   hộp, ngày) `cellStyle: 'white-space: nowrap'`. `.p-tag` đã `nowrap` toàn cục.
-- ⚠️ Repo **không** có cấu hình Prettier: đừng chạy `npx prettier --write` — mặc định 80 cột ngắt mỗi thuộc tính một dòng, lệch hẳn kiểu template
+- Lưu ý: Repo **không** có cấu hình Prettier: đừng chạy `npx prettier --write` — mặc định 80 cột ngắt mỗi thuộc tính một dòng, lệch hẳn kiểu template
   hiện có (một thẻ trên ít dòng dài). Định dạng tay theo file xung quanh.
 - Thông điệp người dùng tiếng Việt, lấy từ `SuccessMessage` / `ErrorMessage` khi có sẵn.
 

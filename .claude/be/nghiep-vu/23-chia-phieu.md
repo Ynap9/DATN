@@ -82,7 +82,7 @@ bên dưới. Văn bản do API cũ giao từ trước vẫn bị tính là Conf
 Lưu mở transaction rồi khoá dòng `construction.ProjectDocumentType` của cặp (`UPDLOCK, HOLDLOCK`, chờ tối đa 5 giây, hết giờ → `812`),
 **sau đó** mới lập kế hoạch. Request đến sau chờ, đọc lại thấy xung đột → `812`. Cần khoá vì phụ trách nút chưa có văn bản `CHECKED`
 không sinh dòng `SubmissionUser` nào để unique `(SubmissionId, Role)` chặn. Unique + bulk insert (`812`) vẫn là chốt chặn cuối.
-⚠️ Cùng khoá với import hồ sơ: đang import lớn thì giao phiếu chờ, quá 5 giây nhận `812` — thử lại sau, đừng nới timeout.
+Lưu ý: Cùng khoá với import hồ sơ: đang import lớn thì giao phiếu chờ, quá 5 giây nhận `812` — thử lại sau, đừng nới timeout.
 
 ## Phiếu của tôi (API 28)
 
@@ -143,7 +143,7 @@ Task 15: thân `SubmissionAssignmentService`, luật ở `AssignmentDomainServic
 | 15.10 | Xuất Excel | Không lọc theo người giữ (Task 25, `337`) |
 | 2026-11-12 | Hai QA cùng chấm văn bản của một phiếu Data | Khoá cặp ở D trước khi nạp phiếu, không mất lượt trừ `DocumentCount` |
 
-⚠️ Đạt chạy song song với một văn bản khác của cùng phiếu về pool có thể đều thấy còn văn bản chưa đạt và không chốt `DONE` (cùng
+Lưu ý: Đạt chạy song song với một văn bản khác của cùng phiếu về pool có thể đều thấy còn văn bản chưa đạt và không chốt `DONE` (cùng
 giới hạn như chốt đợt QA FULL 18C). Đừng thêm khoá ở nhánh Đạt: dòng `Submission` đã cập nhật trước khi khoá, dễ deadlock.
 
 ## Số đo (DB dev local Docker, 20.000 văn bản / 400 hộp, 2026-11-11)
@@ -153,7 +153,7 @@ giới hạn như chốt đợt QA FULL 18C). Đừng thêm khoá ở nhánh Đ�
 | GET cây Data / QA trang 50 | 1,2 s / 1,6 s (câu gộp SQL 320–560 ms) | 500 ms |
 | Lưu Data 1 hộp 50 / 1000 văn bản | 3,0 s / 4,2 s | 300 ms / 1 s |
 
-⚠️ DB local này trễ ~130 ms **mỗi** lượt gọi DB (API có sẵn `auth/role/dropdown`, 2 câu SQL, mất 260–330 ms), nên số trên chủ yếu là
+Lưu ý: DB local này trễ ~130 ms **mỗi** lượt gọi DB (API có sẵn `auth/role/dropdown`, 2 câu SQL, mất 260–330 ms), nên số trên chủ yếu là
 độ trễ môi trường; cần đo lại trên DB thật trước khi kết luận chậm.
 
 > **Tiếp:** [24-don-gia-tien-cong.md](24-don-gia-tien-cong.md) — đơn giá và thống kê tiền công (Task 12). Kiến trúc và quy ước code ở [../architecture/README.md](../architecture/README.md).
