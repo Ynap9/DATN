@@ -1,0 +1,28 @@
+<p-dialog header="Xóa dự án" [(visible)]="visible" [modal]="true" [draggable]="false" [closable]="!deleting" [closeOnEscape]="!deleting"
+    [style]="{ width: '540px' }" [breakpoints]="{ '640px': '95vw' }" (onShow)="loadDocumentTypeNames()" (onHide)="reset()">
+    <div class="flex flex-col gap-3 text-sm">
+        <p-message severity="error" size="small">
+            Xóa dự án sẽ xóa toàn bộ văn bản, dữ liệu nhập, lịch sử kiểm tra và QA, phiếu chia việc, thành viên và giá, cấu hình AI của
+            <b>mọi metadata</b> trong dự án. Tiền công của dự án không còn trong thống kê. Google Sheet đồng bộ được đổi tên thành “… (đã xoá)”, không bị
+            xóa. Không khôi phục được.
+        </p-message>
+        <div class="flex flex-col gap-1">
+            <span class="text-xs text-muted-color">Metadata của dự án</span>
+            <div class="flex flex-wrap gap-1.5">
+                @for (name of documentTypeNames; track name) {
+                    <p-tag [value]="name" severity="secondary" [rounded]="true" />
+                }
+            </div>
+        </div>
+        <div class="flex flex-col gap-1">
+            <span class="text-xs text-muted-color">Gõ lại tên dự án để xác nhận</span>
+            <div class="select-all break-words rounded-lg border border-surface px-3 py-2 font-bold">{{ projectName() }}</div>
+            <input pInputText class="w-full" autofocus autocomplete="off" placeholder="Nhập tên dự án" [(ngModel)]="typedName" [disabled]="deleting"
+                (keydown.enter)="confirm()" />
+        </div>
+    </div>
+    <ng-template #footer>
+        <p-button label="Hủy" severity="secondary" [disabled]="deleting" (onClick)="close()" />
+        <p-button [label]="deleting ? 'Đang xóa…' : 'Xóa dự án'" severity="danger" [disabled]="!isNameMatched" [loading]="deleting" (onClick)="confirm()" />
+    </ng-template>
+</p-dialog>

@@ -10,7 +10,7 @@ Task 43, giao diện làm lại ở Task 53 (cập nhật 2026-11-23). Màn làm
 |---|---|
 | Route | `.../project/:id/metadata/:documentTypeId/check/:submissionId`, quyền như danh sách, `canDeactivate` khai inline trong `construction.routes.ts` |
 | Màn | `submission/submission-check.component.*` |
-| Khung PDF | `submission/submission-pdf-viewer/`: tải qua `proxy-file` bằng `DownloadService`, hiện bằng blob URL trong iframe, có nút Thử lại |
+| Khung PDF | `submission/submission-pdf-viewer/`: tải qua `proxy-file` bằng `DownloadService`, hiện bằng blob URL trong iframe, có nút Thử lại. File đã tải do `SubmissionPdfCacheService` (cùng thư mục, khai `providers` của màn) giữ, một mục `{fileUrl, objectUrl}`: đổi Ngang / Dọc (dựng lại Splitter) cùng văn bản không tải lại; sang văn bản khác hoặc rời màn thì tải lại và thu hồi objectUrl cũ; lỗi tải không lưu cache (Task 69) |
 | Dialog Lịch sử | `submission/submission-history-dialog/`: hàm `openSubmissionHistory(dialogService, id, fileName)`, dùng chung cho danh sách và màn này |
 | Đọc query | `submission/submission-query.ts` (`readSubmissionQuery`), dùng chung với danh sách. Riêng `documentTypeName` (`DOCUMENT_TYPE_NAME_PARAM`) chỉ để hiển thị, không nằm trong `SubmissionQuery` |
 | Bố cục | `submission-layout.ts` (dùng chung với màn QA): localStorage `construction.submission-check.layout` = `{ direction, sizes, fontSize }`, sai thì lấy mặc định |
@@ -55,6 +55,7 @@ Task 43, giao diện làm lại ở Task 53 (cập nhật 2026-11-23). Màn làm
 - Lưu ý: Phím tắt (Ctrl+Enter, Ctrl+↑/↓) phải nghe ở `document:keydown`, đừng nghe ở host component. Lý do: đóng hộp hỏi xong focus
   rơi về `body`, sự kiện không đi qua host nên phím tắt chết đến khi người dùng bấm vào ô nhập. Phím đến từ trong `.p-dialog` thì
   bỏ qua, kẻo Ctrl+Enter lưu ngầm sau dialog. Focus nằm trong iframe PDF thì không bắt được, giới hạn của trình duyệt.
+- Lưu ý: `SubmissionPdfViewerComponent` inject `SubmissionPdfCacheService` (không `providedIn`), nên màn nào dùng `app-submission-pdf-viewer` phải khai `providers: [SubmissionPdfCacheService]`, thiếu thì lỗi NullInjector. Viewer bị huỷ không thu hồi objectUrl vì cache giữ; đừng thêm `revokeObjectURL` vào viewer.
 - Lưu ý: Kéo thanh chia mà iframe nuốt sự kiện chuột thì thanh "dính". Lúc kéo phải gắn `pointer-events-none` lên khung PDF.
 - Lưu ý: Nút ← cạnh khối tên bị co còn 21–29px khi tên file dài. Nguyên nhân: nút trong flex mặc định `shrink: 1`. Cách tránh: thêm
   `shrink-0` cho nút (đã thêm ở cả màn Nhập liệu và màn QA).

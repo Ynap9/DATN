@@ -35,9 +35,9 @@ Quyết định và bẫy riêng của từng màn đã làm (cập nhật 2026-
   nên form bắt chọn ≥ 1 metadata. Sửa từ danh sách gọi `GET {id}` trước để có đủ `documentTypeIds`.
 - Form **Tạo** có 2 nút gạt chỉ đặt lúc tạo, mặc định bật: "Có kiểm tra QA" (`isQaEnabled`) và "Tạo Google Sheet đồng bộ"
   (`isGoogleSheetEnabled`, Task 54). Tắt Sheet → dự án không có `urlGoogleSheetSync`, chỉ nhập bằng Excel, ẩn nút "Mở Google
-  Sheet"; bật mà chưa kết nối Google → BE trả `304`, form giữ nguyên dữ liệu. Form **Sửa** không có và không gửi 2 trường này.
+  Sheet"; bật mà chưa kết nối Google → BE trả `304`, form giữ nguyên dữ liệu. Form **Sửa** không có và không gửi 2 trường này, và (Task 69) không còn ô chọn Trạng thái: nhãn chỉ đọc (tag `PROJECT_STATUSES`), body gửi lại `status` hiện tại; Hết hạn ↔ Đang triển khai do ngày kết thúc quyết định (BE Task 68). Dòng gợi ý dưới Ngày kết thúc, "hôm nay" theo ngày máy: Hết hạn + ngày đã qua → vàng (chọn ngày từ hôm nay hoặc để trống để gia hạn); Hết hạn + ngày trống / từ hôm nay → xanh (lưu xong về Đang triển khai); Đang triển khai + ngày đã qua → vàng, không chặn lưu; Đang nghiệm thu / Đã xong / form Tạo → không có dòng. Lỗi `342` từ BE → toast, giữ dialog.
 - Ngày gửi chuỗi local `YYYY-MM-DDT00:00:00` của `sh-calendar`, **không** `toISOString` (lệch UTC lùi 1 ngày).
-- Xoá dùng `DELETE admin/delete/{id}` (kèm dữ liệu), chỉ Admin / SuperAdmin có quyền Delete; không gọi `DELETE {id}` cũ.
+- Xoá (Task 69): mục ⋯ "Xóa" mở `project/project-delete-dialog` (p-dialog gắn cuối `project-list.component.html`, `deleteTarget` + `deleteDialogVisible`) thay hộp xác nhận thường. Phải gõ lại tên dự án (trim, không phân biệt hoa thường, giữ dấu) mới bật nút, Enter khi đã khớp = Xóa; đang xóa thì khoá Hủy, ô nhập, X và Esc. Chip metadata lấy `GET {id}` lúc mở dialog (danh sách phân trang / có lọc nên không đủ dòng của dự án) rồi đổi id → tên bằng dropdown metadata đã tải. Gọi `DELETE admin/delete/{id}` (kèm dữ liệu), chỉ Admin / SuperAdmin có quyền Delete; không gọi `DELETE {id}` cũ.
 - Bấm tên / thẻ dòng mở thẳng danh sách văn bản đúng metadata của dòng (`project/:id/metadata/:documentTypeId`, Task 46) — màn chi tiết
   dự án cũ đã bỏ. Mục ⋯ đầu tiên "Báo cáo tiến độ" chỉ hiện khi `row.viewerRole` là Admin / Leader.
 

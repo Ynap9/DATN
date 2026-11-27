@@ -26,6 +26,7 @@ import {
 import { SharedImports } from '@/shared/import.shared';
 import { IBaseResponse } from '@/shared/models/request-paging.base.models';
 import { openSubmissionHistory } from './submission-history-dialog/submission-history-dialog.component';
+import { SubmissionPdfCacheService } from './submission-pdf-viewer/submission-pdf-cache.service';
 import { SubmissionPdfViewerComponent } from './submission-pdf-viewer/submission-pdf-viewer.component';
 import { FONT_SIZE_MAX, FONT_SIZE_MIN, ISubmissionLayout, readSubmissionLayout, writeSubmissionLayout } from './submission-layout';
 import { AdjacentDirection, DOCUMENT_TYPE_NAME_PARAM, isFilterEdge, readSubmissionQuery, SubmissionQuery } from './submission-query';
@@ -66,6 +67,7 @@ interface IWrongFieldNote {
     templateUrl: './submission-check.component.html',
     // Phím tắt nghe ở document để vẫn chạy khi focus rơi về body (sau khi đóng hộp hỏi); đóng tab / F5 khi có sửa thì trình duyệt hỏi (43.12)
     host: { '(document:keydown)': 'onKeydown($event)', '(window:beforeunload)': 'onBeforeUnload($event)' },
+    providers: [SubmissionPdfCacheService],
 })
 export class SubmissionCheckComponent extends BaseComponent {
     private readonly _projectService = inject(ProjectService);

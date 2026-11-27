@@ -1,9 +1,10 @@
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
-import { ShCalendarComponent, ShInputTextComponent, ShMultiSelectComponent, ShSelectComponent } from '@sh/ui';
+import { ShCalendarComponent, ShInputTextComponent, ShMultiSelectComponent } from '@sh/ui';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { MessageModule } from 'primeng/message';
+import { TagModule } from 'primeng/tag';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { finalize } from 'rxjs';
 import { IDocumentTypeDropdown } from '@/models/document-type.model';
@@ -13,7 +14,10 @@ import { BaseComponent } from '@/shared/base/base.component';
 import { PROJECT_STATUS, PROJECT_STATUSES } from '@/shared/constants/project.constants';
 import { SharedImports } from '@/shared/import.shared';
 
-const EDITABLE_STATUSES: number[] = [PROJECT_STATUS.DOING, PROJECT_STATUS.EXPIRED];
+const EXPIRED_PASSED_HINT = 'Dự án đã hết hạn. Chọn ngày kết thúc từ hôm nay trở đi, hoặc để trống, để gia hạn.';
+const EXPIRED_RENEWED_HINT = 'Lưu xong dự án về Đang triển khai.';
+const DOING_PASSED_HINT = 'Ngày kết thúc đã qua, sáng mai hệ thống chuyển dự án sang Hết hạn.';
+const DATE_KEY_LENGTH = 'YYYY-MM-DD'.length;
 
 // Ngày là chuỗi local 'YYYY-MM-DDT00:00:00' của sh-calendar nên so chuỗi là đủ
 function dateRangeValidator(group: AbstractControl): ValidationErrors | null {
@@ -23,7 +27,7 @@ function dateRangeValidator(group: AbstractControl): ValidationErrors | null {
 
 @Component({
     selector: 'app-project-form',
-    imports: [SharedImports, MessageModule, ToggleSwitchModule, ShInputTextComponent, ShCalendarComponent, ShMultiSelectComponent, ShSelectComponent],
+    imports: [SharedImports, MessageModule, TagModule, ToggleSwitchModule, ShInputTextComponent, ShCalendarComponent, ShMultiSelectComponent],
     templateUrl: './project-form.component.html',
 })
 export class ProjectFormComponent extends BaseComponent {
@@ -34,8 +38,7 @@ export class ProjectFormComponent extends BaseComponent {
 
     readonly project: IViewProject | undefined = this._config.data?.project;
     readonly documentTypes: IDocumentTypeDropdown[] = this._config.data?.documentTypes ?? [];
-    readonly isStatusLocked = !!this.project && !EDITABLE_STATUSES.includes(this.project.status);
-    readonly statuses = this.isStatusLocked ? PROJECT_STATUSES : PROJECT_STATUSES.filter((status) => EDITABLE_STATUSES.includes(status.value));
+    readonly projectStatus = PROJECT_STATUSES.find((status) => status.value === this.project?.status);
     submitting = false;
 
     override form = new FormGroup(
@@ -48,7 +51,6 @@ export class ProjectFormComponent extends BaseComponent {
             isQaEnabled: new FormControl(this.project?.isQaEnabled ?? true, { nonNullable: true }),
             // Chỉ gửi khi tạo; form Sửa không có ô này
             isGoogleSheetEnabled: new FormControl(true, { nonNullable: true }),
-            status: new FormControl({ value: this.project?.status ?? PROJECT_STATUS.DOING, disabled: this.isStatusLocked }, { nonNullable: true }),
         },
         { validators: dateRangeValidator },
     );
@@ -58,6 +60,16 @@ export class ProjectFormComponent extends BaseComponent {
         return !!this.project?.documentTypeIds.some((id) => !selectedIds.includes(id));
     }
 
+    // Hết hạn ↔ Đang triển khai do ngày kết thúc quyết định (BE Task 68); "hôm nay" theo ngày máy, so chuỗi 'YYYY-MM-DD' vì ngày là chuỗi local
+    get endedAtHint() {
+        const endedAt = this.form.controls.endedAt.value;
+        const isEndedAtPassed = !!endedAt && endedAt.slice(0, DATE_KEY_LENGTH) < new Date().toLocaleDateString('sv-SE');
+        if (this.project?.status === PROJECT_STATUS.EXPIRED) {
+            return isEndedAtPassed ? { text: EXPIRED_PASSED_HINT, isWarning: true } : { text: EXPIRED_RENEWED_HINT, isWarning: false };
+        }
+        return this.project?.status === PROJECT_STATUS.DOING && isEndedAtPassed ? { text: DOING_PASSED_HINT, isWarning: true } : null;
+    }
+
     close() {
         this._ref.close(false);
     }
@@ -65,9 +77,9 @@ export class ProjectFormComponent extends BaseComponent {
     onSubmit() {
         if (this.isFormInvalid()) return;
 
-        const { name, startedAt, endedAt, documentTypeIds, isQaEnabled, isGoogleSheetEnabled, status } = this.form.getRawValue();
+        const { name, startedAt, endedAt, documentTypeIds, isQaEnabled, isGoogleSheetEnabled } = this.form.getRawValue();
         const request$ = this.project
-            ? this._projectService.update(this.project.id, { name, startedAt, endedAt, status, documentTypeIds })
+            ? this._projectService.update(this.project.id, { name, startedAt, endedAt, status: this.project.status, documentTypeIds })
             : this._projectService.create({ name, startedAt, endedAt, isQaEnabled, isGoogleSheetEnabled, documentTypeIds });
 
         this.submitting = true;

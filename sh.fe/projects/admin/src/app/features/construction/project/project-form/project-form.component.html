@@ -13,6 +13,9 @@
             @if (form.hasError('dateRange')) {
                 <small class="text-red-600">Ngày bắt đầu phải trước hoặc bằng ngày kết thúc</small>
             }
+            @if (endedAtHint; as hint) {
+                <small [class.text-amber-700]="hint.isWarning" [class.text-green-700]="!hint.isWarning">{{ hint.text }}</small>
+            }
         </div>
 
         <div class="sm:col-span-2 flex flex-col gap-2">
@@ -26,7 +29,10 @@
         </div>
 
         @if (project) {
-            <sh-select label="Trạng thái" formControlName="status" [options]="statuses" optionLabel="label" optionValue="value" />
+            <div class="flex flex-col gap-2">
+                <label class="font-bold">Trạng thái</label>
+                <p-tag class="self-start" [value]="projectStatus?.label" [severity]="projectStatus?.severity" [rounded]="true" />
+            </div>
             <div class="flex flex-col gap-2">
                 <label class="font-bold">Kiểm tra QA</label>
                 <span>{{ project.isQaEnabled ? 'Có' : 'Không' }}</span>

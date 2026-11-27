@@ -38,6 +38,7 @@ import { SharedImports } from '@/shared/import.shared';
 import { IBaseResponse } from '@/shared/models/request-paging.base.models';
 import { openSubmissionHistory } from '../submission-history-dialog/submission-history-dialog.component';
 import { FONT_SIZE_MAX, FONT_SIZE_MIN, ISubmissionLayout, readSubmissionLayout, writeSubmissionLayout } from '../submission-layout';
+import { SubmissionPdfCacheService } from '../submission-pdf-viewer/submission-pdf-cache.service';
 import { SubmissionPdfViewerComponent } from '../submission-pdf-viewer/submission-pdf-viewer.component';
 import { AdjacentDirection, DOCUMENT_TYPE_NAME_PARAM, isFilterEdge, readSubmissionQuery, SubmissionQuery } from '../submission-query';
 import { buildLocationText } from '../submission-location';
@@ -80,6 +81,7 @@ const BANNER_STYLES: Record<BannerTone, { box: string; icon: string }> = {
     templateUrl: './submission-qa.component.html',
     // Phím tắt nghe ở document để vẫn chạy khi focus rơi về body; đóng tab / F5 khi đang chấm dở thì trình duyệt hỏi (44.13)
     host: { '(document:keydown)': 'onKeydown($event)', '(window:beforeunload)': 'onBeforeUnload($event)' },
+    providers: [SubmissionPdfCacheService],
 })
 export class SubmissionQaComponent extends BaseComponent {
     private readonly _projectService = inject(ProjectService);

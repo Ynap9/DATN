@@ -22,6 +22,7 @@ import { SUBMISSION_ROLE, SUBMISSION_ROLE_BY_VIEWER_ROLE } from '@/shared/consta
 import { IColumn, IColumnFilterValue, IDateRangeValue, ITableAction, ITableEvent } from '@/shared/models/data-table.models';
 import { SharedImports } from '@/shared/import.shared';
 import { ProjectCardComponent } from './project-card/project-card.component';
+import { ProjectDeleteDialogComponent } from './project-delete-dialog/project-delete-dialog.component';
 import { ProjectFormComponent } from './project-form/project-form.component';
 
 const PROJECT_ACTIONS = {
@@ -51,7 +52,7 @@ type ProjectListFilters = Omit<IFindPagingProject, 'pageNumber' | 'pageSize'>;
 
 @Component({
     selector: 'app-project-list',
-    imports: [SharedImports, DataTable, PageHeader, ShSelectComponent, PaginatorModule, SkeletonModule, ProjectCardComponent],
+    imports: [SharedImports, DataTable, PageHeader, ShSelectComponent, PaginatorModule, SkeletonModule, ProjectCardComponent, ProjectDeleteDialogComponent],
     templateUrl: './project-list.component.html',
     styleUrl: './project-list.component.scss',
 })
@@ -97,6 +98,8 @@ export class ProjectListComponent extends BaseComponent {
     columnFilters: IColumnFilterValue = {};
     documentTypes: IDocumentTypeDropdown[] = [];
     projects: IViewProjectPair[] = [];
+    deleteTarget: IViewProjectPair | null = null;
+    deleteDialogVisible = false;
     columns: IColumn<IViewProjectPair>[] = this.buildColumns();
     pageNumber = this.START_PAGE_NUMBER;
     pageSize = 25;
@@ -397,21 +400,7 @@ export class ProjectListComponent extends BaseComponent {
     }
 
     private confirmDeleteProject(project: IViewProjectPair) {
-        this.confirmDelete(
-            {
-                header: 'Xóa dự án',
-                message: `Xóa dự án ${project.projectName} cùng toàn bộ văn bản, phiếu, thành viên, cấu hình AI? Không khôi phục được.`,
-            },
-            () => {
-                this._projectService
-                    .deleteCascade(project.projectId)
-                    .pipe(takeUntilDestroyed(this._destroyRef))
-                    .subscribe((res) => {
-                        if (this.isResponseSucceed(res, true, 'Xóa dự án thành công')) {
-                            this.load();
-                        }
-                    });
-            },
-        );
+        this.deleteTarget = project;
+        this.deleteDialogVisible = true;
     }
 }
