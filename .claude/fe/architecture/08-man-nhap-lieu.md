@@ -24,6 +24,8 @@ Task 43, giao diện làm lại ở Task 53 (cập nhật 2026-11-23). Màn làm
   bản đã QA Đạt. Câu `readonlyBanner.message` hiện ở dòng tóm tắt kèm icon khoá, không có khung riêng. QA vào màn này thì bị đẩy
   về danh sách.
 - Trường hiện = `isShowListView` **hoặc** bị QA đánh sai. Lưu gửi **mọi** trường: BE **giữ nguyên** trường không gửi lên (`BuildCheckPlan` chỉ duyệt trường có trong `inputs`), nhưng FE vẫn gửi đủ để log cũ → mới đầy đủ và form khớp sau lưu.
+- Dự án đang nghiệm thu (Task 74.6): sửa văn bản đã QA Đạt giữ kết quả QA (BE `isProjectAccepting`), nên **không** hỏi, lưu thẳng; dòng tóm tắt thêm "· Dự án đang nghiệm thu: sửa
+  không làm mất kết quả QA đạt" (getter `keepsQaPassed`). Dự án đang triển khai giữ hành vi dưới.
 - Quản lý sửa văn bản đã QA Đạt thì hỏi "Lưu và QA lại" trước. Lưu xong gọi `next`; hết văn bản (317) hoặc `next` lỗi thì ở lại và
   tải lại văn bản để form khớp giá trị vừa lưu.
 - Lỗi khi Lưu: luôn giữ giá trị đang gõ. 826 / 316 / 323 thì tải lại dự án + văn bản (thành chỉ đọc). 820 hiện trạng thái trống
@@ -80,5 +82,7 @@ MinIO đầy (import Excel báo `209`) và không có Google Sheet.
 - Lệch báo PM, chưa sửa (thuộc BE): Admin sửa hộ văn bản của Data thì dòng QA trong Lịch sử ghi "Người nhập: admin02", không phải người giữ văn bản.
 - Lưu ý: mỗi lần mở văn bản mất 3–10 s do tunnel. Sau F5 màn trắng tới khi tải xong; đừng coi là lỗi khi chụp màn quá sớm.
 - Đã dọn: dự án, metadata, văn bản, log và audit của ZZTEST72 / 72B.
+- Task 74 (2026-11-28, `ZZTEST74*` đã dọn): dự án `ACCEPTING` + văn bản QA đạt, Admin sửa một trường rồi Lưu → không hộp hỏi, toast thường, `StatusQa` vẫn đạt, log "… giữ kết quả QA đạt.",
+  không có dòng giữ QA / đợt; dòng tóm tắt hiện câu nghiệm thu. Dự án `DOING` cùng thao tác vẫn hiện hộp "Văn bản đã QA đạt" và không có câu nghiệm thu.
 
 > **Tiếp:** [09-man-qa.md](09-man-qa.md) — màn QA chấm Đạt / Trả lại.

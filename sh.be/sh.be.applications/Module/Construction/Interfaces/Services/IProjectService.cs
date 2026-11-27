@@ -14,6 +14,7 @@ namespace sh.be.applications.Module.Construction.Interfaces.Services
         Task<ViewProjectAcceptanceDto> StartAcceptance(int id, TransitionAcceptanceProjectDto dto);
         Task<ViewProjectAcceptanceDto> FinishAcceptance(int id, TransitionAcceptanceProjectDto dto);
         Task<ViewProjectAcceptanceDto> ReopenAcceptance(int id, ReopenAcceptanceProjectDto dto);
+        Task<ViewProjectAcceptanceDto> ExpireAcceptance(int id, ExpireAcceptanceProjectDto dto);
         Task<ExportFileDto> ExportAcceptanceReport(int id);
         Task<FindProjectByIdDto> Create(CreateProjectDto dto);
         Task Update(int id, UpdateProjectDto dto);

@@ -3,6 +3,7 @@ using sh.be.domain.Module.Construction.Projects.Repositories;
 using sh.be.domain.Module.Construction.Submissions.Repositories;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.Construction;
+using sh.be.shared.Constants.Mail;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
 
@@ -106,6 +107,10 @@ namespace sh.be.domain.Module.Construction.Projects.Services
             }
 
             var daysLeft = CalculateDeadlineDaysLeft(project.EndedAt.Value, today);
+            if (project.Status == ProjectConst.ACCEPTING && daysLeft < 0)
+            {
+                return ProjectDeadlineConst.NOTIFICATION_ACCEPTING_OVERDUE;
+            }
             if (project.Status == ProjectConst.EXPIRED || daysLeft < 0)
             {
                 return ProjectDeadlineConst.NOTIFICATION_EXPIRED;
@@ -142,6 +147,17 @@ namespace sh.be.domain.Module.Construction.Projects.Services
             return new ProjectDeadlineSettings(warningDays, isMailEnabled, defaultedConfigNames);
         }
 
+        public static string BuildDeadlineMailSubject(int notificationType, string projectName)
+        {
+            var subject = notificationType switch
+            {
+                ProjectDeadlineConst.NOTIFICATION_EXPIRED => MailTemplateConstants.SUBJECT_PROJECT_EXPIRED,
+                ProjectDeadlineConst.NOTIFICATION_ACCEPTING_OVERDUE => MailTemplateConstants.SUBJECT_PROJECT_ACCEPTING_OVERDUE,
+                _ => MailTemplateConstants.SUBJECT_PROJECT_DEADLINE_WARNING,
+            };
+            return string.Format(subject, projectName);
+        }
+
         public static string BuildDeadlineSentKey(int projectId, int notificationType, DateTime endedAt, string toAddress)
         {
             return $"{projectId}|{notificationType}|{endedAt:yyyyMMdd}|{toAddress.Trim().ToLowerInvariant()}";
@@ -176,6 +192,14 @@ namespace sh.be.domain.Module.Construction.Projects.Services
             if (!isAdmin)
             {
                 throw new UserFriendlyException(ErrorCodes.BadRequest, "Chỉ Admin được trả dự án về đang triển khai");
+            }
+        }
+
+        public static void EnsureCanExpireAccepting(bool isAdmin)
+        {
+            if (!isAdmin)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Chỉ Admin được chuyển dự án sang Hết hạn");
             }
         }
 

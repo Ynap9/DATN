@@ -29,9 +29,10 @@ cuối cùng QA đạt — dự án không QA (Task 28, `Project.IsQaEnabled`, [
 | Tự chuyển (trong `DELETE submission`, Task 32) — mọi dự án | `DOING` | `ACCEPTING` | Xoá đúng văn bản cuối còn chặn; xoá hết văn bản thì không |
 | `POST {id:int}/acceptance/start` | `DOING` | `ACCEPTING` | Đủ, hoặc Admin `isForced` (lý do tuỳ chọn) |
 | `POST {id:int}/acceptance/finish` | `ACCEPTING` | `DONE` | Đủ, hoặc Admin `isForced` (lý do tuỳ chọn) |
-| `POST {id:int}/acceptance/reopen` | `ACCEPTING` | `DOING` | Chỉ Admin, bắt buộc lý do |
+| `POST {id:int}/acceptance/reopen` | `ACCEPTING` | `DOING` | Chỉ Admin, bắt buộc lý do; bổ sung cấu hình trường dự án còn thiếu (Task 74.8) |
+| `POST {id:int}/acceptance/expire` | `ACCEPTING` | `EXPIRED` | Chỉ Admin, `EndedAt` trước hôm nay giờ VN, bắt buộc lý do (Task 74.3) |
 
-Không bao giờ tự sang `DONE`, không tự hạ `ACCEPTING` về `DOING`. Chỉ tự chuyển ở `ReviewQa` (có QA) hoặc `Check` (không QA), mỗi
+Không bao giờ tự sang `DONE`, không tự hạ `ACCEPTING` về `DOING`, job hạn dự án không chuyển `ACCEPTING` sang `EXPIRED` ([15](15-han-du-an.md)). Chỉ tự chuyển ở `ReviewQa` (có QA) hoặc `Check` (không QA), mỗi
 loại dự án một chỗ: xoá văn bản cuối cùng chưa xong không tự chuyển — bấm "Bắt đầu" (lúc đó đã đủ, không cần lý do).
 
 `PUT project/{id}` **không** được vào / ra `ACCEPTING`, vào / ra `DONE` (`342` "Dùng chức năng nghiệm thu", kiểm trong `Project.Update`; Task 70 chặn thêm đi ra khỏi `DONE`: dự án Xong gửi `status` khác `4` → `342`).
@@ -45,7 +46,7 @@ Gốc `api/v1/construction/project`.
 |---|---|---|
 | `GET {id:int}/acceptance` | `Function.Construction.Project.View` | — |
 | `POST {id:int}/acceptance/start`, `.../finish` | `Function.Construction.Project.Accept` | `{ isForced, reason }` |
-| `POST {id:int}/acceptance/reopen` | `Function.Construction.Project.Accept` | `{ reason }` |
+| `POST {id:int}/acceptance/reopen`, `.../expire` | `Function.Construction.Project.Accept` | `{ reason }` |
 | `GET {id:int}/acceptance/report` | `Function.Construction.Project.View` | — (trả file PDF, [Biên bản](#biên-bản-nghiệm-thu-pdf--task-34)) |
 
 `GET acceptance` từ Task 30: người không thuộc dự án (không phải Admin, không có `ProjectMember` chưa gỡ) → `303`; Leader / Data / QA
@@ -95,7 +96,7 @@ Bẫy: DB bật `READ_COMMITTED_SNAPSHOT`, nên hai request QA đạt **song son
 
 ## Audit — bằng chứng nghiệm thu
 
-Action `Bắt đầu nghiệm thu` / `Hoàn tất nghiệm thu` / `Trả dự án về đang triển khai` (`AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_*`), type
+Action `Bắt đầu nghiệm thu` / `Hoàn tất nghiệm thu` / `Trả dự án về đang triển khai` / `Chuyển hết hạn khi nghiệm thu` (`AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_*`), type
 `Update`. `oldData { ProjectId, Status }`; `newData { ProjectId, Status, IsForced, IsAutomatic, Reason, Summary }` — `IsForced = !IsReady`
 lúc chuyển, `Summary` = dòng tổng của `GET` lúc chuyển. `GET acceptance` đọc audit mới nhất để ra `lastTransition` (`action`,
 `createdDate`, `userName`, `fullName`, `oldStatus`, `newStatus`, `isForced`, `isAutomatic`, `reason`).
@@ -106,6 +107,16 @@ về đang triển khai' WHERE Action = N'Trả dự án về đang làm'`; đ�
 
 Lưu ý: `AuditLog` không có cột `ProjectId`: lần chuyển gần nhất lọc `NewData LIKE '{"ProjectId":<id>,%'`. `ProjectId` **phải** là trường
 **đầu tiên** của `newData` (serializer PascalCase của `AuditLogUtils`); thêm trường lên trước là `lastTransition` thành `null`.
+
+## Chuyển Hết hạn khi nghiệm thu — Task 74
+
+Job hạn dự án không còn đổi `ACCEPTING` sang `EXPIRED` ([15](15-han-du-an.md)). `POST {id}/acceptance/expire` (`ExpireAcceptance`) kiểm: dự án `303` → không phải Admin / SuperAdmin
+`400` "Chỉ Admin được chuyển dự án sang Hết hạn" (Leader mặc định không có key `Accept` nên `403`) → `Project.ExpireAccepting`: không `ACCEPTING` `342` "Chỉ chuyển Hết hạn khi dự án
+đang nghiệm thu", `EndedAt` chưa trước hôm nay giờ VN `342` "Dự án chưa quá ngày kết thúc" → lý do 10–1000 ký tự `400`. `PUT project` vẫn không chọn tay `EXPIRED`. Audit
+`Chuyển hết hạn khi nghiệm thu`: `newData { ProjectId, Status, IsForced = false, IsAutomatic = false, Reason }` (không `Summary`), có trong `AcceptanceActions` của `ProjectQuery` nên hiện ở
+`lastTransition` và biên bản PDF (Cách chuyển "Admin chuyển Hết hạn"). Sau đó như `EXPIRED` do job: gia hạn (Task 68) → `DOING`, bắt đầu nghiệm thu lại; phiếu, văn bản không đổi.
+
+Lưu ý: Mở lại nghiệm thu bổ sung cấu hình trường dự án còn thiếu ([06](06-truong-van-ban.md)), cùng `SaveChanges`; audit mở lại có `AddedFieldCount`.
 
 ## Biên bản nghiệm thu (PDF) — Task 34
 
@@ -151,6 +162,9 @@ C (đã gỡ) 1 khớp đếm tay (loại ô trắng, trường không tính ti�
 / QA `337`, người ngoài `303` cùng thông báo id không có; dự án không QA không có cột QA, văn bản chưa kiểm không tính ô; 61 lần chuyển → 7
 trang, lặp hàng tiêu đề, lý do dài xuống dòng không đè ô; 5 request song song đều trả PDF; `lastTransition` y như cũ. Chưa kiểm xuất biên
 bản xen với ký số lô (người dùng bỏ qua, cần token).
+
+Task 74 (2026-11-28, API thật + SMTP giả, `ZZTEST74*` đã dọn): job với 74A `DOING` hết hôm qua / 74B, 74C `ACCEPTING` (hết hôm qua / còn 2 ngày) → 74A `EXPIRED`, 74B / 74C giữ `ACCEPTING`;
+`expire`: Leader `403`, user gán `Accept` `400`, 74C / 74A `342`, lý do 5 ký tự `400`, Admin 74B → `EXPIRED` + audit + `lastTransition`, gia hạn → `DOING`, PDF có dòng mới; `PUT status = 5` `342`.
 
 ## Giới hạn
 

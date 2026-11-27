@@ -42,7 +42,7 @@ namespace sh.be.applications.Module.Construction.Implements
             _logger.LogInformation($"{nameof(FindPaging)}, dto={JsonSerializer.Serialize(dto)}");
             if (dto.NotificationType.HasValue && !ProjectDeadlineConst.NOTIFICATION_TYPES.Contains(dto.NotificationType.Value))
             {
-                throw new UserFriendlyException(ErrorCodes.BadRequest, "Loại hạn chỉ nhận 1 (sắp hết hạn) hoặc 2 (đã hết hạn)");
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Loại hạn chỉ nhận 1 (sắp hết hạn), 2 (đã hết hạn) hoặc 3 (quá hạn khi đang nghiệm thu)");
             }
             var settings = await _projectConfigDomainService.GetDeadlineSettingsAsync();
             return await _projectDeadlineQuery.FindPaging(dto, GetVietnamTime().Date, settings.WarningDays);

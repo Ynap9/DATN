@@ -2,10 +2,11 @@ import { ITableBadge, TagSeverity } from '@/shared/models/data-table.models';
 
 export const PROJECT_DEADLINE_URL = '/admin/construction/project-deadline';
 
-// Khớp loại báo hạn của BE: dự án sắp hết hạn / đã hết hạn
+// Khớp loại báo hạn của BE: dự án sắp hết hạn / đã hết hạn / đang nghiệm thu đã quá hạn (Task 74)
 export const DEADLINE_TYPE = {
     SOON: 1,
     EXPIRED: 2,
+    ACCEPTING_OVERDUE: 3,
 } as const;
 
 // Trạng thái lần chạy gần nhất của job kiểm hạn do Hangfire trả (lastJobState)
@@ -57,6 +58,7 @@ export const DEADLINE_TYPE_FILTERS = [
     { label: 'Tất cả', value: DEADLINE_TYPE_ALL },
     { label: 'Sắp hết hạn', value: DEADLINE_TYPE.SOON },
     { label: 'Đã hết hạn', value: DEADLINE_TYPE.EXPIRED },
+    { label: 'Nghiệm thu quá hạn', value: DEADLINE_TYPE.ACCEPTING_OVERDUE },
 ];
 
 // Lọc kết quả gửi mail; isSuccess của BE: bỏ trống / true / false
@@ -79,8 +81,14 @@ export function toIsSuccess(filter: DeadlineResultFilter) {
     return filter === DEADLINE_RESULT_FILTER.SUCCESS;
 }
 
+const DEADLINE_TYPE_BADGES: Record<number, ITableBadge> = {
+    [DEADLINE_TYPE.SOON]: { label: 'Sắp hết hạn', tone: 'amber' },
+    [DEADLINE_TYPE.EXPIRED]: { label: 'Đã hết hạn', tone: 'red' },
+    [DEADLINE_TYPE.ACCEPTING_OVERDUE]: { label: 'Nghiệm thu quá hạn', tone: 'amber' },
+};
+
 export function getDeadlineTypeBadge(type: number): ITableBadge {
-    return type === DEADLINE_TYPE.EXPIRED ? { label: 'Đã hết hạn', tone: 'red' } : { label: 'Sắp hết hạn', tone: 'amber' };
+    return DEADLINE_TYPE_BADGES[type] ?? DEADLINE_TYPE_BADGES[DEADLINE_TYPE.SOON];
 }
 
 // Còn n ngày / hết hạn hôm nay: amber; quá hạn: red

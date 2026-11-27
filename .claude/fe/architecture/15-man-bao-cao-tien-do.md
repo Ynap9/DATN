@@ -32,6 +32,8 @@ Tách khỏi [07-man-construction.md](07-man-construction.md) từ Task 71.
 - Thiếu `ProgressStats` / `QaStats` → khối giữ khung, ghi "Bạn chưa được cấp quyền xem mục này", không dựng component nên không gọi API.
 - Nghiệm thu: luật nút / chặn / dialog lý do / PDF chuyển nguyên từ màn chi tiết cũ (`a` = tổng − đã kiểm, `b` = đã kiểm − QA đạt, khớp
   `340`); chuyển xong khối phát `changed`, trang tải lại dự án + acceptance. Câu "Tự vào nghiệm thu khi …" chỉ hiện ở bước Đang triển khai.
+- Nút "Chuyển Hết hạn" (Task 74.9, danger outlined): chỉ khi `canExpire` = ACCEPTING + `canForce` (Admin / SuperAdmin) + ngày kết thúc trước hôm nay (`daysLeft` < 0, dùng chung với
+  `deadlineBadge`). Dialog lý do bắt buộc 10–1000 ký tự (`AcceptanceReasonComponent`, `confirmLabel` riêng), xong toast "Đã chuyển dự án sang Hết hạn" và tải lại báo cáo.
 - Màu dữ liệu khai một lần ở `REPORT_COLORS`; số định dạng `Intl` vi-VN (`formatNumber`, `formatPercent`), không đăng ký locale `vi`.
 - Lưu ý: chart.js vẽ canvas nên đọc token bằng `readCssVar(element, name)` trên phần tử của khối; đừng đọc `document.documentElement`
   — token `--app-*` không ở `:root`, ra chuỗi rỗng và chart tô đen.
@@ -68,5 +70,7 @@ tạm; đã dọn sạch:
 - Tải lại làm mờ bảng, không skeleton; chặn riêng API năng suất → "Chưa tải được năng suất" + Thử lại chỉ trong khối, các khối khác nguyên. Dự án không QA: không tab, 5 cột, không gọi `qa-stats`.
   Thiếu `QaStats`: 5 cột, không gọi `qa-stats/entry-users`, hai khối kia hiện "chưa được cấp quyền".
 - Chưa kiểm: tắt mạng thật bằng DevTools Offline (đã giả lập bằng chặn đúng API đó).
+- Task 74 (2026-11-28, `ZZTEST74B` đã dọn): dự án `ACCEPTING` quá hạn 1 ngày hiện nút "Chuyển Hết hạn"; dialog đúng tiêu đề / câu / ngày, lý do 3 ký tự báo "Lý do phải từ 10 đến 1000 ký tự";
+  lý do hợp lệ → toast, thẻ về Hết hạn, "Lần chuyển gần nhất" = "Chuyển hết hạn khi nghiệm thu", nút biến mất.
 
 > **Tiếp:** [16-man-han-du-an.md](16-man-han-du-an.md) — màn Hạn dự án.

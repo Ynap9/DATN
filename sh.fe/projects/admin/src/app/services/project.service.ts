@@ -1,6 +1,6 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
-import { ICreateProject, IFindPagingProject, IReopenAcceptance, ITransitionAcceptance, IUpdateProject, IViewProject, IViewProjectAcceptance, IViewProjectPair } from "@/models/project.model";
+import { ICreateProject, IExpireAcceptance, IFindPagingProject, IReopenAcceptance, ITransitionAcceptance, IUpdateProject, IViewProject, IViewProjectAcceptance, IViewProjectPair } from "@/models/project.model";
 import {
     IDeadlineCheckStatus,
     IFindProjectDeadline,
@@ -54,6 +54,10 @@ export class ProjectService {
 
     reopenAcceptance(id: number, body: IReopenAcceptance) {
         return this.http.post<IBaseResponseWithData<IViewProjectAcceptance>>(`${this.api}/${id}/acceptance/reopen`, body);
+    }
+
+    expireAcceptance(id: number, body: IExpireAcceptance) {
+        return this.http.post<IBaseResponseWithData<IViewProjectAcceptance>>(`${this.api}/${id}/acceptance/expire`, body);
     }
 
     acceptanceReportUrl(id: number) {

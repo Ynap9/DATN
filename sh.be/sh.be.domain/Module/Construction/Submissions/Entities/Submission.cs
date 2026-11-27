@@ -118,7 +118,8 @@ namespace sh.be.domain.Module.Construction.Submissions.Entities
             PageCount = pageCount;
         }
 
-        public SubmissionLog Check(string checkedBy, string userName, string? note, List<SubmissionDataChange> changes, DateTime checkedDate)
+        // Dự án đang nghiệm thu thì sửa văn bản đã QA đạt giữ kết quả QA đạt, không về Chờ QA (Task 74.5)
+        public SubmissionLog Check(string checkedBy, string userName, string? note, List<SubmissionDataChange> changes, DateTime checkedDate, bool isProjectAccepting)
         {
             var trimmedNote = note?.Trim();
             if (trimmedNote?.Length > SubmissionConst.CHECK_NOTE_MAX_LENGTH)
@@ -128,9 +129,12 @@ namespace sh.be.domain.Module.Construction.Submissions.Entities
 
             var changedDataCount = changes.Count;
             var oldStatus = StatusCheck;
-            var needsQaAgain = oldStatus == SubmissionConst.CHECKED && StatusQa != SubmissionConst.QA_NOT_REVIEWED && changedDataCount > 0;
+            var isEditedAfterQa = oldStatus == SubmissionConst.CHECKED && StatusQa != SubmissionConst.QA_NOT_REVIEWED && changedDataCount > 0;
+            var keepsQaPassed = isEditedAfterQa && isProjectAccepting && StatusQa == SubmissionConst.QA_PASSED;
+            var needsQaAgain = isEditedAfterQa && !keepsQaPassed;
             var description = oldStatus switch
             {
+                SubmissionConst.CHECKED when keepsQaPassed => $"Người dùng: {userName} đã tái kiểm tra hồ sơ, sửa {changedDataCount} trường khi dự án đang nghiệm thu, giữ kết quả QA đạt.",
                 SubmissionConst.CHECKED when needsQaAgain => $"Người dùng: {userName} đã tái kiểm tra hồ sơ, sửa {changedDataCount} trường sau QA — cần QA lại.",
                 SubmissionConst.CHECKED => $"Người dùng: {userName} đã tái kiểm tra hồ sơ.",
                 SubmissionConst.RETURNED => $"Người dùng: {userName} đã kiểm tra lại hồ sơ bị trả lại.",

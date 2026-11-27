@@ -448,6 +448,7 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_START,
             AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_FINISH,
             AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_REOPEN,
+            AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_EXPIRE,
         ];
 
         private record AcceptanceAuditData(int? Status, bool? IsForced, bool? IsAutomatic, string? Reason);

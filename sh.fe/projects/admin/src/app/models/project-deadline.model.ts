@@ -1,7 +1,7 @@
 import { IBaseRequestPaging } from '@/shared/models/request-paging.base.models';
 
 export interface IFindProjectDeadline extends IBaseRequestPaging {
-    // 1 sắp hết hạn, 2 đã hết hạn, bỏ trống = cả hai
+    // 1 sắp hết hạn, 2 đã hết hạn, 3 đang nghiệm thu đã quá hạn, bỏ trống = tất cả
     notificationType?: number;
 }
 

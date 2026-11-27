@@ -189,11 +189,56 @@ namespace sh.be.applications.Module.Construction.Implements
             project.ReopenFromAcceptance(currentUserId, now);
             var reason = ProjectDomainService.NormalizeAcceptanceReason(dto.Reason);
             var summary = await _projectQuery.FindAcceptanceSummary(id);
+            var addedFieldCount = await AddMissingDocumentFieldsAsync(id, currentUserId, now);
 
             _projectRepository.Update(project);
             AddAuditLog(AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_REOPEN, AuditLogConstants.ACTION_TYPE_UPDATE, $"Trả dự án {project.Name} về đang triển khai",
                 new { ProjectId = id, Status = oldStatus },
-                new { ProjectId = id, project.Status, IsForced = false, IsAutomatic = false, Reason = reason, Summary = summary.Total });
+                new { ProjectId = id, project.Status, IsForced = false, IsAutomatic = false, Reason = reason, Summary = summary.Total, AddedFieldCount = addedFieldCount });
+            await _unitOfWork.SaveChangesAsync();
+
+            return await FindAcceptance(id);
+        }
+
+        // Trường tạo khi dự án đang nghiệm thu không vào cấu hình dự án (Task 74.7); mở lại nghiệm thu thì bổ sung các trường đang có mà dự án còn thiếu, nối cuối thứ tự import
+        private async Task<int> AddMissingDocumentFieldsAsync(int projectId, string userId, DateTime now)
+        {
+            var configuredFields = (await _projectRepository.GetDocumentFieldsAsync(projectId)).Select(pf => (pf.DocumentTypeId, pf.DocumentFieldId)).ToHashSet();
+            var addedFields = new List<ProjectDocumentTypeDocumentField>();
+            foreach (var projectDocumentType in await _projectRepository.GetDocumentTypesAsync(projectId))
+            {
+                var missingFields = (await _documentFieldRepository.GetByDocumentTypeIdAsync(projectDocumentType.DocumentTypeId))
+                    .Where(field => !configuredFields.Contains((field.DocumentTypeId, field.Id)))
+                    .ToList();
+                if (missingFields.Count == 0)
+                {
+                    continue;
+                }
+                var lastOrderFieldImport = (await _projectRepository.GetLastOrderFieldImportsAsync(projectDocumentType.DocumentTypeId)).GetValueOrDefault(projectId);
+                addedFields.AddRange(projectDocumentType.AppendDocumentFields(missingFields, lastOrderFieldImport, userId, now));
+            }
+            _projectRepository.AddDocumentFields(addedFields);
+            return addedFields.Count;
+        }
+
+        // Admin chuyển dự án đang nghiệm thu đã quá ngày kết thúc sang Hết hạn; lý do bắt buộc, như trả về đang triển khai
+        public async Task<ViewProjectAcceptanceDto> ExpireAcceptance(int id, ExpireAcceptanceProjectDto dto)
+        {
+            _logger.LogInformation($"{nameof(ExpireAcceptance)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
+            var project = await _projectRepository.FindByIdAsync(id)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectNotFound);
+            var currentUserId = getCurrentUserId();
+            ProjectDomainService.EnsureCanExpireAccepting(PermissionDomainService.IsAdmin(await _roleRepository.GetRoleNamesByUserIdAsync(currentUserId)));
+            var now = GetVietnamTime();
+            var oldStatus = project.Status;
+
+            project.ExpireAccepting(now, currentUserId, now);
+            var reason = ProjectDomainService.NormalizeAcceptanceReason(dto.Reason);
+
+            _projectRepository.Update(project);
+            AddAuditLog(AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_EXPIRE, AuditLogConstants.ACTION_TYPE_UPDATE, $"Chuyển dự án {project.Name} đang nghiệm thu sang hết hạn (ngày kết thúc {project.EndedAt:dd/MM/yyyy})",
+                new { ProjectId = id, Status = oldStatus },
+                new { ProjectId = id, project.Status, IsForced = false, IsAutomatic = false, Reason = reason });
             await _unitOfWork.SaveChangesAsync();
 
             return await FindAcceptance(id);
@@ -238,7 +283,7 @@ namespace sh.be.applications.Module.Construction.Implements
             documentTypeRows.Add(ToDocumentTypeCells("Tổng", summary.Total,
                 summary.DocumentTypes.Sum(row => filledFieldCounts.GetValueOrDefault(row.DocumentTypeId!.Value))));
 
-            // Cách chuyển: tự động trước, trả về đang triển khai luôn do Admin, còn lại theo cờ cho phép khi chưa đủ
+            // Cách chuyển: tự động trước, trả về đang triển khai và chuyển Hết hạn luôn do Admin, còn lại theo cờ cho phép khi chưa đủ
             var transitionRows = transitions
                 .Select(transition => new List<string>
                 {
@@ -247,6 +292,7 @@ namespace sh.be.applications.Module.Construction.Implements
                     transition.IsAutomatic ? "Hệ thống" : !String.IsNullOrWhiteSpace(transition.FullName) ? transition.FullName : transition.UserName ?? "—",
                     transition.IsAutomatic ? "Tự động"
                         : transition.Action == AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_REOPEN ? "Admin trả về"
+                        : transition.Action == AuditLogConstants.ACTION_PROJECT_ACCEPTANCE_EXPIRE ? "Admin chuyển Hết hạn"
                         : transition.IsForced ? "Admin cho phép khi chưa đủ"
                         : "Đủ điều kiện",
                     String.IsNullOrWhiteSpace(transition.Reason) ? "—" : transition.Reason,

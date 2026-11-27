@@ -32,7 +32,7 @@ export interface IDeadlineQuery {
 }
 
 const DATE_PARAM = /^\d{4}-\d{2}-\d{2}$/;
-const TYPES: number[] = [DEADLINE_TYPE.SOON, DEADLINE_TYPE.EXPIRED];
+const TYPES: number[] = Object.values(DEADLINE_TYPE);
 const RESULT_BY_SUCCESS_PARAM: Record<string, DeadlineResultFilter> = {
     true: DEADLINE_RESULT_FILTER.SUCCESS,
     false: DEADLINE_RESULT_FILTER.FAILED,

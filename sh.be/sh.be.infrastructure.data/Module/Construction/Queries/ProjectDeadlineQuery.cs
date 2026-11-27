@@ -22,9 +22,14 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 .AsNoTracking()
                 .Where(p => ProjectConst.DEADLINE_STATUSES.Contains(p.Status) && p.EndedAt != null
                     && (p.Status == ProjectConst.EXPIRED || p.EndedAt < warningEndExclusive));
+            // Cùng luật ProjectDomainService.ClassifyDeadline: dự án đang nghiệm thu quá hạn là loại 3, không phải loại 2
             if (dto.NotificationType == ProjectDeadlineConst.NOTIFICATION_EXPIRED)
             {
-                query = query.Where(p => p.Status == ProjectConst.EXPIRED || p.EndedAt < today);
+                query = query.Where(p => p.Status == ProjectConst.EXPIRED || (p.Status != ProjectConst.ACCEPTING && p.EndedAt < today));
+            }
+            if (dto.NotificationType == ProjectDeadlineConst.NOTIFICATION_ACCEPTING_OVERDUE)
+            {
+                query = query.Where(p => p.Status == ProjectConst.ACCEPTING && p.EndedAt < today);
             }
             if (dto.NotificationType == ProjectDeadlineConst.NOTIFICATION_WARNING)
             {
@@ -48,9 +53,11 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                     StartedAt = p.StartedAt,
                     EndedAt = p.EndedAt,
                     DaysLeft = EF.Functions.DateDiffDay(today, p.EndedAt!.Value),
-                    DeadlineType = p.Status == ProjectConst.EXPIRED || p.EndedAt < today
-                        ? ProjectDeadlineConst.NOTIFICATION_EXPIRED
-                        : ProjectDeadlineConst.NOTIFICATION_WARNING,
+                    DeadlineType = p.Status == ProjectConst.ACCEPTING && p.EndedAt < today
+                        ? ProjectDeadlineConst.NOTIFICATION_ACCEPTING_OVERDUE
+                        : p.Status == ProjectConst.EXPIRED || p.EndedAt < today
+                            ? ProjectDeadlineConst.NOTIFICATION_EXPIRED
+                            : ProjectDeadlineConst.NOTIFICATION_WARNING,
                     LastNotifiedDate = _shDbContext.ProjectDeadlineNotifications
                         .Where(n => n.ProjectId == p.Id && n.IsSuccess)
                         .Max(n => n.CreatedDate),

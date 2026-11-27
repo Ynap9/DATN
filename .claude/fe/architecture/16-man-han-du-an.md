@@ -31,6 +31,8 @@ sắp / đã hết hạn, mail nào gửi lỗi, và chạy kiểm hạn ngay. K
 - Dự án cần chú ý: thanh Tất cả / Sắp hết hạn / Đã hết hạn + ô tìm tên (400 ms), giữ thứ tự BE (quá hạn lâu nhất trước). Cột Còn lại: "Còn n
   ngày" / "Hết hạn hôm nay" màu amber, "Quá n ngày" màu đỏ. "Gia hạn" (cần `Project.Update`, ẩn khi Nghiệm thu / Xong) gọi `findById` rồi mở
   `ProjectFormComponent` như danh sách dự án, lưu xong tải lại tab và thẻ. "Xem mail" sang tab Lịch sử mail lọc đúng dự án.
+- Loại báo hạn (Task 74): `1` sắp, `2` đã hết hạn, `3` "Nghiệm thu quá hạn" (dự án đang nghiệm thu đã quá ngày kết thúc, nhãn amber). Hằng `DEADLINE_TYPE`, `DEADLINE_TYPE_FILTERS` dùng chung nên cả
+  thanh lọc tab Dự án cần chú ý và bộ lọc Loại tab Lịch sử mail có mục này; `type=3` hợp lệ trên URL. "Gia hạn" vẫn ẩn với dự án nghiệm thu, gia hạn ở màn Dự án (Sửa).
 - Lịch sử mail: lọc Loại, Kết quả (`isSuccess`), Từ ngày / Đến ngày, ô tìm tên dự án hoặc email; chip "Dự án: {tên} ×". Từ ngày sau Đến ngày
   thì chữ đỏ và không gọi API (BE trả `400`). Tag Lỗi bấm mở popover `errorMessage`.
 
@@ -54,6 +56,7 @@ Ngày 2026-11-28, Chrome thật + API thật trên DB dev, dự án tạm ZZTEST
   dán URL ra "Không có quyền truy cập".
 - Lịch sử mail (1 dòng lỗi chèn SQL, DB không có dòng lỗi thật): "Xem mail" ra chip + URL; bỏ chip; lọc Lỗi; popover lỗi; khoảng ngày
   sai hiện chữ đỏ; F5 giữ tab + bộ lọc ở cả hai tab. Banner "Mail báo hạn đang tắt" hiện đúng. Link ở màn Cấu hình mở được màn này.
+- Task 74 (2026-11-28, SMTP giả cục bộ): dòng mail loại 3 của `ZZTEST74B` hiện nhãn "Nghiệm thu quá hạn", "Quá 2 ngày", tiêu đề "… đã quá hạn khi đang nghiệm thu"; chọn Loại "Nghiệm thu quá hạn" ghi `type=3` lên URL và lọc đúng.
 - Chỉ đọc code: người nhận 0 (DB có Admin có email nên không tạo được ca), nhánh `job = null`, job Failed, hết 15 lần hỏi.
 
 > **Tiếp:** hết bộ tài liệu — quay lại [README.md](README.md).
