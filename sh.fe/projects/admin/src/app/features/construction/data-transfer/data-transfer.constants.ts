@@ -101,7 +101,7 @@ export function isColumnMappingComplete(mapping: IImportColumnMapping, kind: Imp
 }
 
 // Dòng xám dưới số chạy thử (63.8): số BE trả chỉ đếm ô có dữ liệu
-export const IMPORT_VERIFY_NOTE = 'Chỉ tính ô có dữ liệu; ô trống, null hoặc undefined trên sheet không tính.';
+export const IMPORT_VERIFY_NOTE = 'Chỉ tính ô có dữ liệu; ô trống hoặc chỉ có khoảng trắng không tính.';
 
 export type IVerifyImportResult = IVerifyImportAppend | IVerifyImportBlank | IVerifyImportOverwrite;
 

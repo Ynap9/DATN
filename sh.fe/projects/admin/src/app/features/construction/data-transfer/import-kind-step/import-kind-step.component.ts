@@ -56,12 +56,6 @@ export class ImportKindStepComponent extends BaseComponent {
         ];
     }
 
-    // BE tìm cột ghi đè theo tên và lấy cột đầu tiên khớp: sheet có nhiều cột trùng tên thì có thể ghi đè nhầm cột
-    get hasDuplicateOverwriteColumn() {
-        const key = toHeaderKey(this.mapping().columnImport);
-        return !!key && this.selectableHeaders.filter((header) => toHeaderKey(header) === key).length > 1;
-    }
-
     override ngOnInit(): void {
         this.applyHints();
         if (this.isOverwrite) this.selectOverwriteField(this.mapping().documentFieldId);

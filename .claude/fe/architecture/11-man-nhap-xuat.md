@@ -38,14 +38,14 @@ hoặc ghi vào một Google Sheet (Task 56, job chạy nền). Nhập Google đ
   một cột cho hai trường / tên cột lặp k lần mà ghép < k trường (BE `309`) thì khoá. "Tiếp tục" luôn `saveImportFieldMapping` đủ mọi trường. Ghép giữ trong wizard; đổi link / sheet / file / cột bắt đầu ở bước 1 → tải lại và xoá ô cột cố định không còn trong header (63.10).
 - Bước 3 (63.6, 63.7): thẻ kiểu + ô cột cố định theo kiểu (Thêm mới có link bắt buộc + Số trang; Bổ sung link tuỳ chọn; Ghi đè chọn trường trong các trường đã ghép, `columnImport` = cột đã ghép của trường). Gợi ý chỉ từ cột bắt đầu; cột cố định trùng cột trường → dòng vàng, không chặn.
 - Bước 3 → 4 **luôn** qua chạy thử; Quay lại từ bước 4 xoá kết quả (BE không lưu chạy thử). Lỗi chạy thử → ở bước 3, khung
-  đỏ `whitespace-pre-line`, cao tối đa 240 px. Lỗi import / job → bước 4, nút chính thành "Thử lại" (= chạy thử lại). Số chạy thử là số ô có dữ liệu BE đếm, FE không tự đếm.
+  đỏ `whitespace-pre-line`, cao tối đa 240 px. Lỗi import / job → bước 4, nút chính thành "Thử lại" (= chạy thử lại). Số chạy thử là số ô có dữ liệu BE đếm, FE không tự đếm: ô trống / chỉ có khoảng trắng không tính, chữ "null" / "undefined" là dữ liệu nên vẫn tính (chốt 27/11).
 - Import Google đồng bộ: khoá nút + tab, hỏi khi rời trang (`canDeactivate` + `beforeunload`). Excel tạo job rồi hỏi
   `findImportJob` mỗi `JOB_POLL_MS`, không hỏi khi rời. Xong → khối "Import xong", màn cha tải lại số văn bản.
 - Body (63.9): ô trống gửi `''`; ghi đè gửi `linkColumnImport = ''`; Google cả 3 kiểu gửi `url` + `sheetName` của bước 1; Excel gửi `fileKey` + `sheetName` (không `url`); cả hai nguồn gửi `startColumn`.
 - Ô "Cột Số trang" (Task 62, tuỳ chọn) chỉ hiện ở kiểu Thêm mới, header "Số trang" điền sẵn; kiểu khác body gửi `pageCountColumn = ''`. Chạy thử Thêm mới có thêm ô số phụ "Văn bản có số trang" chỉ khi đã nhập cột.
 
-⚠️ Ghi đè gửi `columnImport` là **tên** cột nên BE lấy cột đầu tiên có tên đó: sheet có nhiều cột trùng tên với cột đã ghép của trường thì có thể ghi đè nhầm cột (FE hiện dòng vàng cảnh báo). Đừng "sửa" bằng cách gửi vị trí cột khi BE chưa nhận.
-⚠️ `toHeaderKey` (hoa thường + gộp khoảng trắng) phải khớp `IsFieldImportMatch` của BE, nếu không FE báo "đủ" còn BE trả `309` / `307`.
+Bẫy: ghi đè gửi `columnImport` = tên header của cột đã ghép cho trường; từ Task 67 BE đọc đúng cột đã ghép của trường (không dò lại theo tên) nên sheet có nhiều cột trùng tên vẫn không ghi đè nhầm, và FE không còn dòng vàng cảnh báo trùng tên. `columnImport` không khớp cột đã ghép → BE `307`. Đừng thêm lại cảnh báo hay gửi vị trí cột.
+Bẫy: `toHeaderKey` (hoa thường + gộp khoảng trắng) phải khớp `IsFieldImportMatch` của BE, nếu không FE báo "đủ" còn BE trả `309` / `307`.
 - Tab Xuất: lọc trạng thái dùng `sh-select` để trống = "Tất cả" (có nút xoá); ô QA và nhóm cột QA ẩn khi dự án không QA
   (cột QA đã tick không gửi). "Sẽ xuất" = `count.total` — BE `count` đã lọc theo `statusCheck` / `statusQa` / `keyword`.
 - Danh sách "File đã xuất" chỉ trong phiên trang (BE không có API liệt kê job). "Tải về" quá 15 phút → gọi lại job lấy link mới.
@@ -65,8 +65,9 @@ Bẫy: "Tải về" sau 15 phút mở link **sau** khi API trả, trình duyệt
 
 ## Chưa làm / chưa kiểm
 
-- Task 63 đã kiểm trình duyệt 2026-11-27 (API thật + Sheet thật, dự án tạm ZZTEST63 đã dọn): link dự án điền sẵn + tự lấy sheet; dự án không Sheet vẫn chọn được Google, link sai → chữ đỏ không toast; dán Sheet tự do lấy được sheet; ghép (lệch tên → "Chưa chọn cột", "Ghi chú (cột thứ 9 / 10)", bấm Tiếp tục thiếu cột → dòng đỏ, một cột hai trường → hai dòng đỏ + khoá, tên cột lặp ghép thiếu → dòng đỏ); ghép đã lưu điền sẵn khi vào lại; cột bắt đầu = 3 bỏ cột A, B và xoá ô cột cố định; ghi đè chỉ chọn trường đã ghép; chạy thử Thêm mới 4 văn bản / 20 ô (dòng tên "null" bỏ) + import thật 4 hồ sơ, 100 trang, ghép lưu DB.
-  Chưa kiểm: Excel (upload / job, MinIO đầy), Bổ sung và Ghi đè chạy thử / import trên trình duyệt (BE đã kiểm 63A), bấm "Tải file mẫu", đổi cặp giữa chừng, tài khoản Leader thật (chỉ dùng Admin).
+- Task 63 đã kiểm trình duyệt 2026-11-27 (API thật + Sheet thật, dự án tạm ZZTEST63 đã dọn): link dự án điền sẵn + tự lấy sheet; dự án không Sheet vẫn chọn được Google, link sai → chữ đỏ không toast; dán Sheet tự do lấy được sheet; ghép (lệch tên → "Chưa chọn cột", "Ghi chú (cột thứ 9 / 10)", bấm Tiếp tục thiếu cột → dòng đỏ, một cột hai trường → hai dòng đỏ + khoá, tên cột lặp ghép thiếu → dòng đỏ); ghép đã lưu điền sẵn khi vào lại; cột bắt đầu = 3 bỏ cột A, B và xoá ô cột cố định; ghi đè chỉ chọn trường đã ghép; chạy thử Thêm mới 4 văn bản / 20 ô (dòng tên "null" bỏ — luật trước Task 67, nay tên file "null" là tên thật) + import thật 4 hồ sơ, 100 trang, ghép lưu DB.
+  Chưa kiểm: Excel (upload / job, MinIO đầy), Bổ sung chạy thử / import trên trình duyệt (BE đã kiểm 63A), bấm "Tải file mẫu", đổi cặp giữa chừng, tài khoản Leader thật (chỉ dùng Admin).
+  Kiểm thêm 2026-11-27 sau Task 67 (API thật + Sheet thật, dự án tạm ZZTEST63 đã dọn): Thêm mới với ô rỗng / dấu cách / NBSP / U+200B, `abc`, `null`, `undefined`, ` NULL ` → chạy thử 4 ô = import ghi 4, DB lưu `null` / `undefined` / `NULL` nguyên văn, dòng xám mới hiện đúng; Ghi đè: không còn dòng vàng cảnh báo trùng tên, chạy thử 2 ô = ghi 2 (ô `null` ghi đè được, ô chỉ U+200B và ô bằng giá trị cũ không tính); Import tiếp giữ link + sheet.
 - Chưa kiểm trình duyệt (người dùng hẹn sau): upload thật, job xuất, popup tải về.
   Task 54 (2026-11-24) đã kiểm trên trình duyệt: khoá / mở tab và nguồn Google khoá khi dự án không Sheet, nhưng
   upload / chạy thử / job là response giả lập (MinIO đầy, `209`).

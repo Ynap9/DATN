@@ -19,9 +19,6 @@
             <div class="flex flex-col gap-1">
                 <sh-select label="Trường bị ghi đè" [required]="true" [options]="fieldOptions" optionLabel="label" optionValue="value" [filter]="true"
                     placeholder="Chọn trường" [ngModel]="mapping().documentFieldId" (ngModelChange)="selectOverwriteField($event)" />
-                @if (hasDuplicateOverwriteColumn) {
-                    <span class="text-xs text-[var(--app-amber)]">Sheet có nhiều cột tên “{{ mapping().columnImport }}”, ghi đè sẽ lấy cột đầu tiên có tên này.</span>
-                }
             </div>
         }
 
