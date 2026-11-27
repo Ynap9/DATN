@@ -1,6 +1,6 @@
 # Plan: đóng gói TT05 — kiểm tra thư mục tải lên + dựng SIP / AIP / DIP
 
-> **Trạng thái:** đã duyệt 2026-11-27 sau 3 lượt rà (Q1–Q5 → C9–C12, C14; X1 → C13). Task 65 (kiểm) + Task 66 (dựng gói) đã viết cho
+> **Trạng thái:** đã duyệt 2026-11-27 sau 4 lượt rà (Q1–Q7 → C9–C12, C14; X1 → C13). Task 65 (kiểm) + Task 66 (dựng gói) đã viết cho
 > Ánh. Trước khi đọc plan: làm đủ "Luật bắt buộc" ở [../dong-goi/README.md](../dong-goi/README.md).
 
 ## Input — cái đã có
@@ -8,7 +8,7 @@
 - Bộ trường 5 loại gói × 4 loại metadata = 20 schema, 333 trường, 82 mã, seed sẵn (Task 37):
   [../nghiep-vu/16-dong-goi-cau-hinh.md](../nghiep-vu/16-dong-goi-cau-hinh.md). Excel mẫu xuất từ
   `api/v1/packaging/config/excel-template` — đây là file người dùng điền.
-- Quy định: [../dong-goi/](../dong-goi/README.md) 10 file + văn bản gốc + gói mẫu trong repo (`goi-mau/`).
+- Quy định: [../dong-goi/](../dong-goi/README.md) 11 file + văn bản gốc + gói mẫu trong repo (`goi-mau/`).
 - **Nguồn luật chỉ có 2: thông tư + gói mẫu** (người dùng 27/11). Code kssm (`ksts/kssm.be` thư mục `DongGoi`)
   chỉ để xem cách làm luồng nhập, **không phải nguồn**, không chép luật nội dung gói từ kssm.
 - Hạ tầng sh.be: `IFileStorageExternal` (MinIO private, link tạm, xoá theo tiền tố), Hangfire
@@ -27,11 +27,11 @@
 | C7 | Ký số và PDF/A chỉ **cảnh báo**, không chặn gói | [08-pdfa.md](../dong-goi/08-pdfa.md), [03 §8](../dong-goi/03-sip-metadata.md) |
 | C8 | Ô trống = rỗng / chỉ khoảng trắng; chữ "null" là dữ liệu | Người dùng 27/11 (chốt import) |
 | C9 | Giá trị riêng của hệ thống **không chép từ gói mẫu**, lấy từ cấu hình của mình: tên phần mềm, phiên bản, agent, tài khoản người đóng gói, mã phông. Gói mẫu chỉ là khuôn | Người dùng 27/11 (Q1) |
-| C10 | Tên phần mềm = **"Thi công số hoá"** (tiêu đề app FE). PREMIS AIP: `Thi công số hoá {phiên bản} (task: đóng gói AIP)` theo khuôn ví dụ thông tư | Người dùng 27/11 (Q4) |
+| C10 | Tên phần mềm = **"Thi công số hoá"** (tiêu đề app FE). PREMIS agent: `LOCAL` / `Thi công số hoá {phiên bản}` / `Thi công số hoá` / `Software`, **không** thêm "(task: …)" (bảng tr.98–101, [11 §4](../dong-goi/11-premis-amdsec-structmap.md)) | Người dùng 27/11 (Q4) |
 | C11 | Tên PDF + khoá ghép = mã tài liệu có trong schema: `docId` → không có thì `docCode` / `arcDocCode` → AIP_hoso ảnh / media `arcFileCode` + `.` + `docOrdinal` 7 số. Gom gói: mã tài liệu bắt đầu bằng mã gói (Điều 8.1.d). DIP: mỗi Excel khai đúng 1 yêu cầu khai thác = 1 gói | Người dùng 27/11 (Q2) |
 | C12 | DIP: người dùng tự đưa 1 file PDF xác thực (Điều 42.2) vào thư mục; BE kiểm có file, cảnh báo nếu không phải PDF/A, đưa vào `documentation/` của gói (tr.294: tệp mô tả bổ sung) | Người dùng 27/11 (Q3) |
 | C13 | Khuôn gói mẫu (15 điểm 04 §10) áp cho **cả 5 loại** ở chỗ phụ lục không ghi khác hẳn; chỗ ghi khác hẳn (OBJID AIP, OAISPACKAGETYPE, PROFILE, PREMIS, `NORMALIZED`) theo bảng phụ lục. Agent METS gốc có 2 note: `IDENTIFICATIONCODE` = mã phông + `SOFTWARE VERSION` = phiên bản | Người dùng 27/11 (X1) |
-| C14 | DIP **có** `PREMIS.xml` + `PREMIS_rep1.xml` (cấu trúc tr.339–348, `eventType` như AIP tr.345), `amdSec/digiprovMD` + `ADMID` như bảng phần tử tr.302, 307, 313–314 — đạt cả cây thư mục (tr.294–295 cho phép) | Người dùng 27/11 (Q5, thay ý "không PREMIS" của Q3) |
+| C14 | DIP **có** `PREMIS.xml` + `PREMIS_rep1.xml`, `amdSec` + `ADMID` như AIP (tr.302, 307, 313–314), `eventType` = `dissemination` (Q7). Mọi PREMIS: loại đối tượng bằng `xsi:type`, không thẻ `objectCategory` (Q6). Chi tiết từng phần tử: [11](../dong-goi/11-premis-amdsec-structmap.md) | Người dùng 27/11 (Q5–Q7) |
 
 ## Luồng nhập — TT05 và gói mẫu không quy định ⇒ PM chốt kỹ thuật 27/11 (kssm chỉ tham khảo, không là nguồn)
 
@@ -60,21 +60,21 @@ bắt đầu bằng nó), ảnh / media (không `docId`) đều không gom đư�
 | # | Luật | Nguồn |
 |---|---|---|
 | D1 | Cây thư mục đúng từng phụ lục; AIP và DIP (C14) thêm `metadata/preservation/PREMIS.xml` + `rep1/metadata/preservation/PREMIS_rep1.xml` | tr.34–36, 112–113, 294–295 |
-| D2 | METS gốc + rep1: thuộc tính theo bảng 10 §2 từng loại (`OBJID`, `TYPE`, `PROFILE`, `OAISPACKAGETYPE`, `structMap` `ORIGINAL` / `NORMALIZED`, `@ADMID`) | 10 §2 |
+| D2 | METS gốc + rep1: thuộc tính theo bảng 10 §2 từng loại (`OBJID`, `TYPE`, `PROFILE`, `OAISPACKAGETYPE`, `ORIGINAL` / `NORMALIZED`); `amdSec` + `structMap` AIP / DIP từng phần tử theo [11 §1–3](../dong-goi/11-premis-amdsec-structmap.md) | 10 §2, 11 |
 | D3 | `SIP_hoso`: bắt chước gói mẫu đủ 15 điểm 04 §10, trừ 3 lỗi 04 §11 (năm trong `docCode` lấy từ `fileCode`; sửa `arcDocCode` → `docCode` trong 3 `ead_*.xsd`; không chép `paperFileCode` rỗng — đã kiểm ở N7) | 04, 09 |
 | D4 | Byte XML: UTF-8 không BOM, LF, thụt 4; ghi file xong mới băm SHA-256 viết HOA; mốc giờ có mili giây + `+07:00`; ghi rep1/METS trước METS gốc | 09 §3–4 |
 | D5 | `simpledc`: phát đủ thẻ của schema; `SIP_hoso` cấp gói + văn bản theo **thứ tự gói mẫu**, còn lại theo `SortOrder` (`.xsd`); ô trống phát thẻ rỗng tự đóng | 09 §6, 10 §1 |
 | D6 | `schemas/`: 4 file METS / xlink / DILCIS chép nguyên byte từ `goi-mau/`; 4 `ead*.xsd` **sinh theo bộ trường của đúng loại gói** (seed Task 37), khuôn byte như gói mẫu (SIP_hoso dùng `docCode`, sửa lỗi #2). Luôn phát đủ 8 file kể cả khi phiên chỉ có văn bản (GM nộp cả 4 `ead*.xsd`) | 09 §7 |
 | D7 | `EAD_DOC_{khoá}.xml` + `data/{khoá}.pdf` — khoá theo C11 | GM, 04 §10 #11–12 |
 | D8 | AIP: OBJID `urn:{mã phông}:uuid:{UUID HOA}` ⇒ bước dựng **bắt buộc nhập mã phông** (soHoaSaoMai cũng gửi `maPhong`); thư mục gói đổi `:` → `_` | tr.38, 115; thư mục tr.34, 111 |
-| D9 | PREMIS AIP: `object` mỗi file có `fixity` SHA-256 + `size` + `format`; `event` `eventType="transfer"` (số hoá — Điều 8.3: số hoá ra AIP); `agent` theo C10; `object` có `signatureInformation` khi PDF đã ký (D9 rà chi tiết lúc viết Task 66) | tr.90–99 (AIP_hoso, `transfer` ở tr.97), tr.169 (AIP_tailieu) |
+| D9 | PREMIS AIP + DIP theo [11 §4](../dong-goi/11-premis-amdsec-structmap.md): gốc 1 `intellectualEntity`, rep1 mỗi file 1 `file` (`fixity` + `size` + `format` theo ví dụ tr.95–96), 1 `event` (`transfer` / `dissemination`), 1 `agent` (C10); không `signatureInformation` (không bắt buộc) | tr.90–99 (AIP_hoso, `transfer` ở tr.97), tr.169 (AIP_tailieu) |
 | D10 | ZIP: tên GUID chữ thường `.zip`, trong ZIP là thư mục gói; MinIO `packaging/{sessionId}/packages/{guid}.zip`; dựng ra file tạm, không giữ cả gói trong RAM | GM, 03 §9, C5 |
 | D11 | DIP: EAD cấp gói = 7 trường yêu cầu khai thác lấy từ sheet cấp gói; tệp xác thực theo C12; PREMIS theo C14 | tr.348, 07 |
 | D12 | Kiểm đầu ra: gói `SIP_hoso` dựng lại từ dữ liệu gói mẫu phải trùng cây + bộ thẻ + cấu trúc METS với `goi-mau/` (khác UUID / giờ / checksum), checksum tự kiểm 100% | 09 |
 
 ## 5. Câu hỏi chờ người dùng (gom 1 lượt)
 
-Q1–Q5 ([10 §4](../dong-goi/10-yeu-cau-tung-mau.md)) đã trả lời 27/11 → C9–C12, C14. Còn cần người dùng xác nhận:
+Q1–Q7 ([10 §4](../dong-goi/10-yeu-cau-tung-mau.md)) đã trả lời 27/11 → C9–C12, C14. Còn cần người dùng xác nhận:
 
 - X1 (từ trả lời Q1) — người dùng xác nhận 27/11 → C13: **khuôn** gói mẫu (`amdSec` rỗng ở SIP, `MDTYPE="DC"`, `1.0.0`, `application/xml`, schema chữ
   thường, `EAD_DOC_` hoa, `OBJID` rep1 = `rep1`, ZIP GUID) áp cho cả 5 loại ở những chỗ phụ lục không ghi khác hẳn;
@@ -82,7 +82,7 @@ Q1–Q5 ([10 §4](../dong-goi/10-yeu-cau-tung-mau.md)) đã trả lời 27/11 �
   Phiên bản phần mềm ghi thêm `note csip:NOTETYPE="SOFTWARE VERSION"` ở agent METS gốc (thông tư tr.41, 189, 300)
   bên cạnh note `IDENTIFICATIONCODE` = mã phông của gói mẫu.
 
-## Review plan — 2026-11-27, 3 lượt (đối chiếu thông tư + gói mẫu)
+## Review plan — 2026-11-27, 4 lượt (đối chiếu thông tư + gói mẫu)
 
 - Lượt 1: bỏ nháp Task 65 cũ (so `docCode` với mã gói cho mọi SIP — sai tr.270; tự chọn khoá PDF); OBJID AIP theo
   bảng tr.38 (D8); gói mẫu 137/137 PDF đã ký + PDF/A-2b nên C7 không trái gói mẫu; `totalDoc` ≠ số file không thành luật.
@@ -90,8 +90,8 @@ Q1–Q5 ([10 §4](../dong-goi/10-yeu-cau-tung-mau.md)) đã trả lời 27/11 �
 - Lượt 3: tên từng thẻ seed ↔ `.xsd` 20 khối — AIP / DIP trùng cả thứ tự, SIP thêm `riskRecovery*` theo GM; trang
   `.xsd` DIP 348, `transfer` AIP_tailieu tr.169, thư mục `:`→`_` tr.34 / 111 / 293; DIP PREMIS → Q5 → C14; kssm
   không còn là nguồn.
-- Chưa rà, giao Bước 0 Task 66: chi tiết từng phần tử PREMIS (tr.90–101, 169–173, 339–348), `amdSec` / `structMap`
-  AIP (tr.43–68, 120–145) và DIP (tr.296–321). Ánh ghi kết quả vào plan trước khi code.
+- Lượt 4: rà từng phần tử `amdSec` (6 bảng), `structMap` gốc / rep1, PREMIS (3 bảng) → [11](../dong-goi/11-premis-amdsec-structmap.md);
+  Q6 `xsi:type`, Q7 DIP `dissemination`; bỏ "(task: …)" ở C10; ADMID = `amdSec`; `AttachmentFile` chỉ khi có đính kèm (GM).
 
 ## Bước (sau khi duyệt)
 

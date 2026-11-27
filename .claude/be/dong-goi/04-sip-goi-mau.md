@@ -1,6 +1,6 @@
 # Gói mẫu SIP_hoso — chốt theo gói mẫu
 
-> **Phần 4/10** · trước: [03-sip-metadata.md](03-sip-metadata.md) · mục lục: [README.md](README.md)
+> **Phần 4/11** · trước: [03-sip-metadata.md](03-sip-metadata.md) · mục lục: [README.md](README.md)
 
 Các `§` trong file này trỏ về [02-sip-cau-truc-mets.md](02-sip-cau-truc-mets.md) (§1–§3) và
 [03-sip-metadata.md](03-sip-metadata.md) (§4–§9). Bản giải nén của gói mẫu:

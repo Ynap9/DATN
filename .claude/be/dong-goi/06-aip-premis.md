@@ -1,6 +1,6 @@
 # Chuẩn AIP — PREMIS và tài liệu liên kết
 
-> **Phần 6/10** · trước: [05-aip.md](05-aip.md) · mục lục: [README.md](README.md)
+> **Phần 6/11** · trước: [05-aip.md](05-aip.md) · mục lục: [README.md](README.md)
 
 ## 6. PREMIS — siêu dữ liệu bảo quản
 
@@ -66,9 +66,10 @@ cả chuỗi nguồn gốc chỉ bằng PREMIS.
 
 ### 6.3. `agent`
 
-Bắt buộc: `agentIdentifier` · `agentIdentifierType` · `agentIdentifierValue` · `agentName`. Ví dụ trong TT05
-dùng `linkingAgentIdentifierType = software` với giá trị `E-ARK Web 0.9.3 (task: SIP_to_AIP_hoso_Reset)` — tức
-tên **và** phiên bản **và** tác vụ của phần mềm đã tạo gói.
+Bắt buộc: `agentIdentifier` · `agentIdentifierType` · `agentIdentifierValue` · `agentName` · `agentType` (tr.100–101).
+Ví dụ agent: `LOCAL` / `E-ARK Web 0.9.3` / `E-ARK Web` / `Software`. Ví dụ event lại ghi `linkingAgentIdentifierValue`
+= `E-ARK Web 0.9.3 (task: SIPtoAIP_hosoReset)`, không khớp agent, trái bảng ("liên kết đến giá trị tác nhân hiện có").
+Lưu ý: sh.be **không** thêm "(task: …)"; chi tiết từng phần tử ở [11 §4](11-premis-amdsec-structmap.md).
 
 ## 7. Tài liệu liên kết trong `AIP_hoso`
 

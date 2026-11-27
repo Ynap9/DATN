@@ -1,6 +1,6 @@
 # PDF/A hai lớp — định dạng tệp nội dung trong gói
 
-> **Phần 8/10** · trước: [07-dip.md](07-dip.md) · mục lục: [README.md](README.md)
+> **Phần 8/11** · trước: [07-dip.md](07-dip.md) · mục lục: [README.md](README.md)
 
 > PDF/A hai lớp là gì, thông tư đòi tới đâu, gói mẫu làm ra sao — và vì sao trong luồng đóng gói của dự án
 > này nó là **tuỳ chọn** chứ không phải cổng chặn. Cập nhật 2026-09-08.

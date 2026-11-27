@@ -20,7 +20,7 @@ Tri thức dự án nằm trong `.claude/` (tiếng Việt), **không** suy ra l
    [`05-conventions.md`](../../fe/architecture/05-conventions.md). Việc còn dở ở `.claude/fe/plans/` — đọc
    [`khop-voi-be.plan.md`](../../fe/plans/khop-voi-be.plan.md) trước khi làm màn hình gọi API.
 4. Việc **đóng gói TT05** (module Packaging: kiểm tra, dựng SIP / AIP / DIP, METS, EAD, PREMIS) ⇒ làm đủ 5 bước ở
-   [`.claude/be/dong-goi/README.md`](../../be/dong-goi/README.md) mục "Luật bắt buộc": đọc 10 file → đọc trang gốc
+   [`.claude/be/dong-goi/README.md`](../../be/dong-goi/README.md) mục "Luật bắt buộc": đọc 11 file → đọc trang gốc
    của thông tư (`tai-lieu/TT05-2025-TT-BNV.txt`) → đọc gói mẫu `goi-mau/` → plan có nguồn từng luật → review rồi
    mới code. Luật không có nguồn ⇒ hỏi người dùng, **cấm tự quyết**.
 

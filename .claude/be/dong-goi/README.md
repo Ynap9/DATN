@@ -24,7 +24,7 @@ Trang schema `.xsd` của từng phụ lục: AIP_hoso 101–106 · AIP_tailieu 
 Đây là phần lõi của đồ án. Người hay agent nào nhận task đóng gói (kiểm tra, dựng gói, METS, EAD, PREMIS) **phải**
 làm đủ 5 bước, theo thứ tự, trước khi sửa một dòng code:
 
-1. Đọc hết 10 file của bộ này, theo thứ tự 01 → 10.
+1. Đọc hết 11 file của bộ này, theo thứ tự 01 → 11.
 2. Mở **văn bản gốc** [tai-lieu/TT05-2025-TT-BNV.txt](tai-lieu/TT05-2025-TT-BNV.txt), đọc đúng các trang mà
    [10-yeu-cau-tung-mau.md](10-yeu-cau-tung-mau.md) ghi cho loại gói của task. Tài liệu tổng hợp có thể sai — đã
    từng sai (OBJID AIP, sửa 27/11) — nên **dòng nào code dựa vào phải đối chiếu lại trang gốc**.
@@ -50,6 +50,7 @@ Thứ tự trọng tài khi các nguồn lệch nhau: [10-yeu-cau-tung-mau.md §
 | [08-pdfa.md](08-pdfa.md) | PDF/A hai lớp: là gì, thông tư đòi tới đâu, vì sao tuỳ chọn, số đo gói mẫu (PDF/A-2b), bẫy ký số |
 | [09-goi-mau-chi-tiet.md](09-goi-mau-chi-tiet.md) | Gói mẫu đo từng file: số đo, byte XML, METS gốc / rep1 đủ thuộc tính, EAD, schema; PDF đã ký + PDF/A-2b |
 | [10-yeu-cau-tung-mau.md](10-yeu-cau-tung-mau.md) | Bảng 5 loại gói có số trang, thứ tự trọng tài, chỗ thông tư tự mâu thuẫn, câu hỏi chưa có nguồn |
+| [11-premis-amdsec-structmap.md](11-premis-amdsec-structmap.md) | `amdSec`, `structMap` gốc / rep1, PREMIS của AIP và DIP rà từng phần tử kèm nguồn (lượt 4, 27/11) |
 | [goi-mau/](goi-mau/) | Bản sao gói mẫu (đủ XML / XSD, 1 PDF) + [danh-sach-file.tsv](goi-mau/danh-sach-file.tsv) 285 file kèm SHA-256 |
 
 ## Thuật ngữ

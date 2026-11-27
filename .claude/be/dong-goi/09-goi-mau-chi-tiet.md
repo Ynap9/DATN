@@ -1,6 +1,6 @@
 # Gói mẫu SIP_hoso — phân tích từng file (bản sao trong repo)
 
-> **Phần 9/10** · trước: [08-pdfa.md](08-pdfa.md) · mục lục: [README.md](README.md)
+> **Phần 9/11** · trước: [08-pdfa.md](08-pdfa.md) · mục lục: [README.md](README.md)
 
 Bổ sung cho [04-sip-goi-mau.md](04-sip-goi-mau.md) (15 điểm chốt + 3 lỗi). File này ghi **mọi chi tiết đo được**
 trên gói mẫu để bộ sinh gói bắt chước đúng từng byte có nghĩa. Đo lại ngày 2026-11-27 bằng script, không chép từ

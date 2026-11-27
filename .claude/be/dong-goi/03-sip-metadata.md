@@ -1,6 +1,6 @@
 # Chuẩn SIP — metadata, bảng mã, mimetype, tên ZIP
 
-> **Phần 3/10** · trước: [02-sip-cau-truc-mets.md](02-sip-cau-truc-mets.md) · mục lục: [README.md](README.md)
+> **Phần 3/11** · trước: [02-sip-cau-truc-mets.md](02-sip-cau-truc-mets.md) · mục lục: [README.md](README.md)
 
 ## 4. `EAD.xml` — metadata cấp gói
 

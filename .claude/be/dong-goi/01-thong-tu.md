@@ -1,6 +1,6 @@
 # Thông tư 05/2025/TT-BNV — nghiệp vụ lưu trữ tài liệu lưu trữ số
 
-> **Phần 1/10** · mục lục: [README.md](README.md)
+> **Phần 1/11** · mục lục: [README.md](README.md)
 
 Luật gốc của mọi việc đóng gói SIP/AIP/DIP. Tổng hợp từ bản PDF chính thức trên `moha.gov.vn` (364 trang);
 thân thông tư Điều 1–52 nằm ở trang 1–32.

@@ -1,6 +1,6 @@
 # Yêu cầu từng mẫu gói — bảng đối chiếu có nguồn
 
-> **Phần 10/10** · trước: [09-goi-mau-chi-tiet.md](09-goi-mau-chi-tiet.md) · mục lục: [README.md](README.md)
+> **Phần 10/11** · trước: [09-goi-mau-chi-tiet.md](09-goi-mau-chi-tiet.md) · mục lục: [README.md](README.md)
 
 Một bảng cho **5 loại gói** sh.be dựng (`PackageConst` 1–5). Mỗi ô ghi **nguồn**: `GM` = gói mẫu
 ([09](09-goi-mau-chi-tiet.md)), `tr.N` = trang N của [tai-lieu/TT05-2025-TT-BNV.txt](tai-lieu/TT05-2025-TT-BNV.txt)
@@ -41,7 +41,7 @@ Một bảng cho **5 loại gói** sh.be dựng (`PackageConst` 1–5). Mỗi ô
 | Tên file trong `data/` | `File1.pdf` chung chung — tr.36 | tr.113 | **GM**: `{docId}.pdf` | tr.241 | tr.295 |
 | Tên file metadata tài liệu | `[Tiêu chuẩn]_[Loại]_[Tên file]` — tr.35 | tr.112 | **GM**: `EAD_DOC_{docId}.xml` | tr.241 | tr.294 |
 | Ngày rút gọn `MM/YYYY`, `YYYY` | `startDate`, `endDate` tr.72; `issuedDate` tr.77–78 | `issuedDate` tr.149 | không, chỉ `DD/MM/YYYY` — tr.214, 219 | không — tr.272 | không — tr.327 |
-| PREMIS `eventType` | số hóa `transfer`; SIP→AIP `information package creation` — tr.97–98 | `transfer` — tr.169 | — | — | như AIP — tr.345 |
+| PREMIS `eventType` | số hóa `transfer`; SIP→AIP `information package creation` — tr.97–98 | `transfer` — tr.169 | — | — | bảng tr.345 chép y AIP; sh.be ghi `dissemination` (Q7) |
 | Tên ZIP | không quy định | không quy định | `STT + OBJID` — tr.238; **GM**: GUID thường | `STT + OBJID` — tr.291 | không quy định |
 
 Điều 8.1.d (tr.6): tên tệp tin số hóa **tối thiểu** gồm mã hồ sơ + `.` + số thứ tự tài liệu trong hồ sơ; hồ sơ
@@ -56,6 +56,11 @@ không tách tài liệu thì tên tệp = mã hồ sơ. Gói mẫu `{docId}.pdf
 | Tên PREMIS rep1 | `PREMIS_rep1.xml` (cây tr.36) | `PREMIS_uuid-60552F0B-….xml` (ví dụ tr.58) | bảng cấu trúc (tr.36) |
 | OAISPACKAGETYPE DIP | `DIP` (tr.299) | `SIP` (tr.311) | bảng |
 | PREMIS DIP | cây thư mục: `PREMIS.xml`, `PREMIS_rep1.xml` **không bắt buộc** (tr.294–295) | bảng phần tử: `amdSec/digiprovMD` → PREMIS **bắt buộc** (tr.302, 313–314); `div Metadata` trỏ `amdSec` bắt buộc (tr.307) | Q5 → sinh PREMIS (thoả cả hai) |
+| `ADMID` | "ID của thẻ `amdSec`" (tr.49, 64, 126, 307, 319) | `mets1_12.xsd` + ví dụ rep1 tr.67: ID `digiprovMD` | bảng ([11 §2](11-premis-amdsec-structmap.md)) |
+| DMDID / ADMID div Metadata DIP | tr.307 ghi ngược mô tả hai dòng | AIP tr.49, 126 + `mets1_12.xsd` đúng chiều | AIP + `.xsd` |
+| `structMap` rep1 div `Metadata` | bắt buộc (tr.63, 318) | ví dụ tr.67 không có | bảng |
+| `AttachmentFile` rep1 | "bắt buộc" (cả SIP_hoso tr.206–210) | GM không có khi không có đính kèm | GM: chỉ phát khi có đính kèm |
+| `linkingAgentIdentifierValue` | bằng `agentIdentifierValue` đang có (tr.98–99) | ví dụ tr.100 thêm "(task: …)" | bảng |
 | UUID DIP | viết hoa (tr.297) | `uuid-4422c185-…` thường (tr.296) | bảng |
 | `docCode` SIP | không nói dấu nối | GM nối bằng `.` | GM |
 
@@ -71,6 +76,8 @@ Lưu ý: [05-aip.md](05-aip.md) trước 27/11 ghi OBJID AIP theo **ví dụ** (
 | Q3 | DIP: tệp văn bản xác thực `.pdf/a` 11 thông tin (Điều 42.2, bắt buộc) lấy ở đâu; có sinh PREMIS (không bắt buộc) không | sh.be chưa có công cụ sinh PDF/A ([08](08-pdfa.md)); thông tư không nói tệp đặt ở đâu trong gói |
 | Q4 | PREMIS của AIP: `agent` ghi phần mềm gì, `object` có ghi `signatureInformation` từ PDF đã ký không | Thông tư chỉ ví dụ `E-ARK Web 0.9.3`; gói mẫu là SIP nên không có PREMIS |
 | Q5 | DIP có sinh PREMIS không, khi cây thư mục (tr.294–295) ghi không bắt buộc mà bảng phần tử (tr.302, 307, 313–314) ghi bắt buộc | Thông tư tự mâu thuẫn, gói mẫu là SIP |
+| Q6 | PREMIS: bảng đòi thẻ `<objectCategory>` (tr.91–92, 163, 340), PREMIS v3 không có thẻ này, ví dụ tr.94 dùng `xsi:type` | Trả lời 27/11: dùng `xsi:type` |
+| Q7 | `eventType` của DIP: bảng tr.345 chép y AIP (chỉ số hoá / SIP→AIP) | Trả lời 27/11: `dissemination` (từ vựng LoC) |
 
 Trả lời (chi tiết: plan [dong-goi-tt05.plan.md](../plans/dong-goi-tt05.plan.md) C9–C12): Q1 giá trị riêng hệ thống
 (tên phần mềm, phiên bản, agent, tài khoản, mã phông) lấy từ cấu hình của mình, gói mẫu chỉ là khuôn · Q2 tên PDF
@@ -84,3 +91,5 @@ Thư mục tải lên, Excel mẫu, ghép tên cột, khớp tên thư mục v�
 kỹ thuật của PM (plan N1–N13), chốt 26/11 "như soHoaSaoMai `dong-goi/kiem-tra`". Code kssm chỉ để xem cách làm,
 **không phải nguồn** (người dùng 27/11: nguồn đáng tin chỉ có thông tư + gói mẫu). Luật **giá trị ô** (kiểu, độ dài, mã, bắt buộc)
 lấy từ `PackageSchemaField` — tức từ thông tư qua seed Task 37.
+
+> **Tiếp:** [11-premis-amdsec-structmap.md](11-premis-amdsec-structmap.md) — `amdSec`, `structMap`, PREMIS của AIP và DIP rà từng phần tử.

@@ -1,6 +1,6 @@
 # Chuẩn AIP — gói hồ sơ, tài liệu lưu trữ (Phụ lục I & II)
 
-> **Phần 5/10** · trước: [04-sip-goi-mau.md](04-sip-goi-mau.md) · mục lục: [README.md](README.md)
+> **Phần 5/11** · trước: [04-sip-goi-mau.md](04-sip-goi-mau.md) · mục lục: [README.md](README.md)
 
 > Hình dạng gói **được bảo quản trong Hệ thống**. `AIP_hoso` = Phụ lục I (trang 33–109), `AIP_tailieu` =
 > Phụ lục II (trang 110–181). Cập nhật 2026-09-08.

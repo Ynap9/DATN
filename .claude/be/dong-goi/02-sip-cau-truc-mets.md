@@ -1,6 +1,6 @@
 # Chuẩn SIP — cấu trúc gói và METS (Phụ lục III & IV)
 
-> **Phần 2/10** · trước: [01-thong-tu.md](01-thong-tu.md) · mục lục: [README.md](README.md)
+> **Phần 2/11** · trước: [01-thong-tu.md](01-thong-tu.md) · mục lục: [README.md](README.md)
 
 > Hai hình dạng gói khi thu nộp **khác Hệ thống**. `SIP_hoso` = Phụ lục III (trang 182–238), `SIP_tailieu` =
 > Phụ lục IV (trang 239–291). Cập nhật 2026-09-08.

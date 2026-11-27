@@ -1,6 +1,6 @@
 # Chuẩn DIP — gói tài liệu lưu trữ sử dụng (Phụ lục V)
 
-> **Phần 7/10** · trước: [06-aip-premis.md](06-aip-premis.md) · mục lục: [README.md](README.md)
+> **Phần 7/11** · trước: [06-aip-premis.md](06-aip-premis.md) · mục lục: [README.md](README.md)
 
 > Gói giao cho **người dùng cuối**, dạng bản sao có xác thực. Phụ lục V, trang 292–357. Cập nhật 2026-09-08.
 
