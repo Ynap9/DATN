@@ -17,14 +17,14 @@ Giá trị từng trường của hồ sơ nằm ở `construction.SubmissionDat
 | Xem file PDF của hồ sơ | `GET api/construction/submission/proxy-file?url=...` | `Function.Construction.Submission.View` |
 
 Ngoài key quyền, 12 API verify / import / tạo job chỉ cho Admin hoặc Leader đang hoạt động của dự án, kiểm đầu tiên → `337` (Task 25; `upload` không kiểm).
-Bốn API append / blank đọc Sheet của dự án: dự án tạo không kèm Sheet → `348` "Dự án không gắn Google Sheet, hãy nhập bằng file Excel" (Task 54A, kiểm đầu `ReadProjectGoogleSheetAsync`); Excel và overwrite (URL sheet ngoài) không đổi.
+Cả 3 kiểu Google đọc đúng `url` + `sheetName` người dùng gửi (Task 63A, [30](30-import-ghep-truong.md)): dự án không gắn Sheet vẫn import được, không còn `348`.
 
 FE luôn gọi `verify` → hiện số liệu → người dùng xác nhận → gọi import. Verify và import dùng **chung** hàm dựng kế hoạch
 (`SubmissionImportDomainService.Build...Plan`), nên số verify bằng đúng số import ghi (nếu sheet và DB không đổi giữa hai lần gọi).
 
 Body chung (`ImportSubmissionDto`): `projectId`, `documentTypeId`, `fileColumnImport` (tên cột tên file, bắt buộc), `linkColumnImport`
-(tên cột link file, bắt buộc với append), `profileRange` (tên cột Hồ sơ), `box` (tên cột Hộp). Overwrite thêm `url`, `sheetName`,
-`columnImport` (cột lấy dữ liệu), `documentFieldId` (trường bị ghi đè), `overwriteChecked` (mặc định `false`).
+(tên cột link file, bắt buộc với append), `profileRange` (tên cột Hồ sơ), `box` (tên cột Hộp), `startColumn` (bắt đầu đọc từ cột, mặc định 1). Append / blank Google
+(`ImportSheetSubmissionDto`) và overwrite thêm `url`, `sheetName`; overwrite còn `columnImport` (cột lấy dữ liệu), `documentFieldId` (trường bị ghi đè), `overwriteChecked` (mặc định `false`).
 
 ## Khoá hồ sơ và cách đọc sheet
 
@@ -34,7 +34,7 @@ Body chung (`ImportSubmissionDto`): `projectId`, `documentTypeId`, `fileColumnIm
 - Tên cột so bằng `DocumentFieldDomainService.IsFieldImportMatch` (giống API `map-field-import`): không phân biệt hoa thường, gộp khoảng trắng.
 - Hồ sơ đã xoá mềm (xem [14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md)) không tính vào khoá: import lại cùng khoá sẽ tạo hồ sơ mới.
 - Cột trường lấy theo cấu hình `ProjectDocumentTypeDocumentField` của dự án + loại văn bản: bỏ `FieldImport` rỗng, xếp theo
-  `OrderFieldImport` rồi `DocumentFieldId`, mỗi cấu hình lấy cột **đầu tiên** khớp mà chưa bị cấu hình khác dùng; không có cột thì bỏ qua.
+  `OrderFieldImport` rồi `DocumentFieldId`, mỗi cấu hình lấy cột **đầu tiên** khớp mà chưa bị cấu hình khác dùng; trường không có cột → `307`, bắt ghép đủ (Task 63A).
   `IndexRow` = thứ tự trong danh sách đã khớp. Import **chỉ đọc** `OrderFieldImport`, không ghi.
 
 ## Kiểm tra trước khi ghi (cả verify)
@@ -58,7 +58,7 @@ Body chung (`ImportSubmissionDto`): `projectId`, `documentTypeId`, `fileColumnIm
 
 | Kiểu | Đọc sheet | Làm gì | Audit |
 |---|---|---|---|
-| Append | `Project.UrlGoogleSheetSync` + `GoogleSheetName` | Tạo hồ sơ có khoá **chưa** có + `SubmissionData` cho **mọi** trường đã map (ô rỗng vẫn tạo, để blank điền sau). Hồ sơ đã có: bỏ qua | `Import thêm mới hồ sơ từ Google Sheet`, `Create` |
+| Append | `url` + `sheetName` trong body | Tạo hồ sơ có khoá **chưa** có + `SubmissionData` cho **mọi** trường đã map (ô rỗng vẫn tạo, để blank điền sau). Hồ sơ đã có: bỏ qua | `Import thêm mới hồ sơ từ Google Sheet`, `Create` |
 | Blank | Như append | Hồ sơ **đã có**, ô sheet khác rỗng: data đang rỗng thì điền (`FillIfBlank`); chưa có data cho trường đó thì thêm. Không tạo hồ sơ, không ghi đè ô có dữ liệu; điền cả hồ sơ đã kiểm tra | `Import bổ sung dữ liệu trống từ Google Sheet`, `Update` |
 | Overwrite | `url` + `sheetName` trong body | Cột `columnImport` ghi đè trường `documentFieldId` của hồ sơ đã có. Ô rỗng: bỏ qua (không xoá). Giá trị giống cũ: không tính. Hồ sơ `CHECKED` bị bỏ qua khi `overwriteChecked = false`; hồ sơ trả lại (`RETURNED`) vẫn bị ghi đè | `Import ghi đè trường dữ liệu từ Google Sheet`, `Update`, `OldData` / `NewData` = danh sách `SubmissionId, FileName, DocumentFieldId, Data` |
 
@@ -161,7 +161,7 @@ dòng trống ở giữa → `IndexGoogleSheet` đúng dòng thật; blank thêm
 đếm, `CHECKED` bị bỏ qua / ghi được khi `overwriteChecked = true`, audit có giá trị cũ / mới, 0 thay đổi không ghi audit; lỗi `306`,
 `307` (sai tên cột, sai `columnImport`), `308` (kèm số dòng), `309`, `311`, `312`, `313` (cả verify), `314`; 2 append đồng thời
 200 dòng → một tạo 200, một chờ khoá rồi tạo 0, không trùng; proxy PDF → `%PDF` inline, link HTML → `315`, url ngoài hồ sơ → `305`;
-không token → `401`; Swagger nhóm `construction` đủ 7 API. 2026-11-24 (Task 54A, `ZZTEST54A` đã dọn): `348` đúng câu ở append / blank verify;
+không token → `401`; Swagger nhóm `construction` đủ 7 API. 2026-11-24 (Task 54A, `ZZTEST54A` đã dọn; `348` đã gỡ khỏi import ở 63A):
 proxy: Data giữ → PDF, Data khác → `820`, Leader của cặp / Admin → PDF, file gắn 2 hồ sơ của 2 Data → cả hai PDF. Chưa kiểm import Excel (MinIO đầy, `209`).
 
 ## Giới hạn

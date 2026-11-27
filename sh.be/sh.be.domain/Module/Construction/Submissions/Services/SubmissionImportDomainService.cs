@@ -1,4 +1,5 @@
 using sh.be.domain.Base.Models;
+using sh.be.domain.Module.Construction.DocumentFields.Entities;
 using sh.be.domain.Module.Construction.DocumentFields.Services;
 using sh.be.domain.Module.Construction.Projects.Entities;
 using sh.be.domain.Module.Construction.Submissions.Entities;
@@ -78,7 +79,7 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
                     var submission = Submission.Create(projectId, documentTypeId, fileName, columns.GetProfileRange(row), columns.GetBox(row),
                         columns.GetFileUrl(row), importedBy, importedDate);
                     var datas = mappedColumns
-                        .Select(column => submission.CreateData(column.DocumentFieldId, row.GetCell(column.ColumnIndex), column.IndexRow,
+                        .Select(column => submission.CreateData(column.DocumentFieldId, GetImportCell(row, column.ColumnIndex), column.IndexRow,
                             BuildSheetCellAddress(column.ColumnIndex, row.SheetRowNumber), importedBy, importedDate))
                         .ToList();
                     return new NewSubmissionDraft(submission, datas);
@@ -110,7 +111,7 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
 
                 foreach (var column in mappedColumns)
                 {
-                    var value = row.GetCell(column.ColumnIndex);
+                    var value = GetImportCell(row, column.ColumnIndex);
                     if (value.Length == 0)
                     {
                         continue;
@@ -148,7 +149,7 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
             var rowChanges = MapRows(table.Rows, row =>
             {
                 var changes = new RowDataChanges();
-                var value = row.GetCell(columnImportIndex);
+                var value = GetImportCell(row, columnImportIndex);
                 if (value.Length == 0 || !TryFindSnapshot(row, columns, snapshotsByKey, out var snapshot))
                 {
                     return changes;
@@ -249,6 +250,144 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
                 mappedColumns.Add(new MappedImportColumn(mapping.DocumentFieldId, headerIndexes[usedHeaderCount], mappedColumns.Count + 1));
             }
             return mappedColumns;
+        }
+
+        // Ô chỉ có khoảng trắng, "null" hoặc "undefined" (không phân biệt hoa thường) là không có dữ liệu; mọi chỗ đọc ô import đều qua đây
+        public static string NormalizeImportValue(string value)
+        {
+            var trimmedValue = value.Trim();
+            return SubmissionConst.IMPORT_NO_DATA_TEXTS.Contains(trimmedValue, StringComparer.OrdinalIgnoreCase) ? String.Empty : trimmedValue;
+        }
+
+        public static string GetImportCell(SheetRow row, int columnIndex)
+        {
+            return NormalizeImportValue(row.GetCell(columnIndex));
+        }
+
+        // "Bắt đầu đọc từ cột" (tính từ 1): header các cột đứng trước thành rỗng nhưng giữ nguyên vị trí cột, nên cột nào cũng chỉ tìm được từ cột bắt đầu trở đi
+        public static List<string> ApplyStartColumn(IReadOnlyList<string> headers, int startColumn)
+        {
+            if (startColumn < 1)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Cột bắt đầu phải từ 1");
+            }
+
+            if (startColumn > headers.Count)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, $"Sheet chỉ có {headers.Count} cột");
+            }
+
+            return headers.Select((header, index) => index < startColumn - 1 ? String.Empty : header).ToList();
+        }
+
+        // Import nào cũng phải ghép đủ mọi trường của cặp với một cột có trên sheet, không bỏ qua êm trường thiếu cột
+        public static void EnsureAllFieldsMapped(List<DocumentField> fields, List<ProjectDocumentTypeDocumentField> mappings,
+            List<MappedImportColumn> mappedColumns)
+        {
+            var configuredFieldIds = mappings.Select(mapping => mapping.DocumentFieldId).ToHashSet();
+            var configuredFields = fields.Where(field => configuredFieldIds.Contains(field.Id)).ToList();
+            if (configuredFields.Count == 0)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Loại văn bản chưa có trường nào");
+            }
+
+            var mappedFieldIds = mappedColumns.Select(column => column.DocumentFieldId).ToHashSet();
+            var unmappedFieldNames = configuredFields
+                .Where(field => !mappedFieldIds.Contains(field.Id))
+                .Select(field => field.Name)
+                .ToList();
+            if (unmappedFieldNames.Count > 0)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorImportColumnNotFound,
+                    $"Chưa ghép đủ cột cho trường: {string.Join(", ", unmappedFieldNames)}. Hãy ghép ở bước Ghép trường.");
+            }
+        }
+
+        // Mỗi trường của cặp nhận một cột: header khớp tên cột đang lưu trước, không có thì header khớp tên trường; mỗi header dùng tối đa một lần.
+        // Duyệt theo OrderFieldImport như import, trả theo thứ tự cột trong bảng (OrderTableView, Id)
+        public static List<ImportFieldHeaderMatch> MatchFieldHeaders(List<ProjectDocumentTypeDocumentField> mappings, List<DocumentField> fields,
+            List<string> headers)
+        {
+            var fieldsById = fields.ToDictionary(field => field.Id);
+            var mappingsByFieldId = mappings
+                .Where(mapping => fieldsById.ContainsKey(mapping.DocumentFieldId))
+                .ToDictionary(mapping => mapping.DocumentFieldId);
+            var usedColumnIndexes = new HashSet<int>();
+            var matchedColumnIndexByFieldId = new Dictionary<int, int>();
+
+            int? FindUnusedColumnIndex(string expectedHeader)
+            {
+                for (var index = 0; index < headers.Count; index++)
+                {
+                    if (!usedColumnIndexes.Contains(index) && DocumentFieldDomainService.IsFieldImportMatch(expectedHeader, headers[index]))
+                    {
+                        return index;
+                    }
+                }
+                return null;
+            }
+
+            foreach (var mapping in mappingsByFieldId.Values.OrderBy(mapping => mapping.OrderFieldImport).ThenBy(mapping => mapping.DocumentFieldId))
+            {
+                var columnIndex = FindUnusedColumnIndex(mapping.FieldImport) ?? FindUnusedColumnIndex(fieldsById[mapping.DocumentFieldId].Name);
+                if (columnIndex.HasValue)
+                {
+                    usedColumnIndexes.Add(columnIndex.Value);
+                    matchedColumnIndexByFieldId[mapping.DocumentFieldId] = columnIndex.Value;
+                }
+            }
+
+            return fields
+                .Where(field => mappingsByFieldId.ContainsKey(field.Id))
+                .Select(field =>
+                {
+                    int? matchedColumnIndex = matchedColumnIndexByFieldId.TryGetValue(field.Id, out var columnIndex) ? columnIndex : null;
+                    return new ImportFieldHeaderMatch(field.Id, field.Name, mappingsByFieldId[field.Id].FieldImport,
+                        matchedColumnIndex.HasValue ? headers[matchedColumnIndex.Value] : String.Empty, matchedColumnIndex);
+                })
+                .ToList();
+        }
+
+        // Bộ ghép lưu cho dự án phải đủ mọi trường của cặp, mỗi trường một cột, không trường hay cột nào lặp
+        public static void EnsureValidFieldMappingChoices(List<ProjectDocumentTypeDocumentField> mappings, List<DocumentField> fields,
+            List<ImportFieldMappingChoice> choices, int startColumn)
+        {
+            if (choices.GroupBy(choice => choice.DocumentFieldId).Any(group => group.Count() > 1))
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Trường gửi trùng");
+            }
+
+            var configuredFieldIds = mappings.Select(mapping => mapping.DocumentFieldId).ToHashSet();
+            if (choices.Any(choice => !configuredFieldIds.Contains(choice.DocumentFieldId)))
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentFieldNotInProject);
+            }
+
+            var unchosenFieldNames = fields
+                .Where(field => configuredFieldIds.Contains(field.Id))
+                .Where(field => !choices.Any(choice => choice.DocumentFieldId == field.Id && choice.FieldImport.Length > 0 && choice.ColumnIndex >= 0))
+                .Select(field => field.Name)
+                .ToList();
+            if (unchosenFieldNames.Count > 0)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, $"Chưa chọn cột cho trường: {string.Join(", ", unchosenFieldNames)}");
+            }
+
+            if (choices.Any(choice => choice.ColumnIndex < startColumn - 1))
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, $"Cột được ghép phải nằm từ cột bắt đầu đọc ({startColumn})");
+            }
+
+            var fieldNamesById = fields.ToDictionary(field => field.Id, field => field.Name);
+            var duplicatedColumnMessages = choices
+                .GroupBy(choice => choice.ColumnIndex)
+                .Where(group => group.Count() > 1)
+                .Select(group => $"Cột {group.First().FieldImport} được ghép cho nhiều trường: {string.Join(", ", group.Select(choice => fieldNamesById.GetValueOrDefault(choice.DocumentFieldId)))}")
+                .ToList();
+            if (duplicatedColumnMessages.Count > 0)
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, string.Join(" | ", duplicatedColumnMessages));
+            }
         }
 
         public static string BuildSubmissionKey(string fileName, string profileRange, string box)
@@ -421,7 +560,7 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
     {
         public string GetFileName(SheetRow row)
         {
-            return row.GetCell(FileNameColumnIndex);
+            return SubmissionImportDomainService.GetImportCell(row, FileNameColumnIndex);
         }
 
         public string GetProfileRange(SheetRow row)
@@ -446,11 +585,15 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
 
         private static string GetOptionalCell(SheetRow row, int? columnIndex)
         {
-            return columnIndex.HasValue ? row.GetCell(columnIndex.Value) : String.Empty;
+            return columnIndex.HasValue ? SubmissionImportDomainService.GetImportCell(row, columnIndex.Value) : String.Empty;
         }
     }
 
     public record MappedImportColumn(int DocumentFieldId, int ColumnIndex, int IndexRow);
+
+    public record ImportFieldHeaderMatch(int DocumentFieldId, string Name, string FieldImport, string MatchedHeader, int? MatchedColumnIndex);
+
+    public record ImportFieldMappingChoice(int DocumentFieldId, string FieldImport, int? ColumnIndex);
 
     public record ExistingSubmissionSnapshot(int Id, string FileName, string ProfileRange, string Box, int StatusCheck)
     {

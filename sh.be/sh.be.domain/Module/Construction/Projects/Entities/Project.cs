@@ -62,15 +62,6 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
             return !string.IsNullOrEmpty(UrlGoogleSheetSync);
         }
 
-        // Dự án tạo không kèm Google Sheet chỉ nhập được bằng file Excel
-        public void EnsureGoogleSheetLinked()
-        {
-            if (!HasGoogleSheet())
-            {
-                throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectGoogleSheetNotLinked);
-            }
-        }
-
         public void Update(string name, DateTime? startedAt, DateTime? endedAt, int status, string? modifiedBy, DateTime modifiedDate)
         {
             EnsureValidStatus(status);

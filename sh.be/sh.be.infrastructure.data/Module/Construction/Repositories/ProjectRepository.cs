@@ -45,6 +45,12 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
             return _shDbContext.Projects.AnyAsync(p => p.UrlGoogleSheetSync.Contains(spreadsheetId));
         }
 
+        // Như ExistsGoogleSheetInProjectAsync nhưng bỏ qua dự án đang import
+        public Task<bool> ExistsGoogleSheetInOtherProjectAsync(string spreadsheetId, int projectId)
+        {
+            return _shDbContext.Projects.AnyAsync(p => p.Id != projectId && p.UrlGoogleSheetSync.Contains(spreadsheetId));
+        }
+
         public Task<List<Project>> GetWithEndedAtByStatusesAsync(IReadOnlyCollection<int> statuses)
         {
             return _shDbContext.Projects
@@ -244,6 +250,14 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
         {
             return _shDbContext.ProjectDocumentTypeDocumentFields
                 .AsNoTracking()
+                .Where(pf => pf.ProjectId == projectId && pf.DocumentTypeId == documentTypeId)
+                .ToListAsync();
+        }
+
+        // Như GetDocumentFieldsAsync nhưng có tracking để sửa cột import rồi SaveChanges
+        public Task<List<ProjectDocumentTypeDocumentField>> GetTrackedDocumentFieldsAsync(int projectId, int documentTypeId)
+        {
+            return _shDbContext.ProjectDocumentTypeDocumentFields
                 .Where(pf => pf.ProjectId == projectId && pf.DocumentTypeId == documentTypeId)
                 .ToListAsync();
         }

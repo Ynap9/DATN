@@ -41,6 +41,21 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
             };
         }
 
+        // Đổi cột import của trường trong dự án; trả false khi tên cột và thứ tự cột đều không đổi (tên cột so đúng chữ)
+        public bool UpdateFieldImport(string fieldImport, int orderFieldImport, string? modifiedBy, DateTime modifiedDate)
+        {
+            if (FieldImport == fieldImport && OrderFieldImport == orderFieldImport)
+            {
+                return false;
+            }
+
+            FieldImport = fieldImport;
+            OrderFieldImport = orderFieldImport;
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
+            return true;
+        }
+
         public void Delete(string? deletedBy, DateTime deletedDate)
         {
             Deleted = true;

@@ -132,7 +132,7 @@ nên lúc hai trường đổi chỗ sẽ trùng tạm thời và báo lỗi. Gh
 - Danh sách lọc theo `documentTypeId` (tuỳ chọn) và `keyword` trên `Name` / `Field`; sắp theo loại văn bản, `OrderTableView`, `Id`.
 - Sửa không đổi được `DocumentTypeId`. Xoá là xoá mềm; xem lại sau xoá trả `302`. Mỗi thao tác ghi để lại audit kèm giá trị cũ và mới.
 - Cấu hình trường của dự án (`ProjectDocumentTypeDocumentField`, [07](07-du-an.md)) đi theo trường, cùng transaction: xoá (một / nhanh) xoá mềm dòng của trường
-  ở **mọi dự án**; tạo (một / nhanh, Task 42 bước 0) thêm dòng cho mọi dự án chưa xoá đang gắn loại văn bản — `FieldImport` của trường, thứ tự import nối sau
+  ở **mọi dự án**; tạo (một / nhanh, Task 42 bước 0) thêm dòng cho mọi dự án chưa xoá đang gắn loại văn bản (cột sheet của từng dự án sửa riêng ở wizard import, [30](30-import-ghep-truong.md)) — `FieldImport` của trường, thứ tự import nối sau
   số lớn nhất của cặp kể cả dòng đã xoá mềm (`ProjectDocumentType.AppendDocumentFields`). Trước đó trường thêm sau không vào dự án cũ: không thành cột, kiểm tra
   và `field-values` trả `311`. Tạo trường phải `SaveChanges` một lần trước để có `Id` rồi mới thêm cấu hình.
 

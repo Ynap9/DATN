@@ -1,6 +1,6 @@
 # Xuất hồ sơ ra Google Sheet
 
-> **Phần 29/29** · trước: [28-van-ban-dang-lam.md](28-van-ban-dang-lam.md) · mục lục: [README.md](README.md)
+> **Phần 29/30** · trước: [28-van-ban-dang-lam.md](28-van-ban-dang-lam.md) · mục lục: [README.md](README.md)
 
 Task 56A (2026-11-24): tab Xuất của màn Nhập / Xuất ghi bảng hồ sơ vào **một tab có sẵn** của Google Sheet, chạy nền Hangfire đúng
 khuôn [xuất Excel chạy nền](14-ho-so-xoa-xuat.md#xuất-excel-chạy-nền). Cùng bộ lọc (`SubmissionFilterDto`), cùng cột và tiêu đề như file
@@ -75,4 +75,4 @@ scratchpad tạo dự án tạm `ZZTEST56A` có Sheet, 5 văn bản, user Data +
 - Không làm được: file chỉ chia sẻ quyền Xem → `206` (không có file như vậy); tắt server queue `export` → `211` (máy đồng đội vẫn nghe
   queue `export` trên DB chung).
 
-> **Tiếp:** hết — quay lại [README.md](README.md).
+> **Tiếp:** [30-import-ghep-truong.md](30-import-ghep-truong.md) — import đọc link gửi lên, ghép trường, đếm chạy thử.

@@ -1,3 +1,5 @@
+using sh.be.domain.Module.Construction.DocumentFields.Entities;
+using sh.be.domain.Module.Construction.DocumentFields.Repositories;
 using sh.be.domain.Module.Construction.DocumentTypes.Repositories;
 using sh.be.domain.Module.Construction.Projects.Entities;
 using sh.be.domain.Module.Construction.Projects.Repositories;
@@ -14,13 +16,15 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
         private readonly ISubmissionRepository _submissionRepository;
         private readonly IProjectRepository _projectRepository;
         private readonly IDocumentTypeRepository _documentTypeRepository;
+        private readonly IDocumentFieldRepository _documentFieldRepository;
 
         public SubmissionDomainService(ISubmissionRepository submissionRepository, IProjectRepository projectRepository,
-            IDocumentTypeRepository documentTypeRepository)
+            IDocumentTypeRepository documentTypeRepository, IDocumentFieldRepository documentFieldRepository)
         {
             _submissionRepository = submissionRepository;
             _projectRepository = projectRepository;
             _documentTypeRepository = documentTypeRepository;
+            _documentFieldRepository = documentFieldRepository;
         }
 
         public async Task<Project> EnsureImportableProjectAsync(int projectId)
@@ -125,6 +129,18 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
         public Task<List<ProjectDocumentTypeDocumentField>> GetImportMappingsAsync(int projectId, int documentTypeId)
         {
             return _projectRepository.GetDocumentFieldsAsync(projectId, documentTypeId);
+        }
+
+        // Bản có tracking của GetImportMappingsAsync, để sửa cột import trong transaction
+        public Task<List<ProjectDocumentTypeDocumentField>> GetTrackedImportMappingsAsync(int projectId, int documentTypeId)
+        {
+            return _projectRepository.GetTrackedDocumentFieldsAsync(projectId, documentTypeId);
+        }
+
+        // Trường của loại văn bản theo thứ tự cột trong bảng (OrderTableView, Id), lấy tên và thứ tự cho danh sách ghép cột import
+        public Task<List<DocumentField>> GetDocumentFieldsAsync(int documentTypeId)
+        {
+            return _documentFieldRepository.GetByDocumentTypeIdAsync(documentTypeId);
         }
 
         public async Task<ProjectDocumentTypeDocumentField> EnsureDocumentFieldInProjectAsync(int projectId, int documentTypeId, int documentFieldId)

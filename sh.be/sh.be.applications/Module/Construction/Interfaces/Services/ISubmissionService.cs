@@ -6,12 +6,15 @@ namespace sh.be.applications.Module.Construction.Interfaces.Services
 {
     public interface ISubmissionService
     {
-        Task<ViewVerifyImportAppendSubmissionDto> VerifyImportAppend(ImportSubmissionDto dto);
-        Task<ViewImportSubmissionResultDto> ImportAppend(ImportSubmissionDto dto);
-        Task<ViewVerifyImportBlankSubmissionDto> VerifyImportBlank(ImportSubmissionDto dto);
-        Task<ViewImportSubmissionResultDto> ImportBlank(ImportSubmissionDto dto);
+        Task<ViewVerifyImportAppendSubmissionDto> VerifyImportAppend(ImportSheetSubmissionDto dto);
+        Task<ViewImportSubmissionResultDto> ImportAppend(ImportSheetSubmissionDto dto);
+        Task<ViewVerifyImportBlankSubmissionDto> VerifyImportBlank(ImportSheetSubmissionDto dto);
+        Task<ViewImportSubmissionResultDto> ImportBlank(ImportSheetSubmissionDto dto);
         Task<ViewVerifyImportOverwriteSubmissionDto> VerifyImportOverwrite(ImportOverwriteSubmissionDto dto);
         Task<ViewImportSubmissionResultDto> ImportOverwrite(ImportOverwriteSubmissionDto dto);
+        Task<List<SheetHeaderDto>> GetImportSheetHeaders(GetImportSheetHeadersDto dto);
+        Task<List<ViewImportFieldMappingDto>> MatchImportFieldMapping(MatchImportFieldMappingDto dto);
+        Task<List<ViewImportFieldMappingDto>> SaveImportFieldMapping(SaveImportFieldMappingDto dto);
         Task<UploadImportExcelResultDto> UploadImportExcel(UploadImportExcelDto dto);
         Task<ViewVerifyImportAppendSubmissionDto> VerifyImportExcelAppend(ImportExcelSubmissionDto dto);
         Task<ViewVerifyImportBlankSubmissionDto> VerifyImportExcelBlank(ImportExcelSubmissionDto dto);

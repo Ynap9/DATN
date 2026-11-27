@@ -136,7 +136,7 @@ Thứ tự trong `ProjectService.Create`:
 4. Lưu DB lỗi → rollback, có file vừa tạo thì `TryDeleteSpreadsheetAsync` xoá rồi ném lại lỗi gốc.
 
 Cờ `false` bỏ bước 2 (không cần kết nối Google) và không `LinkGoogleSheet`. "Có Sheet" = `Project.HasGoogleSheet()` (`UrlGoogleSheetSync`
-khác rỗng); dự án không Sheet đổi tên / xoá không gọi Google, import nguồn Sheet dự án → `348` ([11](11-ho-so-import.md)).
+khác rỗng); dự án không Sheet đổi tên / xoá không gọi Google; import Google đọc link người dùng dán nên vẫn dùng được ([30](30-import-ghep-truong.md)).
 URL lưu đúng dạng `GoogleSheetReaderExternal` đọc được, nên dùng thẳng cho `sheet-header` / `map-field-import`.
 
 ## Sửa dự án và đổi tên file

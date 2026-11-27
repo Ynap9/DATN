@@ -36,6 +36,15 @@ namespace sh.be.domain.Module.Construction.Projects.Services
             }
         }
 
+        // Sheet đồng bộ của dự án khác không được đọc để nhập vào dự án này; Sheet của chính dự án vẫn dùng được
+        public async Task EnsureGoogleSheetNotUsedByOtherProjectAsync(string spreadsheetId, int projectId)
+        {
+            if (await _projectRepository.ExistsGoogleSheetInOtherProjectAsync(spreadsheetId, projectId))
+            {
+                throw new UserFriendlyException(ErrorCodes.CoreErrorInvalidDataSource, "Google Sheet đang là Sheet đồng bộ của dự án khác, không dùng để nhập");
+            }
+        }
+
         public static void EnsureHasDocumentTypes(List<int> documentTypeIds)
         {
             if (documentTypeIds.Count == 0)

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using sh.be.domain.Module.Construction.Submissions.Services;
 using sh.be.shared.Constants.Db;
 using sh.be.shared.Interfaces;
 using System.ComponentModel.DataAnnotations;
@@ -61,13 +62,13 @@ namespace sh.be.domain.Module.Construction.Submissions.Entities
 
         public bool FillIfBlank(string newData, string? indexGoogleSheet, string? modifiedBy, DateTime modifiedDate)
         {
-            var trimmedNewData = newData.Trim();
-            if (!string.IsNullOrWhiteSpace(Data) || trimmedNewData.Length == 0)
+            var normalizedNewData = SubmissionImportDomainService.NormalizeImportValue(newData);
+            if (SubmissionImportDomainService.NormalizeImportValue(Data).Length > 0 || normalizedNewData.Length == 0)
             {
                 return false;
             }
 
-            Data = trimmedNewData;
+            Data = normalizedNewData;
             IndexGoogleSheet = indexGoogleSheet;
             ModifiedBy = modifiedBy;
             ModifiedDate = modifiedDate;
@@ -76,13 +77,13 @@ namespace sh.be.domain.Module.Construction.Submissions.Entities
 
         public bool Overwrite(string newData, string? modifiedBy, DateTime modifiedDate)
         {
-            var trimmedNewData = newData.Trim();
-            if (trimmedNewData.Length == 0 || trimmedNewData == Data.Trim())
+            var normalizedNewData = SubmissionImportDomainService.NormalizeImportValue(newData);
+            if (normalizedNewData.Length == 0 || normalizedNewData == SubmissionImportDomainService.NormalizeImportValue(Data))
             {
                 return false;
             }
 
-            Data = trimmedNewData;
+            Data = normalizedNewData;
             ModifiedBy = modifiedBy;
             ModifiedDate = modifiedDate;
             return true;

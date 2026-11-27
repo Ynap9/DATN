@@ -8,6 +8,7 @@ namespace sh.be.domain.Module.Construction.Projects.Repositories
         Task<Project?> FindByIdAsync(int id);
         Task<bool> ExistsByNameAsync(string name, int? excludedId = null);
         Task<bool> ExistsGoogleSheetInProjectAsync(string spreadsheetId);
+        Task<bool> ExistsGoogleSheetInOtherProjectAsync(string spreadsheetId, int projectId);
         Task<List<Project>> GetWithEndedAtByStatusesAsync(IReadOnlyCollection<int> statuses);
         Task<bool> TryLockDeadlineCheckAsync();
         Task ReleaseDeadlineCheckLockAsync();
@@ -31,6 +32,7 @@ namespace sh.be.domain.Module.Construction.Projects.Repositories
         Task<List<ProjectDocumentType>> GetDeletedDocumentTypesAsync(int projectId, IReadOnlyCollection<int> documentTypeIds);
         Task<List<ProjectDocumentTypeDocumentField>> GetDocumentFieldsAsync(int projectId);
         Task<List<ProjectDocumentTypeDocumentField>> GetDocumentFieldsAsync(int projectId, int documentTypeId);
+        Task<List<ProjectDocumentTypeDocumentField>> GetTrackedDocumentFieldsAsync(int projectId, int documentTypeId);
         Task<List<ProjectDocumentTypeDocumentField>> GetDocumentFieldsByDocumentFieldIdsAsync(IReadOnlyCollection<int> documentFieldIds);
         void AddDocumentFields(IEnumerable<ProjectDocumentTypeDocumentField> projectDocumentFields);
         Task DeleteDocumentFieldsAsync(int projectId, IReadOnlyCollection<int> documentTypeIds, string? deletedBy, DateTime deletedDate);

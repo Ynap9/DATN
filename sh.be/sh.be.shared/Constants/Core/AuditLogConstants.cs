@@ -52,6 +52,7 @@ namespace sh.be.shared.Constants.Core
         public const string ACTION_SUBMISSION_IMPORT_APPEND = "Import thêm mới hồ sơ từ Google Sheet";
         public const string ACTION_SUBMISSION_IMPORT_BLANK = "Import bổ sung dữ liệu trống từ Google Sheet";
         public const string ACTION_SUBMISSION_IMPORT_OVERWRITE = "Import ghi đè trường dữ liệu từ Google Sheet";
+        public const string ACTION_SUBMISSION_IMPORT_FIELD_MAPPING = "Ghép cột import cho dự án";
         public const string ACTION_SUBMISSION_CHECK = "Kiểm tra hồ sơ";
         public const string ACTION_SUBMISSION_QA = "QA hồ sơ";
         public const string ACTION_SUBMISSION_DELETE = "Xóa hồ sơ";

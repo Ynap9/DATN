@@ -76,40 +76,42 @@ namespace sh.be.applications.Module.Construction.Implements
             _googleSheetExternal = googleSheetExternal;
         }
 
-        // Chạy thử import nối thêm hồ sơ mới từ Google Sheet dự án, không ghi DB
-        public async Task<ViewVerifyImportAppendSubmissionDto> VerifyImportAppend(ImportSubmissionDto dto)
+        // Chạy thử import nối thêm hồ sơ mới từ link Google Sheet gửi lên, không ghi DB
+        public async Task<ViewVerifyImportAppendSubmissionDto> VerifyImportAppend(ImportSheetSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(VerifyImportAppend)}, dto={JsonSerializer.Serialize(dto)}");
             await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
-            return await VerifyAppendAsync(dto, ReadProjectGoogleSheetAsync);
+            await EnsureImportGoogleSheetAsync(dto.ProjectId, dto.Url);
+            return await VerifyAppendAsync(dto, _ => ReadImportGoogleSheetAsync(dto.Url, dto.SheetName));
         }
 
-        // Import nối thêm hồ sơ mới từ Google Sheet dự án
-        public async Task<ViewImportSubmissionResultDto> ImportAppend(ImportSubmissionDto dto)
+        // Import nối thêm hồ sơ mới từ link Google Sheet gửi lên
+        public async Task<ViewImportSubmissionResultDto> ImportAppend(ImportSheetSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(ImportAppend)}, dto={JsonSerializer.Serialize(dto)}");
             await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
-            var source = await LoadAppendSheetAsync(dto, ReadProjectGoogleSheetAsync);
-            return await ImportAppendAsync(dto, source, getCurrentUserId(),
-                new ImportAuditSource(String.Empty, source.Project.UrlGoogleSheetSync, source.Project.GoogleSheetName));
+            await EnsureImportGoogleSheetAsync(dto.ProjectId, dto.Url);
+            var source = await LoadAppendSheetAsync(dto, _ => ReadImportGoogleSheetAsync(dto.Url, dto.SheetName));
+            return await ImportAppendAsync(dto, source, getCurrentUserId(), ToGoogleAuditSource(dto.Url, dto.SheetName));
         }
 
-        // Chạy thử import điền ô còn trống từ Google Sheet dự án, không ghi DB
-        public async Task<ViewVerifyImportBlankSubmissionDto> VerifyImportBlank(ImportSubmissionDto dto)
+        // Chạy thử import điền ô còn trống từ link Google Sheet gửi lên, không ghi DB
+        public async Task<ViewVerifyImportBlankSubmissionDto> VerifyImportBlank(ImportSheetSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(VerifyImportBlank)}, dto={JsonSerializer.Serialize(dto)}");
             await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
-            return await VerifyBlankAsync(dto, ReadProjectGoogleSheetAsync);
+            await EnsureImportGoogleSheetAsync(dto.ProjectId, dto.Url);
+            return await VerifyBlankAsync(dto, _ => ReadImportGoogleSheetAsync(dto.Url, dto.SheetName));
         }
 
-        // Import điền ô còn trống của hồ sơ đã có từ Google Sheet dự án
-        public async Task<ViewImportSubmissionResultDto> ImportBlank(ImportSubmissionDto dto)
+        // Import điền ô còn trống của hồ sơ đã có từ link Google Sheet gửi lên
+        public async Task<ViewImportSubmissionResultDto> ImportBlank(ImportSheetSubmissionDto dto)
         {
             _logger.LogInformation($"{nameof(ImportBlank)}, dto={JsonSerializer.Serialize(dto)}");
             await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
-            var source = await LoadProjectSheetAsync(dto, null, ReadProjectGoogleSheetAsync);
-            return await ImportBlankAsync(dto, source, getCurrentUserId(),
-                new ImportAuditSource(String.Empty, source.Project.UrlGoogleSheetSync, source.Project.GoogleSheetName));
+            await EnsureImportGoogleSheetAsync(dto.ProjectId, dto.Url);
+            var source = await LoadProjectSheetAsync(dto, null, _ => ReadImportGoogleSheetAsync(dto.Url, dto.SheetName));
+            return await ImportBlankAsync(dto, source, getCurrentUserId(), ToGoogleAuditSource(dto.Url, dto.SheetName));
         }
 
         // Chạy thử import ghi đè một trường từ sheet chỉ định, không ghi DB
@@ -117,7 +119,8 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             _logger.LogInformation($"{nameof(VerifyImportOverwrite)}, dto={JsonSerializer.Serialize(dto)}");
             await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
-            return await VerifyOverwriteAsync(dto, _dataReaderExternal.ReadTableAsync(dto.Url, dto.SheetName));
+            await EnsureImportGoogleSheetAsync(dto.ProjectId, dto.Url);
+            return await VerifyOverwriteAsync(dto, ReadImportGoogleSheetAsync(dto.Url, dto.SheetName));
         }
 
         // Import ghi đè một trường của hồ sơ đã có từ sheet chỉ định
@@ -125,8 +128,90 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             _logger.LogInformation($"{nameof(ImportOverwrite)}, dto={JsonSerializer.Serialize(dto)}");
             await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
-            var source = await LoadOverwriteSheetAsync(dto, _dataReaderExternal.ReadTableAsync(dto.Url, dto.SheetName));
-            return await ImportOverwriteAsync(dto, source, getCurrentUserId(), new ImportAuditSource($" từ sheet {dto.SheetName}", null, null));
+            await EnsureImportGoogleSheetAsync(dto.ProjectId, dto.Url);
+            var source = await LoadOverwriteSheetAsync(dto, ReadImportGoogleSheetAsync(dto.Url, dto.SheetName));
+            return await ImportOverwriteAsync(dto, source, getCurrentUserId(), ToGoogleAuditSource(dto.Url, dto.SheetName));
+        }
+
+        // Lấy danh sách sheet và header dòng 1 của link Google Sheet để người dùng chọn sheet khi import
+        public async Task<List<SheetHeaderDto>> GetImportSheetHeaders(GetImportSheetHeadersDto dto)
+        {
+            _logger.LogInformation($"{nameof(GetImportSheetHeaders)}, dto={JsonSerializer.Serialize(dto)}");
+            await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
+            await _submissionDomainService.EnsureImportableProjectAsync(dto.ProjectId);
+            await _submissionDomainService.EnsureDocumentTypeInProjectAsync(dto.ProjectId, dto.DocumentTypeId);
+            await EnsureImportGoogleSheetAsync(dto.ProjectId, dto.Url);
+            return await _dataReaderExternal.GetSheetHeadersAsync(dto.Url);
+        }
+
+        // Gợi ý cột sheet cho từng trường của cặp dự án + loại văn bản theo tên cột đang lưu, không ghi DB
+        public async Task<List<ViewImportFieldMappingDto>> MatchImportFieldMapping(MatchImportFieldMappingDto dto)
+        {
+            _logger.LogInformation($"{nameof(MatchImportFieldMapping)}, dto={JsonSerializer.Serialize(dto)}");
+            await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
+            await _submissionDomainService.EnsureImportableProjectAsync(dto.ProjectId);
+            await _submissionDomainService.EnsureDocumentTypeInProjectAsync(dto.ProjectId, dto.DocumentTypeId);
+            var mappings = await _submissionDomainService.GetImportMappingsAsync(dto.ProjectId, dto.DocumentTypeId);
+            var fields = await _submissionDomainService.GetDocumentFieldsAsync(dto.DocumentTypeId);
+            var headers = SubmissionImportDomainService.ApplyStartColumn(dto.Headers, dto.StartColumn);
+            return ToImportFieldMappingDtos(SubmissionImportDomainService.MatchFieldHeaders(mappings, fields, headers));
+        }
+
+        // Lưu cột sheet của mọi trường cho dự án + loại văn bản (không đụng DocumentField gốc), chỉ ghi audit các trường có đổi
+        public async Task<List<ViewImportFieldMappingDto>> SaveImportFieldMapping(SaveImportFieldMappingDto dto)
+        {
+            _logger.LogInformation($"{nameof(SaveImportFieldMapping)}, dto={JsonSerializer.Serialize(dto)}");
+            await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
+            await _submissionDomainService.EnsureImportableProjectAsync(dto.ProjectId);
+            await _submissionDomainService.EnsureDocumentTypeInProjectAsync(dto.ProjectId, dto.DocumentTypeId);
+            var choices = dto.Fields
+                .Select(field => new ImportFieldMappingChoice(field.DocumentFieldId, field.FieldImport?.Trim() ?? String.Empty, field.ColumnIndex))
+                .ToList();
+            var headers = SubmissionImportDomainService.ApplyStartColumn(dto.Headers, dto.StartColumn);
+            var currentUserId = getCurrentUserId();
+            var now = GetVietnamTime();
+
+            await using var transaction = await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                await _submissionDomainService.LockImportAsync(dto.ProjectId, dto.DocumentTypeId);
+                var mappings = await _submissionDomainService.GetTrackedImportMappingsAsync(dto.ProjectId, dto.DocumentTypeId);
+                var fields = await _submissionDomainService.GetDocumentFieldsAsync(dto.DocumentTypeId);
+                SubmissionImportDomainService.EnsureValidFieldMappingChoices(mappings, fields, choices, dto.StartColumn);
+
+                var mappingsByFieldId = mappings.ToDictionary(mapping => mapping.DocumentFieldId);
+                var oldValues = new List<object>();
+                var newValues = new List<object>();
+                foreach (var choice in choices)
+                {
+                    var mapping = mappingsByFieldId[choice.DocumentFieldId];
+                    var oldValue = new { mapping.DocumentFieldId, mapping.FieldImport, mapping.OrderFieldImport };
+                    if (mapping.UpdateFieldImport(choice.FieldImport, choice.ColumnIndex!.Value + 1, currentUserId, now))
+                    {
+                        oldValues.Add(oldValue);
+                        newValues.Add(new { mapping.DocumentFieldId, mapping.FieldImport, mapping.OrderFieldImport });
+                    }
+                }
+
+                // Ném 309 khi cột trùng tên nhiều hơn số trường ghép vào tên đó, giống lúc import
+                SubmissionImportDomainService.ResolveMappedColumns(headers, mappings);
+                if (newValues.Count > 0)
+                {
+                    AddAuditLog(AuditLogConstants.ACTION_SUBMISSION_IMPORT_FIELD_MAPPING, AuditLogConstants.ACTION_TYPE_UPDATE,
+                        $"Ghép cột import {newValues.Count} trường của dự án Id = {dto.ProjectId}, loại văn bản Id = {dto.DocumentTypeId}",
+                        oldValues, newValues, currentUserId);
+                    await _unitOfWork.SaveChangesAsync();
+                }
+
+                await transaction.CommitAsync();
+                return ToImportFieldMappingDtos(SubmissionImportDomainService.MatchFieldHeaders(mappings, fields, []));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{nameof(SaveImportFieldMapping)}, projectId={dto.ProjectId}, documentTypeId={dto.DocumentTypeId}");
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         public async Task<UploadImportExcelResultDto> UploadImportExcel(UploadImportExcelDto dto)
@@ -942,6 +1027,7 @@ namespace sh.be.applications.Module.Construction.Implements
                             auditSource.SheetName,
                             NewSubmissionCount = appendPlan.NewSubmissions.Count,
                             appendPlan.NewDataCount,
+                            appendPlan.NonEmptyCellCount,
                             appendPlan.MappedFieldCount,
                         }, userId);
                 });
@@ -949,7 +1035,7 @@ namespace sh.be.applications.Module.Construction.Implements
             return new ViewImportSubmissionResultDto
             {
                 Message = $"Import hoàn tất. Hồ sơ thêm mới: {plan.NewSubmissions.Count}, "
-                    + $"Dữ liệu thêm mới: {plan.NewDataCount}, Trường đã map: {plan.MappedFieldCount}, Ô dữ liệu có giá trị: {plan.NonEmptyCellCount}",
+                    + $"Dữ liệu thêm mới: {plan.NonEmptyCellCount}, Trường đã map: {plan.MappedFieldCount}",
                 TotalDataFields = plan.NonEmptyCellCount,
             };
         }
@@ -1065,9 +1151,13 @@ namespace sh.be.applications.Module.Construction.Implements
             var tableTask = readTableAsync(project);
             var mappings = await _submissionDomainService.GetImportMappingsAsync(dto.ProjectId, dto.DocumentTypeId);
             var table = await tableTask;
+            SubmissionImportDomainService.EnsureHasData(table);
+            table = table with { Headers = SubmissionImportDomainService.ApplyStartColumn(table.Headers, dto.StartColumn) };
 
             var columns = ResolveSheetColumns(table, dto, fileUrlColumn);
             var mappedColumns = SubmissionImportDomainService.ResolveMappedColumns(table.Headers, mappings);
+            var fields = await _submissionDomainService.GetDocumentFieldsAsync(dto.DocumentTypeId);
+            SubmissionImportDomainService.EnsureAllFieldsMapped(fields, mappings, mappedColumns);
             return new ProjectSheetSource(project, table, columns, mappedColumns);
         }
 
@@ -1077,18 +1167,58 @@ namespace sh.be.applications.Module.Construction.Implements
             var project = await _submissionDomainService.EnsureImportableProjectAsync(dto.ProjectId);
             await _submissionDomainService.EnsureDocumentTypeInProjectAsync(dto.ProjectId, dto.DocumentTypeId);
             var mapping = await _submissionDomainService.EnsureDocumentFieldInProjectAsync(dto.ProjectId, dto.DocumentTypeId, dto.DocumentFieldId);
+            var mappings = await _submissionDomainService.GetImportMappingsAsync(dto.ProjectId, dto.DocumentTypeId);
             var table = await tableTask;
+            SubmissionImportDomainService.EnsureHasData(table);
+            table = table with { Headers = SubmissionImportDomainService.ApplyStartColumn(table.Headers, dto.StartColumn) };
 
             var columns = ResolveSheetColumns(table, dto, null);
             var columnImportIndex = SubmissionImportDomainService.ResolveSingleColumn(table.Headers, dto.ColumnImport);
+            var mappedColumns = SubmissionImportDomainService.ResolveMappedColumns(table.Headers, mappings);
+            var fields = await _submissionDomainService.GetDocumentFieldsAsync(dto.DocumentTypeId);
+            SubmissionImportDomainService.EnsureAllFieldsMapped(fields, mappings, mappedColumns);
             return new OverwriteSheetSource(project, table, columns, mapping, columnImportIndex);
         }
 
-        // Đọc Google Sheet gắn với dự án; dự án không gắn Sheet → 348
-        private Task<SheetTable> ReadProjectGoogleSheetAsync(Project project)
+        // Kiểm link import trước khi đọc, chạy tuần tự (không lẫn với query song song): thiếu link → 400, Sheet của dự án khác → 202
+        private async Task EnsureImportGoogleSheetAsync(int projectId, string url)
         {
-            project.EnsureGoogleSheetLinked();
-            return _dataReaderExternal.ReadTableAsync(project.UrlGoogleSheetSync, project.GoogleSheetName);
+            if (String.IsNullOrWhiteSpace(url))
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Chưa nhập link Google Sheet");
+            }
+
+            await _projectDomainService.EnsureGoogleSheetNotUsedByOtherProjectAsync(_googleSheetExternal.ExtractSpreadsheetId(url), projectId);
+        }
+
+        // Đọc đúng sheet người dùng chọn trên link gửi lên (không phụ thuộc Sheet gắn với dự án); thiếu tên sheet → 400
+        private Task<SheetTable> ReadImportGoogleSheetAsync(string url, string sheetName)
+        {
+            if (String.IsNullOrWhiteSpace(sheetName))
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, "Chưa chọn sheet");
+            }
+
+            return _dataReaderExternal.ReadTableAsync(url, sheetName);
+        }
+
+        private static List<ViewImportFieldMappingDto> ToImportFieldMappingDtos(List<ImportFieldHeaderMatch> matches)
+        {
+            return matches
+                .Select(match => new ViewImportFieldMappingDto
+                {
+                    DocumentFieldId = match.DocumentFieldId,
+                    Name = match.Name,
+                    FieldImport = match.FieldImport,
+                    MatchedHeader = match.MatchedHeader,
+                    MatchedColumnIndex = match.MatchedColumnIndex,
+                })
+                .ToList();
+        }
+
+        private static ImportAuditSource ToGoogleAuditSource(string url, string sheetName)
+        {
+            return new ImportAuditSource($" từ Google Sheet {sheetName}", url, sheetName);
         }
 
         private static ImportAuditSource ToExcelAuditSource(ImportExcelSubmissionDto dto)
@@ -1107,7 +1237,6 @@ namespace sh.be.applications.Module.Construction.Implements
 
         private static SubmissionImportColumns ResolveSheetColumns(SheetTable table, ImportSubmissionDto dto, string? fileUrlColumn)
         {
-            SubmissionImportDomainService.EnsureHasData(table);
             var columns = SubmissionImportDomainService.ResolveColumns(table.Headers, dto.FileColumnImport, dto.ProfileRange, dto.Box, fileUrlColumn);
             SubmissionImportDomainService.EnsureNoDuplicateKeys(table, columns);
             return columns;

@@ -35,7 +35,7 @@ namespace sh.be.api.Controllers.Module.Construction
 
         [HttpPost("import/append/verify")]
         [Permission(PermissionConstants.FUNCTION_SUBMISSION_IMPORT)]
-        public async Task<ApiResponse> VerifyImportAppend([FromBody] ImportSubmissionDto dto)
+        public async Task<ApiResponse> VerifyImportAppend([FromBody] ImportSheetSubmissionDto dto)
         {
             try
             {
@@ -50,7 +50,7 @@ namespace sh.be.api.Controllers.Module.Construction
 
         [HttpPost("import/append")]
         [Permission(PermissionConstants.FUNCTION_SUBMISSION_IMPORT)]
-        public async Task<ApiResponse> ImportAppend([FromBody] ImportSubmissionDto dto)
+        public async Task<ApiResponse> ImportAppend([FromBody] ImportSheetSubmissionDto dto)
         {
             try
             {
@@ -65,7 +65,7 @@ namespace sh.be.api.Controllers.Module.Construction
 
         [HttpPost("import/blank/verify")]
         [Permission(PermissionConstants.FUNCTION_SUBMISSION_IMPORT)]
-        public async Task<ApiResponse> VerifyImportBlank([FromBody] ImportSubmissionDto dto)
+        public async Task<ApiResponse> VerifyImportBlank([FromBody] ImportSheetSubmissionDto dto)
         {
             try
             {
@@ -80,7 +80,7 @@ namespace sh.be.api.Controllers.Module.Construction
 
         [HttpPost("import/blank")]
         [Permission(PermissionConstants.FUNCTION_SUBMISSION_IMPORT)]
-        public async Task<ApiResponse> ImportBlank([FromBody] ImportSubmissionDto dto)
+        public async Task<ApiResponse> ImportBlank([FromBody] ImportSheetSubmissionDto dto)
         {
             try
             {
@@ -115,6 +115,51 @@ namespace sh.be.api.Controllers.Module.Construction
             try
             {
                 var data = await _submissionService.ImportOverwrite(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("import/sheet-headers")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_IMPORT)]
+        public async Task<ApiResponse> GetImportSheetHeaders([FromQuery] GetImportSheetHeadersDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.GetImportSheetHeaders(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPost("import/field-mapping/match")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_IMPORT)]
+        public async Task<ApiResponse> MatchImportFieldMapping([FromBody] MatchImportFieldMappingDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.MatchImportFieldMapping(dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPut("import/field-mapping")]
+        [Permission(PermissionConstants.FUNCTION_SUBMISSION_IMPORT)]
+        public async Task<ApiResponse> SaveImportFieldMapping([FromBody] SaveImportFieldMappingDto dto)
+        {
+            try
+            {
+                var data = await _submissionService.SaveImportFieldMapping(dto);
                 return new(data);
             }
             catch (Exception ex)
