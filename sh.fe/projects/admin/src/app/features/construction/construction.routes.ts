@@ -5,6 +5,7 @@ import { DataTransferComponent } from './data-transfer/data-transfer.component';
 import { DocumentTypeDetailComponent } from './document-type/document-type-detail.component';
 import { DocumentTypeListComponent } from './document-type/document-type-list.component';
 import { ProjectConfigComponent } from './project-config/project-config.component';
+import { ProjectDeadlineComponent } from './project-deadline/project-deadline.component';
 import { ProjectListComponent } from './project/project-list.component';
 import { ProjectReportComponent } from './project/project-report/project-report.component';
 import { SubmissionCheckComponent } from './submission/submission-check.component';
@@ -16,6 +17,7 @@ const PROJECT_PERMISSIONS = [PermissionConstants.MENU_PROJECT, PermissionConstan
 const SUBMISSION_PERMISSIONS = [PermissionConstants.MENU_SUBMISSION, PermissionConstants.FUNCTION_SUBMISSION_VIEW];
 const DATA_TRANSFER_PERMISSIONS = [PermissionConstants.FUNCTION_SUBMISSION_IMPORT, PermissionConstants.FUNCTION_SUBMISSION_EXPORT];
 const PROJECT_CONFIG_PERMISSIONS = [PermissionConstants.MENU_PROJECT_CONFIG, PermissionConstants.FUNCTION_PROJECT_CONFIG_VIEW];
+const PROJECT_DEADLINE_PERMISSIONS = [PermissionConstants.FUNCTION_PROJECT_DEADLINE];
 
 // Rời chi tiết Metadata khi tab Prompt OCR còn thay đổi chưa lưu thì hỏi trước
 const metadataDetailDeactivateGuard: CanDeactivateFn<DocumentTypeDetailComponent> = (component) => component.canDeactivate();
@@ -65,6 +67,7 @@ export const CONSTRUCTION_ROUTES: Routes = [
         canDeactivate: [projectConfigDeactivateGuard],
         data: { permissions: PROJECT_CONFIG_PERMISSIONS },
     },
+    { path: 'project-deadline', component: ProjectDeadlineComponent, canActivate: [permissionGuard], data: { permissions: PROJECT_DEADLINE_PERMISSIONS } },
     { path: 'metadata', component: DocumentTypeListComponent, canActivate: [permissionGuard], data: { permissions: DOCUMENT_TYPE_PERMISSIONS } },
     {
         path: 'metadata/:id',

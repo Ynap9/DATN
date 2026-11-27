@@ -1,0 +1,17 @@
+<div class="flex flex-wrap items-center justify-between gap-3">
+    <p-selectbutton [options]="typeOptions" optionLabel="label" optionValue="value" [allowEmpty]="false" [ngModel]="type" (ngModelChange)="onTypeChange($event)" />
+    <p-iconfield class="w-full sm:w-72">
+        <p-inputicon class="pi pi-search" />
+        <input pInputText class="w-full" placeholder="Tìm tên dự án" [formControl]="keyword" />
+    </p-iconfield>
+</div>
+
+<div class="mt-3">
+    <app-data-table tableKey="construction-project-deadline" dataKey="projectId" [columns]="columns" [data]="rows" [loading]="loading" [pageNumber]="pageNumber"
+        [pageSize]="pageSize" [total]="totalRecords" (pageChange)="onPageChange($event)" (action)="onAction($event)">
+        <div tableEmpty class="flex flex-col items-center gap-2 py-6">
+            <span class="grid h-11 w-11 place-items-center rounded-full bg-[var(--app-bg)] text-[var(--app-muted)]"><i class="pi pi-calendar"></i></span>
+            <span class="font-semibold text-[var(--app-ink)]">Không có dự án nào sắp hoặc đã hết hạn</span>
+        </div>
+    </app-data-table>
+</div>

@@ -1,0 +1,29 @@
+<app-page-header title="Hạn dự án" [breadcrumbs]="breadcrumbs" description="Dự án sắp hoặc đã quá ngày kết thúc và các mail báo hạn hệ thống đã gửi.">
+    <div class="flex items-center gap-2">
+        <p-button label="Làm mới" icon="pi pi-refresh" severity="secondary" [outlined]="true" [disabled]="isRunning" (onClick)="refresh()" />
+        <p-button label="Kiểm hạn ngay" icon="pi pi-play" [loading]="isRunning" [disabled]="!canRun" (onClick)="confirmRun()" />
+    </div>
+</app-page-header>
+
+<div class="mt-4 flex flex-col gap-4">
+    <div>
+        <app-deadline-status-card [status]="status" />
+    </div>
+
+    <div class="flex gap-1 border-b border-[var(--app-line)]" role="tablist">
+        @for (tab of tabs; track tab.key) {
+            <button type="button" role="tab" [attr.aria-selected]="activeTab === tab.key"
+                class="-mb-px cursor-pointer border-0 bg-transparent px-3 py-2 text-[13px] font-semibold"
+                [style.border-bottom]="'2px solid ' + (activeTab === tab.key ? 'var(--app-accent)' : 'transparent')"
+                [style.color]="activeTab === tab.key ? 'var(--app-accent)' : 'var(--app-muted)'" (click)="selectTab(tab.key)">
+                {{ tab.label }}
+            </button>
+        }
+    </div>
+
+    @if (activeTab === tabKeys.ATTENTION) {
+        <app-deadline-attention-tab (extended)="loadStatus()" (viewMails)="showMails($event)" />
+    } @else {
+        <app-deadline-mail-tab />
+    }
+</div>

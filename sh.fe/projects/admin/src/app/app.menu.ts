@@ -1,6 +1,7 @@
 import { MenuItem } from 'primeng/api';
 import { METADATA_URL } from '@/shared/constants/document-type.constants';
 import { PermissionConstants } from '@/shared/constants/permission.constants';
+import { PROJECT_DEADLINE_URL } from '@/shared/constants/project-deadline.constants';
 
 export const APP_MENU_ITEMS: MenuItem[] = [
     {
@@ -11,6 +12,7 @@ export const APP_MENU_ITEMS: MenuItem[] = [
         label: 'Hồ sơ thi công',
         items: [
             { label: 'Dự án', icon: 'pi pi-building', routerLink: ['/admin/construction/project'], permission: PermissionConstants.FUNCTION_PROJECT_VIEW },
+            { label: 'Hạn dự án', icon: 'pi pi-calendar-clock', routerLink: [PROJECT_DEADLINE_URL], permission: PermissionConstants.FUNCTION_PROJECT_DEADLINE },
             {
                 label: 'Metadata',
                 icon: 'pi pi-table',

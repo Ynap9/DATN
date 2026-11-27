@@ -1,6 +1,6 @@
 # Màn Báo cáo tiến độ (Construction)
 
-> **Phần 15/15** · trước: [14-man-tien-cong.md](14-man-tien-cong.md) · mục lục: [README.md](README.md)
+> **Phần 15/16** · trước: [14-man-tien-cong.md](14-man-tien-cong.md) · mục lục: [README.md](README.md)
 
 Task 46 (cập nhật Task 71, 2026-11-27): `/admin/construction/project/:id` (`project/project-report/`), chỉ để xem — không có lối sang danh sách văn bản.
 Tách khỏi [07-man-construction.md](07-man-construction.md) từ Task 71.
@@ -69,4 +69,4 @@ tạm; đã dọn sạch:
   Thiếu `QaStats`: 5 cột, không gọi `qa-stats/entry-users`, hai khối kia hiện "chưa được cấp quyền".
 - Chưa kiểm: tắt mạng thật bằng DevTools Offline (đã giả lập bằng chặn đúng API đó).
 
-> **Tiếp:** hết bộ tài liệu — quay lại [README.md](README.md).
+> **Tiếp:** [16-man-han-du-an.md](16-man-han-du-an.md) — màn Hạn dự án.

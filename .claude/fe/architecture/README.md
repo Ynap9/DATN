@@ -74,6 +74,7 @@ URL FE `/admin/<module>/...` trùng tên module BE `api/v1/<module>/...` để t
 | [13-man-chia-phieu.md](13-man-chia-phieu.md) | Màn Chia phiếu: cây hộp / hồ sơ, xem trước, giao; phiếu của một người, chuyển / thu hồi phiếu và phụ trách QA |
 | [14-man-tien-cong.md](14-man-tien-cong.md) | Màn Tiền công: chế độ Admin / Leader / nhân viên theo cặp, nhóm cột Thực nhận / Giá công ty, dải tổng, Xuất Excel |
 | [15-man-bao-cao-tien-do.md](15-man-bao-cao-tien-do.md) | Màn Báo cáo tiến độ: lọc theo URL, các khối (KPI, biểu đồ, nghiệm thu, chất lượng QA), khối Năng suất 2 tab không cần QA, ghi chép kiểm trình duyệt |
+| [16-man-han-du-an.md](16-man-han-du-an.md) | Màn Hạn dự án: thẻ job kiểm hạn, Kiểm hạn ngay, tab Dự án cần chú ý (Gia hạn), tab Lịch sử mail, bộ lọc ghi lên URL |
 
 ## Nguyên tắc không đổi
 

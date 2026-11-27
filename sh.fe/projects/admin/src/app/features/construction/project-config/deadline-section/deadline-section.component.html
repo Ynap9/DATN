@@ -4,6 +4,11 @@
         <span class="text-[13px] text-[var(--app-muted)]">
             Hệ thống kiểm hạn mỗi sáng 7:00, gửi mail cho SuperAdmin và Admin khi dự án sắp hết hạn hoặc đã hết hạn.
         </span>
+        @if (canViewDeadline) {
+            <a class="mt-1 w-fit text-[13px] font-semibold text-[var(--app-accent)] no-underline hover:underline" [routerLink]="deadlineUrl">
+                Xem dự án sắp / đã hết hạn và lịch sử mail
+            </a>
+        }
     </div>
 
     <form class="grid grid-cols-1 items-start gap-x-4 gap-y-2 p-5 md:grid-cols-[180px_minmax(0,1fr)] md:gap-y-[18px]" [formGroup]="form" (ngSubmit)="save()">

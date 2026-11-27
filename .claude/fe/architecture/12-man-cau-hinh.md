@@ -12,7 +12,7 @@ Google, hạn dự án. Nghiệp vụ BE ở [../../be/nghiep-vu/08-cau-hinh-du-
 | Route | `/admin/construction/project-config`, `permissionGuard` = `Menu…ProjectConfig` **hoặc** `Function…ProjectConfig.View`, `canDeactivate` inline trong `construction.routes.ts` |
 | Menu | "Cấu hình" (`pi pi-cog`) cuối nhóm Quản trị, key `MENU_PROJECT_CONFIG` |
 | Màn cha | `project-config/project-config.component.*`: tải danh sách, `canDeactivate`, Kết nối Google, đọc `?google=` |
-| Khối | `google-connection-section/` (chỉ hiển thị, phát `connect`), `google-app-section/` (4 ô), `deadline-section/` (báo trước + mail) |
+| Khối | `google-connection-section/` (chỉ hiển thị, phát `connect`), `google-app-section/` (4 ô), `deadline-section/` (báo trước + mail, link sang [màn Hạn dự án](16-man-han-du-an.md) khi có `Project.Deadline`) |
 | Lưu chung | `project-config-save.ts`: `toProjectConfigMap`, `saveProjectConfigs` (tuần tự, dừng ở lỗi đầu), `getSaveErrorMessage` |
 | Hằng | `project-config.constants.ts`: `PROJECT_CONFIG_NAME`, `PROJECT_CONFIG_MASKED`, `GOOGLE_CALLBACK_PATH`, `GOOGLE_CALLBACK_RESULT`, `PROJECT_CONFIG_ERROR_CODE`, `DEADLINE_WARNING_DAYS_DEFAULT` |
 | API | `ProjectConfigService`: `getList`, `create`, `update`, `getGoogleAuthorizationUrl` |

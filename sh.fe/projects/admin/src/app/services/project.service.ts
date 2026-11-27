@@ -1,6 +1,14 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { ICreateProject, IFindPagingProject, IReopenAcceptance, ITransitionAcceptance, IUpdateProject, IViewProject, IViewProjectAcceptance, IViewProjectPair } from "@/models/project.model";
+import {
+    IDeadlineCheckStatus,
+    IFindProjectDeadline,
+    IFindProjectDeadlineNotification,
+    IProjectDeadline,
+    IProjectDeadlineNotification,
+    IRunDeadlineCheck,
+} from "@/models/project-deadline.model";
 import { IBaseResponse, IBaseResponsePaging, IBaseResponseWithData } from "@/shared/models/request-paging.base.models";
 import { apiUrl } from "@/shared/utils/api-url";
 
@@ -50,5 +58,26 @@ export class ProjectService {
 
     acceptanceReportUrl(id: number) {
         return `${this.api}/${id}/acceptance/report`;
+    }
+
+    findDeadlinePaging(query: IFindProjectDeadline) {
+        return this.http.get<IBaseResponsePaging<IProjectDeadline>>(`${this.api}/deadline`, { params: this.toParams(query) });
+    }
+
+    runDeadlineCheck() {
+        return this.http.post<IBaseResponseWithData<IRunDeadlineCheck>>(`${this.api}/deadline-check/run`, null);
+    }
+
+    findDeadlineCheckStatus() {
+        return this.http.get<IBaseResponseWithData<IDeadlineCheckStatus>>(`${this.api}/deadline-check/status`);
+    }
+
+    findDeadlineNotificationPaging(query: IFindProjectDeadlineNotification) {
+        return this.http.get<IBaseResponsePaging<IProjectDeadlineNotification>>(`${this.api}/deadline-notification/paging`, { params: this.toParams(query) });
+    }
+
+    // Bỏ tham số rỗng nhưng giữ số 0 và false (isSuccess = false là lọc "Lỗi")
+    private toParams(query: object) {
+        return Object.fromEntries(Object.entries(query).filter(([, value]) => value !== undefined && value !== null && value !== ''));
     }
 }
