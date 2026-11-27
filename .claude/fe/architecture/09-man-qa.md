@@ -43,4 +43,21 @@ trường không khớp rồi chấm Đạt hoặc Trả lại, xong tự sang v
 - Lưu ý: Test trên DB dev qua tunnel: mỗi lần mở văn bản mất 3–6 s. Bấm khi màn đang bận thì nút bị tắt, thao tác mất — đừng
   coi là lỗi điều hướng.
 
+## Đã kiểm thực tế (Task 72)
+
+Ngày 2026-11-27, Chrome thật + API thật trên DB dev, dự án tạm ZZTEST72 (có QA, 2 hộp × 6 văn bản, Data A kiểm hết, Q phụ trách cả hai hộp)
+và ZZTEST72B (không QA). Văn bản chèn bằng SQL vì MinIO đầy.
+
+- Kết quả 24 / 24 bước của bảng 44.3 đạt. Bước 24 (đóng tab khi chấm dở) kiểm gián tiếp: đang có trường đánh dấu Sai thì điều hướng bị
+  chặn bởi hộp "Leave site?".
+- Bước 1 lọc theo hộp A để ra "2 / 6" (dự án có 12 văn bản chưa QA). Bước 22 chạy đầu tiên với 12 văn bản, 10 dòng mỗi trang, mở văn bản ở trang 2.
+- Đổi ở Task 44: bước 12 chấm văn bản cuối bộ lọc thì ở lại văn bản vừa chấm (tải lại, banner xanh, tag "Ngoài bộ lọc", ▶ và "Văn bản sau"
+  tắt), không có trạng thái "Đã chấm hết văn bản trong bộ lọc".
+- Dùng API thay màn: bước 9 (Q trả lại trường ẩn F5 rồi Data sửa), bước 20 (Admin chấm Đạt khi Q còn mở màn), chuyển dự án sang ACCEPTING
+  / DONE (API nghiệm thu). Bước 8 và 9 Data sửa lại bằng màn Nhập liệu / API `check`.
+- Bước 20 thực tế: Q gửi Đạt sau khi Admin đã chấm Đạt thì BE nhận, toast "Đã chấm Đạt …", không báo lỗi (chấm đè Đạt → Đạt, không tính tiền
+  theo Task 68). Không phải lỗi màn.
+- Bước 21: Dọc + A+ ở màn QA, mở màn Nhập liệu thì cùng bố cục (khoá localStorage chung).
+- Đã dọn: dự án, metadata, văn bản, log và audit của ZZTEST72 / 72B / 72G.
+
 > **Tiếp:** [10-man-operation.md](10-man-operation.md) — màn module Operation: Thành viên dự án.

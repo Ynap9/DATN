@@ -64,4 +64,21 @@ Task 43, giao diện làm lại ở Task 53 (cập nhật 2026-11-23). Màn làm
 - Lưu ý: `proxy-file` lỗi vẫn trả HTTP 200 kèm JSON (315 / 305), nên luôn đọc qua `readErrorResponse`. BE chỉ kiểm URL có thuộc một
   văn bản nào không, **không** kiểm người gọi có được giao văn bản đó.
 
+## Đã kiểm thực tế (Task 72)
+
+Ngày 2026-11-27, Chrome thật + API thật trên DB dev qua tunnel, dự án tạm ZZTEST72 (có QA) và ZZTEST72B (không QA), tài khoản có sẵn
+(SuperAdmin, Admin, Leader, 2 Data, 2 QA). Metadata, trường, dự án, thành viên và chia phiếu đi qua API; riêng văn bản chèn bằng SQL vì
+MinIO đầy (import Excel báo `209`) và không có Google Sheet.
+
+- Kết quả 21 / 21 bước của bảng 43.3 đạt. Bước 21 (đóng tab khi có sửa chưa lưu) kiểm gián tiếp: điều hướng bị chặn bởi hộp "Leave site?".
+- Bước giao diện đã đổi ở Task 53, kiểm theo tài liệu này: 6 và 8 (hết văn bản thì nút ▶ tắt, không có toast "Đã hết văn bản…"; từ văn bản
+  "Ngoài bộ lọc" bấm ▶ không đi tiếp được, ◀ đi được), 9 (không còn banner đỏ và chip, thay bằng dòng "Còn X / Y trường QA đánh sai" và
+  chú thích dưới ô), 12 (khoá hiện ở dòng tóm tắt, không có khung xanh riêng).
+- Dùng API thay màn: bước 11 (màn QA không đánh dấu được trường ẩn), chuyển dự án sang ACCEPTING / DONE (API nghiệm thu), Q chấm Đạt lại
+  văn bản để dựng bước 14. Bước 19 sửa `fileUrlS3Object` bằng SQL rồi trả về như cũ.
+- Chưa kiểm: dòng "Bản ghi cũ…" của log trước Task 43A (dữ liệu tạm không có log cũ).
+- Lệch báo PM, chưa sửa (thuộc BE): Admin sửa hộ văn bản của Data thì dòng QA trong Lịch sử ghi "Người nhập: admin02", không phải người giữ văn bản.
+- Lưu ý: mỗi lần mở văn bản mất 3–10 s do tunnel. Sau F5 màn trắng tới khi tải xong; đừng coi là lỗi khi chụp màn quá sớm.
+- Đã dọn: dự án, metadata, văn bản, log và audit của ZZTEST72 / 72B.
+
 > **Tiếp:** [09-man-qa.md](09-man-qa.md) — màn QA chấm Đạt / Trả lại.

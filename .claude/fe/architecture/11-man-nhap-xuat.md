@@ -63,6 +63,20 @@ Bẫy: khung lỗi dùng `whitespace-pre-line` phải đặt `{{ }}` sát thẻ 
 
 Bẫy: "Tải về" sau 15 phút mở link **sau** khi API trả, trình duyệt có thể chặn popup — bấm lại là mở (chưa kiểm).
 
+## Đã kiểm thực tế (Task 72)
+
+Ngày 2026-11-28, Chrome thật + API thật, dự án tạm ZZTEST72B (không QA) và ZZTEST72G (chỉ để lấy Sheet), Sheet Google thật tạo qua hệ thống.
+
+- "Tải file mẫu" đạt: bấm link ở bước 1 tab Nhập, tải `ZZTEST72 Metadata_template.xlsx` (6.458 byte), mở được, một sheet tên metadata,
+  5 tiêu đề đúng 5 trường. File mẫu chỉ có cột trường, không có "Tên file", "Hồ sơ", "Hộp", "Link" (đúng thiết kế ở BE 05, các cột này
+  chọn ở bước 3).
+- Đổi cặp ở bước 3 đạt: dán Sheet, lấy sheet, ghép 5 / 5 trường, sang bước 3, đổi dự án ở ô chọn cặp rồi quay lại thì về bước 1, ô link
+  trống, danh sách bước sạch.
+- Chưa kiểm: 3 kiểu import Excel (chạy thử, job tới "Xong", số dòng khớp), file thiếu cột "Tên file" ra dòng job "Lỗi", xuất Excel (số dòng
+  khớp "Sẽ xuất N", tải về mở được). Lý do: MinIO vẫn đầy, upload trả `209`. Chủ đồ án chốt tạm coi đạt, kiểm lại khi PM dọn MinIO.
+- Lưu ý: muốn có Sheet Google có tiêu đề cột để test mà không có quyền ghi Sheet: tạo dự án tạm có Google Sheet, xoá mềm dự án (Sheet hết là
+  Sheet của dự án nên đọc / ghi được), rồi dùng "Xuất ra Google Sheet" đổ dữ liệu vào. File Sheet nằm lại trên Drive, phải xoá tay.
+
 ## Chưa làm / chưa kiểm
 
 - Task 63 đã kiểm trình duyệt 2026-11-27 (API thật + Sheet thật, dự án tạm ZZTEST63 đã dọn): link dự án điền sẵn + tự lấy sheet; dự án không Sheet vẫn chọn được Google, link sai → chữ đỏ không toast; dán Sheet tự do lấy được sheet; ghép (lệch tên → "Chưa chọn cột", "Ghi chú (cột thứ 9 / 10)", bấm Tiếp tục thiếu cột → dòng đỏ, một cột hai trường → hai dòng đỏ + khoá, tên cột lặp ghép thiếu → dòng đỏ); ghép đã lưu điền sẵn khi vào lại; cột bắt đầu = 3 bỏ cột A, B và xoá ô cột cố định; ghi đè chỉ chọn trường đã ghép; chạy thử Thêm mới 4 văn bản / 20 ô (dòng tên "null" bỏ — luật trước Task 67, nay tên file "null" là tên thật) + import thật 4 hồ sơ, 100 trang, ghép lưu DB.
