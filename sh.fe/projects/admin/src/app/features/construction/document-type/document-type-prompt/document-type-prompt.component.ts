@@ -16,11 +16,13 @@ import {
     getPromptTemplateStatusBadge,
     NORMALIZE_RULES,
     PROMPT_FIELD_DESCRIPTION_MAX_LENGTH,
+    PROMPT_ERROR_CODE,
     PROMPT_FIELD_EXAMPLE_MAX_LENGTH,
     PROMPT_MAX_LENGTH,
     PROMPT_NOTE_MAX_LENGTH,
 } from '@/shared/constants/prompt-template.constants';
 import { ITableAction, ITableBadge } from '@/shared/models/data-table.models';
+import { IBaseResponse } from '@/shared/models/request-paging.base.models';
 import { SharedImports } from '@/shared/import.shared';
 import { IPromptHistoryDialogData, PromptHistoryDialogComponent } from './prompt-history-dialog.component';
 import { IPromptPreviewDialogData, PromptPreviewDialogComponent } from './prompt-preview-dialog.component';
@@ -128,6 +130,8 @@ export class DocumentTypePromptComponent extends BaseComponent implements OnInit
             .subscribe((res) => {
                 if (this.isResponseSucceed(res)) {
                     this.loadEditor((editor) => this.messageSuccess(`Đã lưu nháp v${editor.draft?.version}`));
+                } else {
+                    this.reloadIfDraftChanged(res);
                 }
             });
     }
@@ -183,13 +187,24 @@ export class DocumentTypePromptComponent extends BaseComponent implements OnInit
         }
         const needsSave = !draft || this.form.dirty;
         const draftId$ = needsSave
-            ? this.saveDraftRequest().pipe(map((res) => (this.isResponseSucceed(res) ? res.data : null)))
+            ? this.saveDraftRequest().pipe(
+                  map((res) => {
+                      const isSucceed = this.isResponseSucceed(res);
+                      if (!isSucceed) this.reloadIfDraftChanged(res);
+                      return isSucceed ? res.data : null;
+                  }),
+              )
             : of(draft.id);
 
         this.publishing = true;
         draftId$
             .pipe(
-                switchMap((draftId) => (draftId ? this._promptTemplateService.publish(draftId, { note: toText(note) || null }) : EMPTY)),
+                // Vừa lưu nháp thì không cần so ngày; chỉ xuất bản nháp đang xem thì gửi ngày sửa cuối để BE chặn khi bị người khác sửa (914)
+                switchMap((draftId) =>
+                    draftId
+                        ? this._promptTemplateService.publish(draftId, { note: toText(note) || null, draftModifiedDate: needsSave ? null : (draft?.modifiedDate ?? null) })
+                        : EMPTY,
+                ),
                 finalize(() => (this.publishing = false)),
                 takeUntilDestroyed(this._destroyRef),
             )
@@ -199,8 +214,17 @@ export class DocumentTypePromptComponent extends BaseComponent implements OnInit
                 } else if (needsSave) {
                     // Nháp đã lưu nhưng xuất bản bị chặn (vd. 911 / 913): tải lại để form khớp bản nháp vừa lưu
                     this.loadEditor();
+                } else {
+                    this.reloadIfDraftChanged(res);
                 }
             });
+    }
+
+    // 914: nháp đã bị người khác sửa. BE trả câu báo (đã toast), tải lại để thấy bản mới nhất, nội dung đang gõ mất
+    private reloadIfDraftChanged(res: IBaseResponse) {
+        if (res.code === PROMPT_ERROR_CODE.DRAFT_CHANGED) {
+            this.loadEditor();
+        }
     }
 
     private saveDraftRequest() {
@@ -237,6 +261,7 @@ export class DocumentTypePromptComponent extends BaseComponent implements OnInit
             systemPrompt: toText(value.systemPrompt),
             instructionPrompt: toText(value.instructionPrompt),
             note: toText(value.note) || null,
+            draftModifiedDate: this.editor?.draft?.modifiedDate ?? null,
             fields: value.fields.map((field) => ({ ...field, description: toText(field.description), example: toText(field.example) || null })),
         };
     }

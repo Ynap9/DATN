@@ -1,0 +1,72 @@
+@use '../report-card' as card;
+
+.productivity-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.productivity-title {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    h2 {
+        @include card.report-card-title;
+    }
+
+    span {
+        @include card.report-card-subtitle;
+    }
+}
+
+.productivity-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    border-bottom: 1px solid var(--app-line);
+}
+
+.productivity-tab {
+    margin-bottom: -1px;
+    padding: 8px 12px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--app-muted);
+    cursor: pointer;
+
+    span {
+        margin-left: 4px;
+        font-weight: 400;
+    }
+
+    &.is-active {
+        border-bottom-color: var(--app-accent);
+        color: var(--app-accent);
+    }
+}
+
+.is-stale {
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.productivity-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 200px;
+    font-size: 13px;
+    color: var(--app-muted);
+}
+
+// Dòng chưa có số (rowClass của bảng): cả dòng chữ màu phụ; chọn đủ cấp để thắng màu ô của DataTable
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr.productivity-row--zero > td {
+    color: var(--app-muted);
+}

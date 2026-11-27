@@ -32,9 +32,9 @@ import {
 } from './project-report.constants';
 import { ReportAcceptanceComponent } from './report-acceptance/report-acceptance.component';
 import { ReportDailyChartComponent } from './report-daily-chart/report-daily-chart.component';
-import { ReportEntryUsersComponent } from './report-entry-users/report-entry-users.component';
 import { ReportFieldErrorsComponent } from './report-field-errors/report-field-errors.component';
 import { ReportKpiComponent } from './report-kpi/report-kpi.component';
+import { ReportProductivityComponent } from './report-productivity/report-productivity.component';
 import { ReportQaQualityComponent } from './report-qa-quality/report-qa-quality.component';
 import { ReportStatusByMetadataComponent } from './report-status-by-metadata/report-status-by-metadata.component';
 
@@ -53,7 +53,7 @@ const NOT_MANAGER_MESSAGE = 'Chỉ quản lý dự án xem được báo cáo ti
 
 @Component({
     selector: 'app-project-report',
-    imports: [SharedImports, PageHeader, StatusBadge, ShSelectComponent, SelectButtonModule, SkeletonModule, ReportAcceptanceComponent, ReportKpiComponent, ReportStatusByMetadataComponent, ReportDailyChartComponent, ReportQaQualityComponent, ReportFieldErrorsComponent, ReportEntryUsersComponent],
+    imports: [SharedImports, PageHeader, StatusBadge, ShSelectComponent, SelectButtonModule, SkeletonModule, ReportAcceptanceComponent, ReportKpiComponent, ReportStatusByMetadataComponent, ReportDailyChartComponent, ReportQaQualityComponent, ReportFieldErrorsComponent, ReportProductivityComponent],
     templateUrl: './project-report.component.html',
     styleUrl: './project-report.component.scss',
 })

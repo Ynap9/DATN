@@ -65,7 +65,6 @@ namespace sh.be.applications.Module.Ai.Implements
         public async Task<int> SaveDraft(int documentTypeId, SavePromptDraftDto dto)
         {
             _logger.LogInformation($"{nameof(SaveDraft)}, documentTypeId={documentTypeId}, dto={JsonSerializer.Serialize(dto)}");
-            await _promptTemplateDomainService.EnsureDocumentTypeExistsAsync(documentTypeId);
             var currentUserId = getCurrentUserId();
             var now = GetVietnamTime();
             var inputs = dto.Fields
@@ -76,6 +75,8 @@ namespace sh.be.applications.Module.Ai.Implements
             try
             {
                 await _promptTemplateRepository.LockDocumentTypeAsync(documentTypeId);
+                await _promptTemplateDomainService.EnsureDocumentTypeExistsAsync(documentTypeId);
+                PromptTemplateDomainService.EnsureDraftNotChanged(await _promptTemplateRepository.FindDraftAsync(documentTypeId), dto.DraftModifiedDate);
                 var draft = await _promptTemplateDomainService.GetOrCreateDraftAsync(documentTypeId, currentUserId, now);
                 draft.UpdateDraft(dto.SystemPrompt, dto.InstructionPrompt, dto.Note, currentUserId, now);
                 var values = PromptTemplateDomainService.BuildFieldConfigs(await _documentFieldRepository.GetByDocumentTypeIdAsync(documentTypeId), inputs);
@@ -122,7 +123,6 @@ namespace sh.be.applications.Module.Ai.Implements
             _logger.LogInformation($"{nameof(Publish)}, id={id}, dto={JsonSerializer.Serialize(dto)}");
             var template = await _promptTemplateRepository.FindByIdAsync(id)
                 ?? throw new UserFriendlyException(ErrorCodes.AiErrorPromptTemplateNotFound);
-            await _promptTemplateDomainService.EnsureDocumentTypeExistsAsync(template.DocumentTypeId);
             var currentUserId = getCurrentUserId();
             var now = GetVietnamTime();
 
@@ -130,7 +130,10 @@ namespace sh.be.applications.Module.Ai.Implements
             try
             {
                 await _promptTemplateRepository.LockDocumentTypeAsync(template.DocumentTypeId);
+                await _promptTemplateDomainService.EnsureDocumentTypeExistsAsync(template.DocumentTypeId);
                 var draft = await _promptTemplateDomainService.EnsureDraftAsync(template);
+                // Không gửi ngày (FE vừa lưu nháp xong) thì không so
+                PromptTemplateDomainService.EnsureDraftNotChanged(draft, dto.DraftModifiedDate ?? draft.LastChangedDate);
                 PromptTemplateDomainService.EnsurePublishable(await _promptFieldConfigRepository.GetByTemplateIdAsync(draft.Id),
                     await _documentFieldRepository.GetByDocumentTypeIdAsync(draft.DocumentTypeId));
 
@@ -162,7 +165,6 @@ namespace sh.be.applications.Module.Ai.Implements
             _logger.LogInformation($"{nameof(Restore)}, id={id}");
             var source = await _promptTemplateRepository.FindByIdAsync(id)
                 ?? throw new UserFriendlyException(ErrorCodes.AiErrorPromptTemplateNotFound);
-            await _promptTemplateDomainService.EnsureDocumentTypeExistsAsync(source.DocumentTypeId);
             var currentUserId = getCurrentUserId();
             var now = GetVietnamTime();
 
@@ -170,6 +172,7 @@ namespace sh.be.applications.Module.Ai.Implements
             try
             {
                 await _promptTemplateRepository.LockDocumentTypeAsync(source.DocumentTypeId);
+                await _promptTemplateDomainService.EnsureDocumentTypeExistsAsync(source.DocumentTypeId);
                 var draft = await _promptTemplateDomainService.CreateRestoredDraftAsync(source, currentUserId, now);
                 await _unitOfWork.SaveChangesAsync();
 

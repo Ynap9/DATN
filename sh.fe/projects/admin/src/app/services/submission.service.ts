@@ -1,5 +1,6 @@
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpContext } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
+import { SKIP_ERROR_TOAST } from "@/core/http/http-context";
 import {
     ICheckSubmission,
     ICheckSubmissionResult,
@@ -25,6 +26,7 @@ import {
     IListSubmission,
     IMatchImportFieldMapping,
     IProgressDailyStats,
+    IProgressUserStats,
     IQaEntryUserStats,
     IQaFieldStats,
     IQaStatsSummary,
@@ -124,6 +126,11 @@ export class SubmissionService {
         return this.http.get<IBaseResponseWithData<IProgressDailyStats>>(`${this.api}/progress-stats/daily`, { params: this.toParams(query) });
     }
 
+    // Năng suất theo người nhập / chấm trong khoảng ngày, không phụ thuộc QA (Task 70)
+    findProgressUserStats(filter: IFindStats) {
+        return this.http.get<IBaseResponseWithData<IProgressUserStats>>(`${this.api}/progress-stats/users`, { params: this.toParams(filter) });
+    }
+
     qaStatsSummary(query: IFindStats) {
         return this.http.get<IBaseResponseWithData<IQaStatsSummary>>(`${this.api}/qa-stats/summary`, { params: this.toParams(query) });
     }
@@ -132,8 +139,12 @@ export class SubmissionService {
         return this.http.get<IBaseResponseWithData<IQaFieldStats[]>>(`${this.api}/qa-stats/fields`, { params: this.toParams(query) });
     }
 
-    qaStatsEntryUsers(query: IFindPagingQaEntryUserStats) {
-        return this.http.get<IBaseResponsePaging<IQaEntryUserStats>>(`${this.api}/qa-stats/entry-users`, { params: this.toParams(query) });
+    // skipErrorToast: khối chỉ dùng số này làm phần phụ nên lỗi HTTP không toast (Báo cáo tiến độ, cột chất lượng của Năng suất)
+    qaStatsEntryUsers(query: IFindPagingQaEntryUserStats, skipErrorToast = false) {
+        return this.http.get<IBaseResponsePaging<IQaEntryUserStats>>(`${this.api}/qa-stats/entry-users`, {
+            params: this.toParams(query),
+            context: new HttpContext().set(SKIP_ERROR_TOAST, skipErrorToast),
+        });
     }
 
     // Chạy thử import từ link Google Sheet gửi lên, không ghi DB

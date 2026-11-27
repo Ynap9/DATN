@@ -1,6 +1,6 @@
 # Màn Tiền công (Operation)
 
-> **Phần 14/14** · trước: [13-man-chia-phieu.md](13-man-chia-phieu.md) · mục lục: [README.md](README.md)
+> **Phần 14/15** · trước: [13-man-chia-phieu.md](13-man-chia-phieu.md) · mục lục: [README.md](README.md)
 
 Task 59, 2026-11-26. Chỉ đọc: khối lượng, đơn giá, thành tiền theo người. Công thức và phạm vi xem do BE tính, xem
 [24-don-gia-tien-cong.md](../../be/nghiep-vu/24-don-gia-tien-cong.md). FE **không tự tính tiền**; chỉ cộng dòng cho dải tổng của nhân viên.
@@ -60,4 +60,4 @@ Lưu ý: DB dev lúc test (2026-11-26) chưa có `Function.Operation.Wage.View` 
 cho ba vai trò (Task 57A, [BE 03](../../be/nghiep-vu/03-vai-tro-mac-dinh.md)); DB mới do seeder cấp.
 Link "Chưa đặt giá" sang Thành viên dự án giữ chỉ ở chế độ Admin, kể cả sau Task 60 (quyết định 2026-11-27).
 
-> **Tiếp:** hết bộ tài liệu — quay lại [README.md](README.md).
+> **Tiếp:** [15-man-bao-cao-tien-do.md](15-man-bao-cao-tien-do.md) — màn Báo cáo tiến độ: lọc, các khối, khối Năng suất (Task 71).

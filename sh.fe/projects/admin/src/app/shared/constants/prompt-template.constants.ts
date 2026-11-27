@@ -37,6 +37,11 @@ export const NORMALIZE_RULES: { value: string; label: string }[] = [
     { value: NORMALIZE_RULE.UPPER, label: 'Chữ in hoa' },
 ];
 
+// Mã lỗi AI của BE mà màn Prompt OCR xử lý riêng
+export const PROMPT_ERROR_CODE = {
+    DRAFT_CHANGED: 914,
+} as const;
+
 export const PROMPT_MAX_LENGTH = 20000;
 export const PROMPT_NOTE_MAX_LENGTH = 1000;
 export const PROMPT_FIELD_DESCRIPTION_MAX_LENGTH = 2000;

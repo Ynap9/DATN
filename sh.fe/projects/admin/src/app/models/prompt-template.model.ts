@@ -48,11 +48,13 @@ export interface ISavePromptDraft {
     systemPrompt: string;
     instructionPrompt: string;
     note?: string | null;
+    draftModifiedDate?: string | null;
     fields: ISavePromptField[];
 }
 
 export interface IPublishPromptTemplate {
     note?: string | null;
+    draftModifiedDate?: string | null;
 }
 
 export interface IPromptTemplateVersion {

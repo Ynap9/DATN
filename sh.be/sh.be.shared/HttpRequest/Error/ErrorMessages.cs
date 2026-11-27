@@ -164,6 +164,7 @@ namespace sh.be.shared.HttpRequest.Error
             { ErrorCodes.AiErrorPromptFieldInvalid, "Trường không thuộc metadata, đã xoá hoặc chưa bật OCR" },
             { ErrorCodes.AiErrorPromptOutputKeyInvalid, "Trường chưa có tên trường OCR, tên quá dài hoặc trùng tên trường OCR với trường khác" },
             { ErrorCodes.AiErrorPromptNoActiveField, "Bản prompt cần ít nhất một trường đang dùng" },
+            { ErrorCodes.AiErrorPromptDraftChanged, "Bản nháp đã bị người khác sửa, hãy tải lại để xem bản mới nhất" },
         };
         public static string GetMessage(int code)
         {

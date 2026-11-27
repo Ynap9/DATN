@@ -1,6 +1,6 @@
 # Import: link Sheet gửi lên, ghép trường, đếm chạy thử
 
-> **Phần 30/30** · trước: [29-xuat-google-sheet.md](29-xuat-google-sheet.md) · mục lục: [README.md](README.md)
+> **Phần 30/31** · trước: [29-xuat-google-sheet.md](29-xuat-google-sheet.md) · mục lục: [README.md](README.md)
 
 Task 63A (2026-11-27, kèm [số trang](#số-trang-khi-import-thêm-mới) của Task 62) sửa [import hồ sơ](11-ho-so-import.md) cho giống 5sdb + soHoaSaoMai: đọc **đúng link người dùng dán**, lưu cách ghép
 trường ↔ cột sheet theo dự án + loại văn bản, mọi import đều phải ghép đủ trường, số chạy thử đếm đúng số ô có dữ liệu sẽ ghi. Không migration,
@@ -108,4 +108,4 @@ Lưu ý: **Chưa kiểm:** import Excel (MinIO dùng chung đầy ổ, `209`; Ex
 Lưu ý: Chạy thử Excel / Google bằng body cũ (thiếu `startColumn`) vẫn đúng vì mặc định 1; `PUT field-mapping` không gửi `headers` bị `400` "Sheet chỉ có 0 cột".
 Lưu ý: `GET sheet-headers` với `url` rỗng bị model binding chặn `400` (HTTP) trước khi tới kiểm của service; kiểm `400` "Chưa nhập link Google Sheet" chỉ chạy với body POST.
 
-> **Tiếp:** hết — quay lại [README.md](README.md).
+> **Tiếp:** [31-nang-suat-theo-nguoi.md](31-nang-suat-theo-nguoi.md) — năng suất theo người nhập, không phụ thuộc QA (Task 70).

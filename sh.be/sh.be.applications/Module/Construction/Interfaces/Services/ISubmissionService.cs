@@ -43,6 +43,7 @@ namespace sh.be.applications.Module.Construction.Interfaces.Services
         Task<BaseResponsePagingDto<GetListProjectSubmissionLogDto>> FindProjectLogPaging(FindPagingProjectSubmissionLogDto dto);
         Task<ViewSubmissionSummaryDto> FindSummary(FindSubmissionSummaryDto dto);
         Task<ViewProgressDailyStatsDto> FindProgressDailyStats(FindProgressStatsDto dto);
+        Task<ViewProgressUserStatsDto> FindProgressUserStats(FindProgressStatsDto dto);
         Task<ViewQaStatsSummaryDto> FindQaStatsSummary(FindQaStatsDto dto);
         Task<List<GetListQaFieldStatsDto>> FindQaFieldStats(FindQaStatsDto dto);
         Task<BaseResponsePagingDto<GetListQaEntryUserStatsDto>> FindQaEntryUserStatsPaging(FindPagingQaEntryUserStatsDto dto);

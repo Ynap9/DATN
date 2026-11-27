@@ -66,8 +66,8 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
         {
             EnsureValidStatus(status);
             EnsureValidPeriod(startedAt, endedAt);
-            // Vào / ra nghiệm thu và sang Xong chỉ qua chức năng nghiệm thu để luôn kiểm điều kiện và ghi audit nghiệm thu
-            if (status != Status && (Status == ProjectConst.ACCEPTING || status == ProjectConst.ACCEPTING || status == ProjectConst.DONE))
+            // Vào / ra nghiệm thu và vào / ra Xong chỉ qua chức năng nghiệm thu để luôn kiểm điều kiện và ghi audit nghiệm thu
+            if (status != Status && (Status == ProjectConst.ACCEPTING || Status == ProjectConst.DONE || status == ProjectConst.ACCEPTING || status == ProjectConst.DONE))
             {
                 throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectStatusTransitionInvalid, "Dùng chức năng nghiệm thu");
             }

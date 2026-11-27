@@ -27,13 +27,14 @@ Hướng dẫn riêng của dự án là `ProjectAiConfig.ExtraInstruction` (Tas
 | 21.14 | Lưu nháp, xuất bản, khôi phục, bỏ nháp chạy trong transaction + khoá dòng `DocumentType` (`UPDLOCK, HOLDLOCK`), sau khoá đọc lại nháp | — |
 | 21.15 | `SystemPrompt`, `InstructionPrompt` ≤ 20000; `Description` ≤ 2000, `Example` ≤ 500, `Note` ≤ 1000 (trim, rỗng → `null`) | `400` |
 | 21.16 | Mọi thao tác ghi có audit: lưu nháp, xuất bản, khôi phục thành nháp, bỏ nháp (`ACTION_PROMPT_TEMPLATE_*`) | — |
+| 21.17 | Chống ghi đè nháp (Task 70): lưu nháp gửi `draftModifiedDate` = ngày sửa cuối của nháp đang xem. Có nháp mà ngày khác (kể cả gửi `null`), hoặc không có nháp mà gửi ngày khác `null` → từ chối; khớp thì lưu. Xuất bản: ngày khác `null` mà khác nháp → từ chối, `null` → không so (FE vừa lưu nháp xong). So bằng `==` trên `DateTime` đọc từ DB, sau `LockDocumentTypeAsync` | `914` |
 
 **Khác spec (đã chốt 2026-11-20):**
 
 - Spec ghi "không migration", nhưng cột `OutputKey` từ Task 19 chỉ `nvarchar(100)` trong khi `FieldNameOcr` là `nvarchar(max)` — tên OCR dài
   làm lưu nháp lỗi 500. Người dùng chọn **nới cột** lên `nvarchar(450)` (migration `Update_PromptFieldConfig_OutputKey`, `Migrations/Ai/`);
   `912` vì thế bắt thêm "dài quá 450" và trùng **không phân biệt hoa thường** (collation DB không phân biệt, index unique sẽ đụng).
-- Metadata đã xoá mềm: **chặn ghi, cho đọc** — màn sửa, danh sách phiên bản, lưu nháp, xuất bản, khôi phục → `301`; xem trước và bỏ nháp vẫn được.
+- Metadata đã xoá mềm: **chặn ghi, cho đọc** — màn sửa, danh sách phiên bản, lưu nháp, xuất bản, khôi phục → `301`; xem trước và bỏ nháp vẫn được. Kiểm `301` của lưu nháp / xuất bản / khôi phục chạy **sau** khoá `DocumentType` (Task 70), nên metadata bị xoá giữa hai bước vẫn bị chặn.
 - Khôi phục lấy `Order` theo `OrderListView` **hiện tại** và `OutputKey` theo `FieldNameOcr` hiện tại; trường có key rỗng / quá dài / trùng
   bị **bỏ khỏi nháp, không báo lỗi** (hai trường trùng key thì bỏ cả hai — không có căn cứ chọn).
 - `911` / `912` nêu tên trường bằng `UserFriendlyException(code, message)` vì shared không có hàm ghép mẫu thông điệp.
@@ -45,13 +46,17 @@ Hướng dẫn riêng của dự án là `ProjectAiConfig.ExtraInstruction` (Tas
 |---|---|---|---|---|
 | 1 | GET | `document-type/{documentTypeId:int}` | `View` | `ViewPromptEditorDto`: `published`, `draft`, `editingId` (= nháp ?? bản đang dùng; `null` = chưa có bản nào), prompt của bản đó, `fields` = **mọi trường OCR hiện có** theo `OrderListView` kèm cấu hình nếu có (`inTemplate`), `missingFields`, `invalidFields` (tên; trường đã xoá lấy tên lúc còn) |
 | 2 | GET | `document-type/{documentTypeId:int}/versions` | `View` | Mọi bản chưa xoá, `Version` giảm dần, có `sourceVersion`, người tạo / xuất bản |
-| 3 | PUT | `document-type/{documentTypeId:int}/draft` | `Update` | `SavePromptDraftDto` → id nháp. `fields` rỗng được (xuất bản sẽ `913`); trường bỏ khỏi body bị xoá mềm |
-| 4 | POST | `{id:int}/publish` | `Publish` | `{ note? }` |
+| 3 | PUT | `document-type/{documentTypeId:int}/draft` | `Update` | `SavePromptDraftDto` (kèm `draftModifiedDate?`, [21.17](#luật-đã-chốt)) → id nháp. `fields` rỗng được (xuất bản sẽ `913`); trường bỏ khỏi body bị xoá mềm |
+| 4 | POST | `{id:int}/publish` | `Publish` | `{ note?, draftModifiedDate? }` |
 | 5 | POST | `{id:int}/restore` | `Update` | → id nháp mới |
 | 6 | DELETE | `{id:int}` | `Update` | Bỏ nháp |
 | 7 | GET | `{id:int}/preview` | `View` | `{ systemPrompt, prompt }` — xem trước được mọi bản, kể cả `ARCHIVED` |
 
 Không tìm thấy bản (kể cả đã xoá) → `908`; metadata không có / đã xoá → `301`. Lỗi kiểm body trả `400` kèm câu tiếng Việt nêu tên trường.
+
+Lưu ý: `draftModifiedDate` so bằng `==`, nên FE phải gửi lại **nguyên chuỗi** `draft.modifiedDate` API trả (7 chữ số lẻ), không đổi qua `Date` / làm tròn mili giây, kẻo khớp sai thành `914`. Client không gửi trường (client cũ) mà đang có nháp thì lưu nháp trả `914`; xuất bản không gửi thì không so.
+
+Lưu ý: nháp tạo bằng Khôi phục có `ModifiedDate` trống (chưa `UpdateDraft` lần nào) mà API trả `ModifiedDate ?? CreatedDate` cho FE. So bằng `ModifiedDate` thô thì FE gửi ngày tạo, BE so với `null` → `914` mọi lần lưu / xuất bản, form tải lại vẫn như cũ (gặp lúc kiểm tab Prompt OCR, Task 71.8). Đã sửa: so bằng `PromptTemplate.LastChangedDate` (`ModifiedDate ?? CreatedDate`, thuộc tính chỉ đọc, không map). Đừng đổi lại sang `ModifiedDate`.
 
 ## Khuôn ghép prompt
 
@@ -95,12 +100,13 @@ sau lần lưu lấy `Id`.
 | `911` | `AiErrorPromptFieldInvalid` | Trường không thuộc metadata / đã xoá / tắt OCR (lưu nháp, xuất bản) |
 | `912` | `AiErrorPromptOutputKeyInvalid` | `FieldNameOcr` rỗng, dài quá 450 hoặc trùng |
 | `913` | `AiErrorPromptNoActiveField` | Xuất bản khi không có trường `IsActive` |
+| `914` | `AiErrorPromptDraftChanged` | Nháp đã bị người khác sửa / bỏ / xuất bản so với `draftModifiedDate` gửi lên: "Bản nháp đã bị người khác sửa, hãy tải lại để xem bản mới nhất" |
 
 ## Code
 
 | Tầng | File |
 |---|---|
-| Shared | `Constants/Ai/PromptTemplateConst` (`NORMALIZE_RULES`, `PROMPT_MAX_LENGTH`, `OUTPUT_KEY_MAX_LENGTH` = 450), `ErrorCodes` 908–913, `PermissionConstants`, `AuditLogConstants` |
+| Shared | `Constants/Ai/PromptTemplateConst` (`NORMALIZE_RULES`, `PROMPT_MAX_LENGTH`, `OUTPUT_KEY_MAX_LENGTH` = 450), `ErrorCodes` 908–914, `PermissionConstants`, `AuditLogConstants` |
 | Domain | `Module/Ai/Prompts/Entities/*`; `Repositories/IPromptTemplateRepository`, `IPromptFieldConfigRepository`; `Services/PromptTemplateDomainService` |
 | Applications | `Module/Ai/Dtos/PromptTemplate/*` (8 DTO), `IPromptTemplateQuery`, `IPromptTemplateService` / `PromptTemplateService` |
 | Data | `Module/Ai/Repositories/PromptTemplateRepository`, `PromptFieldConfigRepository`, `Queries/PromptTemplateQuery`; `Migrations/Ai/Update_PromptFieldConfig_OutputKey` |
@@ -118,5 +124,7 @@ Bổ sung cùng ngày **6/6 đạt**: user tạm **chỉ role Admin** (không Su
 
 Lưu ý: User `admin` của DB dev có cả role `SuperAdmin` (bỏ qua kiểm quyền) — test quyền phải dùng user chỉ có role cần kiểm. DB dev dùng chung:
 máy chạy code chưa có 4 key prompt khởi động là `SeedPermission` xoá key + quyền đã gán (gặp lúc test, [02](02-phan-quyen.md#đừng-đổi-tên-key-đã-seed)).
+
+Kiểm thêm 2026-11-27 (Task 70, API thật + 2 tab trình duyệt, metadata tạm `ZZTEST70` đã dọn): **15/15 đạt** — lưu nháp đủ nhánh (null / đúng ngày / ngày cũ / có nháp gửi null / nháp đã bỏ gửi ngày), xuất bản ngày cũ `914` (nháp còn), đúng ngày được, `null` hoặc không gửi trường thì không so; metadata đã xoá → `301` cả lưu nháp, khôi phục, xuất bản. Hai tab: tab A lưu nháp, tab B (editor cũ) lưu → toast `914` và form tải lại thấy nội dung tab A; tab A bỏ nháp, tab B lưu → `914`; tab A xuất bản không sửa gì → được. Ca đua thật (metadata bị xoá giữa hai bước) không tái hiện được bằng test: kiểm bằng đọc code (kiểm `301` nằm sau `LockDocumentTypeAsync` ở 3 hàm).
 
 > **Tiếp:** [28-van-ban-dang-lam.md](28-van-ban-dang-lam.md) — văn bản đang làm gần nhất và lọc trường trống (Task 42A).

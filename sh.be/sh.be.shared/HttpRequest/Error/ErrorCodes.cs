@@ -168,6 +168,7 @@ namespace sh.be.shared.HttpRequest.Error
         public const int AiErrorPromptFieldInvalid = 911;
         public const int AiErrorPromptOutputKeyInvalid = 912;
         public const int AiErrorPromptNoActiveField = 913;
+        public const int AiErrorPromptDraftChanged = 914;
 
     }
 }

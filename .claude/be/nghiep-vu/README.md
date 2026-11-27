@@ -39,6 +39,7 @@
 | [28-van-ban-dang-lam.md](28-van-ban-dang-lam.md) | Hồ sơ (Task 42A): văn bản người gọi lưu / chấm QA gần nhất còn mở được (`latest-working`), lọc trường trống `isEmpty1` / `isEmpty2` cho 11 API bộ lọc chung |
 | [29-xuat-google-sheet.md](29-xuat-google-sheet.md) | Hồ sơ (Task 56A): xuất bảng hồ sơ vào tab có sẵn của Google Sheet bằng Gmail đã kết nối, chạy nền Hangfire như xuất Excel, chặn Sheet đồng bộ của dự án |
 | [30-import-ghep-truong.md](30-import-ghep-truong.md) | Import (Task 63A): đọc đúng link Sheet gửi lên (chặn Sheet dự án khác), 3 API `sheet-headers` / `field-mapping/match` / lưu ghép trường theo dự án + loại, bắt buộc ghép đủ, `startColumn`, chữ "null" / "undefined" là dữ liệu, ghi đè đọc đúng cột đã ghép, đọc lại ghép sau khoá, đếm chạy thử đúng số ghi |
+| [31-nang-suat-theo-nguoi.md](31-nang-suat-theo-nguoi.md) | Hồ sơ (Task 70): `GET progress-stats/users` — sản lượng theo người nhập (Data + QA) trong khoảng ngày, không phụ thuộc QA; người được tính là người bấm hoặc người đang giữ, dòng "Không gắn người"; số có thể lệch tiền công (cố ý) |
 
 ## Thuật ngữ
 

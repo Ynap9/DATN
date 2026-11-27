@@ -629,6 +629,159 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             return stats;
         }
 
+        // Năng suất theo người trong khoảng ngày, không phụ thuộc QA. Lượt kiểm / chấm tính cho người bấm nếu họ là thành viên đúng vai trò của cặp
+        // (kể cả đã gỡ), không thì cho người đang giữ văn bản vai trò đó (không đổi DB nên là người giữ HIỆN TẠI); không có ai giữ → dòng userId = null
+        public async Task<ViewProgressUserStatsDto> FindProgressUserStats(int projectId, int documentTypeId, DateTime fromDate, DateTime toDate,
+            string? restrictedUserId)
+        {
+            var toDateExclusive = toDate.AddDays(1);
+            var stats = new ViewProgressUserStatsDto
+            {
+                FromDate = fromDate,
+                ToDate = toDate,
+                IsQaEnabled = await _shDbContext.Projects.AsNoTracking().Where(p => p.Id == projectId).Select(p => p.IsQaEnabled).FirstAsync(),
+            };
+
+            var dataLogs = from l in _shDbContext.SubmissionLogs.AsNoTracking()
+                           join s in _shDbContext.Submissions.AsNoTracking() on l.SubmissionId equals s.Id
+                           where l.ProjectId == projectId && l.DocumentTypeId == documentTypeId
+                               && l.NewStatus == SubmissionConst.CHECKED && l.OldStatus != SubmissionConst.CHECKED
+                               && l.CreatedDate >= fromDate && l.CreatedDate < toDateExclusive
+                           select new
+                           {
+                               l.SubmissionId,
+                               Day = l.CreatedDate!.Value.Date,
+                               UserId = _shDbContext.ProjectMembers.IgnoreQueryFilters().Any(m => m.ProjectId == projectId && m.DocumentTypeId == documentTypeId
+                                       && m.UserId == l.UserId && m.Role == RoleConstants.ROLE_DATA)
+                                   ? l.UserId
+                                   : _shDbContext.SubmissionUsers.Where(u => u.SubmissionId == l.SubmissionId && u.Role == RoleConstants.ROLE_DATA)
+                                       .Select(u => u.UserId).FirstOrDefault(),
+                           };
+            if (restrictedUserId != null)
+            {
+                dataLogs = dataLogs.Where(x => x.UserId == restrictedUserId);
+            }
+
+            var dataRows = await dataLogs
+                .GroupBy(x => x.UserId)
+                .Select(g => new GetListProgressDataUserDto
+                {
+                    UserId = g.Key,
+                    UserName = _shDbContext.Users.Where(u => u.Id == g.Key).Select(u => u.UserName).FirstOrDefault(),
+                    FullName = _shDbContext.Users.Where(u => u.Id == g.Key).Select(u => u.FullName).FirstOrDefault(),
+                    DocumentCount = g.Select(x => x.SubmissionId).Distinct().Count(),
+                    WorkingDays = g.Select(x => x.Day).Distinct().Count(),
+                })
+                .ToListAsync();
+            // Ô có dữ liệu của trường tính tiền đọc giá trị hiện tại, mỗi văn bản của một người cộng một lần (như K1 tiền công)
+            var fieldCountByUserId = (await dataLogs
+                    .Select(x => new { x.UserId, x.SubmissionId })
+                    .Distinct()
+                    .Select(x => new
+                    {
+                        x.UserId,
+                        FieldCount = _shDbContext.SubmissionDatas.Count(d => d.SubmissionId == x.SubmissionId && d.Data.Trim() != ""
+                            && _shDbContext.DocumentFields.Any(f => f.Id == d.DocumentFieldId && f.IsChargeable)),
+                    })
+                    .GroupBy(x => x.UserId)
+                    .Select(g => new { UserId = g.Key, FieldCount = g.Sum(x => x.FieldCount) })
+                    .ToListAsync())
+                .ToLookup(x => (string?)x.UserId, x => x.FieldCount);
+            foreach (var dataRow in dataRows)
+            {
+                dataRow.FieldCount = fieldCountByUserId[dataRow.UserId].FirstOrDefault();
+            }
+            stats.DataUsers = MergeProgressUserRows(await FindProgressMembersAsync(projectId, documentTypeId, RoleConstants.ROLE_DATA, restrictedUserId), dataRows)
+                .OrderBy(row => row.UserId == null)
+                .ThenByDescending(row => row.DocumentCount)
+                .ThenByDescending(row => row.FieldCount)
+                .ThenBy(row => row.UserName)
+                .ToList();
+
+            if (!stats.IsQaEnabled)
+            {
+                return stats;
+            }
+
+            // Lượt Đạt → Đạt (Admin chấm lại văn bản đang Đạt) không tính, cùng luật tiền QA
+            var qaLogs = from q in _shDbContext.SubmissionQaLogs.AsNoTracking()
+                         join s in _shDbContext.Submissions.AsNoTracking() on q.SubmissionId equals s.Id
+                         where q.ProjectId == projectId && q.DocumentTypeId == documentTypeId
+                             && q.CreatedDate >= fromDate && q.CreatedDate < toDateExclusive
+                             && (q.OldStatusQa != SubmissionConst.QA_PASSED || q.NewStatusQa != SubmissionConst.QA_PASSED)
+                         select new
+                         {
+                             q.SubmissionId,
+                             q.NewStatusQa,
+                             Day = q.CreatedDate!.Value.Date,
+                             UserId = _shDbContext.ProjectMembers.IgnoreQueryFilters().Any(m => m.ProjectId == projectId && m.DocumentTypeId == documentTypeId
+                                     && m.UserId == q.UserId && m.Role == RoleConstants.ROLE_QA)
+                                 ? q.UserId
+                                 : _shDbContext.SubmissionUsers.Where(u => u.SubmissionId == q.SubmissionId && u.Role == RoleConstants.ROLE_QA)
+                                     .Select(u => u.UserId).FirstOrDefault(),
+                         };
+            if (restrictedUserId != null)
+            {
+                qaLogs = qaLogs.Where(x => x.UserId == restrictedUserId);
+            }
+
+            var qaRows = await qaLogs
+                .GroupBy(x => x.UserId)
+                .Select(g => new GetListProgressQaUserDto
+                {
+                    UserId = g.Key,
+                    UserName = _shDbContext.Users.Where(u => u.Id == g.Key).Select(u => u.UserName).FirstOrDefault(),
+                    FullName = _shDbContext.Users.Where(u => u.Id == g.Key).Select(u => u.FullName).FirstOrDefault(),
+                    ReviewCount = g.Count(),
+                    ReviewDocumentCount = g.Select(x => x.SubmissionId).Distinct().Count(),
+                    PassedCount = g.Count(x => x.NewStatusQa == SubmissionConst.QA_PASSED),
+                    FailedCount = g.Count(x => x.NewStatusQa == SubmissionConst.QA_FAILED),
+                    WorkingDays = g.Select(x => x.Day).Distinct().Count(),
+                })
+                .ToListAsync();
+            stats.QaUsers = MergeProgressUserRows(await FindProgressMembersAsync(projectId, documentTypeId, RoleConstants.ROLE_QA, restrictedUserId), qaRows)
+                .OrderBy(row => row.UserId == null)
+                .ThenByDescending(row => row.ReviewCount)
+                .ThenBy(row => row.UserName)
+                .ToList();
+            return stats;
+        }
+
+        // Mọi người từng là thành viên vai trò này của cặp (kể cả dòng đã gỡ): IsRemoved = không còn dòng nào chưa gỡ
+        private async Task<List<ProgressUserDto>> FindProgressMembersAsync(int projectId, int documentTypeId, string role, string? restrictedUserId)
+        {
+            return await _shDbContext.ProjectMembers
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .Where(m => m.ProjectId == projectId && m.DocumentTypeId == documentTypeId && m.Role == role
+                    && (restrictedUserId == null || m.UserId == restrictedUserId))
+                .GroupBy(m => m.UserId)
+                .Select(g => new ProgressUserDto
+                {
+                    UserId = g.Key,
+                    UserName = _shDbContext.Users.Where(u => u.Id == g.Key).Select(u => u.UserName).FirstOrDefault(),
+                    FullName = _shDbContext.Users.Where(u => u.Id == g.Key).Select(u => u.FullName).FirstOrDefault(),
+                    IsRemoved = !g.Any(m => !m.Deleted),
+                })
+                .ToListAsync();
+        }
+
+        // Dòng có số thì giữ (đánh dấu đã gỡ nếu là thành viên đã gỡ); thành viên chưa gỡ chưa làm gì vẫn có dòng 0; thành viên đã gỡ mà 0 thì bỏ
+        private static List<TRow> MergeProgressUserRows<TRow>(List<ProgressUserDto> members, List<TRow> countedRows) where TRow : ProgressUserDto, new()
+        {
+            var removedUserIds = members.Where(member => member.IsRemoved).Select(member => member.UserId).ToHashSet();
+            foreach (var countedRow in countedRows)
+            {
+                countedRow.IsRemoved = removedUserIds.Contains(countedRow.UserId);
+            }
+
+            var countedUserIds = countedRows.Select(countedRow => countedRow.UserId).ToHashSet();
+            var emptyRows = members
+                .Where(member => !member.IsRemoved && !countedUserIds.Contains(member.UserId))
+                .Select(member => new TRow { UserId = member.UserId, UserName = member.UserName, FullName = member.FullName });
+            return countedRows.Concat(emptyRows).ToList();
+        }
+
         public async Task<ViewQaStatsSummaryDto> FindQaStatsSummary(FindQaStatsDto dto, DateTime fromDate, DateTime toDateExclusive, string? restrictedUserId = null)
         {
             var reviews = await FindQaReviewsAsync(dto.ProjectId, dto.DocumentTypeId, fromDate, toDateExclusive, restrictedUserId);

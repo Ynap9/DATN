@@ -66,21 +66,29 @@
     </section>
     <!-- Hai khối dưới tự tải khi cuộn tới (46.11); statsFilter mới mỗi lần đổi lọc / Làm mới nên khối tự tải lại -->
     @if (project.isQaEnabled && statsFilter) {
-        <section class="report-row">
+        <section class="report-row report-row--single">
             @if (canViewQaStats) {
                 @defer (on viewport) {
                     <app-report-field-errors class="report-card" [filter]="statsFilter" />
                 } @placeholder {
                     <div class="report-card"><h2 class="report-card-title">Trường hay sai nhất</h2><p-skeleton height="200px" /></div>
                 }
-                @defer (on viewport) {
-                    <app-report-entry-users class="report-card" [filter]="statsFilter" />
-                } @placeholder {
-                    <div class="report-card"><h2 class="report-card-title">Năng suất theo người nhập</h2><p-skeleton height="200px" /></div>
-                }
             } @else {
                 <ng-container *ngTemplateOutlet="deniedBlock; context: { $implicit: 'Trường hay sai nhất' }" />
-                <ng-container *ngTemplateOutlet="deniedBlock; context: { $implicit: 'Năng suất theo người nhập' }" />
+            }
+        </section>
+    }
+    <!-- Năng suất không cần QA nên có ở cả dự án không QA; chỉ cần ProgressStats (Task 71) -->
+    @if (statsFilter) {
+        <section class="report-row report-row--single">
+            @if (canViewProgress) {
+                @defer (on viewport) {
+                    <app-report-productivity class="report-card" [filter]="statsFilter" [isQaEnabled]="project.isQaEnabled" [canViewQaStats]="canViewQaStats" />
+                } @placeholder {
+                    <div class="report-card"><h2 class="report-card-title">Năng suất</h2><p-skeleton height="200px" /></div>
+                }
+            } @else {
+                <ng-container *ngTemplateOutlet="deniedBlock; context: { $implicit: 'Năng suất' }" />
             }
         </section>
     }

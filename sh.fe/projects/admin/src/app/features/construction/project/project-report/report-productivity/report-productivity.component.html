@@ -1,0 +1,39 @@
+<div class="productivity-head">
+    <div class="productivity-title">
+        <h2>Năng suất</h2>
+        <span>{{ subtitle }}</span>
+    </div>
+    @if (activeRows.length) {
+        <p-button [label]="'Xem tất cả (' + activeRows.length + ')'" [link]="true" size="small" (onClick)="openAll()" />
+    }
+</div>
+
+@if (block.error && !block.loading) {
+    <div class="productivity-state">
+        <span>Chưa tải được năng suất</span>
+        <p-button label="Thử lại" icon="pi pi-refresh" severity="secondary" [outlined]="true" size="small" (onClick)="retry()" />
+    </div>
+} @else if (block.data) {
+    @if (hasQaTab) {
+        <div class="productivity-tabs" role="tablist">
+            <button type="button" role="tab" class="productivity-tab" [class.is-active]="activeTab === tabs.DATA" [attr.aria-selected]="activeTab === tabs.DATA"
+                (click)="selectTab(tabs.DATA)">
+                Nhập liệu<span>{{ dataRows.length }}</span>
+            </button>
+            <button type="button" role="tab" class="productivity-tab" [class.is-active]="activeTab === tabs.QA" [attr.aria-selected]="activeTab === tabs.QA"
+                (click)="selectTab(tabs.QA)">
+                QA<span>{{ qaRows.length }}</span>
+            </button>
+        </div>
+    }
+    <div [class.is-stale]="block.loading">
+        <app-data-table [columns]="columns" [data]="topRows" dataKey="userId" [paginator]="false" [rowClass]="rowClass" />
+    </div>
+} @else {
+    <p-skeleton height="200px" />
+}
+
+<p-dialog [header]="dialogTitle" [(visible)]="dialogVisible" [modal]="true" [style]="{ width: '820px' }" [breakpoints]="{ '860px': '95vw' }">
+    <app-data-table [columns]="columns" [data]="dialogRows" dataKey="userId" [pageNumber]="dialogPageNumber" [pageSize]="dialogPageSize"
+        [total]="activeRows.length" [rowsPerPageOptions]="dialogPageSizes" [rowClass]="rowClass" (pageChange)="onDialogPageChange($event)" />
+</p-dialog>

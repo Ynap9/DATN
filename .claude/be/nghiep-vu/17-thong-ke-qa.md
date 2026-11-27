@@ -3,7 +3,7 @@
 > **Phần 17/22** · trước: [16-dong-goi-cau-hinh.md](16-dong-goi-cau-hinh.md) · mục lục: [README.md](README.md)
 
 Tổng hợp dữ liệu QA đã lưu (`SubmissionQaLog`, `SubmissionQaLogField`) của **một dự án + một loại văn bản**. Mục đích là để Leader
-biết trường nào hay sai, người nhập nào hay sai, và tỉ lệ đúng là bao nhiêu. Đây là đầu vào cho KPI và dashboard. Cả 5 API chỉ đọc:
+biết trường nào hay sai, người nhập nào hay sai, và tỉ lệ đúng là bao nhiêu. Đây là đầu vào cho KPI và dashboard. Cả 6 API chỉ đọc:
 không transaction, không audit, không đổi schema. Luồng QA tạo ra dữ liệu này nằm ở [13-ho-so-qa.md](13-ho-so-qa.md).
 
 ## Các chức năng
@@ -14,7 +14,7 @@ không transaction, không audit, không đổi schema. Luồng QA tạo ra dữ
 | `GET qa-stats/fields` | `...Submission.QaStats` | Số lần sai và tỉ lệ đúng theo từng trường, lọc thêm `entryUserId` |
 | `GET qa-stats/entry-users` | `...Submission.QaStats` | Chỉ số theo từng người nhập, phân trang, `keyword`, `orderBy` |
 | `GET {id:int}/timeline` | `Function.Construction.Submission.View` | Một trục thời gian gộp các lần kiểm tra và QA của một văn bản |
-| `GET progress-stats/daily` | `Function.Construction.Submission.ProgressStats` | Số văn bản được kiểm / QA đạt theo từng ngày (Task 46A, [mục dưới](#tiến-độ-theo-ngày--progress-statsdaily-task-46a)) |
+| `GET progress-stats/daily`, `GET progress-stats/users` | `Function.Construction.Submission.ProgressStats` | Số văn bản được kiểm / QA đạt theo từng ngày (Task 46A, [mục dưới](#tiến-độ-theo-ngày--progress-statsdaily-task-46a)); năng suất theo người, không phụ thuộc QA (Task 70, [31](31-nang-suat-theo-nguoi.md)) |
 
 Ba API thống kê nhận `projectId`, `documentTypeId` (bắt buộc), `fromDate`, `toDate`. Key quyền `QaStats` là key mới.
 `SeedRolePermission` tự cấp key này cho `Admin`, và cho Leader / Data / QA khi DB mới ([03](03-vai-tro-mac-dinh.md#quyền-do-seeder-cấp-task-57a)). Phạm vi (Task 40, chốt 14/11): Admin và Leader có

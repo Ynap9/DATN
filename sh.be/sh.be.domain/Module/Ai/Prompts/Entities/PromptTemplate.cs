@@ -39,6 +39,9 @@ namespace sh.be.domain.Module.Ai.Prompts.Entities
         public bool Deleted { get; private set; }
         public string? DeletedBy { get; private set; }
 
+        // Ngày thay đổi cuối API trả cho màn sửa: nháp mới khôi phục chưa sửa lần nào có ModifiedDate trống nên lấy ngày tạo
+        public DateTime? LastChangedDate => ModifiedDate ?? CreatedDate;
+
         private PromptTemplate()
         {
         }

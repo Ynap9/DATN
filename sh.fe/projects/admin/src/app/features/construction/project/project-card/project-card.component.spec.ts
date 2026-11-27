@@ -24,6 +24,7 @@ describe('ProjectCardComponent', () => {
         totalBox: 0,
         totalProfileRange: 0,
         totalSubmission: 1200,
+        totalPages: 0,
         checkedCount: 74,
         qaPassedCount: null,
         progressPercent: 140,

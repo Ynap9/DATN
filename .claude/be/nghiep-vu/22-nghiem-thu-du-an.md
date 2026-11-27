@@ -34,7 +34,7 @@ cuối cùng QA đạt — dự án không QA (Task 28, `Project.IsQaEnabled`, [
 Không bao giờ tự sang `DONE`, không tự hạ `ACCEPTING` về `DOING`. Chỉ tự chuyển ở `ReviewQa` (có QA) hoặc `Check` (không QA), mỗi
 loại dự án một chỗ: xoá văn bản cuối cùng chưa xong không tự chuyển — bấm "Bắt đầu" (lúc đó đã đủ, không cần lý do).
 
-`PUT project/{id}` **không** được vào / ra `ACCEPTING` hay đặt `DONE` (`342` "Dùng chức năng nghiệm thu", kiểm trong `Project.Update`).
+`PUT project/{id}` **không** được vào / ra `ACCEPTING`, vào / ra `DONE` (`342` "Dùng chức năng nghiệm thu", kiểm trong `Project.Update`; Task 70 chặn thêm đi ra khỏi `DONE`: dự án Xong gửi `status` khác `4` → `342`).
 Giữ nguyên `status` (kể cả `ACCEPTING` / `DONE`) để sửa tên, ngày… vẫn được; `EXPIRED` → `DOING` vẫn như cũ.
 
 ## API

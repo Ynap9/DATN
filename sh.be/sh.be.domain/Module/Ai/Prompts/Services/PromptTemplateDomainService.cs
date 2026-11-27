@@ -62,6 +62,15 @@ namespace sh.be.domain.Module.Ai.Prompts.Services
         }
 
         // Đọc lại bản nháp sau khi khoá metadata: bản đã bị request khác xuất bản / bỏ thì 909 (21.14)
+        // Hai người cùng sửa nháp: ngày sửa cuối người gọi đang giữ phải khớp nháp hiện có (chưa có nháp thì phải null), khác → 914
+        public static void EnsureDraftNotChanged(PromptTemplate? draft, DateTime? draftModifiedDate)
+        {
+            if (draft?.LastChangedDate != draftModifiedDate)
+            {
+                throw new UserFriendlyException(ErrorCodes.AiErrorPromptDraftChanged);
+            }
+        }
+
         public async Task<PromptTemplate> EnsureDraftAsync(PromptTemplate template)
         {
             var draft = await _promptTemplateRepository.FindDraftAsync(template.DocumentTypeId);

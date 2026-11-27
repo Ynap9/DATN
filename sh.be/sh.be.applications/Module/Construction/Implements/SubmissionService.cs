@@ -660,6 +660,16 @@ namespace sh.be.applications.Module.Construction.Implements
             return await _submissionQuery.FindProgressDailyStats(dto.ProjectId, dto.DocumentTypeId, fromDate, toDate, restrictedUserId);
         }
 
+        // Năng suất theo người (Data + QA) trong khoảng ngày, không phụ thuộc QA; Data / QA chỉ thấy dòng của mình
+        public async Task<ViewProgressUserStatsDto> FindProgressUserStats(FindProgressStatsDto dto)
+        {
+            _logger.LogInformation($"{nameof(FindProgressUserStats)}, dto={JsonSerializer.Serialize(dto)}");
+            var (fromDate, toDate) = NormalizeQaStatsDateRange(dto.FromDate, dto.ToDate);
+            await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
+            var restrictedUserId = await _submissionAssignmentService.ResolveRestrictedUserIdAsync(dto.ProjectId, dto.DocumentTypeId, getCurrentUserId());
+            return await _submissionQuery.FindProgressUserStats(dto.ProjectId, dto.DocumentTypeId, fromDate, toDate, restrictedUserId);
+        }
+
         // Thống kê QA tổng trong khoảng ngày; Data / QA chỉ tính lượt chấm trên văn bản mình đang giữ
         public async Task<ViewQaStatsSummaryDto> FindQaStatsSummary(FindQaStatsDto dto)
         {

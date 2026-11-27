@@ -65,7 +65,7 @@ URL FE `/admin/<module>/...` trùng tên module BE `api/v1/<module>/...` để t
 | [04-http-auth.md](04-http-auth.md) | `core/auth` (chưa có) và `core/http` (interceptor, tải file) |
 | [05-conventions.md](05-conventions.md) | **Quy ước code bắt buộc**, bảng "đặt đúng chỗ" |
 | [06-them-man-hinh.md](06-them-man-hinh.md) | Các bước thêm một màn hình gọi API BE |
-| [07-man-construction.md](07-man-construction.md) | Ghi chú từng màn module `construction`: Metadata, Dự án, Báo cáo tiến độ, Danh sách văn bản |
+| [07-man-construction.md](07-man-construction.md) | Ghi chú từng màn module `construction`: Metadata (tab Prompt OCR), Dự án, Danh sách văn bản; Báo cáo tiến độ ở file 15 |
 | [08-man-nhap-lieu.md](08-man-nhap-lieu.md) | Màn Nhập liệu (PDF + form, nút trước / sau, Lưu, chỉ đọc) và dialog Lịch sử văn bản |
 | [09-man-qa.md](09-man-qa.md) | Màn QA (đánh dấu trường Sai, Đạt / Trả lại, banner chỉ đọc, Lần trước sai) |
 | [10-man-operation.md](10-man-operation.md) | Màn module `operation`: Thành viên dự án (Admin + Leader theo cặp, chọn cặp trên URL, Thêm / Sửa giá / Gỡ); Nhóm nhân viên (Tạo / Sửa / Xoá, nhóm lệch vai trò); picker cặp dùng chung |
@@ -73,6 +73,7 @@ URL FE `/admin/<module>/...` trùng tên module BE `api/v1/<module>/...` để t
 | [12-man-cau-hinh.md](12-man-cau-hinh.md) | Màn Cấu hình: kết nối Google (quay về `?google=`), ứng dụng Google (che secret, Đổi), hạn dự án; lưu từng dòng PUT / POST, 409 / 304 |
 | [13-man-chia-phieu.md](13-man-chia-phieu.md) | Màn Chia phiếu: cây hộp / hồ sơ, xem trước, giao; phiếu của một người, chuyển / thu hồi phiếu và phụ trách QA |
 | [14-man-tien-cong.md](14-man-tien-cong.md) | Màn Tiền công: chế độ Admin / Leader / nhân viên theo cặp, nhóm cột Thực nhận / Giá công ty, dải tổng, Xuất Excel |
+| [15-man-bao-cao-tien-do.md](15-man-bao-cao-tien-do.md) | Màn Báo cáo tiến độ: lọc theo URL, các khối (KPI, biểu đồ, nghiệm thu, chất lượng QA), khối Năng suất 2 tab không cần QA, ghi chép kiểm trình duyệt |
 
 ## Nguyên tắc không đổi
 

@@ -53,7 +53,7 @@ gia hạn tới đúng hôm nay thì sáng mai mới hết.
 | `EXPIRED` | `EndedAt` trống hoặc từ hôm nay trở đi, `status` 2 hoặc 5 | Lưu, tự về `DOING` (audit thấy `Status` 5 → 2) |
 | `EXPIRED` | `EndedAt` vẫn trước hôm nay, `status = 2` | `342` "Ngày kết thúc đã qua. Dời ngày kết thúc từ hôm nay trở đi để gia hạn dự án"; không lưu |
 | `EXPIRED` | `EndedAt` vẫn trước hôm nay, `status = 5` | Lưu bình thường (tên, ngày bắt đầu, metadata), vẫn `EXPIRED` |
-| `ACCEPTING` / `DONE` | status khác trạng thái hiện tại | Luật nghiệm thu cũ: `342` "Dùng chức năng nghiệm thu" ([22](22-nghiem-thu-du-an.md)) |
+| `ACCEPTING` / `DONE` | status khác trạng thái hiện tại | `342` "Dùng chức năng nghiệm thu" ([22](22-nghiem-thu-du-an.md)); Task 70 chặn cả đi ra khỏi `DONE` (trước đó `DONE` gửi 2 / 5 vẫn lưu được) |
 
 Mã `342` dùng lại với câu mới; route, DTO, `ProjectDeadlineJob`, `Project.Expire` không đổi. Body sửa vẫn gửi `status` (FE gửi lại
 trạng thái hiện tại của dự án).
@@ -111,10 +111,6 @@ script (tìm chữ trong thân mail mã hoá base64); thân mail giải mã ra �
 ## Giới hạn
 
 Lưu ý: Mail gửi xong mà `SaveChanges` lịch sử lỗi thì lần sau có thể gửi trùng: chấp nhận, vì không giữ transaction khi chờ SMTP.
-
-Lưu ý: `Project.Update` chỉ chặn đi **vào** `ACCEPTING` / `DONE` và ra khỏi `ACCEPTING`, không chặn đi ra khỏi `DONE`: dự án `DONE`
-gửi `status = 5` (hoặc `2`) vẫn lưu được, và `status = 5` kèm `EndedAt` còn ở tương lai khiến job gửi mail loại `2`. Chốt 2026-11-27: để
-nguyên theo Task 68 (các luật gia hạn không áp cho `DONE`), không tự thêm chặn khi chưa hỏi PM.
 
 Lưu ý: Múi giờ `SE Asia Standard Time` là tên trên Windows. Chạy Docker Linux thì cả `GetVietnamTime()` lẫn lịch job lỗi; khi
 triển khai phải đổi sang `Asia/Ho_Chi_Minh` ở một chỗ (`BaseService.VietnamTimeZone`).

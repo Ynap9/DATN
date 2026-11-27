@@ -274,6 +274,35 @@ export interface IProgressDailyStats {
     days: IProgressDaily[];
 }
 
+// Năng suất theo người (Task 70): userId null = "Không gắn người"; userName / fullName null = user đã xoá cứng
+export interface IProgressUser {
+    userId: string | null;
+    userName: string | null;
+    fullName: string | null;
+    isRemoved: boolean;
+    workingDays: number;
+}
+
+export interface IProgressDataUser extends IProgressUser {
+    documentCount: number;
+    fieldCount: number;
+}
+
+export interface IProgressQaUser extends IProgressUser {
+    reviewCount: number;
+    reviewDocumentCount: number;
+    passedCount: number;
+    failedCount: number;
+}
+
+export interface IProgressUserStats {
+    fromDate: string;
+    toDate: string;
+    isQaEnabled: boolean;
+    dataUsers: IProgressDataUser[];
+    qaUsers: IProgressQaUser[];
+}
+
 // Các tỷ lệ là phần trăm 0–100, BE làm tròn 2 số
 export interface IQaStatsMetric {
     reviewCount: number;

@@ -55,7 +55,7 @@ Menu.Construction                  Menu nghiệp vụ xây dựng
     ├── Function.Construction.Submission.Check    (kiểm tra và sửa dữ liệu hồ sơ)
     ├── Function.Construction.Submission.Qa       (đánh giá QA Đạt / Không đạt)
     ├── Function.Construction.Submission.QaStats  (thống kê QA theo trường, người nhập)
-    ├── Function.Construction.Submission.ProgressStats (tiến độ kiểm / QA đạt theo ngày — Task 46A)
+    ├── Function.Construction.Submission.ProgressStats (tiến độ kiểm / QA đạt theo ngày — Task 46A; năng suất theo người — Task 70)
     ├── Function.Construction.Submission.Delete   (xoá mềm hồ sơ)
     ├── Function.Construction.Submission.Export   (xuất Excel / Google Sheet theo bộ lọc)
     └── Function.Construction.Submission.AssignQa (giao phiếu QA — Task 18C)
@@ -149,7 +149,7 @@ Chi tiết cơ chế attribute và cách truy vấn DB: xem [../architecture/01-
 | `DELETE api/construction/submission` (ids trong body) | `Function.Construction.Submission.Delete`, chỉ Admin / SuperAdmin (`400`, Task 32, [14](14-ho-so-xoa-xuat.md#xoá-hồ-sơ)) |
 | `GET api/construction/submission/export-excel`, `POST .../export-excel/job`, `GET .../export-excel/job/{jobId}`, `GET .../export-sheet/sheet-names`, `POST .../export-sheet/job`, `GET .../export-sheet/job/{jobId}` | `Function.Construction.Submission.Export` (Leader chỉ dự án mình — `337`, [14](14-ho-so-xoa-xuat.md), [29](29-xuat-google-sheet.md)) |
 | `GET api/construction/submission/qa-stats/summary`, `GET .../qa-stats/fields`, `GET .../qa-stats/entry-users` | `Function.Construction.Submission.QaStats` |
-| `GET api/construction/submission/progress-stats/daily` | `Function.Construction.Submission.ProgressStats` (Admin có qua seeder, Leader gán tay — [17](17-thong-ke-qa.md#tiến-độ-theo-ngày--progress-statsdaily-task-46a)) |
+| `GET api/construction/submission/progress-stats/daily`, `.../progress-stats/users` | `Function.Construction.Submission.ProgressStats` (Admin có qua seeder, Leader gán tay — [17](17-thong-ke-qa.md#tiến-độ-theo-ngày--progress-statsdaily-task-46a)) |
 | `GET api/digital-signature/template/paging`, `GET .../{id}`, `GET .../sample-file` | `Function.DigitalSignature.Template.View` |
 | `POST` / `PUT {id}` + `PUT {id}/config` / `DELETE {id}` `api/digital-signature/template` | `...Template.Create` / `.Update` / `.Delete` |
 | `GET api/digital-signature/signing-batch/running`, `GET .../{id}/files`, `.../{id}/progress`, `.../{id}/files/{fileId}/signed-url` | `Function.DigitalSignature.SigningBatch.View` |
