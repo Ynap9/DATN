@@ -40,6 +40,7 @@
 | [29-xuat-google-sheet.md](29-xuat-google-sheet.md) | Hồ sơ (Task 56A): xuất bảng hồ sơ vào tab có sẵn của Google Sheet bằng Gmail đã kết nối, chạy nền Hangfire như xuất Excel, chặn Sheet đồng bộ của dự án |
 | [30-import-ghep-truong.md](30-import-ghep-truong.md) | Import (Task 63A): đọc đúng link Sheet gửi lên (chặn Sheet dự án khác), 3 API `sheet-headers` / `field-mapping/match` / lưu ghép trường theo dự án + loại, bắt buộc ghép đủ, `startColumn`, chữ "null" / "undefined" là dữ liệu, ghi đè đọc đúng cột đã ghép, đọc lại ghép sau khoá, đếm chạy thử đúng số ghi |
 | [31-nang-suat-theo-nguoi.md](31-nang-suat-theo-nguoi.md) | Hồ sơ (Task 70): `GET progress-stats/users` — sản lượng theo người nhập (Data + QA) trong khoảng ngày, không phụ thuộc QA; người được tính là người bấm hoặc người đang giữ, dòng "Không gắn người"; số có thể lệch tiền công (cố ý) |
+| [32-dong-goi-phien-kiem.md](32-dong-goi-phien-kiem.md) | Đóng gói (Task 65): phiên tải thư mục, soi file (SHA-256, chữ ký, PDF/A), ghép cột Excel mờ, gom file vào gói, kiểm giá trị ô, job kiểm + job dọn 7 ngày, 7 API, lỗi `704`–`709` |
 
 ## Thuật ngữ
 
@@ -58,7 +59,7 @@
 ## Ba quy tắc xuyên suốt
 
 - Mọi thao tác ghi đều tạo `AuditLog` **trong cùng transaction** với thay đổi dữ liệu (xem [04-nhat-ky-he-thong.md](04-nhat-ky-he-thong.md)).
-- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`109` (Auth), `201`–`211` (Core), `301`–`346` (Construction), `601`–`635` (DigitalSignature), `701`–`703` (Packaging), `801`–`826` (Operation, bỏ `814`) hoặc `901`–`913` (Ai).
+- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`109` (Auth), `201`–`211` (Core), `301`–`346` (Construction), `601`–`635` (DigitalSignature), `701`–`709` (Packaging), `801`–`826` (Operation, bỏ `814`) hoặc `901`–`913` (Ai).
 - Thời gian thao tác lấy theo giờ Việt Nam, người thao tác lấy từ token đăng nhập.
 
 Route trong các file nghiệp vụ viết rút gọn `api/<module>/...`; route thật có version: `api/v1/<module>/...` (từ 2026-10-20,

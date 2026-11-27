@@ -130,6 +130,12 @@ namespace sh.be.shared.HttpRequest.Error
         public const int PackagingErrorPackageTypeInvalid = 701;
         public const int PackagingErrorMetadataTypeInvalid = 702;
         public const int PackagingErrorSchemaFieldNotFound = 703;
+        public const int PackagingErrorSessionStartInvalid = 704;
+        public const int PackagingErrorSessionFinished = 705;
+        public const int PackagingErrorSessionNotFound = 706;
+        public const int PackagingErrorSessionNotPending = 707;
+        public const int PackagingErrorUploadFileCountInvalid = 708;
+        public const int PackagingErrorRelativePathsRequired = 709;
 
         public const int OperationErrorStaffGroupNotFound = 801;
         public const int OperationErrorStaffGroupNameExists = 802;

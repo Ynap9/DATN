@@ -2,7 +2,9 @@ using Microsoft.Extensions.Options;
 using sh.be.applications.Base;
 using sh.be.applications.Base.Interfaces.External.BackgroundJob;
 using sh.be.applications.Module.Construction.Jobs;
+using sh.be.applications.Module.Packaging.Jobs;
 using sh.be.shared.Constants.Construction;
+using sh.be.shared.Constants.Packaging;
 using sh.be.shared.Settings;
 
 namespace sh.be.api.Worker
@@ -31,6 +33,8 @@ namespace sh.be.api.Worker
                 job => job.ExecuteAsync(), _backgroundJobSettings.Jobs.ProjectDeadlineCheck, BaseService.VietnamTimeZone);
             backgroundJobExternal.AddOrUpdateRecurring<SubmissionExportCleanupJob>(SubmissionConst.EXPORT_CLEANUP_RECURRING_JOB_ID,
                 job => job.ExecuteAsync(), _backgroundJobSettings.Jobs.SubmissionExportCleanup, BaseService.VietnamTimeZone);
+            backgroundJobExternal.AddOrUpdateRecurring<PackageSessionCleanupJob>(PackageSessionConst.CLEANUP_RECURRING_JOB_ID,
+                job => job.ExecuteAsync(), _backgroundJobSettings.Jobs.PackageSessionCleanup, BaseService.VietnamTimeZone);
             return Task.CompletedTask;
         }
 

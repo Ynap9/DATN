@@ -171,6 +171,6 @@ mỗi request + 1 / 3 câu của API), nên phải đo lại trên môi trườn
 
 ## Chưa thi công
 
-API ghi cấu hình, phiên kiểm tra metadata, đóng gói ZIP / METS / EAD / PREMIS.
+API ghi cấu hình, đóng gói ZIP / METS / EAD / PREMIS (Task 66). Phiên kiểm tra metadata đã có: [32](32-dong-goi-phien-kiem.md).
 
 > **Tiếp:** [17-thong-ke-qa.md](17-thong-ke-qa.md) — thống kê QA theo trường, người nhập, tỉ lệ đúng, dòng thời gian văn bản.
