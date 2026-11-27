@@ -1,5 +1,5 @@
 import { Component, input } from '@angular/core';
-import { formatNumber, IVerifyView } from '../data-transfer.constants';
+import { formatNumber, IMPORT_VERIFY_NOTE, IVerifyView } from '../data-transfer.constants';
 
 // Bước 4 wizard import: tóm tắt lựa chọn + số chạy thử, khung đang import / lỗi (48.11, 48.13); chỉ hiển thị
 @Component({
@@ -13,4 +13,5 @@ export class ImportVerifyStepComponent {
     errorMessage = input<string | null>(null);
 
     readonly formatNumber = formatNumber;
+    readonly note = IMPORT_VERIFY_NOTE;
 }

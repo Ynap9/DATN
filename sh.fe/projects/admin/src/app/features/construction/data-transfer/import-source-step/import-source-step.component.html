@@ -2,9 +2,8 @@
     <div class="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
         @for (option of sourceOptions; track option.value) {
             @let selected = source() === option.value;
-            @let disabled = isSourceDisabled(option.value);
-            <button type="button" [attr.aria-pressed]="selected" [disabled]="disabled"
-                class="flex flex-col items-start gap-1.5 rounded-xl p-[18px] text-left disabled:cursor-not-allowed disabled:opacity-60"
+            <button type="button" [attr.aria-pressed]="selected"
+                class="flex flex-col items-start gap-1.5 rounded-xl p-[18px] text-left"
                 [class]="selected ? 'cursor-pointer border-[1.5px] border-[var(--app-accent)] bg-[#f3faf7]' : 'cursor-pointer border border-[var(--app-line-strong)] bg-white'"
                 (click)="selectSource(option.value)">
                 <span class="mb-1 flex h-[38px] w-[38px] items-center justify-center rounded-[10px]"
@@ -12,20 +11,26 @@
                     <i [class]="option.icon"></i>
                 </span>
                 <span class="text-sm font-bold">{{ option.label }}</span>
-                <span class="text-[13px] text-[var(--app-muted)]">{{ disabled ? 'Dự án chưa gắn Google Sheet' : option.description }}</span>
+                <span class="text-[13px] text-[var(--app-muted)]">{{ option.description }}</span>
             </button>
         }
     </div>
 
     @if (source() === sourceKey.SHEET) {
-        <div class="flex items-center gap-3 rounded-xl border border-[var(--app-line)] px-4 py-3.5">
-            <div class="flex min-w-0 flex-1 flex-col">
-                <span class="text-xs text-[var(--app-muted)]">Sheet đang gắn</span>
-                <span class="truncate font-semibold">{{ googleSheetName() || '…' }}</span>
+        <div class="flex flex-col gap-1">
+            <label for="importSheetUrl" class="text-xs font-semibold text-[var(--app-muted)]">Link Google Sheet *</label>
+            <div class="flex items-center gap-2">
+                <input pInputText id="importSheetUrl" class="min-w-0 flex-1" [class]="sheetsError ? 'border-[var(--app-red)]!' : ''" [ngModel]="url()"
+                    (ngModelChange)="onUrlChange($event)" />
+                <p-button [label]="isLoadingSheets ? 'Đang đọc…' : 'Lấy danh sách sheet'" severity="secondary" [outlined]="true" [disabled]="!url().trim()"
+                    [loading]="isLoadingSheets" (onClick)="loadSheets()" />
             </div>
-            <a class="text-[13px] font-semibold text-[var(--app-accent-700)]" [href]="urlGoogleSheetSync()" target="_blank" rel="noopener">Mở Google Sheet ↗</a>
+            @if (sheetsError) {
+                <span class="text-xs text-[var(--app-red)]">{{ sheetsError }}</span>
+            }
         </div>
-        <span class="text-xs text-[var(--app-muted)]">Sheet phải được chia sẻ cho tài khoản dịch vụ của hệ thống, không thì sẽ báo không đọc được.</span>
+        <sh-select class="w-full sm:w-80" label="Sheet" [required]="true" [options]="googleSheetOptions" optionLabel="label" optionValue="value"
+            placeholder="Bấm &quot;Lấy danh sách sheet&quot; trước" [disabled]="!googleSheets().length" [ngModel]="googleSheet()" (ngModelChange)="onSheetChange($event)" />
     } @else if (upload(); as uploaded) {
         <div class="flex items-center gap-3 rounded-xl border border-[var(--app-line)] px-4 py-3.5">
             <i class="pi pi-file-excel text-xl text-[var(--app-green)]"></i>
@@ -36,7 +41,7 @@
             <p-button label="Đổi file" severity="secondary" [outlined]="true" size="small" (onClick)="changeFile()" />
         </div>
         <sh-select class="w-full sm:w-80" label="Sheet" [options]="sheetOptions" optionLabel="label" optionValue="value" placeholder="Chọn sheet"
-            [ngModel]="sheetName()" (ngModelChange)="sheetName.set($event)" />
+            [ngModel]="sheetName()" (ngModelChange)="onSheetChange($event)" />
     } @else {
         <label class="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-[1.5px] border-dashed px-6 py-10 text-center"
             [class]="isDragging ? 'border-[var(--app-accent)] bg-[#f3faf7]' : fileError ? 'border-[var(--app-red)] bg-[var(--app-red-soft)]' : 'border-[var(--app-line-strong)] bg-[#fbfcfb]'"
@@ -50,5 +55,19 @@
                 <span class="text-xs" [class]="fileError ? 'text-[var(--app-red)]' : 'text-[var(--app-muted)]'">{{ fileError || 'Chỉ nhận .xlsx tối đa 20 MB' }}</span>
             }
         </label>
+    }
+
+    @if (hasSelectedSheet) {
+        <div class="flex flex-col gap-1 sm:w-80">
+            <sh-input-number label="Bắt đầu đọc từ cột" [required]="true" [min]="1" [max]="maxStartColumn" [useGrouping]="false" [ngModel]="startColumn()"
+                (ngModelChange)="onStartColumnChange($event)" />
+            <span class="text-xs text-[var(--app-muted)]">Các cột bên trái cột này không được đọc.</span>
+        </div>
+    }
+    @if (source() === sourceKey.SHEET) {
+        <span class="text-xs text-[var(--app-muted)]">Sheet phải được chia sẻ cho tài khoản dịch vụ của hệ thống.</span>
+    }
+    @if (canDownloadTemplate) {
+        <button type="button" class="w-fit cursor-pointer text-[13px] font-semibold text-[var(--app-accent-700)]" (click)="downloadTemplate()">Tải file mẫu</button>
     }
 </div>

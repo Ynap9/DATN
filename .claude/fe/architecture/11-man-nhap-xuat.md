@@ -2,9 +2,9 @@
 
 > **Phần 11/13** · trước: [10-man-operation.md](10-man-operation.md) · mục lục: [README.md](README.md)
 
-Task 48 (cập nhật 2026-11-25). Admin / Leader của dự án nhập văn bản từ Google Sheet của dự án hoặc file Excel
-(wizard 4 bước), và xuất theo bộ lọc + cột thêm ra file Excel hoặc ghi vào một Google Sheet (Task 56, job chạy nền).
-Nhập chưa kiểm trên trình duyệt; xuất Google Sheet đã kiểm (xem cuối file).
+Task 48 (cập nhật 2026-11-27, đổi theo Task 63). Admin / Leader của dự án nhập văn bản từ link Google Sheet bất kỳ hoặc file Excel
+(wizard 4 bước: Nguồn dữ liệu → Ghép trường → Kiểu import → Chạy thử & import, theo 5sdb), và xuất theo bộ lọc + cột thêm ra file Excel
+hoặc ghi vào một Google Sheet (Task 56, job chạy nền). Nhập Google đã kiểm trên trình duyệt (Task 63); xuất Google Sheet đã kiểm (xem cuối file).
 
 ## Route và file
 
@@ -13,11 +13,11 @@ Nhập chưa kiểm trên trình duyệt; xuất Google Sheet đã kiểm (xem c
 | Route | `/admin/construction/data-transfer`, `permissionGuard` = có `Function.Construction.Submission.Import` **hoặc** `.Export`, `canDeactivate` inline trong `construction.routes.ts` |
 | Menu | "Nhập / Xuất dữ liệu" dưới "Metadata"; `permission` là **mảng key** (`AppMenu.canView`: có một là hiện) |
 | Màn | `data-transfer/data-transfer.component.*`: picker cặp trong `app-page-header`, "Dự án … · N văn bản" là `description` của header (dưới tiêu đề), tab theo quyền |
-| Wizard Nhập | `import-wizard/` giữ trạng thái + gọi API; bước con `import-source-step/` (nguồn, upload), `import-column-step/` (ghép cột), `import-verify-step/` (chỉ hiển thị); bước 2 Kiểu import viết thẳng trong wizard |
+| Wizard Nhập | `import-wizard/` giữ trạng thái + gọi API; bước con `import-source-step/` (link + sheet + cột bắt đầu, upload), `import-field-step/` (ghép trường), `import-kind-step/` (kiểu + cột cố định), `import-verify-step/` (chỉ hiển thị) |
 | Tab Xuất dữ liệu | `export-panel/`: thẻ chọn đích (Excel / Google Sheet), khối đích Sheet, danh sách "Đã xuất" chung cho cả hai đích |
-| Hằng của màn | `data-transfer.constants.ts`: tên bước, thẻ nguồn / kiểu, `IImportColumnMapping`, `isColumnMappingComplete`, `getVerifyView`, `TOAST_ERROR_CODES`, `EXPORT_TARGET` / `EXPORT_TARGET_OPTIONS`, `IExportJobRow`, `formatNumber` |
+| Hằng của màn | `data-transfer.constants.ts`: tên bước, thẻ nguồn / kiểu, `IImportColumnMapping`, `IImportFieldRow`, `toHeaderKey`, `IMPORT_FIXED_COLUMN_KEYS`, `isColumnMappingComplete`, `getVerifyView`, `TOAST_ERROR_CODES`, `EXPORT_TARGET` / `EXPORT_TARGET_OPTIONS`, `IExportJobRow`, `formatNumber` |
 | Hằng chung | `IMPORT_KIND`, `IMPORT_SOURCE`, `BACKGROUND_JOB_STATUS`, `EXPORT_COLUMNS`, `IMPORT_EXCEL_MAX_BYTES`, `JOB_POLL_MS`, `EXPORT_DOWNLOAD_URL_MS` ở `submission.constants.ts` |
-| API | `SubmissionService`: `verifyImport` / `importSheet`, `uploadImportExcel`, `verifyImportExcel` / `createImportExcelJob` / `findImportJob`, `createExportJob` / `findExportJob`, `getExportSheetNames` / `createExportSheetJob` / `findExportSheetJob`; `DocumentFieldService.getSheetHeaders`, `dropdown` |
+| API | `SubmissionService`: `getImportSheetHeaders` / `matchImportFieldMapping` / `saveImportFieldMapping`, `verifyImport` / `importSheet`, `uploadImportExcel`, `verifyImportExcel` / `createImportExcelJob` / `findImportJob`, `createExportJob` / `findExportJob`, `getExportSheetNames` / `createExportSheetJob` / `findExportSheetJob`. Wizard không còn gọi `DocumentFieldService.getSheetHeaders` (cần quyền `DocumentField.Create`; màn kiểm tra sheet của loại văn bản vẫn dùng) |
 
 ## Quyết định
 
@@ -31,15 +31,21 @@ Nhập chưa kiểm trên trình duyệt; xuất Google Sheet đã kiểm (xem c
 - Hai tab ẩn bằng `[class.hidden]` chứ không `@if`, để đổi tab không mất tiến độ wizard / danh sách file đã xuất.
 - Dự án `ACCEPTING` / `DONE` / `EXPIRED` → khung xám thay wizard; tab Xuất vẫn dùng được.
 - Upload: FE chặn đuôi khác `.xlsx` và > 20 MB trước khi gửi; `observe: 'events'` để hiện %.
-- Ghép cột: `p-autocomplete` gợi ý header, gõ tay được. Google đọc header bằng `sheet-header` chỉ khi có
-  `Function.Construction.DocumentField.Create`; thiếu quyền / lỗi → dòng xám "Không đọc được tên cột…". Header trùng
-  "Tên file / Link / Hồ sơ / Hộp" (không phân biệt hoa thường) điền sẵn vào ô **đang hiện và đang trống**.
-- Bước 3 → 4 **luôn** qua chạy thử; Quay lại từ bước 4 xoá kết quả (BE không lưu chạy thử). Lỗi chạy thử → về bước 3, khung
-  đỏ `whitespace-pre-line`, cao tối đa 240 px. Lỗi import / job → bước 4, nút chính thành "Thử lại" (= chạy thử lại).
+- Bước 1 (63.2, 63.3): thẻ Google không bao giờ khoá, mặc định chọn Google, ô link điền sẵn `urlGoogleSheetSync` của dự án (rỗng nếu chưa gắn). Link của dự án thì tự gọi
+  `getImportSheetHeaders` một lần (chờ có tên sheet của dự án để chọn sẵn); lỗi hiện chữ đỏ dưới ô link, không toast; sửa link xoá danh sách + sheet và huỷ lượt gọi dở.
+  "Bắt đầu đọc từ cột" (Google và Excel, 1 … số cột của sheet) co lại khi đổi sheet; "Tải file mẫu" ẩn khi thiếu `DocumentType.View`.
+- Bước 2 (63.4, 63.5): `matchImportFieldMapping` → bảng trường ↔ cột (giá trị đầu = `matchedColumnIndex`, lựa chọn là vị trí cột nên header trùng tên hiện "Ghi chú (cột thứ 6)"). Thiếu cột: không khoá nút, bấm Tiếp tục mới viền đỏ + cuộn tới dòng;
+  một cột cho hai trường / tên cột lặp k lần mà ghép < k trường (BE `309`) thì khoá. "Tiếp tục" luôn `saveImportFieldMapping` đủ mọi trường. Ghép giữ trong wizard; đổi link / sheet / file / cột bắt đầu ở bước 1 → tải lại và xoá ô cột cố định không còn trong header (63.10).
+- Bước 3 (63.6, 63.7): thẻ kiểu + ô cột cố định theo kiểu (Thêm mới có link bắt buộc + Số trang; Bổ sung link tuỳ chọn; Ghi đè chọn trường trong các trường đã ghép, `columnImport` = cột đã ghép của trường). Gợi ý chỉ từ cột bắt đầu; cột cố định trùng cột trường → dòng vàng, không chặn.
+- Bước 3 → 4 **luôn** qua chạy thử; Quay lại từ bước 4 xoá kết quả (BE không lưu chạy thử). Lỗi chạy thử → ở bước 3, khung
+  đỏ `whitespace-pre-line`, cao tối đa 240 px. Lỗi import / job → bước 4, nút chính thành "Thử lại" (= chạy thử lại). Số chạy thử là số ô có dữ liệu BE đếm, FE không tự đếm.
 - Import Google đồng bộ: khoá nút + tab, hỏi khi rời trang (`canDeactivate` + `beforeunload`). Excel tạo job rồi hỏi
   `findImportJob` mỗi `JOB_POLL_MS`, không hỏi khi rời. Xong → khối "Import xong", màn cha tải lại số văn bản.
-- Body theo 48.15: ô trống gửi `''`; ghi đè gửi `linkColumnImport = ''`; Excel ghi đè **không** có `url`.
-- Ô "Cột Số trang" (Task 62, tuỳ chọn) chỉ hiện ở kiểu Thêm mới, header "Số trang" điền sẵn; kiểu khác body gửi `pageCountColumn = ''`. Chạy thử Thêm mới có thêm ô số phụ "Văn bản có số trang" chỉ khi đã nhập cột. Chưa kiểm trình duyệt.
+- Body (63.9): ô trống gửi `''`; ghi đè gửi `linkColumnImport = ''`; Google cả 3 kiểu gửi `url` + `sheetName` của bước 1; Excel gửi `fileKey` + `sheetName` (không `url`); cả hai nguồn gửi `startColumn`.
+- Ô "Cột Số trang" (Task 62, tuỳ chọn) chỉ hiện ở kiểu Thêm mới, header "Số trang" điền sẵn; kiểu khác body gửi `pageCountColumn = ''`. Chạy thử Thêm mới có thêm ô số phụ "Văn bản có số trang" chỉ khi đã nhập cột.
+
+⚠️ Ghi đè gửi `columnImport` là **tên** cột nên BE lấy cột đầu tiên có tên đó: sheet có nhiều cột trùng tên với cột đã ghép của trường thì có thể ghi đè nhầm cột (FE hiện dòng vàng cảnh báo). Đừng "sửa" bằng cách gửi vị trí cột khi BE chưa nhận.
+⚠️ `toHeaderKey` (hoa thường + gộp khoảng trắng) phải khớp `IsFieldImportMatch` của BE, nếu không FE báo "đủ" còn BE trả `309` / `307`.
 - Tab Xuất: lọc trạng thái dùng `sh-select` để trống = "Tất cả" (có nút xoá); ô QA và nhóm cột QA ẩn khi dự án không QA
   (cột QA đã tick không gửi). "Sẽ xuất" = `count.total` — BE `count` đã lọc theo `statusCheck` / `statusQa` / `keyword`.
 - Danh sách "File đã xuất" chỉ trong phiên trang (BE không có API liệt kê job). "Tải về" quá 15 phút → gọi lại job lấy link mới.
@@ -59,7 +65,9 @@ Bẫy: "Tải về" sau 15 phút mở link **sau** khi API trả, trình duyệt
 
 ## Chưa làm / chưa kiểm
 
-- Chưa kiểm trình duyệt (người dùng hẹn sau): upload thật, chạy thử / import cả 3 kiểu × 2 nguồn, job xuất, popup tải về.
+- Task 63 đã kiểm trình duyệt 2026-11-27 (API thật + Sheet thật, dự án tạm ZZTEST63 đã dọn): link dự án điền sẵn + tự lấy sheet; dự án không Sheet vẫn chọn được Google, link sai → chữ đỏ không toast; dán Sheet tự do lấy được sheet; ghép (lệch tên → "Chưa chọn cột", "Ghi chú (cột thứ 9 / 10)", bấm Tiếp tục thiếu cột → dòng đỏ, một cột hai trường → hai dòng đỏ + khoá, tên cột lặp ghép thiếu → dòng đỏ); ghép đã lưu điền sẵn khi vào lại; cột bắt đầu = 3 bỏ cột A, B và xoá ô cột cố định; ghi đè chỉ chọn trường đã ghép; chạy thử Thêm mới 4 văn bản / 20 ô (dòng tên "null" bỏ) + import thật 4 hồ sơ, 100 trang, ghép lưu DB.
+  Chưa kiểm: Excel (upload / job, MinIO đầy), Bổ sung và Ghi đè chạy thử / import trên trình duyệt (BE đã kiểm 63A), bấm "Tải file mẫu", đổi cặp giữa chừng, tài khoản Leader thật (chỉ dùng Admin).
+- Chưa kiểm trình duyệt (người dùng hẹn sau): upload thật, job xuất, popup tải về.
   Task 54 (2026-11-24) đã kiểm trên trình duyệt: khoá / mở tab và nguồn Google khoá khi dự án không Sheet, nhưng
   upload / chạy thử / job là response giả lập (MinIO đầy, `209`).
 - Xuất Google Sheet đã kiểm trên trình duyệt 2026-11-25 (API thật + Gmail thật, dự án tạm ZZTEST56F đã dọn): chọn đích; link Sheet chính của dự án → lỗi đỏ dưới ô; sửa link xoá lỗi; lấy tên sheet tự chọn tab đầu; "Ghi vào" theo dòng bắt đầu; Huỷ hộp xác nhận không tạo job; Xuất → "Đang ghi…" → "Đã ghi" + link mở Sheet, nút khoá rồi mở lại; Sheet thật đúng (dòng phía trên giữ, dòng cũ phía dưới xoá); đổi đích qua lại giữ giá trị; đổi cặp làm lại khối đích; nút khoá khi link rỗng.

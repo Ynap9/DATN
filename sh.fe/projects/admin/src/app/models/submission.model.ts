@@ -313,7 +313,7 @@ export type IQaEntryUserStats = IQaStatsMetric & {
     fullName: string | null;
 };
 
-// Body import từ Google Sheet của dự án (append / blank); ô cột trống gửi ''
+// Body chung của 3 kiểu import, cả Google và Excel; ô cột trống gửi ''; startColumn tính từ 1
 export interface IImportSubmission {
     projectId: number;
     documentTypeId: number;
@@ -322,11 +322,16 @@ export interface IImportSubmission {
     profileRange: string;
     box: string;
     pageCountColumn: string;
+    startColumn: number;
 }
 
-export interface IImportOverwriteSubmission extends IImportSubmission {
+// Body import Google Sheet: đọc đúng link + sheet người dùng gửi (63A), không đọc Sheet gắn với dự án
+export interface IImportSheetSubmission extends IImportSubmission {
     url: string;
     sheetName: string;
+}
+
+export interface IImportOverwriteSubmission extends IImportSheetSubmission {
     columnImport: string;
     documentFieldId: number;
     overwriteChecked: boolean;
@@ -342,6 +347,40 @@ export interface IImportExcelOverwriteSubmission extends IImportExcelSubmission 
     columnImport: string;
     documentFieldId: number;
     overwriteChecked: boolean;
+}
+
+// Query GET import/sheet-headers: tên sheet + header dòng 1 của link Google Sheet (63A)
+export interface IImportSheetHeadersQuery {
+    projectId: number;
+    documentTypeId: number;
+    url: string;
+}
+
+// Một trường của cặp dự án + loại văn bản và cột sheet BE gợi ý (match) hoặc vừa lưu (save, matchedHeader = '')
+export interface IImportFieldMapping {
+    documentFieldId: number;
+    name: string;
+    fieldImport: string;
+    matchedHeader: string;
+    matchedColumnIndex: number | null;
+}
+
+// columnIndex = vị trí cột trong mảng headers gửi lên (phân biệt các cột trùng tên)
+export interface IImportFieldMappingChoice {
+    documentFieldId: number;
+    fieldImport: string;
+    columnIndex: number;
+}
+
+export interface IMatchImportFieldMapping {
+    projectId: number;
+    documentTypeId: number;
+    headers: string[];
+    startColumn: number;
+}
+
+export interface ISaveImportFieldMapping extends IMatchImportFieldMapping {
+    fields: IImportFieldMappingChoice[];
 }
 
 export interface IUploadImportExcelResult {

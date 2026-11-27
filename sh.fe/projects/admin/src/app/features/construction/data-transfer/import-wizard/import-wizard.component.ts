@@ -1,11 +1,13 @@
 import { Component, DestroyRef, effect, inject, input, output, untracked, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize, Subscription, switchMap, takeWhile, timer } from 'rxjs';
+import { ISheetHeader } from '@/models/document-field.model';
 import { IViewProjectPair } from '@/models/project.model';
 import {
     IImportExcelOverwriteSubmission,
     IImportExcelSubmission,
     IImportOverwriteSubmission,
+    IImportSheetSubmission,
     IImportSubmission,
     IUploadImportExcelResult,
 } from '@/models/submission.model';
@@ -28,29 +30,33 @@ import {
     createColumnMapping,
     getVerifyView,
     IImportColumnMapping,
+    IImportFieldRow,
+    IMPORT_DEFAULT_START_COLUMN,
+    IMPORT_FIXED_COLUMN_KEYS,
     IMPORT_JOB_RUNNING_MESSAGE,
     IMPORT_KIND_OPTIONS,
-    IMPORT_SOURCE_OPTIONS,
     IMPORT_STEPS,
     isColumnMappingComplete,
     IVerifyImportResult,
     TOAST_ERROR_CODES,
+    toHeaderKey,
 } from '../data-transfer.constants';
-import { ImportColumnStepComponent } from '../import-column-step/import-column-step.component';
+import { ImportFieldStepComponent } from '../import-field-step/import-field-step.component';
+import { ImportKindStepComponent } from '../import-kind-step/import-kind-step.component';
 import { ImportSourceStepComponent } from '../import-source-step/import-source-step.component';
 import { ImportVerifyStepComponent } from '../import-verify-step/import-verify-step.component';
 
 const STEP = {
     SOURCE: 0,
-    KIND: 1,
-    COLUMN: 2,
+    FIELD: 1,
+    KIND: 2,
     VERIFY: 3,
 } as const;
 
 // Wizard import 4 bước của tab Nhập (48.5); đổi cặp → về bước 1, bỏ file đã tải (48.4)
 @Component({
     selector: 'app-import-wizard',
-    imports: [SharedImports, ImportSourceStepComponent, ImportColumnStepComponent, ImportVerifyStepComponent],
+    imports: [SharedImports, ImportSourceStepComponent, ImportFieldStepComponent, ImportKindStepComponent, ImportVerifyStepComponent],
     templateUrl: './import-wizard.component.html',
     host: { '(window:beforeunload)': 'onBeforeUnload($event)' },
 })
@@ -67,18 +73,28 @@ export class ImportWizardComponent extends BaseComponent {
     // 337: không còn quản lý dự án, màn cha tải lại danh sách cặp (48.18)
     forbidden = output<void>();
     private readonly _sourceStep = viewChild(ImportSourceStepComponent);
+    private readonly _fieldStep = viewChild(ImportFieldStepComponent);
 
     readonly stepKey = STEP;
     readonly steps = IMPORT_STEPS;
-    readonly kindOptions = IMPORT_KIND_OPTIONS;
 
     step: number = STEP.SOURCE;
     source: ImportSource = IMPORT_SOURCE.SHEET;
     kind: ImportKind = IMPORT_KIND.APPEND;
     upload: IUploadImportExcelResult | null = null;
     sheetName: string | null = null;
-    mapping: IImportColumnMapping = createColumnMapping(null);
-    // Tên sheet Google chỉ có ở chi tiết dự án, không có trong cặp
+    // Bước 1 nguồn Google: link người dùng dán, danh sách sheet đã lấy, sheet đã chọn; cột bắt đầu đọc dùng cho cả Google và Excel
+    url = '';
+    googleSheets: ISheetHeader[] = [];
+    googleSheet: string | null = null;
+    startColumn = IMPORT_DEFAULT_START_COLUMN;
+    // Bước 2 ghép trường: null = chưa tải từ BE; xoá khi bước 1 đổi để bước 2 gọi match lại (63.10)
+    fieldRows: IImportFieldRow[] | null = null;
+    fieldError: string | null = null;
+    isSavingFields = false;
+    private _sourceSignature = '';
+    mapping: IImportColumnMapping = createColumnMapping();
+    // Tên sheet Google gắn với dự án chỉ có ở chi tiết dự án, không có trong cặp
     googleSheetName: string | null = null;
 
     verifyResult: IVerifyImportResult | null = null;
@@ -96,7 +112,7 @@ export class ImportWizardComponent extends BaseComponent {
     }
 
     get isBusy() {
-        return this.isVerifying || this.isImporting;
+        return this.isVerifying || this.isImporting || this.isSavingFields;
     }
 
     // Chỉ import Google chạy đồng bộ: rời trang là không biết kết quả
@@ -114,13 +130,16 @@ export class ImportWizardComponent extends BaseComponent {
         return this.kind === IMPORT_KIND.APPEND ? this.mapping.pageCountColumn.trim() : '';
     }
 
+    // Nguồn · kiểu · số trường đã ghép · các cột cố định đã chọn (63.8)
     get summaryChips() {
         const columns = [this.mapping.fileColumnImport, this.mapping.profileRange, this.mapping.box, this.appendPageCountColumn].map((column) => column.trim()).filter(Boolean);
-        return [this.getStepSummary(STEP.SOURCE), this.getStepSummary(STEP.KIND), columns.join(' · ')];
+        const sourceChip = this.source === IMPORT_SOURCE.SHEET ? `Google Sheet · ${this.googleSheet}` : `Excel · ${this.upload?.fileName} · ${this.sheetName}`;
+        return [sourceChip, this.getStepSummary(STEP.KIND), `Đã ghép ${this.fieldRows?.length ?? 0} trường`, columns.join(' · ')];
     }
 
     get primaryLabel() {
-        if (this.step === STEP.COLUMN) return this.isVerifying ? 'Đang chạy thử…' : 'Chạy thử';
+        if (this.step === STEP.FIELD && this.isSavingFields) return 'Đang lưu…';
+        if (this.step === STEP.KIND) return this.isVerifying ? 'Đang chạy thử…' : 'Chạy thử';
         if (this.step !== STEP.VERIFY) return 'Tiếp tục';
         if (this.importError) return this.isVerifying ? 'Đang chạy thử…' : 'Thử lại';
         return this.verifyView?.actionLabel ?? '';
@@ -130,19 +149,21 @@ export class ImportWizardComponent extends BaseComponent {
         if (this.isBusy) return false;
         switch (this.step) {
             case STEP.SOURCE:
-                return this.source === IMPORT_SOURCE.SHEET ? !!this.pair().urlGoogleSheetSync : !!this.upload && !!this.sheetName;
+                return this.source === IMPORT_SOURCE.SHEET ? !!this.googleSheet : !!this.upload && !!this.sheetName;
+            case STEP.FIELD:
+                return !!this._fieldStep() && !this._fieldStep()!.isBlocked;
             case STEP.KIND:
-                return true;
-            case STEP.COLUMN:
-                return isColumnMappingComplete(this.mapping, this.kind, this.source);
+                return isColumnMappingComplete(this.mapping, this.kind);
             default:
                 return !!this.importError || !!this.verifyView?.main.value;
         }
     }
 
-    // Header của sheet Excel đang chọn, làm gợi ý ở bước Ghép cột
-    get excelHeaders() {
-        return this.upload?.sheets.find((sheet) => sheet.sheetName === this.sheetName)?.headers ?? [];
+    // Header của sheet đang chọn ở bước 1, làm gợi ý ở bước Ghép cột
+    get sheetHeaders() {
+        const isGoogle = this.source === IMPORT_SOURCE.SHEET;
+        const sheets = isGoogle ? this.googleSheets : (this.upload?.sheets ?? []);
+        return sheets.find((sheet) => sheet.sheetName === (isGoogle ? this.googleSheet : this.sheetName))?.headers ?? [];
     }
 
     constructor() {
@@ -156,18 +177,26 @@ export class ImportWizardComponent extends BaseComponent {
     // Dòng xám dưới tên bước: lựa chọn đã chọn, chỉ hiện từ bước đang đứng trở về trước
     getStepSummary(index: number) {
         if (index > this.step) return '';
-        if (index === STEP.SOURCE) return IMPORT_SOURCE_OPTIONS.find((option) => option.value === this.source)?.label ?? '';
+        if (index === STEP.SOURCE) {
+            const sheetName = this.source === IMPORT_SOURCE.SHEET ? this.googleSheet : this.sheetName;
+            if (!sheetName) return '';
+            return this.source === IMPORT_SOURCE.SHEET ? `${sheetName} · Google Sheet` : `${this.upload?.fileName} · ${sheetName}`;
+        }
+        if (index === STEP.FIELD) return this.fieldRows ? `Đã ghép ${this.fieldRows.filter((row) => row.columnIndex !== null).length} / ${this.fieldRows.length} trường` : '';
         if (index === STEP.KIND) return IMPORT_KIND_OPTIONS.find((option) => option.value === this.kind)?.label ?? '';
         return '';
     }
 
     onPrimary() {
         if (!this.canPrimary) return;
-        if (this.step === STEP.COLUMN || (this.step === STEP.VERIFY && this.importError)) {
+        if (this.step === STEP.KIND || (this.step === STEP.VERIFY && this.importError)) {
             this.verify();
         } else if (this.step === STEP.VERIFY) {
             this.runImport();
+        } else if (this.step === STEP.FIELD) {
+            if (this._fieldStep()!.validateRequired()) this.saveFieldMapping();
         } else {
+            if (this.step === STEP.SOURCE) this.resetWhenSourceChanged();
             this.step++;
         }
     }
@@ -178,11 +207,18 @@ export class ImportWizardComponent extends BaseComponent {
         this.step--;
     }
 
-    // Về bước 1, giữ nguồn + file Excel đã tải (48.14)
+    // Về bước 1, giữ link + sheet / file Excel đã tải; ghép đọc lại từ BE khi sang bước 2 (63.11)
     importMore() {
         this.doneMessage = null;
         this.clearVerify();
+        this.fieldRows = null;
+        this.fieldError = null;
         this.step = STEP.SOURCE;
+    }
+
+    // 211 / 337 khi tải ghép: toast (337 kèm tải lại danh sách cặp) (63.13)
+    onFieldToastFailed(res: IBaseResponse) {
+        this.toBoxError(res);
     }
 
     openSubmissionList() {
@@ -191,6 +227,51 @@ export class ImportWizardComponent extends BaseComponent {
 
     onBeforeUnload(event: BeforeUnloadEvent) {
         if (this.isLeaveBlocked) event.preventDefault();
+    }
+
+    // Bước 1 đổi link / sheet / file / cột bắt đầu thì ghép cũ không còn đúng: bước 2 tải lại từ BE, ô cột cố định không còn trong header mới bị xoá (63.10)
+    private resetWhenSourceChanged() {
+        const signature = [this.source, this.url.trim(), this.googleSheet, this.upload?.fileKey, this.sheetName, this.startColumn].join('|');
+        if (signature === this._sourceSignature) return;
+        this._sourceSignature = signature;
+        this.fieldRows = null;
+        this.fieldError = null;
+        this.clearMissingFixedColumns();
+    }
+
+    private clearMissingFixedColumns() {
+        const headerKeys = new Set(this.sheetHeaders.slice(this.startColumn - 1).map(toHeaderKey));
+        const mapping = { ...this.mapping };
+        for (const key of IMPORT_FIXED_COLUMN_KEYS) {
+            if (mapping[key] && !headerKeys.has(toHeaderKey(mapping[key]))) mapping[key] = '';
+        }
+        this.mapping = mapping;
+    }
+
+    // Luôn lưu đủ mọi trường (63.5); BE bỏ qua khi không đổi. Lỗi → khung đỏ dưới bảng, ở lại bước
+    private saveFieldMapping() {
+        const headers = this.sheetHeaders;
+        this.isSavingFields = true;
+        this.fieldError = null;
+        this._requestSubscription = this._submissionService
+            .saveImportFieldMapping({
+                projectId: this.pair().projectId,
+                documentTypeId: this.pair().documentTypeId,
+                headers,
+                startColumn: this.startColumn,
+                fields: this.fieldRows!.map((row) => ({ documentFieldId: row.documentFieldId, fieldImport: headers[row.columnIndex!], columnIndex: row.columnIndex! })),
+            })
+            .pipe(
+                finalize(() => (this.isSavingFields = false)),
+                takeUntilDestroyed(this._destroyRef),
+            )
+            .subscribe((res) => {
+                if (this.isResponseSucceed(res, false)) {
+                    this.step++;
+                    return;
+                }
+                this.fieldError = this.toBoxError(res);
+            });
     }
 
     // Lỗi chạy thử (kể cả bấm Thử lại ở bước 4) → về bước 3, khung đỏ câu BE trả (48.11)
@@ -216,7 +297,7 @@ export class ImportWizardComponent extends BaseComponent {
                 if (!error) return;
                 this.clearVerify();
                 this.verifyError = error;
-                this.step = STEP.COLUMN;
+                this.step = STEP.KIND;
             });
     }
 
@@ -311,6 +392,7 @@ export class ImportWizardComponent extends BaseComponent {
             profileRange: this.mapping.profileRange.trim(),
             box: this.mapping.box.trim(),
             pageCountColumn: this.appendPageCountColumn,
+            startColumn: this.startColumn,
         };
     }
 
@@ -322,10 +404,10 @@ export class ImportWizardComponent extends BaseComponent {
         };
     }
 
-    private buildSheetBody(): IImportSubmission | IImportOverwriteSubmission {
-        const body = this.buildBaseBody();
-        if (this.kind !== IMPORT_KIND.OVERWRITE) return body;
-        return { ...body, url: this.mapping.url.trim(), sheetName: this.mapping.sheetName.trim(), ...this.buildOverwriteFields() };
+    // Cả 3 kiểu đọc link + sheet người dùng chọn ở bước 1 (63.9)
+    private buildSheetBody(): IImportSheetSubmission | IImportOverwriteSubmission {
+        const body: IImportSheetSubmission = { ...this.buildBaseBody(), url: this.url.trim(), sheetName: this.googleSheet! };
+        return this.kind === IMPORT_KIND.OVERWRITE ? { ...body, ...this.buildOverwriteFields() } : body;
     }
 
     // Excel ghi đè không có url
@@ -334,7 +416,7 @@ export class ImportWizardComponent extends BaseComponent {
         return this.kind === IMPORT_KIND.OVERWRITE ? { ...body, ...this.buildOverwriteFields() } : body;
     }
 
-    // Dự án chưa gắn Google Sheet thì mặc định Excel; bỏ lượt tải file / chạy thử / import đang chờ của cặp cũ
+    // Mặc định nguồn Google, link điền sẵn theo dự án; bỏ lượt tải file / chạy thử / import đang chờ của cặp cũ
     private reset(pair: IViewProjectPair) {
         this._sourceStep()?.changeFile();
         this._requestSubscription?.unsubscribe();
@@ -343,11 +425,19 @@ export class ImportWizardComponent extends BaseComponent {
         this.clearVerify();
         this.doneMessage = null;
         this.step = STEP.SOURCE;
-        this.source = pair.urlGoogleSheetSync ? IMPORT_SOURCE.SHEET : IMPORT_SOURCE.EXCEL;
+        this.source = IMPORT_SOURCE.SHEET;
         this.kind = IMPORT_KIND.APPEND;
         this.upload = null;
         this.sheetName = null;
-        this.mapping = createColumnMapping(pair.urlGoogleSheetSync);
+        this.url = pair.urlGoogleSheetSync ?? '';
+        this.googleSheets = [];
+        this.googleSheet = null;
+        this.startColumn = IMPORT_DEFAULT_START_COLUMN;
+        this.fieldRows = null;
+        this.fieldError = null;
+        this.isSavingFields = false;
+        this._sourceSignature = '';
+        this.mapping = createColumnMapping();
         this.googleSheetName = null;
         if (pair.urlGoogleSheetSync) this.loadGoogleSheetName(pair);
     }
@@ -360,8 +450,6 @@ export class ImportWizardComponent extends BaseComponent {
             .subscribe((res) => {
                 if (pair !== this.pair() || !this.isResponseSucceed(res, false)) return;
                 this.googleSheetName = res.data.googleSheetName;
-                // Ghi đè từ Google: ô Tên sheet điền sẵn tên sheet đang gắn
-                this.mapping = { ...this.mapping, sheetName: this.mapping.sheetName || res.data.googleSheetName };
             });
     }
 }

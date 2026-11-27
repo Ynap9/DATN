@@ -15,12 +15,15 @@ import {
     IFindSubmissionFieldValue,
     IImportExcelOverwriteSubmission,
     IImportExcelSubmission,
+    IImportFieldMapping,
     IImportOverwriteSubmission,
-    IImportSubmission,
+    IImportSheetHeadersQuery,
+    IImportSheetSubmission,
     IImportSubmissionResult,
     ILatestWorkingSubmission,
     IListQaSubmission,
     IListSubmission,
+    IMatchImportFieldMapping,
     IProgressDailyStats,
     IQaEntryUserStats,
     IQaFieldStats,
@@ -28,6 +31,7 @@ import {
     IQaSubmissionDetail,
     IReviewQaResult,
     IReviewQaSubmission,
+    ISaveImportFieldMapping,
     ISubmissionCount,
     ISubmissionDetail,
     ISubmissionExportJob,
@@ -40,6 +44,7 @@ import {
     IUploadImportExcelResult,
     IVerifyImportResultMap,
 } from "@/models/submission.model";
+import { ISheetHeader } from "@/models/document-field.model";
 import { ImportKind, LatestWorkingType } from "@/shared/constants/submission.constants";
 import { IBaseResponsePaging, IBaseResponseWithData } from "@/shared/models/request-paging.base.models";
 import { apiUrl } from "@/shared/utils/api-url";
@@ -131,14 +136,29 @@ export class SubmissionService {
         return this.http.get<IBaseResponsePaging<IQaEntryUserStats>>(`${this.api}/qa-stats/entry-users`, { params: this.toParams(query) });
     }
 
-    // Chạy thử import từ Google Sheet của dự án, không ghi DB
-    verifyImport<K extends ImportKind>(kind: K, body: IImportSubmission | IImportOverwriteSubmission) {
+    // Chạy thử import từ link Google Sheet gửi lên, không ghi DB
+    verifyImport<K extends ImportKind>(kind: K, body: IImportSheetSubmission | IImportOverwriteSubmission) {
         return this.http.post<IBaseResponseWithData<IVerifyImportResultMap[K]>>(`${this.api}/import/${kind}/verify`, body);
     }
 
     // Import đồng bộ từ Google Sheet, có thể mất tới 1 phút
-    importSheet(kind: ImportKind, body: IImportSubmission | IImportOverwriteSubmission) {
+    importSheet(kind: ImportKind, body: IImportSheetSubmission | IImportOverwriteSubmission) {
         return this.http.post<IBaseResponseWithData<IImportSubmissionResult>>(`${this.api}/import/${kind}`, body);
+    }
+
+    // Tên sheet + header dòng 1 của link Google Sheet; Admin / Leader của dự án, thay document-field/sheet-header
+    getImportSheetHeaders(query: IImportSheetHeadersQuery) {
+        return this.http.get<IBaseResponseWithData<ISheetHeader[]>>(`${this.api}/import/sheet-headers`, { params: this.toParams(query) });
+    }
+
+    // Gợi ý cột sheet cho từng trường theo tên cột đang lưu, không ghi DB
+    matchImportFieldMapping(body: IMatchImportFieldMapping) {
+        return this.http.post<IBaseResponseWithData<IImportFieldMapping[]>>(`${this.api}/import/field-mapping/match`, body);
+    }
+
+    // Lưu cột đã ghép của MỌI trường cho dự án + loại văn bản
+    saveImportFieldMapping(body: ISaveImportFieldMapping) {
+        return this.http.put<IBaseResponseWithData<IImportFieldMapping[]>>(`${this.api}/import/field-mapping`, body);
     }
 
     // observe 'events' + reportProgress để hiện % đang tải lên
@@ -189,7 +209,7 @@ export class SubmissionService {
     }
 
     // Bỏ tham số trống nhưng giữ số 0: statusCheck = 0 / statusQa = 0 là lọc thật; mảng giữ nguyên để gửi lặp
-    private toParams(query: ISubmissionFilter | IFindStats | IExportSubmission | IExportSheetNamesQuery) {
+    private toParams(query: ISubmissionFilter | IFindStats | IExportSubmission | IExportSheetNamesQuery | IImportSheetHeadersQuery) {
         return Object.fromEntries(Object.entries(query).filter(([, value]) => value !== undefined && value !== null && value !== ''));
     }
 }
