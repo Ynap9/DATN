@@ -69,6 +69,5 @@ namespace sh.be.shared.Constants.Construction
         public const int BULK_TIMEOUT_SECONDS = 600;
         public const int PARALLEL_ROW_THRESHOLD = 5000;
         public const char KEY_SEPARATOR = '\u001F';
-        public static readonly IReadOnlyList<string> IMPORT_NO_DATA_TEXTS = ["null", "undefined"];
     }
 }

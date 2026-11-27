@@ -5,6 +5,7 @@
 Task 63A (2026-11-27, kèm [số trang](#số-trang-khi-import-thêm-mới) của Task 62) sửa [import hồ sơ](11-ho-so-import.md) cho giống 5sdb + soHoaSaoMai: đọc **đúng link người dùng dán**, lưu cách ghép
 trường ↔ cột sheet theo dự án + loại văn bản, mọi import đều phải ghép đủ trường, số chạy thử đếm đúng số ô có dữ liệu sẽ ghi. Không migration,
 không key quyền mới, không mã lỗi mới; 3 API mới và body import đổi (FE cũ gọi append / blank Google sẽ nhận `400` tới khi Task 63 FE xong).
+Task 67 (2026-11-27, sau rà import) sửa tiếp: chữ "null" / "undefined" là dữ liệu, ô chỉ có ký tự vô hình là trống, ghi đè đọc đúng cột đã ghép, import đọc lại ghép sau khoá; không đổi API, DB, mã lỗi.
 
 ## Đọc link gửi lên
 
@@ -14,8 +15,8 @@ không key quyền mới, không mã lỗi mới; 3 API mới và body import đ
 - `url` trống → `400` "Chưa nhập link Google Sheet"; `sheetName` trống → `400` "Chưa chọn sheet" (kiểm trước khi đọc). Link không đọc được →
   `202` / `203` / `204` như trước.
 - **Chặn Sheet đồng bộ của dự án khác → `202`** "Google Sheet đang là Sheet đồng bộ của dự án khác, không dùng để nhập" (ở 3 kiểu + `sheet-headers`):
-  nếu không, Leader dự án này đọc và nhập được dữ liệu dự án khác qua tài khoản dịch vụ. Ngoài spec; Sheet của chính dự án không bị chặn.
-  Kiểm chạy tuần tự ngay sau `337`, **trước** lúc đọc sheet song song với query cấu hình (kết nối DB tắt MARS, hai query không chạy cùng lúc).
+  Người dùng chốt 27/11: chặn Sheet đồng bộ của dự án khác (dự án chưa xoá) → `202`, để Leader dự án này không đọc dữ liệu dự án khác qua tài khoản dịch vụ; Sheet của chính dự án không bị chặn.
+  Kiểm chạy tuần tự ngay sau `337`, **trước** lúc đọc sheet (kết nối DB tắt MARS, hai query không chạy cùng lúc).
 - Audit 3 kiểu ghi `SheetUrl`, `SheetName` (append / blank: trong `NewValues`) và mô tả " từ Google Sheet {tên sheet}" (overwrite trước đây ghi null).
 - Append: message "Dữ liệu thêm mới" = số ô **có dữ liệu** (`NonEmptyCellCount`), không còn kèm số dòng ghi DB; audit giữ `NewDataCount` và thêm `NonEmptyCellCount`.
 
@@ -52,12 +53,19 @@ Cùng quyền `Function.Construction.Submission.Import` + Admin / Leader của d
 
 ## Ghép đủ trường và đếm chạy thử
 
-- **Mọi import** (3 kiểu, Google + Excel, chạy thử + job) kiểm trong `LoadProjectSheetAsync` / `LoadOverwriteSheetAsync`: mọi trường của cặp phải có `FieldImport` khác rỗng và
+- **Mọi import** (3 kiểu, Google + Excel, chạy thử + job) kiểm trong `ResolveImportMappingAsync` (gọi từ `LoadProjectSheetAsync` / `LoadOverwriteSheetAsync`): mọi trường của cặp phải có `FieldImport` khác rỗng và
   tìm được cột trên sheet; thiếu → `307` "Chưa ghép đủ cột cho trường: {tên}, …. Hãy ghép ở bước Ghép trường." (trước đây trường thiếu cột bị bỏ qua êm). Cặp không có trường
   nào → `400` "Loại văn bản chưa có trường nào". Overwrite cũng chạy `309` và kiểm này (trước chỉ kiểm cột ghi đè).
-- **Ô không có dữ liệu** (`SubmissionImportDomainService.NormalizeImportValue`, một hàm duy nhất): Trim; rỗng, "null", "undefined" (không phân biệt hoa thường) → `""`. Mọi chỗ đọc ô
-  (trường, Tên file, Link, Hộp, Hồ sơ) qua `GetImportCell`. Dòng có tên file "null" bị bỏ như dòng trống; link "null" → `314`. Ô rỗng vẫn lưu `Data = ""` (giữ dòng cho blank
-  điền sau), không bao giờ lưu chữ "null". `SubmissionData.FillIfBlank` / `Overwrite` dùng cùng luật: ô DB đang "null" / "undefined" là trống.
+- **Ô không có dữ liệu** (`SubmissionImportDomainService.NormalizeImportValue`, một hàm duy nhất, Task 67): bỏ ở hai đầu mọi ký tự `char.IsWhiteSpace` (kể cả NBSP) và U+200B / U+FEFF
+  (`string.Trim` của .NET không bỏ hai ký tự này); còn rỗng → `""`; ký tự nằm giữa chữ giữ nguyên. **Không so chữ nào**: "null", "NULL", "undefined" người dùng gõ là dữ liệu thật (chốt 27/11),
+  lưu nguyên văn, vẫn đếm và tính tiền. Mọi chỗ đọc ô (trường, Tên file, Link, Hộp, Hồ sơ, Số trang) qua `GetImportCell`; ô rỗng vẫn lưu `Data = ""` (giữ dòng cho blank điền sau).
+  `SubmissionData.FillIfBlank` / `Overwrite` dùng cùng luật: ô DB đang "null" là có dữ liệu nên blank không điền, ô sheet "null" điền / ghi đè như chữ thường, ô chỉ U+200B không ghi đè.
+  Tên file "null" là tên thật (tạo văn bản tên "null"), tên file chỉ U+200B bị bỏ như dòng trống; link "null" đi kiểm link như mọi chữ khác; ô Số trang "null" vẫn là ô sai → `PageCount = null`.
+- **Ghi đè lấy cột theo ghép** (Task 67): cột đọc dữ liệu là cột đã ghép của chính trường `documentFieldId` (`ResolveOverwriteColumn`), không dò lại theo tên, nên sheet có 2 cột "Ghi chu" ghép
+  cho 2 trường vẫn đọc đúng cột của từng trường. `columnImport` giữ trong body để kiểm: trống → `307` "Chưa nhập tên cột dữ liệu"; không khớp header của cột đã ghép → `307`
+  "Cột ghi đè {x} không phải cột đã ghép của trường {tên}. Hãy ghép ở bước Ghép trường." (không âm thầm đọc cột khác với cột người dùng chọn).
+- **Đọc lại ghép sau khoá** (Task 67): import thật (3 kiểu, Google + job Excel) gọi lại `ResolveImportMappingAsync` trong `ImportInTransactionAsync` sau `LockImportAsync`, trên cùng bảng sheet đã đọc
+  (không đọc lại sheet), nên lưu ghép xong giữa lúc import chờ khoá thì import dùng ghép mới. Chạy thử không khoá nên giữ lần đọc lúc load.
 - **Số chạy thử = số import ghi** (cùng kế hoạch, chỉ đếm ô có dữ liệu — số này dùng để tính tiền): append = ô trường đã ghép có giá trị ở hồ sơ sẽ tạo; blank = ô sheet có dữ liệu
   sẽ điền vào trường đang trống **hoặc chưa có dòng `SubmissionData`** (5sdb quên trường hợp sau); overwrite = ô có giá trị **khác** giá trị đang có (5sdb đếm cả ô bằng giá trị cũ).
 
@@ -69,17 +77,17 @@ Task 62 (2026-11-27): số trang chỉ lấy từ cột "Số trang" trong sheet
 - Đọc ô (`SubmissionImportColumns.GetPageCount`): chỉ nhận toàn chữ số hoặc dấu nghìn đúng nhóm 3 chữ số (`1.234`, `1,234`); `12,5` / `12.5` là số lẻ nên sai. Kết quả phải từ 1 đến `PAGE_COUNT_MAX` (100000). Ô trống hoặc sai → `null`, hồ sơ vẫn tạo, **không** báo lỗi.
 - Hồ sơ đã có (trùng khoá) bị bỏ qua như cũ nên không đổi số trang. Verify trả thêm `totalPageCount` (0 khi không ghép cột); message import nối ", Có số trang: N văn bản" khi N > 0; audit append thêm `PageCountCount`.
 - Danh sách dự án có `totalPages` ([25](25-xoa-du-an-danh-sach-cap.md)). Để sau: xuất Excel / Google Sheet chưa có cột Số trang; Task 22B (OCR) và màn tải PDF sẽ ghi số trang thật qua `SetPageCount`.
-- Đã kiểm 2026-11-27, API thật trên DB dev (`ZZTEST62`, Sheet qua API dự án, đã dọn): 13/13 đạt. 14 dòng mẫu (`1234`, `1.234`, `1,234`, `5`, `100000` nhận; `abc`, `0`, `-3`, `12,5`, `12,5 trang`, `100001`, `12.5`, `null`, ô trống → null); tên cột sai `307`; import lại với số khác giữ số cũ; blank / overwrite không đổi; `totalPages` Admin 103.707, Data chỉ văn bản được giao, xoá mềm không cộng; 5.000 dòng import 7,5 s (có cột) / 7,6 s (không cột), verify 2,2–3,1 s mỗi kiểu. ⚠️ Chưa kiểm import Excel (MinIO đầy, `209`) và 100.000 dòng (đo 5.000 để khỏi ghi nặng DB dùng chung).
+- Đã kiểm 2026-11-27, API thật trên DB dev (`ZZTEST62`, Sheet qua API dự án, đã dọn): 13/13 đạt. 14 dòng mẫu (`1234`, `1.234`, `1,234`, `5`, `100000` nhận; `abc`, `0`, `-3`, `12,5`, `12,5 trang`, `100001`, `12.5`, `null`, ô trống → null); tên cột sai `307`; import lại với số khác giữ số cũ; blank / overwrite không đổi; `totalPages` Admin 103.707, Data chỉ văn bản được giao, xoá mềm không cộng; 5.000 dòng import 7,5 s (có cột) / 7,6 s (không cột), verify 2,2–3,1 s mỗi kiểu. Chưa kiểm import Excel (MinIO đầy, `209`) và 100.000 dòng (đo 5.000 để khỏi ghi nặng DB dùng chung).
 
 ## Khác 5sdb
 
 | | 5sdb | ĐATN |
 |---|---|---|
 | Append / blank đọc | `project.UrlGoogleSheetSync` dù FE dán link khác | Đúng link người dùng gửi, cả 3 kiểu |
-| Ô "null" / "undefined" | Đếm là có dữ liệu | Coi là trống |
+| Ô "null" / "undefined" | Đếm là có dữ liệu | Là dữ liệu (chốt 27/11) |
 | So header | Đúng chữ | Khớp lỏng, thử tên cột đã lưu rồi tên trường |
 | "Bắt đầu đọc từ cột" | BE dùng làm dòng tiêu đề, chỉ ở bước ghép | Đúng nghĩa cột, áp ở ghép, chạy thử và import |
-| Ghi đè | FE không gửi cột Tên file / Hồ sơ / Hộp nên BE không tìm được văn bản | Vẫn bắt chọn Tên file |
+| Ghi đè | FE không gửi cột Tên file / Hồ sơ / Hộp nên BE không tìm được văn bản | Vẫn bắt chọn Tên file; cột đọc lấy theo cột đã ghép của trường (Task 67) |
 
 Giữ khác chủ đích: Hộp / Hồ sơ / Link (khi bổ sung) không bắt buộc; có thêm nguồn Excel.
 
@@ -91,7 +99,12 @@ trống, trường chưa có dòng được thêm); overwrite = 1; audit 3 kiể
 `match` (gộp khoảng trắng, hai trường cùng tên cột, thử tên trường); lưu ghép (audit đúng 2 dòng, gửi lại không audit, `311`, trùng, thiếu, cùng cột, `309`, hai cột "Ghi chu" import đúng F→trường 1, H→trường 2);
 `307` thiếu cột ở 3 kiểu; `startColumn` (bỏ cột trước, `309` biến mất, `307` cột cố định, `400` hai đầu, `match` / lưu ghép).
 
-Lưu ý: **Chưa kiểm:** import Excel (MinIO dùng chung đầy ổ, `209`; Excel dùng chung `Load*SheetAsync` nên cùng luật), lưu ghép lúc import cùng cặp đang chạy (chờ khoá), thiếu quyền Leader dự án khác (`337`).
+Task 67, 2026-11-27, API thật trên DB dev (`ZZTEST67`, Sheet qua API dự án, đã dọn, file Sheet đã xoá khỏi Drive) — **14/14 đạt**: 9 giá trị (`abc`, rỗng, 2 dấu cách, NBSP, U+200B, U+FEFF, `null`, `undefined`, ` NULL `)
+đếm đúng 4 ô, DB lưu `null` / `undefined` / `NULL` nguyên văn; `a<U+200B>b` giữ nguyên; tên file `null` tạo văn bản, tên file chỉ U+200B bỏ dòng; blank = 3, overwrite = 1, số chạy thử bằng số ghi ở cả 3 kiểu;
+sheet có 2 cột "Ghi chu" (F, H): ghi đè trường B đọc cột H, trường A đọc cột F; `columnImport` khác cột đã ghép / trống → `307` đúng câu, DB không đổi; giữ khoá bằng phiên SQL, đổi cột ghép của 1 trường
+rồi nhả khoá → import chờ 8 giây và dùng ghép mới, lưu ghép khi cặp đang bị giữ khoá thì chờ (4,9 giây) rồi lưu; Sheet của dự án khác `202`, Sheet của chính dự án vẫn được.
+
+Lưu ý: **Chưa kiểm:** import Excel (MinIO dùng chung đầy ổ, `209`; Excel dùng chung `Load*SheetAsync` / `ResolveImportMappingAsync` nên cùng luật), thiếu quyền Leader dự án khác (`337`).
 Lưu ý: Chạy thử Excel / Google bằng body cũ (thiếu `startColumn`) vẫn đúng vì mặc định 1; `PUT field-mapping` không gửi `headers` bị `400` "Sheet chỉ có 0 cột".
 Lưu ý: `GET sheet-headers` với `url` rỗng bị model binding chặn `400` (HTTP) trước khi tới kiểm của service; kiểm `400` "Chưa nhập link Google Sheet" chỉ chạy với body POST.
 

@@ -1007,7 +1007,11 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             var now = GetVietnamTime();
             var plan = await ImportInTransactionAsync(dto, nameof(ImportAppendAsync),
-                () => BuildAppendPlanAsync(dto, source, userId, now),
+                async () =>
+                {
+                    var resolvedMapping = await ResolveImportMappingAsync(dto, source.Table, null, null);
+                    return await BuildAppendPlanAsync(dto, source with { MappedColumns = resolvedMapping.MappedColumns }, userId, now);
+                },
                 async appendPlan =>
                 {
                     if (!appendPlan.HasChanges)
@@ -1047,7 +1051,11 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             var now = GetVietnamTime();
             var plan = await ImportInTransactionAsync(dto, nameof(ImportBlankAsync),
-                () => BuildBlankPlanAsync(dto, source, userId, now),
+                async () =>
+                {
+                    var resolvedMapping = await ResolveImportMappingAsync(dto, source.Table, null, null);
+                    return await BuildBlankPlanAsync(dto, source with { MappedColumns = resolvedMapping.MappedColumns }, userId, now);
+                },
                 async blankPlan =>
                 {
                     if (!blankPlan.HasChanges)
@@ -1085,7 +1093,12 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             var now = GetVietnamTime();
             var plan = await ImportInTransactionAsync(dto, nameof(ImportOverwriteAsync),
-                () => BuildOverwritePlanAsync(dto, source, userId, now),
+                async () =>
+                {
+                    var resolvedMapping = await ResolveImportMappingAsync(dto, source.Table, dto.DocumentFieldId, dto.ColumnImport);
+                    return await BuildOverwritePlanAsync(dto,
+                        source with { Mapping = resolvedMapping.OverwriteMapping!, ColumnImportIndex = resolvedMapping.OverwriteColumnIndex!.Value }, userId, now);
+                },
                 async overwritePlan =>
                 {
                     if (!overwritePlan.HasChanges)
@@ -1152,17 +1165,13 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             var project = await _submissionDomainService.EnsureImportableProjectAsync(dto.ProjectId);
             await _submissionDomainService.EnsureDocumentTypeInProjectAsync(dto.ProjectId, dto.DocumentTypeId);
-            var tableTask = readTableAsync(project);
-            var mappings = await _submissionDomainService.GetImportMappingsAsync(dto.ProjectId, dto.DocumentTypeId);
-            var table = await tableTask;
+            var table = await readTableAsync(project);
             SubmissionImportDomainService.EnsureHasData(table);
             table = table with { Headers = SubmissionImportDomainService.ApplyStartColumn(table.Headers, dto.StartColumn) };
 
             var columns = ResolveSheetColumns(table, dto, fileUrlColumn, pageCountColumn);
-            var mappedColumns = SubmissionImportDomainService.ResolveMappedColumns(table.Headers, mappings);
-            var fields = await _submissionDomainService.GetDocumentFieldsAsync(dto.DocumentTypeId);
-            SubmissionImportDomainService.EnsureAllFieldsMapped(fields, mappings, mappedColumns);
-            return new ProjectSheetSource(project, table, columns, mappedColumns);
+            var resolvedMapping = await ResolveImportMappingAsync(dto, table, null, null);
+            return new ProjectSheetSource(project, table, columns, resolvedMapping.MappedColumns);
         }
 
         private async Task<OverwriteSheetSource> LoadOverwriteSheetAsync<TDto>(TDto dto, Task<SheetTable> tableTask)
@@ -1170,18 +1179,35 @@ namespace sh.be.applications.Module.Construction.Implements
         {
             var project = await _submissionDomainService.EnsureImportableProjectAsync(dto.ProjectId);
             await _submissionDomainService.EnsureDocumentTypeInProjectAsync(dto.ProjectId, dto.DocumentTypeId);
-            var mapping = await _submissionDomainService.EnsureDocumentFieldInProjectAsync(dto.ProjectId, dto.DocumentTypeId, dto.DocumentFieldId);
-            var mappings = await _submissionDomainService.GetImportMappingsAsync(dto.ProjectId, dto.DocumentTypeId);
+            await _submissionDomainService.EnsureDocumentFieldInProjectAsync(dto.ProjectId, dto.DocumentTypeId, dto.DocumentFieldId);
             var table = await tableTask;
             SubmissionImportDomainService.EnsureHasData(table);
             table = table with { Headers = SubmissionImportDomainService.ApplyStartColumn(table.Headers, dto.StartColumn) };
 
             var columns = ResolveSheetColumns(table, dto, null, null);
-            var columnImportIndex = SubmissionImportDomainService.ResolveSingleColumn(table.Headers, dto.ColumnImport);
+            var resolvedMapping = await ResolveImportMappingAsync(dto, table, dto.DocumentFieldId, dto.ColumnImport);
+            return new OverwriteSheetSource(project, table, columns, resolvedMapping.OverwriteMapping!, resolvedMapping.OverwriteColumnIndex!.Value);
+        }
+
+        // Đọc cấu hình ghép hiện tại của cặp, dựng cột đã ghép trên bảng sheet và kiểm ghép đủ trường; ghi đè kèm cột ghi đè + dòng ghép của trường.
+        // Gọi lúc load (chạy thử, báo lỗi sớm) và gọi lại sau LockImportAsync để import dùng đúng ghép vừa lưu
+        private async Task<ResolvedImportMapping> ResolveImportMappingAsync(ImportSubmissionDto dto, SheetTable table, int? overwriteDocumentFieldId,
+            string? overwriteColumnImport)
+        {
+            var mappings = await _submissionDomainService.GetImportMappingsAsync(dto.ProjectId, dto.DocumentTypeId);
             var mappedColumns = SubmissionImportDomainService.ResolveMappedColumns(table.Headers, mappings);
             var fields = await _submissionDomainService.GetDocumentFieldsAsync(dto.DocumentTypeId);
             SubmissionImportDomainService.EnsureAllFieldsMapped(fields, mappings, mappedColumns);
-            return new OverwriteSheetSource(project, table, columns, mapping, columnImportIndex);
+            if (!overwriteDocumentFieldId.HasValue)
+            {
+                return new ResolvedImportMapping(mappedColumns, null, null);
+            }
+
+            var overwriteMapping = mappings.FirstOrDefault(mapping => mapping.DocumentFieldId == overwriteDocumentFieldId.Value)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorDocumentFieldNotInProject);
+            var overwriteColumnIndex = SubmissionImportDomainService.ResolveOverwriteColumn(table.Headers, mappedColumns, fields,
+                overwriteDocumentFieldId.Value, overwriteColumnImport ?? String.Empty);
+            return new ResolvedImportMapping(mappedColumns, overwriteMapping, overwriteColumnIndex);
         }
 
         // Kiểm link import trước khi đọc, chạy tuần tự (không lẫn với query song song): thiếu link → 400, Sheet của dự án khác → 202
@@ -1328,6 +1354,8 @@ namespace sh.be.applications.Module.Construction.Implements
 
         private record OverwriteSheetSource(Project Project, SheetTable Table, SubmissionImportColumns Columns, ProjectDocumentTypeDocumentField Mapping,
             int ColumnImportIndex);
+
+        private record ResolvedImportMapping(List<MappedImportColumn> MappedColumns, ProjectDocumentTypeDocumentField? OverwriteMapping, int? OverwriteColumnIndex);
 
         private record ImportAuditSource(string Description, string? SheetUrl, string? SheetName);
     }

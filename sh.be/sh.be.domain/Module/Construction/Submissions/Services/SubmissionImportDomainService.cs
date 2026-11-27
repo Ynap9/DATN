@@ -204,14 +204,23 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
                 pageCountColumnIndex);
         }
 
-        public static int ResolveSingleColumn(IReadOnlyList<string> headers, string columnName)
+        // Cột ghi đè là cột đã ghép của chính trường đó (không dò lại theo tên, nên tên cột trùng vẫn đọc đúng cột); tên cột gửi lên phải khớp header của cột ấy
+        public static int ResolveOverwriteColumn(IReadOnlyList<string> headers, List<MappedImportColumn> mappedColumns, List<DocumentField> fields,
+            int documentFieldId, string columnImport)
         {
-            EnsureColumnNameEntered(columnName, "dữ liệu");
+            EnsureColumnNameEntered(columnImport, "dữ liệu");
 
-            var missingColumns = new List<string>();
-            var columnIndex = FindColumn(headers, columnName, missingColumns);
-            EnsureNoMissingColumns(missingColumns);
-            return columnIndex!.Value;
+            var fieldName = fields.FirstOrDefault(field => field.Id == documentFieldId)?.Name ?? documentFieldId.ToString();
+            var mappedColumn = mappedColumns.FirstOrDefault(column => column.DocumentFieldId == documentFieldId)
+                ?? throw new UserFriendlyException(ErrorCodes.ConstructionErrorImportColumnNotFound,
+                    $"Chưa ghép cột cho trường {fieldName}. Hãy ghép ở bước Ghép trường.");
+            if (!DocumentFieldDomainService.IsFieldImportMatch(columnImport, headers[mappedColumn.ColumnIndex]))
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorImportColumnNotFound,
+                    $"Cột ghi đè {columnImport.Trim()} không phải cột đã ghép của trường {fieldName}. Hãy ghép ở bước Ghép trường.");
+            }
+
+            return mappedColumn.ColumnIndex;
         }
 
         public static List<MappedImportColumn> ResolveMappedColumns(IReadOnlyList<string> headers,
@@ -255,11 +264,30 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
             return mappedColumns;
         }
 
-        // Ô chỉ có khoảng trắng, "null" hoặc "undefined" (không phân biệt hoa thường) là không có dữ liệu; mọi chỗ đọc ô import đều qua đây
+        // Bỏ ở 2 đầu khoảng trắng và ký tự vô hình U+200B / U+FEFF (string.Trim không bỏ 2 ký tự này); chữ "null" / "undefined" là dữ liệu thật; mọi chỗ đọc ô import đều qua đây
         public static string NormalizeImportValue(string value)
         {
-            var trimmedValue = value.Trim();
-            return SubmissionConst.IMPORT_NO_DATA_TEXTS.Contains(trimmedValue, StringComparer.OrdinalIgnoreCase) ? String.Empty : trimmedValue;
+            if (String.IsNullOrEmpty(value))
+            {
+                return String.Empty;
+            }
+
+            var start = 0;
+            var end = value.Length;
+            while (start < end && IsBlankImportChar(value[start]))
+            {
+                start++;
+            }
+            while (end > start && IsBlankImportChar(value[end - 1]))
+            {
+                end--;
+            }
+            return value[start..end];
+        }
+
+        private static bool IsBlankImportChar(char character)
+        {
+            return char.IsWhiteSpace(character) || character == '​' || character == '﻿';
         }
 
         public static string GetImportCell(SheetRow row, int columnIndex)

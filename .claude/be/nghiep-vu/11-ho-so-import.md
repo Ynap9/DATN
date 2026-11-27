@@ -30,7 +30,7 @@ Body chung (`ImportSubmissionDto`): `projectId`, `documentTypeId`, `fileColumnIm
 
 - Khoá = `FileName + ProfileRange (Hồ sơ) + Box (Hộp)` trong cùng dự án + loại văn bản; so bằng `SubmissionImportDomainService.BuildSubmissionKey`
   (trim, **không phân biệt hoa thường**) ở mọi nơi. DB lưu giá trị đã trim, giữ nguyên hoa thường; unique index có filter chặn trùng ở DB.
-- Dòng `1` là header; mọi ô đã trim. Dòng có tên file rỗng bị bỏ qua ở mọi API. `IndexGoogleSheet` (ví dụ `G5`) dùng **số dòng thật**.
+- Dòng `1` là header; mọi ô bỏ khoảng trắng và ký tự vô hình U+200B / U+FEFF ở hai đầu (chữ "null" / "undefined" là dữ liệu, [30](30-import-ghep-truong.md)). Dòng có tên file rỗng bị bỏ qua ở mọi API. `IndexGoogleSheet` (ví dụ `G5`) dùng **số dòng thật**.
 - Tên cột so bằng `DocumentFieldDomainService.IsFieldImportMatch` (giống API `map-field-import`): không phân biệt hoa thường, gộp khoảng trắng.
 - Hồ sơ đã xoá mềm (xem [14-ho-so-xoa-xuat.md](14-ho-so-xoa-xuat.md)) không tính vào khoá: import lại cùng khoá sẽ tạo hồ sơ mới.
 - Cột trường lấy theo cấu hình `ProjectDocumentTypeDocumentField` của dự án + loại văn bản: bỏ `FieldImport` rỗng, xếp theo
@@ -48,7 +48,7 @@ Body chung (`ImportSubmissionDto`): `projectId`, `documentTypeId`, `fileColumnIm
 | Loại văn bản không tồn tại / chưa gắn vào dự án | `301` / `312` |
 | Link sheet sai / không đọc được (chưa share cho service account) / không có sheet | `202` / `203` / `204` |
 | Sheet không có dòng dữ liệu | `306` |
-| Chưa nhập tên cột tên file, hoặc cột nhập vào không có trên header (liệt kê tên cột) | `307` |
+| Chưa nhập tên cột tên file / `columnImport` (ghi đè), cột nhập vào không có trên header (liệt kê tên cột), hoặc `columnImport` không phải cột đã ghép của trường | `307` |
 | Hai dòng trùng khoá — liệt kê `Tên file, Hộp, Hồ sơ ... xuất hiện n lần (dòng r1, r2)` | `308` |
 | Header X có N cột nhưng chỉ M < N cấu hình trỏ tới X (header không ai cấu hình thì bỏ qua) | `309` |
 | Append: chưa nhập cột link / dòng có tên file mà link rỗng (liệt kê số dòng) | `307` / `314` |
@@ -60,7 +60,7 @@ Body chung (`ImportSubmissionDto`): `projectId`, `documentTypeId`, `fileColumnIm
 |---|---|---|---|
 | Append | `url` + `sheetName` trong body | Tạo hồ sơ có khoá **chưa** có + `SubmissionData` cho **mọi** trường đã map (ô rỗng vẫn tạo, để blank điền sau). Hồ sơ đã có: bỏ qua | `Import thêm mới hồ sơ từ Google Sheet`, `Create` |
 | Blank | Như append | Hồ sơ **đã có**, ô sheet khác rỗng: data đang rỗng thì điền (`FillIfBlank`); chưa có data cho trường đó thì thêm. Không tạo hồ sơ, không ghi đè ô có dữ liệu; điền cả hồ sơ đã kiểm tra | `Import bổ sung dữ liệu trống từ Google Sheet`, `Update` |
-| Overwrite | `url` + `sheetName` trong body | Cột `columnImport` ghi đè trường `documentFieldId` của hồ sơ đã có. Ô rỗng: bỏ qua (không xoá). Giá trị giống cũ: không tính. Hồ sơ `CHECKED` bị bỏ qua khi `overwriteChecked = false`; hồ sơ trả lại (`RETURNED`) vẫn bị ghi đè | `Import ghi đè trường dữ liệu từ Google Sheet`, `Update`, `OldData` / `NewData` = danh sách `SubmissionId, FileName, DocumentFieldId, Data` |
+| Overwrite | `url` + `sheetName` trong body | Cột đã ghép của trường `documentFieldId` (`columnImport` phải khớp header cột ấy, tên cột trùng vẫn đọc đúng cột) ghi đè trường đó của hồ sơ đã có. Ô rỗng: bỏ qua (không xoá). Giá trị giống cũ: không tính. Hồ sơ `CHECKED` bị bỏ qua khi `overwriteChecked = false`; hồ sơ trả lại (`RETURNED`) vẫn bị ghi đè | `Import ghi đè trường dữ liệu từ Google Sheet`, `Update`, `OldData` / `NewData` = danh sách `SubmissionId, FileName, DocumentFieldId, Data` |
 
 Append tạo hồ sơ với `Name = FileName`, `StatusCheck = 0`, **một** link gán cho cả `FileUrlS3Object`, `FileUrlGoogleDrive`,
 `FileUrlGstore` (hiện link là S3/MinIO; Google Drive / Gstore làm sau). Có `pageCountColumn` thì hồ sơ mới nhận `PageCount` từ ô đó ([30](30-import-ghep-truong.md#số-trang-khi-import-thêm-mới)).
@@ -71,10 +71,10 @@ overwrite `{ totalOverWriteCount, totalSkippedChecked }`. Kết quả import: `{
 
 ## Ghi dữ liệu — một transaction
 
-1. Ngoài transaction: kiểm như bảng trên; đọc sheet **song song** với query cấu hình (append/blank đọc sheet sau khi có dự án).
+1. Ngoài transaction: kiểm như bảng trên; đọc sheet rồi đọc cấu hình ghép (`ResolveImportMappingAsync`).
 2. Mở transaction → khoá dòng `ProjectDocumentType (ProjectId, DocumentTypeId)` bằng `UPDLOCK, HOLDLOCK`, chờ tối đa 5 giây
    (`SubmissionConst.IMPORT_LOCK_TIMEOUT_MILLISECONDS`); hết giờ → `310`. Import khác dự án / loại văn bản không chặn nhau.
-3. Đọc lại hồ sơ / dữ liệu **sau khi khoá** → dựng kế hoạch (sheet ≥ 5.000 dòng thì chạy song song, kết quả giống tuần tự).
+3. Đọc lại hồ sơ / dữ liệu **và cấu hình ghép sau khi khoá** (Task 67, không đọc lại sheet) → dựng kế hoạch (sheet ≥ 5.000 dòng thì chạy song song, kết quả giống tuần tự).
 4. Có thay đổi: bulk insert / update (`EFCore.BulkExtensions`, lô 100.000) + audit → `SaveChanges` → commit. Không có gì: commit
    rỗng, **không** ghi audit. Lỗi bất kỳ → rollback toàn bộ. Vi phạm unique index (import song song lọt khoá) → `310`.
 

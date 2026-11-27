@@ -38,7 +38,7 @@
 | [27-ai-prompt.md](27-ai-prompt.md) | Prompt OCR theo metadata (Ai): prompt chung + từng trường OCR, nháp → xuất bản → lưu trữ, khôi phục thành nháp mới, cảnh báo trường lệch, khuôn ghép prompt, 7 API, lỗi `908`–`913` |
 | [28-van-ban-dang-lam.md](28-van-ban-dang-lam.md) | Hồ sơ (Task 42A): văn bản người gọi lưu / chấm QA gần nhất còn mở được (`latest-working`), lọc trường trống `isEmpty1` / `isEmpty2` cho 11 API bộ lọc chung |
 | [29-xuat-google-sheet.md](29-xuat-google-sheet.md) | Hồ sơ (Task 56A): xuất bảng hồ sơ vào tab có sẵn của Google Sheet bằng Gmail đã kết nối, chạy nền Hangfire như xuất Excel, chặn Sheet đồng bộ của dự án |
-| [30-import-ghep-truong.md](30-import-ghep-truong.md) | Import (Task 63A): đọc đúng link Sheet gửi lên (chặn Sheet dự án khác), 3 API `sheet-headers` / `field-mapping/match` / lưu ghép trường theo dự án + loại, bắt buộc ghép đủ, `startColumn`, ô "null" / "undefined" là trống, đếm chạy thử đúng số ghi |
+| [30-import-ghep-truong.md](30-import-ghep-truong.md) | Import (Task 63A): đọc đúng link Sheet gửi lên (chặn Sheet dự án khác), 3 API `sheet-headers` / `field-mapping/match` / lưu ghép trường theo dự án + loại, bắt buộc ghép đủ, `startColumn`, chữ "null" / "undefined" là dữ liệu, ghi đè đọc đúng cột đã ghép, đọc lại ghép sau khoá, đếm chạy thử đúng số ghi |
 
 ## Thuật ngữ
 

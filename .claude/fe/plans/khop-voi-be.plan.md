@@ -51,7 +51,7 @@ Nghiên cứu, ghi từ Task 38 (2026-11-19, danh sách dự án V2). FE đã ch
 
 | Việc | BE cần làm | FE đang hiện |
 |---|---|---|
-| Số trang | ✅ Đã có (Task 62): `Submission.PageCount` lấy từ cột Số trang khi import Thêm mới, paging trả `totalPages` | Cột "Số trang" hiện số; văn bản cũ cộng 0 |
+| Số trang | Đã có (xong, Task 62): `Submission.PageCount` lấy từ cột Số trang khi import Thêm mới, paging trả `totalPages` | Cột "Số trang" hiện số; văn bản cũ cộng 0 |
 | Đã OCR / Chưa OCR | Chờ module AI ghi kết quả OCR theo văn bản; paging trả `ocrDoneCount` / `ocrPendingCount` | Hai cột = "—", không lên thẻ |
 | Số đếm trên tab trạng thái | API đếm theo `status` (1 câu `GROUP BY`), cùng phạm vi xem với paging | Tab không có số |
 | Sort dữ liệu theo cột | Paging nhận tham số sort | "Sắp xếp" chỉ là thứ tự cột trong dialog bánh răng |
