@@ -1,12 +1,12 @@
 # Thi công Task 66 — dựng gói TT05 (Bước 0)
 
-> Trạng thái: chờ PM duyệt (viết 2026-11-28, chưa code). Tách từ [dong-goi-tt05.plan.md](dong-goi-tt05.plan.md). Phần dưới bổ sung
+> Trạng thái: **đã duyệt 28/11** (viết 2026-11-28, chưa code; chốt ở mục "PM chốt 28/11"). Tách từ [dong-goi-tt05.plan.md](dong-goi-tt05.plan.md). Phần dưới bổ sung
 > metsHdr / dmdSec / fileSec cho AIP + DIP mà [11](../dong-goi/11-premis-amdsec-structmap.md) chưa rà. Nguồn: `tr.N` = trang thông tư,
 > `GM` = gói mẫu, `C13` = khuôn gói mẫu áp cho 5 loại. Đã đọc lại tr.37–62, 114–133, 296–313 và 2 METS của `goi-mau/`.
 
 ## Input
 
-- Task 65 xong: phiên, gói (`MatchReport`, `RowIndex`, `DocKey`), file (`ObjectKey`, `Sha256`, `MimeType`); cột build đã có (không migration).
+- Task 65 xong: phiên, gói (`MatchReport`, `RowIndex`, `DocKey`), file (`ObjectKey`, `Sha256`, `MimeType`); cột build đã có; thêm 1 migration 2 cột cơ quan lưu trữ (P3).
 - Luật C5–C14, D1–D12 của plan gốc; bảng 10 §2; amdSec / structMap / PREMIS theo 11 §1–4 (đối chiếu lại trang gốc: không thấy lệch).
 
 ## Thẻ `mets` (gốc + rep1)
@@ -51,13 +51,23 @@
 | `file` | `ID="ID-{UUID HOA}"`, `SIZE`, `CREATED`, `CHECKSUM`, `CHECKSUMTYPE`; `FLocat xlink:type="simple" LOCTYPE="URL"` | tr.46, 60; GM |
 | không liệt | `EAD*.xml`, `PREMIS*.xml` (chỉ qua `dmdSec` / `amdSec`) | GM (EAD_* không trong fileSec) |
 
-## Người dùng đã chọn 28/11 (PM xác nhận khi duyệt)
+## PM chốt 28/11
 
 - P1. Agent rep1 DIP = `DISSEMINATOR` + `requestID` (nguồn tr.311), không theo khuôn GM `CREATOR`.
 - P2. `LABEL` gốc DIP = `""` (tr.297 không bắt buộc, cấp gói DIP không có `title`; giữ khuôn luôn có `LABEL` như GM).
-- P3. Mã cơ quan lưu trữ nhập lúc tạo gói: `POST build {fondsCode, archiveCode?, archiveName?}` — nhập đủ cả hai thì phát agent
-  `ARCHIVIST`, chỉ một trong hai → lỗi; mỗi cái ≤ 100 ký tự. Không thêm cột (task cấm migration): hai giá trị đi qua tham số job,
-  dựng lại phải nhập lại.
+- P3 (đổi so với bản Ánh viết: **lưu DB**). `POST build {fondsCode, archiveCode?, archiveName?}`; nhập đủ cả hai thì phát agent
+  `ARCHIVIST`, chỉ một trong hai → `713`; mỗi cái ≤ 100 ký tự, trim, chuỗi trắng coi như không nhập.
+  - Thêm 2 cột null vào `PackageSession`: `ArchiveCode` nvarchar(100), `ArchiveName` nvarchar(100). Migration riêng
+    `Packaging/Add_PackageSession_Archive` chỉ thêm 2 cột (được phép, ngoại lệ của luật "không migration" trong task).
+  - `PackageSession.StartBuild(fondsCode, archiveCode, archiveName, builtBy, now)` ghi cả 4 giá trị cùng `FondsCode` / `BuiltBy` có sẵn.
+    Job **đọc từ phiên**, không nhận qua tham số job.
+  - Dựng lại: body vẫn gửi đủ, ghi đè giá trị cũ (gửi trống thì xoá, không phát `ARCHIVIST`). `GET .../result` trả thêm `fondsCode`,
+    `archiveCode`, `archiveName` để FE điền sẵn form, người dùng không phải gõ lại.
+- PREMIS (M2-G20): thông tư không bắt buộc kèm hay kiểm theo `premis.xsd` (tr.34–35: `schemas/` của AIP chỉ có `METS.xsd` + `EAD*.xsd`;
+  tr.90–91: `schemaLocation` trỏ URL LOC). **Không nhúng `premis.xsd`**, không đóng vào gói; PREMIS kiểm theo khuôn tài liệu 11.
+  Có thể tải bản LOC về kiểm tay một lần lúc test, không đưa vào repo.
+- Sửa luôn trong task này: M2-G18 (khối catch của `VerifyFromJob` đọc lại trạng thái, phiên đã `cancelled` thì không `Fail`),
+  M2-G19 (`AddFiles` hai đợt song song không được trùng `ObjectKey`: đặt khoá theo Guid thay số thứ tự đếm).
 - P4. Được sửa `sh.be.infrastructure.external.csproj`: thêm `<EmbeddedResource>` cho 4 `.xsd` của `goi-mau/`, không đổi tham chiếu.
 
 ## Class sẽ tạo
@@ -73,6 +83,7 @@
 ## Expected output
 
 Mỗi gói không lỗi ra 1 ZIP `packaging/{id}/packages/{guid}.zip`; SIP_hoso dựng lại từ dữ liệu gói mẫu trùng cây, bộ thẻ, thứ tự thẻ
-(66.10); 2 METS qua `mets1_12.xsd`, PREMIS qua `premis.xsd` v3; build sạch, không migration, comment theo 07.
+(66.10); 2 METS qua `mets1_12.xsd`; PREMIS đúng khuôn 11; build sạch, `has-pending-model-changes` sạch sau migration 2 cột,
+comment theo 07.
 
 > **Tiếp:** [dong-goi-tt05.plan.md](dong-goi-tt05.plan.md) — luật gốc C / N / D.
