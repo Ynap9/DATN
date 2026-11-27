@@ -7,6 +7,7 @@ using sh.be.shared.Constants.Construction;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace sh.be.domain.Module.Construction.Submissions.Services
 {
@@ -77,7 +78,7 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
                     }
 
                     var submission = Submission.Create(projectId, documentTypeId, fileName, columns.GetProfileRange(row), columns.GetBox(row),
-                        columns.GetFileUrl(row), importedBy, importedDate);
+                        columns.GetFileUrl(row), importedBy, importedDate, columns.GetPageCount(row));
                     var datas = mappedColumns
                         .Select(column => submission.CreateData(column.DocumentFieldId, GetImportCell(row, column.ColumnIndex), column.IndexRow,
                             BuildSheetCellAddress(column.ColumnIndex, row.SheetRowNumber), importedBy, importedDate))
@@ -91,7 +92,7 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
             var distinctSheetKeyCount = GetRowsWithFileName(table, columns).Select(columns.BuildKey).Distinct().Count();
 
             return new AppendImportPlan(newSubmissions, mappedColumns.Count, newDatas.Count, newDatas.Count(data => data.Data.Length > 0),
-                snapshots.Count, distinctSheetKeyCount);
+                snapshots.Count, distinctSheetKeyCount, newSubmissions.Count(draft => draft.Submission.PageCount.HasValue));
         }
 
         public static BlankImportPlan BuildBlankPlan(SheetTable table, SubmissionImportColumns columns, List<MappedImportColumn> mappedColumns,
@@ -187,7 +188,7 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
         }
 
         public static SubmissionImportColumns ResolveColumns(IReadOnlyList<string> headers, string fileColumn, string? profileRangeColumn,
-            string? boxColumn, string? fileUrlColumn)
+            string? boxColumn, string? fileUrlColumn, string? pageCountColumn = null)
         {
             EnsureColumnNameEntered(fileColumn, "tên file");
 
@@ -196,9 +197,11 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
             var profileRangeColumnIndex = FindColumn(headers, profileRangeColumn, missingColumns);
             var boxColumnIndex = FindColumn(headers, boxColumn, missingColumns);
             var fileUrlColumnIndex = FindColumn(headers, fileUrlColumn, missingColumns);
+            var pageCountColumnIndex = FindColumn(headers, pageCountColumn, missingColumns);
             EnsureNoMissingColumns(missingColumns);
 
-            return new SubmissionImportColumns(fileNameColumnIndex!.Value, profileRangeColumnIndex, boxColumnIndex, fileUrlColumnIndex);
+            return new SubmissionImportColumns(fileNameColumnIndex!.Value, profileRangeColumnIndex, boxColumnIndex, fileUrlColumnIndex,
+                pageCountColumnIndex);
         }
 
         public static int ResolveSingleColumn(IReadOnlyList<string> headers, string columnName)
@@ -556,8 +559,12 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
         }
     }
 
-    public record SubmissionImportColumns(int FileNameColumnIndex, int? ProfileRangeColumnIndex, int? BoxColumnIndex, int? FileUrlColumnIndex)
+    public record SubmissionImportColumns(int FileNameColumnIndex, int? ProfileRangeColumnIndex, int? BoxColumnIndex, int? FileUrlColumnIndex,
+        int? PageCountColumnIndex = null)
     {
+        // Số nguyên không dấu hoặc có dấu phân cách nghìn đúng nhóm 3 chữ số ("1234", "1.234", "1,234"); "12,5" / "12.5" là số lẻ nên không khớp
+        private static readonly Regex PageCountRegex = new(@"^(\d+|\d{1,3}(\.\d{3})+|\d{1,3}(,\d{3})+)$", RegexOptions.Compiled);
+
         public string GetFileName(SheetRow row)
         {
             return SubmissionImportDomainService.GetImportCell(row, FileNameColumnIndex);
@@ -578,9 +585,26 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
             return GetOptionalCell(row, FileUrlColumnIndex);
         }
 
+        // null khi không ghép cột, ô trống hoặc ô không phải số nguyên từ 1 đến PAGE_COUNT_MAX (ô sai bị bỏ qua, không báo lỗi)
+        public int? GetPageCount(SheetRow row)
+        {
+            return PageCountColumnIndex.HasValue ? ParsePageCount(SubmissionImportDomainService.GetImportCell(row, PageCountColumnIndex.Value)) : null;
+        }
+
         public string BuildKey(SheetRow row)
         {
             return SubmissionImportDomainService.BuildSubmissionKey(GetFileName(row), GetProfileRange(row), GetBox(row));
+        }
+
+        private static int? ParsePageCount(string value)
+        {
+            if (!PageCountRegex.IsMatch(value))
+            {
+                return null;
+            }
+
+            var digits = value.Replace(".", String.Empty).Replace(",", String.Empty);
+            return int.TryParse(digits, out var pageCount) && pageCount is >= 1 and <= SubmissionConst.PAGE_COUNT_MAX ? pageCount : null;
         }
 
         private static string GetOptionalCell(SheetRow row, int? columnIndex)
@@ -621,7 +645,7 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
     }
 
     public record AppendImportPlan(List<NewSubmissionDraft> NewSubmissions, int MappedFieldCount, int NewDataCount,
-        int NonEmptyCellCount, int ExistingSubmissionCount, int DistinctSheetKeyCount)
+        int NonEmptyCellCount, int ExistingSubmissionCount, int DistinctSheetKeyCount, int PageCountCount)
     {
         public bool HasChanges => NewSubmissions.Count > 0;
     }

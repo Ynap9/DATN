@@ -17,6 +17,7 @@ namespace sh.be.applications.Module.Construction.Dtos.Project
         public int TotalBox { get; set; }
         public int TotalProfileRange { get; set; }
         public int TotalSubmission { get; set; }
+        public int TotalPages { get; set; }
         public int CheckedCount { get; set; }
         public int? QaPassedCount { get; set; }
         public decimal ProgressPercent { get; set; }

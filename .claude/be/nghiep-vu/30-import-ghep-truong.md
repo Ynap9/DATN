@@ -2,7 +2,7 @@
 
 > **Phần 30/30** · trước: [29-xuat-google-sheet.md](29-xuat-google-sheet.md) · mục lục: [README.md](README.md)
 
-Task 63A (2026-11-27) sửa [import hồ sơ](11-ho-so-import.md) cho giống 5sdb + soHoaSaoMai: đọc **đúng link người dùng dán**, lưu cách ghép
+Task 63A (2026-11-27, kèm [số trang](#số-trang-khi-import-thêm-mới) của Task 62) sửa [import hồ sơ](11-ho-so-import.md) cho giống 5sdb + soHoaSaoMai: đọc **đúng link người dùng dán**, lưu cách ghép
 trường ↔ cột sheet theo dự án + loại văn bản, mọi import đều phải ghép đủ trường, số chạy thử đếm đúng số ô có dữ liệu sẽ ghi. Không migration,
 không key quyền mới, không mã lỗi mới; 3 API mới và body import đổi (FE cũ gọi append / blank Google sẽ nhận `400` tới khi Task 63 FE xong).
 
@@ -60,6 +60,16 @@ Cùng quyền `Function.Construction.Submission.Import` + Admin / Leader của d
   điền sau), không bao giờ lưu chữ "null". `SubmissionData.FillIfBlank` / `Overwrite` dùng cùng luật: ô DB đang "null" / "undefined" là trống.
 - **Số chạy thử = số import ghi** (cùng kế hoạch, chỉ đếm ô có dữ liệu — số này dùng để tính tiền): append = ô trường đã ghép có giá trị ở hồ sơ sẽ tạo; blank = ô sheet có dữ liệu
   sẽ điền vào trường đang trống **hoặc chưa có dòng `SubmissionData`** (5sdb quên trường hợp sau); overwrite = ô có giá trị **khác** giá trị đang có (5sdb đếm cả ô bằng giá trị cũ).
+
+## Số trang khi import Thêm mới
+
+Task 62 (2026-11-27): số trang chỉ lấy từ cột "Số trang" trong sheet, **không** tải PDF, không job, không migration (cột `Submission.PageCount` đã có từ `8f012a9`).
+
+- `pageCountColumn` (tuỳ chọn) chỉ ở **append**, cả Google lẫn Excel. Rỗng = hồ sơ mới `PageCount = null`. Tên cột nhập mà sheet không có → `307`; blank / overwrite gửi lên thì BE bỏ qua (không đọc, không `307`).
+- Đọc ô (`SubmissionImportColumns.GetPageCount`): chỉ nhận toàn chữ số hoặc dấu nghìn đúng nhóm 3 chữ số (`1.234`, `1,234`); `12,5` / `12.5` là số lẻ nên sai. Kết quả phải từ 1 đến `PAGE_COUNT_MAX` (100000). Ô trống hoặc sai → `null`, hồ sơ vẫn tạo, **không** báo lỗi.
+- Hồ sơ đã có (trùng khoá) bị bỏ qua như cũ nên không đổi số trang. Verify trả thêm `totalPageCount` (0 khi không ghép cột); message import nối ", Có số trang: N văn bản" khi N > 0; audit append thêm `PageCountCount`.
+- Danh sách dự án có `totalPages` ([25](25-xoa-du-an-danh-sach-cap.md)). Để sau: xuất Excel / Google Sheet chưa có cột Số trang; Task 22B (OCR) và màn tải PDF sẽ ghi số trang thật qua `SetPageCount`.
+- Đã kiểm 2026-11-27, API thật trên DB dev (`ZZTEST62`, Sheet qua API dự án, đã dọn): 13/13 đạt. 14 dòng mẫu (`1234`, `1.234`, `1,234`, `5`, `100000` nhận; `abc`, `0`, `-3`, `12,5`, `12,5 trang`, `100001`, `12.5`, `null`, ô trống → null); tên cột sai `307`; import lại với số khác giữ số cũ; blank / overwrite không đổi; `totalPages` Admin 103.707, Data chỉ văn bản được giao, xoá mềm không cộng; 5.000 dòng import 7,5 s (có cột) / 7,6 s (không cột), verify 2,2–3,1 s mỗi kiểu. ⚠️ Chưa kiểm import Excel (MinIO đầy, `209`) và 100.000 dòng (đo 5.000 để khỏi ghi nặng DB dùng chung).
 
 ## Khác 5sdb
 

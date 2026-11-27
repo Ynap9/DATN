@@ -321,6 +321,7 @@ export interface IImportSubmission {
     linkColumnImport: string;
     profileRange: string;
     box: string;
+    pageCountColumn: string;
 }
 
 export interface IImportOverwriteSubmission extends IImportSubmission {
@@ -352,6 +353,7 @@ export interface IUploadImportExcelResult {
 export interface IVerifyImportAppend {
     totalDataFields: number;
     totalAppendRowCount: number;
+    totalPageCount: number;
     totalFieldCount: number;
     totalSubmission: number;
     totalSubmissionGoogleSheet: number;

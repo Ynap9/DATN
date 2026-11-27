@@ -60,6 +60,7 @@ export class ImportColumnStepComponent extends BaseComponent {
             ...(this.isOverwrite ? [] : [linkField]),
             { key: 'profileRange', label: 'Cột Hồ sơ', required: false },
             { key: 'box', label: 'Cột Hộp', required: false },
+            ...(this.kind() === IMPORT_KIND.APPEND ? [{ key: 'pageCountColumn' as const, label: 'Cột Số trang', required: false }] : []),
             ...(this.isOverwrite ? [{ key: 'columnImport' as const, label: 'Cột lấy dữ liệu', required: true }] : []),
         ];
     }

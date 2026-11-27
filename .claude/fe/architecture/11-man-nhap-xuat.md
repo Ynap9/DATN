@@ -39,6 +39,7 @@ Nhập chưa kiểm trên trình duyệt; xuất Google Sheet đã kiểm (xem c
 - Import Google đồng bộ: khoá nút + tab, hỏi khi rời trang (`canDeactivate` + `beforeunload`). Excel tạo job rồi hỏi
   `findImportJob` mỗi `JOB_POLL_MS`, không hỏi khi rời. Xong → khối "Import xong", màn cha tải lại số văn bản.
 - Body theo 48.15: ô trống gửi `''`; ghi đè gửi `linkColumnImport = ''`; Excel ghi đè **không** có `url`.
+- Ô "Cột Số trang" (Task 62, tuỳ chọn) chỉ hiện ở kiểu Thêm mới, header "Số trang" điền sẵn; kiểu khác body gửi `pageCountColumn = ''`. Chạy thử Thêm mới có thêm ô số phụ "Văn bản có số trang" chỉ khi đã nhập cột. Chưa kiểm trình duyệt.
 - Tab Xuất: lọc trạng thái dùng `sh-select` để trống = "Tất cả" (có nút xoá); ô QA và nhóm cột QA ẩn khi dự án không QA
   (cột QA đã tick không gửi). "Sẽ xuất" = `count.total` — BE `count` đã lọc theo `statusCheck` / `statusQa` / `keyword`.
 - Danh sách "File đã xuất" chỉ trong phiên trang (BE không có API liệt kê job). "Tải về" quá 15 phút → gọi lại job lấy link mới.

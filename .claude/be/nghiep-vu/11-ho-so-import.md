@@ -23,7 +23,7 @@ FE luôn gọi `verify` → hiện số liệu → người dùng xác nhận �
 (`SubmissionImportDomainService.Build...Plan`), nên số verify bằng đúng số import ghi (nếu sheet và DB không đổi giữa hai lần gọi).
 
 Body chung (`ImportSubmissionDto`): `projectId`, `documentTypeId`, `fileColumnImport` (tên cột tên file, bắt buộc), `linkColumnImport`
-(tên cột link file, bắt buộc với append), `profileRange` (tên cột Hồ sơ), `box` (tên cột Hộp), `startColumn` (bắt đầu đọc từ cột, mặc định 1). Append / blank Google
+(tên cột link file, bắt buộc với append), `profileRange` (tên cột Hồ sơ), `box` (tên cột Hộp), `pageCountColumn` (tên cột Số trang, chỉ append, tuỳ chọn), `startColumn` (bắt đầu đọc từ cột, mặc định 1). Append / blank Google
 (`ImportSheetSubmissionDto`) và overwrite thêm `url`, `sheetName`; overwrite còn `columnImport` (cột lấy dữ liệu), `documentFieldId` (trường bị ghi đè), `overwriteChecked` (mặc định `false`).
 
 ## Khoá hồ sơ và cách đọc sheet
@@ -63,10 +63,10 @@ Body chung (`ImportSubmissionDto`): `projectId`, `documentTypeId`, `fileColumnIm
 | Overwrite | `url` + `sheetName` trong body | Cột `columnImport` ghi đè trường `documentFieldId` của hồ sơ đã có. Ô rỗng: bỏ qua (không xoá). Giá trị giống cũ: không tính. Hồ sơ `CHECKED` bị bỏ qua khi `overwriteChecked = false`; hồ sơ trả lại (`RETURNED`) vẫn bị ghi đè | `Import ghi đè trường dữ liệu từ Google Sheet`, `Update`, `OldData` / `NewData` = danh sách `SubmissionId, FileName, DocumentFieldId, Data` |
 
 Append tạo hồ sơ với `Name = FileName`, `StatusCheck = 0`, **một** link gán cho cả `FileUrlS3Object`, `FileUrlGoogleDrive`,
-`FileUrlGstore` (hiện link là S3/MinIO; Google Drive / Gstore làm sau).
+`FileUrlGstore` (hiện link là S3/MinIO; Google Drive / Gstore làm sau). Có `pageCountColumn` thì hồ sơ mới nhận `PageCount` từ ô đó ([30](30-import-ghep-truong.md#số-trang-khi-import-thêm-mới)).
 
 Kết quả verify: append `{ totalDataFields (ô có giá trị sẽ thêm), totalAppendRowCount (hồ sơ sẽ tạo), totalFieldCount (trường đã map),
-totalSubmission (hồ sơ đang có), totalSubmissionGoogleSheet (số khoá trên sheet) }`; blank `{ totalBlankCount, totalFieldCount }`;
+totalSubmission (hồ sơ đang có), totalSubmissionGoogleSheet (số khoá trên sheet), totalPageCount (hồ sơ mới có số trang) }`; blank `{ totalBlankCount, totalFieldCount }`;
 overwrite `{ totalOverWriteCount, totalSkippedChecked }`. Kết quả import: `{ message, totalDataFields }` (server không đo thời gian; muốn đo thì đo từ phía client).
 
 ## Ghi dữ liệu — một transaction

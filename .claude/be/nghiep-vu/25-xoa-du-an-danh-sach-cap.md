@@ -61,6 +61,7 @@ Item `GetListProjectPairDto`:
 | `viewerRole` | `Admin` hoặc vai trò thành viên của người gọi trong cặp (`Leader` / `Data` / `QA`) |
 | `memberCount` | Mọi `ProjectMember` chưa gỡ của cặp, kể cả Leader và người ngưng hoạt động |
 | `totalBox`, `totalProfileRange` | Số Hộp / số (Hộp, Hồ sơ) khác nhau của cặp |
+| `totalPages` | Tổng `Submission.PageCount` của văn bản chưa xoá, cùng tập với `totalSubmission` (Admin / Leader: cả cặp; Data / QA: văn bản được giao); `null` cộng 0 (Task 62, [30](30-import-ghep-truong.md#số-trang-khi-import-thêm-mới)). `myProgresses` không có |
 | `totalSubmission`, `checkedCount`, `progressPercent` | Admin / Leader: cả cặp; Data: văn bản mình giữ / đã kiểm; QA: văn bản mình phụ trách / đã chấm (`StatusQa` khác chưa chấm). `%` làm tròn 2 số |
 | `qaPassedCount` | Chỉ Admin / Leader và dự án có QA; còn lại `null` |
 | `filledFieldCount` | Chỉ Data: số ô có dữ liệu (trim khác rỗng) của **trường tính tiền** (`IsChargeable`, trường chưa xoá) trong văn bản mình đã kiểm; còn lại `null` |

@@ -51,7 +51,7 @@ từ BE; sẵn sàng làm màn hình theo [../architecture/06-them-man-hinh.md](
 
 | Việc | BE cần làm | FE đang hiện |
 |---|---|---|
-| Số trang | Nơi lưu số trang mỗi văn bản (`Submission` chưa có) — hỏi chủ đồ án về schema, rồi paging trả `totalPages` | Cột "Số trang" = "—" |
+| Số trang | ✅ Đã có (Task 62): `Submission.PageCount` lấy từ cột Số trang khi import Thêm mới, paging trả `totalPages` | Cột "Số trang" hiện số; văn bản cũ cộng 0 |
 | Đã OCR / Chưa OCR | Chờ module AI ghi kết quả OCR theo văn bản; paging trả `ocrDoneCount` / `ocrPendingCount` | Hai cột = "—", không lên thẻ |
 | Số đếm trên tab trạng thái | API đếm theo `status` (1 câu `GROUP BY`), cùng phạm vi xem với paging | Tab không có số |
 | Sort dữ liệu theo cột | Paging nhận tham số sort | "Sắp xếp" chỉ là thứ tự cột trong dialog ⚙ |

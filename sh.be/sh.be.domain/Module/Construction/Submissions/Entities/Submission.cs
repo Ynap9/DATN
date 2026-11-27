@@ -68,12 +68,12 @@ namespace sh.be.domain.Module.Construction.Submissions.Entities
         }
 
         public static Submission Create(int projectId, int documentTypeId, string fileName, string profileRange, string box, string fileUrl,
-            string? createdBy, DateTime createdDate)
+            string? createdBy, DateTime createdDate, int? pageCount = null)
         {
             var trimmedFileName = fileName.Trim();
             var trimmedFileUrl = fileUrl.Trim();
 
-            return new Submission
+            var submission = new Submission
             {
                 ProjectId = projectId,
                 DocumentTypeId = documentTypeId,
@@ -88,6 +88,12 @@ namespace sh.be.domain.Module.Construction.Submissions.Entities
                 CreatedBy = createdBy,
                 CreatedDate = createdDate,
             };
+            if (pageCount.HasValue)
+            {
+                submission.SetPageCount(pageCount.Value);
+            }
+
+            return submission;
         }
 
         public SubmissionData CreateData(int documentFieldId, string data, int indexRow, string indexGoogleSheet,
@@ -102,12 +108,12 @@ namespace sh.be.domain.Module.Construction.Submissions.Entities
             return StatusCheck == SubmissionConst.CHECKED;
         }
 
-        // Chỉ job đếm trang gọi: null = chưa đếm, 0 = đã thử nhưng không đọc được file
+        // Số trang của văn bản: null = chưa có số trang, có số thì từ 1 đến PAGE_COUNT_MAX
         public void SetPageCount(int pageCount)
         {
-            if (pageCount < 0)
+            if (pageCount < 1 || pageCount > SubmissionConst.PAGE_COUNT_MAX)
             {
-                throw new UserFriendlyException(ErrorCodes.BadRequest, "Số trang không được âm");
+                throw new UserFriendlyException(ErrorCodes.BadRequest, $"Số trang phải từ 1 đến {SubmissionConst.PAGE_COUNT_MAX}");
             }
             PageCount = pageCount;
         }

@@ -8,6 +8,7 @@ namespace sh.be.applications.Module.Construction.Dtos.Submission
         public string LinkColumnImport { get; set; } = String.Empty;
         public string ProfileRange { get; set; } = String.Empty;
         public string Box { get; set; } = String.Empty;
+        public string PageCountColumn { get; set; } = String.Empty;
         public int StartColumn { get; set; } = 1;
     }
 }

@@ -47,7 +47,7 @@ Task 30 (2026-11-13): Leader / Data / QA được gán `Project.View` chỉ th�
   (trả `true` / `false`, ngoài dự án ném `303` để không lộ dự án có tồn tại), đọc vai trò qua `ProjectRepository.GetMemberRolesAsync`.
 - `myProgresses` (`GetListProjectMyProgressDto`): mỗi cặp mình là Data / QA chưa gỡ và `ProjectDocumentType` chưa xoá, sắp theo tên loại
   văn bản (loại đã xoá cuối, giữ tên cũ): `documentTypeId`, `documentTypeName`, `viewerRole`, `totalBox`, `totalProfileRange`,
-  `totalSubmission`, `checkedCount`, `progressPercent`, `filledFieldCount` (chỉ Data). Đếm bằng **cùng hàm** với cột "của tôi" ở paging
+  `totalSubmission`, `checkedCount`, `progressPercent`, `filledFieldCount` (chỉ Data; không có `totalPages` như paging, Task 62). Đếm bằng **cùng hàm** với cột "của tôi" ở paging
   (`ProjectQuery.CountMyHeldSubmissionsAsync`) nên số luôn khớp ([25](25-xoa-du-an-danh-sach-cap.md#danh-sách-cặp--get-apiconstructionprojectpaging)).
 - `viewerRoles` (`GetListProjectViewerRoleDto`, Task 42 bước 0, mọi người gọi): `[{ documentTypeId, viewerRole }]` của cặp chưa gỡ, sắp `documentTypeId`. Admin → mọi
   cặp `Admin`; người khác → `Role` ở `ProjectMember` của cặp (không xét `IsActive`), cặp không tham gia thì không có dòng. Để FE biết Leader quản lý cặp nào;

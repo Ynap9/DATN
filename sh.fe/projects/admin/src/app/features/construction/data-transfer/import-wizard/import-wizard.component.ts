@@ -92,7 +92,7 @@ export class ImportWizardComponent extends BaseComponent {
     private _requestSubscription: Subscription | null = null;
 
     get verifyView() {
-        return this.verifyResult ? getVerifyView(this.kind, this.verifyResult) : null;
+        return this.verifyResult ? getVerifyView(this.kind, this.verifyResult, !!this.appendPageCountColumn) : null;
     }
 
     get isBusy() {
@@ -109,8 +109,13 @@ export class ImportWizardComponent extends BaseComponent {
     }
 
     // Nguồn · kiểu · các cột đã chọn
+    // Cột Số trang chỉ thuộc kiểu Thêm mới; kiểu khác gửi '' (48.15)
+    private get appendPageCountColumn() {
+        return this.kind === IMPORT_KIND.APPEND ? this.mapping.pageCountColumn.trim() : '';
+    }
+
     get summaryChips() {
-        const columns = [this.mapping.fileColumnImport, this.mapping.profileRange, this.mapping.box].map((column) => column.trim()).filter(Boolean);
+        const columns = [this.mapping.fileColumnImport, this.mapping.profileRange, this.mapping.box, this.appendPageCountColumn].map((column) => column.trim()).filter(Boolean);
         return [this.getStepSummary(STEP.SOURCE), this.getStepSummary(STEP.KIND), columns.join(' · ')];
     }
 
@@ -305,6 +310,7 @@ export class ImportWizardComponent extends BaseComponent {
             linkColumnImport: this.kind === IMPORT_KIND.OVERWRITE ? '' : this.mapping.linkColumnImport.trim(),
             profileRange: this.mapping.profileRange.trim(),
             box: this.mapping.box.trim(),
+            pageCountColumn: this.appendPageCountColumn,
         };
     }
 

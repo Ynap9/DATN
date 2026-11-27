@@ -31,7 +31,7 @@ lên `nvarchar(450)` (trần khoá index SQL Server), EF xoá rồi tạo lại 
 `construction.SubmissionLog.ChangedDatas` `nvarchar(max)` NULL. Log cũ giữ `null` (không backfill), không cần script dữ liệu.
 
 `Add_Submission_PageCount` (`Migrations/Construction/`, Task 62) chạy sau `Add_SubmissionLog_ChangedDatas`: chỉ thêm cột `construction.Submission.PageCount` `int` NULL
-(`null` = chưa đếm, `0` = đã thử nhưng không đọc được file, `> 0` = số trang). Văn bản cũ giữ `null`, job đếm trang sẽ đếm dần, không cần script dữ liệu.
+(`null` = chưa có số trang, có số thì từ 1 đến 100000; ghi khi import Thêm mới có cột Số trang, Task 62). Văn bản cũ giữ `null`, không cần script dữ liệu.
 
 ## Dữ liệu test hồ sơ (DB dev)
 

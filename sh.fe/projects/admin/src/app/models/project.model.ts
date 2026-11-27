@@ -27,6 +27,7 @@ export interface IViewProjectPair {
     totalBox: number;
     totalProfileRange: number;
     totalSubmission: number;
+    totalPages: number;
     checkedCount: number;
     qaPassedCount: number | null;
     progressPercent: number;

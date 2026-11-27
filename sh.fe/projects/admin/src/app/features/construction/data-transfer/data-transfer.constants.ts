@@ -37,12 +37,13 @@ export const IMPORT_KIND_OPTIONS: { value: ImportKind; label: string; descriptio
     },
 ];
 
-// Ô bước Ghép cột (48.10); cột trống gửi '', url / sheetName chỉ dùng khi Google + ghi đè
+// Ô bước Ghép cột (48.10); cột trống gửi '', url / sheetName chỉ dùng khi Google + ghi đè, pageCountColumn chỉ dùng khi thêm mới
 export interface IImportColumnMapping {
     fileColumnImport: string;
     linkColumnImport: string;
     profileRange: string;
     box: string;
+    pageCountColumn: string;
     url: string;
     sheetName: string;
     columnImport: string;
@@ -50,7 +51,7 @@ export interface IImportColumnMapping {
     overwriteChecked: boolean;
 }
 
-export type ImportColumnKey = 'fileColumnImport' | 'linkColumnImport' | 'profileRange' | 'box' | 'columnImport';
+export type ImportColumnKey = 'fileColumnImport' | 'linkColumnImport' | 'profileRange' | 'box' | 'pageCountColumn' | 'columnImport';
 
 // Header trùng tên này (không phân biệt hoa thường) thì điền sẵn vào ô tương ứng
 export const IMPORT_COLUMN_HINTS: Partial<Record<ImportColumnKey, string>> = {
@@ -58,6 +59,7 @@ export const IMPORT_COLUMN_HINTS: Partial<Record<ImportColumnKey, string>> = {
     linkColumnImport: 'Link',
     profileRange: 'Hồ sơ',
     box: 'Hộp',
+    pageCountColumn: 'Số trang',
 };
 
 export function createColumnMapping(url: string | null): IImportColumnMapping {
@@ -66,6 +68,7 @@ export function createColumnMapping(url: string | null): IImportColumnMapping {
         linkColumnImport: '',
         profileRange: '',
         box: '',
+        pageCountColumn: '',
         url: url ?? '',
         sheetName: '',
         columnImport: '',
@@ -103,7 +106,7 @@ export const IMPORT_JOB_RUNNING_MESSAGE: Record<ImportSource, string> = {
     [IMPORT_SOURCE.EXCEL]: 'Đã đưa vào hàng chờ chạy nền, đang import… Có thể rời trang, kết quả vẫn được ghi.',
 };
 
-export function getVerifyView(kind: ImportKind, result: IVerifyImportResult): IVerifyView {
+export function getVerifyView(kind: ImportKind, result: IVerifyImportResult, hasPageCountColumn: boolean): IVerifyView {
     if (kind === IMPORT_KIND.APPEND) {
         const append = result as IVerifyImportAppend;
         return {
@@ -113,6 +116,7 @@ export function getVerifyView(kind: ImportKind, result: IVerifyImportResult): IV
                 { label: 'Trường đã ghép', value: append.totalFieldCount },
                 { label: 'Văn bản đang có', value: append.totalSubmission },
                 { label: 'Dòng trên sheet', value: append.totalSubmissionGoogleSheet },
+                ...(hasPageCountColumn ? [{ label: 'Văn bản có số trang', value: append.totalPageCount }] : []),
             ],
             actionLabel: `Import ${formatNumber(append.totalAppendRowCount)} văn bản`,
         };

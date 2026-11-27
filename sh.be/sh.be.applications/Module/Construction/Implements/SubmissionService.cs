@@ -110,7 +110,7 @@ namespace sh.be.applications.Module.Construction.Implements
             _logger.LogInformation($"{nameof(ImportBlank)}, dto={JsonSerializer.Serialize(dto)}");
             await EnsureAdminOrProjectLeaderAsync(dto.ProjectId);
             await EnsureImportGoogleSheetAsync(dto.ProjectId, dto.Url);
-            var source = await LoadProjectSheetAsync(dto, null, _ => ReadImportGoogleSheetAsync(dto.Url, dto.SheetName));
+            var source = await LoadProjectSheetAsync(dto, null, null, _ => ReadImportGoogleSheetAsync(dto.Url, dto.SheetName));
             return await ImportBlankAsync(dto, source, getCurrentUserId(), ToGoogleAuditSource(dto.Url, dto.SheetName));
         }
 
@@ -320,7 +320,7 @@ namespace sh.be.applications.Module.Construction.Implements
         public async Task<string> ImportExcelBlankFromJob(ImportExcelSubmissionDto dto, string userId)
         {
             _logger.LogInformation($"{nameof(ImportExcelBlankFromJob)}, userId={userId}, dto={JsonSerializer.Serialize(dto)}");
-            var source = await LoadProjectSheetAsync(dto, null, _ => ReadImportExcelTableAsync(dto, userId));
+            var source = await LoadProjectSheetAsync(dto, null, null, _ => ReadImportExcelTableAsync(dto, userId));
             var result = await ImportBlankAsync(dto, source, userId, ToExcelAuditSource(dto));
             return result.Message;
         }
@@ -971,6 +971,7 @@ namespace sh.be.applications.Module.Construction.Implements
             {
                 TotalDataFields = plan.NonEmptyCellCount,
                 TotalAppendRowCount = plan.NewSubmissions.Count,
+                TotalPageCount = plan.PageCountCount,
                 TotalFieldCount = plan.MappedFieldCount,
                 TotalSubmission = plan.ExistingSubmissionCount,
                 TotalSubmissionGoogleSheet = plan.DistinctSheetKeyCount,
@@ -979,7 +980,7 @@ namespace sh.be.applications.Module.Construction.Implements
 
         private async Task<ViewVerifyImportBlankSubmissionDto> VerifyBlankAsync(ImportSubmissionDto dto, Func<Project, Task<SheetTable>> readTableAsync)
         {
-            var source = await LoadProjectSheetAsync(dto, null, readTableAsync);
+            var source = await LoadProjectSheetAsync(dto, null, null, readTableAsync);
             var plan = await BuildBlankPlanAsync(dto, source, getCurrentUserId(), GetVietnamTime());
 
             return new ViewVerifyImportBlankSubmissionDto
@@ -1029,13 +1030,15 @@ namespace sh.be.applications.Module.Construction.Implements
                             appendPlan.NewDataCount,
                             appendPlan.NonEmptyCellCount,
                             appendPlan.MappedFieldCount,
+                            appendPlan.PageCountCount,
                         }, userId);
                 });
 
             return new ViewImportSubmissionResultDto
             {
                 Message = $"Import hoàn tất. Hồ sơ thêm mới: {plan.NewSubmissions.Count}, "
-                    + $"Dữ liệu thêm mới: {plan.NonEmptyCellCount}, Trường đã map: {plan.MappedFieldCount}",
+                    + $"Dữ liệu thêm mới: {plan.NonEmptyCellCount}, Trường đã map: {plan.MappedFieldCount}"
+                    + (plan.PageCountCount > 0 ? $", Có số trang: {plan.PageCountCount} văn bản" : String.Empty),
                 TotalDataFields = plan.NonEmptyCellCount,
             };
         }
@@ -1139,12 +1142,13 @@ namespace sh.be.applications.Module.Construction.Implements
 
         private async Task<ProjectSheetSource> LoadAppendSheetAsync(ImportSubmissionDto dto, Func<Project, Task<SheetTable>> readTableAsync)
         {
-            var source = await LoadProjectSheetAsync(dto, dto.LinkColumnImport, readTableAsync);
+            var source = await LoadProjectSheetAsync(dto, dto.LinkColumnImport, dto.PageCountColumn, readTableAsync);
             SubmissionImportDomainService.EnsureFileUrlsPresent(source.Table, source.Columns);
             return source;
         }
 
-        private async Task<ProjectSheetSource> LoadProjectSheetAsync(ImportSubmissionDto dto, string? fileUrlColumn, Func<Project, Task<SheetTable>> readTableAsync)
+        private async Task<ProjectSheetSource> LoadProjectSheetAsync(ImportSubmissionDto dto, string? fileUrlColumn, string? pageCountColumn,
+            Func<Project, Task<SheetTable>> readTableAsync)
         {
             var project = await _submissionDomainService.EnsureImportableProjectAsync(dto.ProjectId);
             await _submissionDomainService.EnsureDocumentTypeInProjectAsync(dto.ProjectId, dto.DocumentTypeId);
@@ -1154,7 +1158,7 @@ namespace sh.be.applications.Module.Construction.Implements
             SubmissionImportDomainService.EnsureHasData(table);
             table = table with { Headers = SubmissionImportDomainService.ApplyStartColumn(table.Headers, dto.StartColumn) };
 
-            var columns = ResolveSheetColumns(table, dto, fileUrlColumn);
+            var columns = ResolveSheetColumns(table, dto, fileUrlColumn, pageCountColumn);
             var mappedColumns = SubmissionImportDomainService.ResolveMappedColumns(table.Headers, mappings);
             var fields = await _submissionDomainService.GetDocumentFieldsAsync(dto.DocumentTypeId);
             SubmissionImportDomainService.EnsureAllFieldsMapped(fields, mappings, mappedColumns);
@@ -1172,7 +1176,7 @@ namespace sh.be.applications.Module.Construction.Implements
             SubmissionImportDomainService.EnsureHasData(table);
             table = table with { Headers = SubmissionImportDomainService.ApplyStartColumn(table.Headers, dto.StartColumn) };
 
-            var columns = ResolveSheetColumns(table, dto, null);
+            var columns = ResolveSheetColumns(table, dto, null, null);
             var columnImportIndex = SubmissionImportDomainService.ResolveSingleColumn(table.Headers, dto.ColumnImport);
             var mappedColumns = SubmissionImportDomainService.ResolveMappedColumns(table.Headers, mappings);
             var fields = await _submissionDomainService.GetDocumentFieldsAsync(dto.DocumentTypeId);
@@ -1235,9 +1239,11 @@ namespace sh.be.applications.Module.Construction.Implements
             return table;
         }
 
-        private static SubmissionImportColumns ResolveSheetColumns(SheetTable table, ImportSubmissionDto dto, string? fileUrlColumn)
+        private static SubmissionImportColumns ResolveSheetColumns(SheetTable table, ImportSubmissionDto dto, string? fileUrlColumn,
+            string? pageCountColumn)
         {
-            var columns = SubmissionImportDomainService.ResolveColumns(table.Headers, dto.FileColumnImport, dto.ProfileRange, dto.Box, fileUrlColumn);
+            var columns = SubmissionImportDomainService.ResolveColumns(table.Headers, dto.FileColumnImport, dto.ProfileRange, dto.Box, fileUrlColumn,
+                pageCountColumn);
             SubmissionImportDomainService.EnsureNoDuplicateKeys(table, columns);
             return columns;
         }

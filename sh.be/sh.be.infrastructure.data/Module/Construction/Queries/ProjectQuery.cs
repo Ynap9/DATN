@@ -156,7 +156,8 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                         g.Select(s => s.Box).Distinct().Count(),
                         g.Select(s => s.Box + "|" + s.ProfileRange).Distinct().Count(),
                         g.Count(s => s.StatusCheck == SubmissionConst.CHECKED),
-                        g.Count(s => s.StatusCheck == SubmissionConst.CHECKED && s.StatusQa == SubmissionConst.QA_PASSED)),
+                        g.Count(s => s.StatusCheck == SubmissionConst.CHECKED && s.StatusQa == SubmissionConst.QA_PASSED),
+                        g.Sum(s => s.PageCount ?? 0)),
                 })
                 .ToDictionaryAsync(c => (c.ProjectId, c.DocumentTypeId), c => c.Counts);
 
@@ -167,7 +168,7 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 var key = (pair.ProjectId, pair.DocumentTypeId);
                 var isTotalViewer = pair.ViewerRole is RoleConstants.ROLE_ADMIN or RoleConstants.ROLE_LEADER;
                 var counts = (isTotalViewer ? totalCounts.GetValueOrDefault(key) : myCounts.GetValueOrDefault((pair.ProjectId, pair.DocumentTypeId, pair.ViewerRole)))
-                    ?? new PairCounts(0, 0, 0, 0, 0);
+                    ?? new PairCounts(0, 0, 0, 0, 0, 0);
 
                 pair.DocumentTypeName = documentTypeNames.GetValueOrDefault(pair.DocumentTypeId) ?? String.Empty;
                 pair.UrlGoogleSheetSync = isTotalViewer ? pair.UrlGoogleSheetSync : null;
@@ -175,6 +176,7 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 pair.TotalBox = counts.TotalBox;
                 pair.TotalProfileRange = counts.TotalProfileRange;
                 pair.TotalSubmission = counts.Total;
+                pair.TotalPages = counts.TotalPages;
                 pair.CheckedCount = counts.Checked;
                 pair.QaPassedCount = isTotalViewer && pair.IsQaEnabled ? counts.QaPassed : null;
                 pair.ProgressPercent = counts.Total == 0 ? 0 : Math.Round(counts.Checked * 100m / counts.Total, 2);
@@ -221,7 +223,7 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
 
             return pairs.Select(pair =>
             {
-                var counts = myCounts.GetValueOrDefault((projectId, pair.DocumentTypeId, pair.Role)) ?? new PairCounts(0, 0, 0, 0, 0);
+                var counts = myCounts.GetValueOrDefault((projectId, pair.DocumentTypeId, pair.Role)) ?? new PairCounts(0, 0, 0, 0, 0, 0);
                 return new GetListProjectMyProgressDto
                 {
                     DocumentTypeId = pair.DocumentTypeId,
@@ -418,7 +420,8 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                                           g.Count(s => g.Key.Role == RoleConstants.ROLE_QA
                                               ? s.StatusQa != SubmissionConst.QA_NOT_REVIEWED
                                               : s.StatusCheck == SubmissionConst.CHECKED),
-                                          0),
+                                          0,
+                                          g.Sum(s => s.PageCount ?? 0)),
                                   })
                                   .ToDictionaryAsync(c => (c.ProjectId, c.DocumentTypeId, c.Role), c => c.Counts);
             // Ô có dữ liệu chỉ tính trường tính tiền (IsChargeable) theo cờ hiện tại; query filter bỏ trường đã xoá
@@ -461,6 +464,6 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             public string? NewData { get; init; }
         }
 
-        private record PairCounts(int Total, int TotalBox, int TotalProfileRange, int Checked, int QaPassed);
+        private record PairCounts(int Total, int TotalBox, int TotalProfileRange, int Checked, int QaPassed, int TotalPages);
     }
 }
