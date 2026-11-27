@@ -7,12 +7,14 @@ using sh.be.applications.Module.Construction.Dtos.QaAssignment;
 using sh.be.applications.Base.Dtos.DigitalSignature;
 using sh.be.applications.Module.DigitalSignature.Dtos.SigningBatch;
 using sh.be.applications.Module.DigitalSignature.Dtos.Template;
+using sh.be.applications.Module.Packaging.Dtos.PackageSession;
 using sh.be.shared.Constants.Construction;
 using sh.be.domain.Module.Construction.DocumentFields.Entities;
 using sh.be.domain.Module.Construction.DocumentTypes.Entities;
 using sh.be.domain.Module.Construction.Projects.Entities;
 using sh.be.domain.Module.Construction.QaAssignments.Entities;
 using sh.be.domain.Module.DigitalSignature.Entities;
+using sh.be.domain.Module.Packaging.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -60,6 +62,12 @@ namespace sh.be.applications.Base
                 .ForMember(dest => dest.WetSignatureImage, opt => opt.Ignore())
                 .ForMember(dest => dest.Positions, opt => opt.Ignore());
             CreateMap<TemplatePosition, PdfSigningPositionDto>();
+            CreateMap<PackageSession, PackageSessionProgressDto>();
+            CreateMap<PackageSession, ViewPackageSessionResultDto>()
+                .ForMember(d => d.Dossiers, o => o.Ignore())
+                .ForMember(d => d.Excels, o => o.Ignore());
+            CreateMap<PackageDossier, GetListPackageDossierDto>();
+            CreateMap<PackageDocument, GetListPackageDocumentDto>();
         }
     }
 }

@@ -78,6 +78,11 @@ namespace sh.be.shared.Constants.Core
         public const string ACTION_SIGNING_BATCH_PAUSE = "Tạm dừng lô ký";
         public const string ACTION_SIGNING_BATCH_CANCEL = "Hủy lô ký";
 
+        public const string ACTION_PACKAGE_SESSION_CREATE = "Tạo phiên đóng gói";
+        public const string ACTION_PACKAGE_SESSION_ADD_FILES = "Tải file lên phiên đóng gói";
+        public const string ACTION_PACKAGE_SESSION_START = "Bắt đầu kiểm phiên đóng gói";
+        public const string ACTION_PACKAGE_SESSION_CANCEL = "Hủy phiên đóng gói";
+
         public const string ACTION_STAFF_GROUP_CREATE = "Tạo nhóm nhân viên";
         public const string ACTION_STAFF_GROUP_UPDATE = "Cập nhật nhóm nhân viên";
         public const string ACTION_STAFF_GROUP_DELETE = "Xóa nhóm nhân viên";

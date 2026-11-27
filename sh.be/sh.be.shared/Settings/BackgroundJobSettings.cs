@@ -12,5 +12,6 @@ namespace sh.be.shared.Settings
     {
         public string ProjectDeadlineCheck { get; set; } = "0 7 * * *";
         public string SubmissionExportCleanup { get; set; } = "0 2 * * *";
+        public string PackageSessionCleanup { get; set; } = "0 2 * * *";
     }
 }
