@@ -47,12 +47,12 @@ API lấy tên tab cũng kiểm đủ vì nó dùng tài khoản Gmail của h�
 | Thiếu cấu hình Google / chưa kết nối | `304` |
 | `jobId` không có, hết hạn, của người khác, hoặc là job xuất Excel (và ngược lại) | `326` — câu dùng chung "Không tìm thấy yêu cầu xuất dữ liệu…" |
 
-⚠️ Hai job xuất ghi cùng một tab không khoá nhau (FE khoá nút khi còn dòng "Đang ghi…" cùng link và tab, nhưng gọi API thẳng vẫn được): kết quả là bản ghi sau cùng đè lên.
+Lưu ý: Hai job xuất ghi cùng một tab không khoá nhau (FE khoá nút khi còn dòng "Đang ghi…" cùng link và tab, nhưng gọi API thẳng vẫn được): kết quả là bản ghi sau cùng đè lên.
 
-⚠️ Ghi không nguyên tử, chia lô 5.000 dòng: lỗi giữa chừng để lại tab ghi dở (đầu là dữ liệu mới, sau là dữ liệu cũ) nhưng không bao giờ trống; xuất lại là đúng. Chỉ xoá giá trị, định dạng ô cũ còn.
+Lưu ý: Ghi không nguyên tử, chia lô 5.000 dòng: lỗi giữa chừng để lại tab ghi dở (đầu là dữ liệu mới, sau là dữ liệu cũ) nhưng không bao giờ trống; xuất lại là đúng. Chỉ xoá giá trị, định dạng ô cũ còn.
 Chưa xử lý giới hạn 10 triệu ô của Google — lỗi Google trả về thành `206`.
 
-⚠️ Chặn Sheet dự án so `UrlGoogleSheetSync` chứa `spreadsheetId` (id Google dài cố định nên không nhầm); Sheet của dự án **đã xoá** không
+Lưu ý: Chặn Sheet dự án so `UrlGoogleSheetSync` chứa `spreadsheetId` (id Google dài cố định nên không nhầm); Sheet của dự án **đã xoá** không
 bị chặn. Máy đồng đội chạy code cũ cùng DB vẫn có thể nhặt job (bẫy ở [14](14-ho-so-xoa-xuat.md#xuất-excel-chạy-nền)).
 
 ## Đã kiểm thực tế

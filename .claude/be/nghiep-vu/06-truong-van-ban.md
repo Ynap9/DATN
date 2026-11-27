@@ -106,7 +106,7 @@ Ví dụ `1..6`, kéo trường `1` tới `5` → trường đó thành `5`, `2.
 Trường không tồn tại hoặc đã xoá → `302`. Chưa gọi thử API thật (người dùng tự kiểm).
 Kéo thả chỉ dịch giá trị trong khoảng giữa nên trường đang dùng không trùng nhau, nhưng có thể trùng số với trường đã xoá.
 
-⚠️ Tạo mới phải lấy `MAX + 1`, **không** lấy `COUNT + 1`: khi đã có chỗ hở (còn `3, 4, 5`), `COUNT + 1 = 4` trùng thứ tự
+Lưu ý: Tạo mới phải lấy `MAX + 1`, **không** lấy `COUNT + 1`: khi đã có chỗ hở (còn `3, 4, 5`), `COUNT + 1 = 4` trùng thứ tự
 đang dùng. `MAX` tính cả trường đã xoá (`GetMaxOrderAsync` dùng `IgnoreQueryFilters()`) và lấy **cột lớn hơn** của mỗi dòng:
 kéo lên có thể làm số lớn nhất của một cột giảm (`1, 3, 5` kéo `5` lên `1` → `1, 2, 4`), chỉ lấy một cột thì trường mới
 trùng ở cột kia.
@@ -115,11 +115,11 @@ trùng ở cột kia.
 `DocumentType` cha (`UPDLOCK, HOLDLOCK`). Request cùng loại văn bản xếp hàng, request sau đọc thứ tự request trước đã lưu;
 khác loại văn bản thì không chặn nhau. Cũng nhờ khoá này mà kiểm `Field` trùng không lọt khi đồng thời.
 
-⚠️ Kéo thả phải nạp trường **sau** khi khoá: service lấy `DocumentTypeId` bằng `FindDocumentTypeIdAsync` (không theo dõi
+Lưu ý: Kéo thả phải nạp trường **sau** khi khoá: service lấy `DocumentTypeId` bằng `FindDocumentTypeIdAsync` (không theo dõi
 entity), khoá, rồi mới `FindByIdAsync`. Nạp entity trước khoá thì `from` có thể là số cũ, và EF không nạp lại entity đang
 theo dõi khi đọc danh sách trong khoá → dịch sai, trùng thứ tự. Đừng "gọn code" bằng cách gộp về một lần `FindByIdAsync`.
 
-⚠️ Không dùng unique index cho cột thứ tự: đánh lại thứ tự cập nhật từng dòng, SQL Server kiểm unique sau mỗi `UPDATE`,
+Lưu ý: Không dùng unique index cho cột thứ tự: đánh lại thứ tự cập nhật từng dòng, SQL Server kiểm unique sau mỗi `UPDATE`,
 nên lúc hai trường đổi chỗ sẽ trùng tạm thời và báo lỗi. Ghi trường mới mà bỏ `LockOrderAsync` là mở lại lỗi trùng thứ tự.
 
 ### Khác
@@ -165,13 +165,13 @@ lọc trống chạy với trường mới. DB dev đếm 0 cặp thiếu cấu 
 
 ## Giới hạn
 
-⚠️ Chưa có unique index cho `(DocumentTypeId, Field)`; trùng `Field` chặn bằng code dưới khoá ở trên, ghi thẳng vào DB thì không.
+Lưu ý: Chưa có unique index cho `(DocumentTypeId, Field)`; trùng `Field` chặn bằng code dưới khoá ở trên, ghi thẳng vào DB thì không.
 
-⚠️ Xoá loại văn bản không xoá các trường của nó; trường vẫn còn nhưng không tạo thêm được vào loại văn bản đã xoá.
+Lưu ý: Xoá loại văn bản không xoá các trường của nó; trường vẫn còn nhưng không tạo thêm được vào loại văn bản đã xoá.
 
-⚠️ Chưa kiểm `Name`, `Field` rỗng, giống `DocumentType`.
+Lưu ý: Chưa kiểm `Name`, `Field` rỗng, giống `DocumentType`.
 
-⚠️ Tạo trường đúng lúc dự án đang gắn loại văn bản đó có thể sót một dòng cấu hình: hai transaction không thấy dữ liệu chưa commit của nhau và không dùng chung khoá
+Lưu ý: Tạo trường đúng lúc dự án đang gắn loại văn bản đó có thể sót một dòng cấu hình: hai transaction không thấy dữ liệu chưa commit của nhau và không dùng chung khoá
 (tạo trường khoá thứ tự loại văn bản, gắn dự án thì không). Cửa sổ rất hẹp, chưa chặn; gặp thì chạy lại câu đếm "cặp thiếu cấu hình" và chèn bù.
 
 > **Tiếp:** [07-du-an.md](07-du-an.md) — danh mục dự án và Google Sheet tự tạo.

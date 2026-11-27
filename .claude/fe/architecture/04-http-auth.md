@@ -12,7 +12,7 @@ Nằm ở `admin/src/app/core/auth/` và `core/http/`. Lib `@sh/ui` không có p
 | `guard/auth.guard.ts` | Gắn ở route `admin`: `getMe` lỗi ⇒ về login kèm `redirect_uri`; thành công ⇒ nạp vai trò, quyền vào `SharedService` |
 | `guard/permission.guard.ts` | Gắn ở route con với `data: { permissions: [...] }`: SuperAdmin hoặc có ít nhất một key thì qua, không thì về `auth/access` |
 
-⚠️ `core/auth` đang import `@/services/shared.service`, `@/services/user.service`, lệch luật tầng trong [README.md](README.md).
+Lưu ý: `core/auth` đang import `@/services/shared.service`, `@/services/user.service`, lệch luật tầng trong [README.md](README.md).
 
 ## core/http — interceptor dạng hàm
 
@@ -26,7 +26,7 @@ Nằm ở `admin/src/app/core/auth/` và `core/http/`. Lib `@sh/ui` không có p
 
 Token nằm trong cookie `HttpOnly` do BE đặt, JS không đọc được. FE dùng client `client-web2`, không có secret.
 
-⚠️ `authInterceptor` phải đứng sau `httpErrorInterceptor` trong mảng để `401` được thử refresh trước khi hiện toast.
+Lưu ý: `authInterceptor` phải đứng sau `httpErrorInterceptor` trong mảng để `401` được thử refresh trước khi hiện toast.
 
 Cờ điều khiển là `HttpContextToken` trong `http-context.ts`, **không** đi kèm query string:
 
@@ -37,9 +37,9 @@ this._http.get(url, { context });
 
 `DownloadService.get(url)` / `post(url, body)` trả `HttpResponse<Blob>`; lưu file bằng `Utils.makeDownload`.
 
-⚠️ Chỉ **lỗi HTTP** mới qua `httpErrorInterceptor`. BE trả lỗi nghiệp vụ bằng **HTTP 200** + `status = 0`, nên lỗi
+Lưu ý: Chỉ **lỗi HTTP** mới qua `httpErrorInterceptor`. BE trả lỗi nghiệp vụ bằng **HTTP 200** + `status = 0`, nên lỗi
 nghiệp vụ phải được đọc ở tầng data-access của tính năng (sẽ có `unwrapApiResponse` theo plan khớp BE).
-⚠️ Đăng nhập sai BE trả HTTP **400** `{ error: 'invalid_grant', error_description }`; lời gọi `/connect/token` phải
+Lưu ý: Đăng nhập sai BE trả HTTP **400** `{ error: 'invalid_grant', error_description }`; lời gọi `/connect/token` phải
 đặt `SKIP_ERROR_TOAST` và tự hiện `error_description`, nếu không sẽ ra toast "Dữ liệu gửi lên không hợp lệ" (câu của mã 400).
 
 ## GlobalErrorHandler

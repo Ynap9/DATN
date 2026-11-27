@@ -1,6 +1,6 @@
 # Chuẩn SIP — metadata, bảng mã, mimetype, tên ZIP
 
-> **Phần 3/8** · trước: [02-sip-cau-truc-mets.md](02-sip-cau-truc-mets.md) · mục lục: [README.md](README.md)
+> **Phần 3/10** · trước: [02-sip-cau-truc-mets.md](02-sip-cau-truc-mets.md) · mục lục: [README.md](README.md)
 
 ## 4. `EAD.xml` — metadata cấp gói
 
@@ -24,7 +24,7 @@
 | `startDate` / `endDate` | Thời gian bắt đầu / kết thúc | Date | | `DD/MM/YYYY` |
 | `keyword` | Từ khóa (nếu có) | String | 100 | |
 | `totalDoc` | Tổng số tài liệu trong hồ sơ | Number | 10 | văn bản + tài liệu kỹ thuật + âm bản/ảnh + ghi âm/phim |
-| `numberOfPaper` | Số lượng tờ | Number | 10 | dành riêng tài liệu giấy số hóa — **xem ⚠️ dưới** |
+| `numberOfPaper` | Số lượng tờ | Number | 10 | dành riêng tài liệu giấy số hóa — **xem Lưu ý: dưới** |
 | `numberOfPage` | Số lượng trang | Number | 10 | |
 | `format` | Tình trạng vật lý (nếu có) | String | 50 | |
 | `inforSign` | Ký hiệu thông tin (nếu có) | String | 30 | |
@@ -34,7 +34,7 @@
 | `riskRecoveryStatus` | Tình trạng dự phòng | String | 2 | `01` đã dự phòng · `02` chưa — **bắt buộc khi `riskRecovery=1`** |
 | `description` | Ghi chú | String | 2000 | tên người lập hồ sơ + nội dung cần làm rõ |
 
-⚠️ **Bản thân TT05 tự mâu thuẫn ở đây, tới hai lần.** Khung XML trang 212 liệt kê **18** phần tử, có
+Lưu ý: **Bản thân TT05 tự mâu thuẫn ở đây, tới hai lần.** Khung XML trang 212 liệt kê **18** phần tử, có
 `numberOfPaper`; nhưng bảng mô tả chi tiết trang 212–217 chỉ đánh số **17**, nhảy từ `totalDoc` (#9) sang
 `numberOfPage` (#10). Tệ hơn, **`EAD.xsd` ở mục 4 của chính Phụ lục III chỉ khai 16 phần tử** — thiếu hẳn
 `riskRecovery` và `riskRecoveryStatus` mà khung XML có. Gói mẫu có đủ **18** ở cả schema lẫn dữ liệu, nên
@@ -110,7 +110,7 @@ Dùng khi nguồn nộp **đã nộp tài liệu đó ở lần trước** và k
 | Nội dung | chỉ `{Định danh tài liệu}` — văn bản → `Mã định danh tài liệu`; phim âm bản/ảnh → tiêu đề; phim/âm thanh → tiêu đề |
 | Khai trong METS | `fileSec/fileGrp[@USE='Holeyfile']/file`, nối bằng `structMap/div/div/div[@LABEL="MetadataLink/Holey"]` |
 
-⚠️ Hai chỗ chính bản TT05 tự lệch, **đừng lặng lẽ chuẩn hóa lại**: phụ lục viết `@USER='Holeyfile'` trong khi
+Lưu ý: Hai chỗ chính bản TT05 tự lệch, **đừng lặng lẽ chuẩn hóa lại**: phụ lục viết `@USER='Holeyfile'` trong khi
 mọi chỗ khác dùng `@USE`; và ví dụ `structMap` của `SIP_tailieu` (trang 267) đã dùng `LABEL="MetadataLink/Holey"`
 mặc dù Phụ lục IV **không hề định nghĩa** cơ chế tài liệu liên kết.
 
@@ -148,7 +148,7 @@ mặc dù Phụ lục IV **không hề định nghĩa** cơ chế tài liệu li
 Định dạng nội dung trong gói: văn bản và tài liệu kỹ thuật là **PDF/A hai lớp**; âm bản/ảnh là JPEG; ghi âm,
 ghi hình là MPEG-4, MP3, avi, wma, wmv.
 
-⚠️ **PDF/A không phải cổng chặn của gói.** Chính bảng trên nhận `.txt`, `.rtf`, `.doc`, `.docx`, `.odt` bên
+Lưu ý: **PDF/A không phải cổng chặn của gói.** Chính bảng trên nhận `.txt`, `.rtf`, `.doc`, `.docx`, `.odt` bên
 cạnh `.pdf/a`, nên gói vẫn hợp lệ về cấu trúc khi tệp văn bản không phải PDF/A — ràng buộc PDF/A của Điều 8
 gắn vào **khâu số hóa từ bản giấy**, không gắn vào khâu đóng gói. Trong luồng đóng gói của dự án, sinh PDF/A
 là **tuỳ chọn**; mức tuân thủ, bẫy thứ tự với ký số và điều kiện bật ở [08-pdfa.md](08-pdfa.md).
@@ -160,10 +160,10 @@ là **tuỳ chọn**; mức tuân thủ, bẫy thứ tự với ký số và đi
 Số thứ tự do người dùng tự đánh theo số Ả-rập; ID gói lấy từ `mets/@OBJID` của phần tử gốc METS.xml. Câu chữ
 giống hệt nhau ở cả hai phụ lục (trang 238 và trang 291).
 
-⚠️ **Chỉ SIP có quy tắc đặt tên ZIP.** Phụ lục I, II và V đều nói gói được nén ZIP khi truyền nhận nhưng
+Lưu ý: **Chỉ SIP có quy tắc đặt tên ZIP.** Phụ lục I, II và V đều nói gói được nén ZIP khi truyền nhận nhưng
 **không quy định tên file**.
 
-🎯 **Gói mẫu làm khác, và chốt theo gói mẫu:** tên ZIP là **một GUID thường viết chữ nhỏ**,
+**Gói mẫu làm khác, và chốt theo gói mẫu:** tên ZIP là **một GUID thường viết chữ nhỏ**,
 `b6acafed-a809-4b78-ae9f-0373d50d52f0.zip` — **không có tiền tố `uuid-`, không có số thứ tự, và khác hẳn
 `OBJID`** của gói (`uuid-0F203B84-…`). Thư mục gói mang tên `OBJID` **nằm bên trong** file ZIP, chỉ thấy sau
 khi giải nén. Nghĩa là một gói có **hai định danh khác nhau**: GUID của file ZIP và `OBJID` của gói bên trong.

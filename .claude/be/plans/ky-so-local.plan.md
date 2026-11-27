@@ -1,6 +1,6 @@
 # Plan: ký số local (lô tải lên, USB token qua plugin)
 
-> **Trạng thái:** 🔶 làm dở — kiến trúc A–G chốt 2026-10-17; ✅ bước 2–8 (code + tài liệu, [../nghiep-vu/10-lo-ky.md](../nghiep-vu/10-lo-ky.md)); còn bước 1 (đo) và chạy thử
+> **Trạng thái:** làm dở — kiến trúc A–G chốt 2026-10-17; (xong) bước 2–8 (code + tài liệu, [../nghiep-vu/10-lo-ky.md](../nghiep-vu/10-lo-ky.md)); còn bước 1 (đo) và chạy thử
 > luồng qua API với USB token thật — phần mật mã đã ký thật qua TSA, OpenSSL xác nhận. Đã xong: mẫu chữ ký
 > ([../nghiep-vu/09-mau-chu-ky.md](../nghiep-vu/09-mau-chu-ky.md)), API plugin, `ICertificateValidatorExternal`
 > ([../architecture/05-infrastructure-external.md](../architecture/05-infrastructure-external.md)).

@@ -58,7 +58,7 @@ văn bản vừa kiểm / vừa đạt giữa lúc lập kế hoạch và lúc x
 số → `812` rollback. `AssignCheckedToQaAsync` gọi lại `EnsureCanCheckAsync` trong transaction của Kiểm tra: văn bản vừa bị thu / chuyển
 → `820`, Kiểm tra rollback.
 
-⚠️ DB bật `READ_COMMITTED_SNAPSHOT`: `ExecuteDelete` + `Any` đọc thường thấy bản đã commit **cũ** ("chưa kiểm") của dòng Kiểm tra
+Lưu ý: DB bật `READ_COMMITTED_SNAPSHOT`: `ExecuteDelete` + `Any` đọc thường thấy bản đã commit **cũ** ("chưa kiểm") của dòng Kiểm tra
 đang ghi dở và xoá nhầm, để lại văn bản `CHECKED` không người giữ (test đua 2026-11-13 bắt được). Đừng bỏ `UPDLOCK`, đừng chuyển
 điều kiện ra C# đọc trước rồi xoá sau.
 

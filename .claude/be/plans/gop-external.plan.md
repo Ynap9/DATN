@@ -1,6 +1,6 @@
 # Plan: gom tầng external theo mục, chuẩn tên `External`
 
-> **Trạng thái:** 🔶 làm dở — chốt 2026-10-24; ✅ bước 1–5 (code + tài liệu), còn bước 6 (kiểm tổng).
+> **Trạng thái:** làm dở — chốt 2026-10-24; (xong) bước 1–5 (code + tài liệu), còn bước 6 (kiểm tổng).
 
 ## Input
 
@@ -39,16 +39,16 @@
 
 Mỗi phần: `git mv` (giữ lịch sử), đổi tên / namespace, sửa service dùng cổng đó + `Program.cs`, build sạch, dừng cho review.
 
-1. ✅ Mail — làm mẫu cho cách đặt tên và thư mục.
-2. ✅ Storage — kiểm lại tên embedded resource sau khi chuyển `SampleFile/Files`. ✅ DTO `File/`, `Plugin/` → `Base/Dtos/Storage/`;
-   ✅ `IRequestContext`, `IAuthorizationStateProtector` → `Base/Interfaces/Api/`.
-   ✅ 9 cổng còn lại → `External/DataReader/`, `External/DigitalSignature/` (giữ tên cũ); DTO `Excel/`, `Spreadsheet/` → `Dtos/DataReader/`,
+1. (xong) Mail — làm mẫu cho cách đặt tên và thư mục.
+2. (xong) Storage — kiểm lại tên embedded resource sau khi chuyển `SampleFile/Files`. (xong) DTO `File/`, `Plugin/` → `Base/Dtos/Storage/`;
+   (xong) `IRequestContext`, `IAuthorizationStateProtector` → `Base/Interfaces/Api/`.
+   (xong) 9 cổng còn lại → `External/DataReader/`, `External/DigitalSignature/` (giữ tên cũ); DTO `Excel/`, `Spreadsheet/` → `Dtos/DataReader/`,
    `Signing/` → `Dtos/DigitalSignature/`. Applications xong phần thư mục.
-3. ✅ DataReader — đổi tên `...External`, gộp Excel, gộp Google writer + authorizer, chuyển `external/Spreadsheet/` vào `DataReader/`.
-   ✅ (mở rộng) `domain/Module/Construction` gom theo nghiệp vụ → vai trò: `{DocumentTypes,DocumentFields,Projects,Submissions}/
+3. (xong) DataReader — đổi tên `...External`, gộp Excel, gộp Google writer + authorizer, chuyển `external/Spreadsheet/` vào `DataReader/`.
+   (xong) (mở rộng) `domain/Module/Construction` gom theo nghiệp vụ → vai trò: `{DocumentTypes,DocumentFields,Projects,Submissions}/
    {Entities,Repositories,Services}`; `Check/`, `Import/` vào `Submissions/Services/`. Migration cũ giữ nguyên (chỉ chứa chuỗi tên kiểu).
-4. ✅ DigitalSignature — đổi tên, chuyển `external/{Pdf,Signing,Timestamp,Certificate}/` vào `DigitalSignature/`.
-5. ✅ Tài liệu: bảng interface ở `architecture/README.md`, `05-infrastructure-external.md`, `09-chu-ky-so.md`, quy ước tên ở `07-conventions.md`,
+4. (xong) DigitalSignature — đổi tên, chuyển `external/{Pdf,Signing,Timestamp,Certificate}/` vào `DigitalSignature/`.
+5. (xong) Tài liệu: bảng interface ở `architecture/README.md`, `05-infrastructure-external.md`, `09-chu-ky-so.md`, quy ước tên ở `07-conventions.md`,
    bước "thêm dịch vụ ngoài" ở `08-them-chuc-nang.md`.
 6. Build `dotnet build sh.be/sh.be.api/sh.be.api.sln`, chạy API, gọi thử một API của mỗi mục.
 
@@ -60,7 +60,7 @@ trừ một điểm ở dưới. Hangfire nằm trong mục `BackgroundJob/` (đ
 ## Điểm cần chú ý
 
 - Gộp Excel: file template dùng chung cách giãn cột của file xuất (kẹp rộng 8–60) — khác nhỏ so với hiện tại, người dùng đã đồng ý.
-- ⚠️ Thư mục nghiệp vụ ở domain dùng **số nhiều** (`Submissions/`): namespace `...Construction.Submission` sẽ che entity `Submission`
+- Lưu ý: Thư mục nghiệp vụ ở domain dùng **số nhiều** (`Submissions/`): namespace `...Construction.Submission` sẽ che entity `Submission`
   trong code domain (CS0118). Cùng loại bẫy với `Hangfire.BackgroundJob`.
 - `ISampleFileExternal` (Storage) dùng `ExportFileDto` nằm ở `Dtos/DataReader/` — phụ thuộc chéo mục, chấp nhận vì DTO là file xuất Excel.
 - Đổi tên là đổi chữ ký nội bộ, không đổi route / DTO / schema; FE không bị ảnh hưởng.

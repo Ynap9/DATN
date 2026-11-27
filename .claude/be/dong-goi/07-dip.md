@@ -1,6 +1,6 @@
 # Chuẩn DIP — gói tài liệu lưu trữ sử dụng (Phụ lục V)
 
-> **Phần 7/8** · trước: [06-aip-premis.md](06-aip-premis.md) · mục lục: [README.md](README.md)
+> **Phần 7/10** · trước: [06-aip-premis.md](06-aip-premis.md) · mục lục: [README.md](README.md)
 
 > Gói giao cho **người dùng cuối**, dạng bản sao có xác thực. Phụ lục V, trang 292–357. Cập nhật 2026-09-08.
 
@@ -9,9 +9,7 @@
 DIP không phải một lựa chọn song song với SIP/AIP mà là **một trong bốn mức bản dành cho người sử dụng** —
 mức cao nhất, quy định ở **Điều 42**: *Bản sao tài liệu lưu trữ số có xác thực dạng gói tin DIP*.
 
-Ba mức dưới nó (bản đọc, bản sao không xác thực, bản sao có xác thực — Điều 37, 40, 41) chỉ là **file lẻ** có
-đóng dấu chữ "BẢN SAO"; chúng **không cần đóng gói**. Xem bảng bốn mức ở
-[01-thong-tu.md §6](01-thong-tu.md).
+Ba mức dưới (Điều 37, 40, 41) chỉ là **file lẻ** đóng dấu "BẢN SAO", **không đóng gói** — [01 §6](01-thong-tu.md).
 
 Điều kiện của gói DIP (Điều 42.1–2): được nhân bản từ bản gốc tài liệu lưu trữ số và **bảo đảm các yếu tố xác
 thực** đối với bản gốc — tức khác hẳn bản đọc, vốn "không kiểm tra được các yếu tố xác thực".
@@ -45,15 +43,15 @@ từ tài liệu gốc nào, và dùng được tới bao giờ.
 ├── metadata/
 │   ├── descriptive/
 │   │   └── EAD.xml                       bắt buộc, 01 — mô tả YÊU CẦU KHAI THÁC, xem §5
-│   └── preservation/                     ○ KHÔNG bắt buộc
-│       └── PREMIS.xml                    ○ KHÔNG bắt buộc
+│   └── preservation/                     (*) KHÔNG bắt buộc
+│       └── PREMIS.xml                    (*) KHÔNG bắt buộc
 ├── representations/rep1/
 │   ├── METS.xml                          bắt buộc, 01
 │   ├── metadata/
 │   │   ├── descriptive/
 │   │   │   └── EAD_doc_File1.xml …       ≥01 — [Tiêu chuẩn]_[Loại tài liệu]_[Tên file]
-│   │   └── preservation/                 ○ KHÔNG bắt buộc
-│   │       └── PREMIS_rep1.xml           ○ KHÔNG bắt buộc
+│   │   └── preservation/                 (*) KHÔNG bắt buộc
+│   │       └── PREMIS_rep1.xml           (*) KHÔNG bắt buộc
 │   └── data/
 │       └── File1.pdf … Filen.pdf         ≥01 tài liệu
 ├── schemas/
@@ -62,14 +60,12 @@ từ tài liệu gốc nào, và dùng được tới bao giờ.
 └── documentation/UserManual.pdf          KHÔNG bắt buộc
 ```
 
-○ = **khác AIP**: bốn mục bảo quản chuyển từ *bắt buộc* sang *không bắt buộc*. Hợp lý — người dùng nhận bản
-sao để đọc, không phải để bảo quản lâu dài; PREMIS chỉ đi kèm khi cần chứng minh chuỗi nguồn gốc.
+(*) = **khác AIP**: bốn mục bảo quản ghi *không bắt buộc* ở cây thư mục — sh.be vẫn sinh (C14, mục 7).
 
 Hai khác biệt nhỏ nữa so với AIP: `data/` của DIP **không có `.fetch.txt`** (không có cơ chế tài liệu liên kết —
 bản giao người dùng phải tự đủ), và mọi ví dụ đều là `.pdf`.
 
-⚠️ Phụ lục V đánh số mục bắt đầu từ **"2. CẤU TRÚC GÓI TIN"** — không có mục 1. Lỗi đánh số của bản gốc, không
-phải thiếu nội dung.
+Lưu ý: Phụ lục V bắt đầu từ **"2. CẤU TRÚC GÓI TIN"**, không có mục 1 — lỗi đánh số bản gốc, không thiếu nội dung.
 
 ## 4. METS
 
@@ -98,7 +94,7 @@ phải thiếu nội dung.
 `structMap` của DIP dùng cả `@AMDID` lẫn `@DMDID` trên `div[@LABEL="MetadataLink/File"]`, bên cạnh
 `div[@LABEL="Data"]` và `div[@LABEL="AttachmentFile"]` — giống AIP.
 
-⚠️ **Hai lỗi trong chính ví dụ của Phụ lục V, đừng chép theo.** Ví dụ `metsHdr` ở trang 311 ghi
+Lưu ý: **Hai lỗi trong chính ví dụ của Phụ lục V, đừng chép theo.** Ví dụ `metsHdr` ở trang 311 ghi
 `csip:OAISPACKAGETYPE="SIP"` trong khi bảng mô tả ngay trước đó (trang 299) chốt giá trị phải là `DIP`. Cũng ví
 dụ đó dùng `agent/@ROLE="ARCHIVIST"` thay vì `CREATOR` như mọi phụ lục khác. Bám bảng mô tả, không bám ví dụ.
 
@@ -131,13 +127,13 @@ dụ đó dùng `agent/@ROLE="ARCHIVIST"` thay vì `CREATOR` như mọi phụ l�
 Nhóm `02`–`09` là các diện chính sách được ưu tiên/miễn giảm phí; `feeObjectType` chính là chỗ Hệ thống căn cứ
 để tính phí đọc và phí cấp bản sao (Điều 36.1.c, Điều 39.1.c).
 
-⚠️ Hệ quả thiết kế: **`EAD.xml` của DIP không mang `fileCode`, `arcFileCode`, `title`, `totalDoc` hay bất kỳ
+Lưu ý: Hệ quả thiết kế: **`EAD.xml` của DIP không mang `fileCode`, `arcFileCode`, `title`, `totalDoc` hay bất kỳ
 trường mô tả tài liệu nào.** Bộ sinh gói không thể tái sử dụng đường ghi `EAD.xml` của SIP/AIP cho DIP — phải
 là một đường riêng, lấy dữ liệu từ **bản ghi yêu cầu khai thác**, không phải từ hồ sơ.
 
 ## 6. Metadata từng tài liệu — gần SIP hơn AIP
 
-⚠️ **Không phải "bê nguyên bộ của AIP".** Đọc thẳng schema Phụ lục V (mục 3.4.2), `EAD_doc` của DIP có
+Lưu ý: **Không phải "bê nguyên bộ của AIP".** Đọc thẳng schema Phụ lục V (mục 3.4.2), `EAD_doc` của DIP có
 **20 trường** và giống **bản SIP** chứ không giống AIP — chỉ khác hai chỗ: `docCode` → `arcDocCode`, và
 **bỏ hẳn `organName`**:
 
@@ -167,6 +163,9 @@ Phụ lục V có đủ bốn schema như các phụ lục khác (mục 3.4): `3
 bản đã liệt kê ở [03-sip-metadata.md §5.2–5.3](03-sip-metadata.md), với `docCode` đổi thành `arcDocCode`.
 
 ## 7. PREMIS trong DIP
+
+Lưu ý: chốt 2026-11-27 (Q5, plan C14): sh.be **luôn sinh** PREMIS cho DIP, vì bảng phần tử METS DIP (tr.302, 307,
+313–314) ghi `amdSec/digiprovMD` bắt buộc; cây thư mục ghi "không bắt buộc" chỉ là cho phép vắng, không cấm có.
 
 Khi có, `PREMIS.xml` của DIP dùng **cùng cấu trúc PREMIS v3.0** như AIP — `premis` · `object` · `event` ·
 `agent`, cùng bộ thuộc tính, cùng cách nối `linkingObjectIdentifier`. Xem

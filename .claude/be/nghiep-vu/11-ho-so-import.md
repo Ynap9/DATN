@@ -90,14 +90,14 @@ overwrite `{ totalOverWriteCount, totalSkippedChecked }`. Kết quả import: `{
 
 Cùng code nhưng bật MARS: import append 383,7 s.
 
-⚠️ **MARS + bulk**: bulk async trên kết nối MARS chết giữa chừng (`BeginExecuteNonQuery requires an open and available Connection`),
+Lưu ý: **MARS + bulk**: bulk async trên kết nối MARS chết giữa chừng (`BeginExecuteNonQuery requires an open and available Connection`),
 transaction phía SQL Server vẫn mở và giữ khoá → mọi import sau của loại văn bản đó nhận `310` tới khi `KILL` session. Bulk sync thì chạy
 đúng nhưng chậm 8 lần. Vì vậy `SO_HOA_DB` để `MultipleActiveResultSets=False` (đổi 2026-10-17); môi trường deploy cũng phải tắt.
 
-⚠️ `SubmissionRepository` đọc `SubmissionData` và chạy bulk bằng API **sync** (`ToList`, `BulkInsert`, `BulkUpdate`): SqlClient đọc / ghi cột
+Lưu ý: `SubmissionRepository` đọc `SubmissionData` và chạy bulk bằng API **sync** (`ToList`, `BulkInsert`, `BulkUpdate`): SqlClient đọc / ghi cột
 `nvarchar(max)` ở chế độ async chậm hàng chục lần (verify blank 101 s → 13,9 s khi đổi sang sync). Đừng "sửa" lại thành `ToListAsync`.
 
-⚠️ Lô bulk 4.000 → 100.000: mỗi lô tốn vài lượt đi – về (~150 ms mỗi lượt ở môi trường Docker này), 150 lô chiếm gần hết thời gian
+Lưu ý: Lô bulk 4.000 → 100.000: mỗi lô tốn vài lượt đi – về (~150 ms mỗi lượt ở môi trường Docker này), 150 lô chiếm gần hết thời gian
 (insert 600.000 dữ liệu 88 s → ~35 s). Cả import trong một transaction nên lô lớn không đổi khả năng rollback.
 
 ## Import từ file Excel chạy nền
@@ -136,12 +136,12 @@ Luồng FE: tải file → chọn **một** kiểu + sheet + cột → chạy th
 | 24.3 | Giới hạn file | `.xlsx`, ≤ 20 MB, ≤ 100.000 dòng dữ liệu |
 | 24.4 | Giữ file trên MinIO | 1 ngày rồi xoá (như file export) |
 
-⚠️ `S3FileStorageExternal` không tách "không có object" khỏi lỗi khác, nên MinIO sập cũng báo `343` "đã hết hạn". ⚠️ Chuỗi số theo culture của
-server (`1,234,567.50` hay `1.234.567,50`), có thể khác Google Sheet (theo cài đặt file sheet). ⚠️ Job đụng import / xoá đồng bộ cùng cặp
+Lưu ý: `S3FileStorageExternal` không tách "không có object" khỏi lỗi khác, nên MinIO sập cũng báo `343` "đã hết hạn". Lưu ý: Chuỗi số theo culture của
+server (`1,234,567.50` hay `1.234.567,50`), có thể khác Google Sheet (theo cài đặt file sheet). Lưu ý: Job đụng import / xoá đồng bộ cùng cặp
 dự án + loại văn bản thì chờ khoá 5 giây rồi Failed `310`, không tự thử lại.
 
 Đã kiểm 2026-11-12 gọi API thật trên DB dev (ZZTEST24, đã xoá; MinIO chung đầy ổ nên dùng S3 giả lập cục bộ qua `S3__*`): verify Excel = Google 3 kiểu; 1.000 hồ sơ / 6.000 ô khớp từng ô bản Google; import lại → 0, không audit; overwrite `false` / `true`, blank; `306`–`344`, `211`; job lỗi Failed không retry; dự án sang `DONE` / `ACCEPTING` khi job chờ → Failed; 2 job tuần tự. **Chưa đo** hiệu năng.
-⚠️ Server import chết đột ngột vẫn coi là sống tới 90 giây (`SERVER_ALIVE_SECONDS`): job tạo lúc đó nằm chờ tới khi server lên lại. ⚠️ Excel dùng chung câu `306` "Google Sheet không có dữ liệu" và `Action` audit "…từ Google Sheet" (chỉ `Content` ghi "từ file Excel").
+Lưu ý: Server import chết đột ngột vẫn coi là sống tới 90 giây (`SERVER_ALIVE_SECONDS`): job tạo lúc đó nằm chờ tới khi server lên lại. Lưu ý: Excel dùng chung câu `306` "Google Sheet không có dữ liệu" và `Action` audit "…từ Google Sheet" (chỉ `Content` ghi "từ file Excel").
 
 ## Xem file — proxy
 
@@ -166,14 +166,14 @@ proxy: Data giữ → PDF, Data khác → `820`, Leader của cặp / Admin → 
 
 ## Giới hạn
 
-⚠️ Chưa kiểm: thiếu quyền → `403`. Rollback đã kiểm bằng cách dừng API giữa lúc bulk insert (đã chèn 20.000 hồ sơ + 396.000 dữ liệu
+Lưu ý: Chưa kiểm: thiếu quyền → `403`. Rollback đã kiểm bằng cách dừng API giữa lúc bulk insert (đã chèn 20.000 hồ sơ + 396.000 dữ liệu
 trong transaction): DB không còn hồ sơ, dữ liệu, audit nào của lần import đó. Lỗi `308` / `314` liệt kê **mọi** dòng lỗi (message rất dài).
 
-⚠️ Sheet dự án do tài khoản OAuth tạo trong thư mục `GoogleFolderId`; reader dùng **service account**, nên thư mục / sheet phải share cho
+Lưu ý: Sheet dự án do tài khoản OAuth tạo trong thư mục `GoogleFolderId`; reader dùng **service account**, nên thư mục / sheet phải share cho
 `client_email` của service account (người dùng tự share) — không thì `203`.
-⚠️ Trường thêm vào loại văn bản **sau** khi gắn vào dự án không tự vào cấu hình `ProjectDocumentTypeDocumentField` (hành vi của
+Lưu ý: Trường thêm vào loại văn bản **sau** khi gắn vào dự án không tự vào cấu hình `ProjectDocumentTypeDocumentField` (hành vi của
 [07-du-an.md](07-du-an.md)), nên import không thấy trường đó cho tới khi cấu hình dự án được cập nhật.
-⚠️ `proxy-file` tìm `FileUrlS3Object` không có index (cột `nvarchar(1000)` vượt giới hạn khoá index) → quét bảng `Submission` mỗi lần
+Lưu ý: `proxy-file` tìm `FileUrlS3Object` không có index (cột `nvarchar(1000)` vượt giới hạn khoá index) → quét bảng `Submission` mỗi lần
 xem file. Bảng lớn thì nên đổi sang tìm theo `Id` hồ sơ — đổi contract FE, hỏi trước. Chấp nhận `application/octet-stream` vì MinIO
 thường lưu PDF với kiểu này, nên file không phải PDF mà có kiểu đó vẫn lọt.
 

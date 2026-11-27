@@ -82,7 +82,7 @@ Body: `{ id, projectId, documentTypeId, datas: [{ documentFieldId, data }], note
   Check / QA / Xoá cùng văn bản chạy lần lượt, request sau xét trên trạng thái đã commit (không còn ghi vào văn bản vừa bị xoá).
 - Thứ tự khoá chung **cặp `ProjectDocumentType` → văn bản** (như Xoá / import / giao việc): dự án có QA thì Check gọi
   `LockPairBeforeSubmissionAsync` trước khi khoá dòng văn bản (timeout 5 giây → `812`); dự án không QA không khoá cặp.
-- ⚠️ Check khoá văn bản trước rồi mới khoá cặp ở `AssignCheckedToQaAsync` → đua với Xoá (khoá cặp trước) thành deadlock, Xoá nhận
+- Lưu ý: Check khoá văn bản trước rồi mới khoá cặp ở `AssignCheckedToQaAsync` → đua với Xoá (khoá cặp trước) thành deadlock, Xoá nhận
   500 ở 10/10 vòng → nguyên nhân: hai luồng khoá ngược chiều → mọi thao tác cần cả hai khoá phải lấy cặp trước, văn bản sau
   (kiểm thật 20/11: 0/28 vòng lỗi sau khi sửa). Deadlock còn sót ở chỗ khác trả `423`, xem [06-shared](../architecture/06-shared.md).
 - Một transaction (Task 25): lưu `Submission`, `SubmissionData`, `SubmissionLog`, `AuditLog` → `AssignCheckedToQaAsync` (kiểm lại người giữ `820`; dự án không QA thì xét `DONE` phiếu Data, không giao QA) → lưu → (dự án không QA, Task 28: tự vào nghiệm thu khi văn bản cuối được kiểm, [22](22-nghiem-thu-du-an.md#tự-chuyển-trong-reviewqa--check--delete)) → commit; lỗi ở đâu cũng không ghi gì.
@@ -163,20 +163,20 @@ gọi cả HTTP. Một request nhẹ (`count` 16 hồ sơ) đã tốn ~136 ms (�
 
 ## Giới hạn
 
-⚠️ `field-values` không lọc chậm (~1 s ở DB): plan **sort theo `Data` (`nvarchar(max)`)** rồi seek `Submission` cho từng ô; nhiều ô cùng giá trị thì
+Lưu ý: `field-values` không lọc chậm (~1 s ở DB): plan **sort theo `Data` (`nvarchar(max)`)** rồi seek `Submission` cho từng ô; nhiều ô cùng giá trị thì
 không dừng sớm được. Đo tay: `GROUP BY CAST(Data AS nvarchar(4000))` còn 114 ms, nhưng EF cần thêm `DbFunction` trong `ShDbContext` và giá trị
 dài hơn 4.000 ký tự bị cắt khi gộp — chưa làm, chờ chốt. Đừng thêm index / `INCLUDE` cột `Data` (xem dưới).
 
-⚠️ **Chưa đo** import append 20.000 hồ sơ (mục tiêu < 60 s); import chưa gọi lại sau khi gộp vào `SubmissionService` — code chỉ chuyển chỗ.
+Lưu ý: **Chưa đo** import append 20.000 hồ sơ (mục tiêu < 60 s); import chưa gọi lại sau khi gộp vào `SubmissionService` — code chỉ chuyển chỗ.
 
-⚠️ Hai người cùng kiểm một hồ sơ: người lưu sau ghi đè (last write wins); chặn thì gửi kèm `ModifiedDate` để so — chưa làm.
+Lưu ý: Hai người cùng kiểm một hồ sơ: người lưu sau ghi đè (last write wins); chặn thì gửi kèm `ModifiedDate` để so — chưa làm.
 
-⚠️ Lọc theo giá trị trường phải đọc cột `SubmissionData.Data` (`nvarchar(max)`, không index được) cho từng hồ sơ trong phạm vi lọc.
+Lưu ý: Lọc theo giá trị trường phải đọc cột `SubmissionData.Data` (`nvarchar(max)`, không index được) cho từng hồ sơ trong phạm vi lọc.
 Đừng thêm index / `INCLUDE` cột này: nhân đôi dung lượng và làm chậm bulk import. Nếu đo thấy chậm thì tính cột băm có index.
 
-⚠️ Kiểm tra tốn 8 lượt đi – về DB (6 luồng chính + vai trò + `UserName`, token không có tên — đã chốt giữ), Task 25 thêm mở / commit transaction.
+Lưu ý: Kiểm tra tốn 8 lượt đi – về DB (6 luồng chính + vai trò + `UserName`, token không có tên — đã chốt giữ), Task 25 thêm mở / commit transaction.
 Nạp hồ sơ (`305`, `319`) chạy **trước** nên lỗi sớm không tốn thêm; cộng chi phí `[Permission]` ([02-phan-quyen.md](02-phan-quyen.md)).
 
-⚠️ `Description` lưu `UserName` **lúc kiểm**; đổi tên đăng nhập sau đó mô tả cũ giữ nguyên, còn `userName` / `fullName` khi đọc là tên hiện tại.
+Lưu ý: `Description` lưu `UserName` **lúc kiểm**; đổi tên đăng nhập sau đó mô tả cũ giữ nguyên, còn `userName` / `fullName` khi đọc là tên hiện tại.
 
 > **Tiếp:** [13-ho-so-qa.md](13-ho-so-qa.md) — QA hồ sơ đã kiểm tra, trả lại hồ sơ không đạt, lịch sử QA.

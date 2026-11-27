@@ -2,21 +2,39 @@
 
 > Bộ này chỉ chép **quy định** của Thông tư 05/2025/TT-BNV về gói SIP / AIP / DIP (cấu trúc gói, METS, EAD, PREMIS,
 > bảng mã, PDF/A). Nghiệp vụ và thiết kế module đóng gói của sh.be **chốt riêng ở ĐATN**, không bê theo sao_mai / kssm.
-> ✅ Đã thi công phần **cấu hình metadata** (bảng + seed): [../nghiep-vu/16-dong-goi-cau-hinh.md](../nghiep-vu/16-dong-goi-cau-hinh.md).
-> 🔬 Chưa thi công: API, kiểm tra metadata, đóng gói ZIP / METS / EAD / PREMIS.
+> Đã thi công phần **cấu hình metadata** (bảng + seed): [../nghiep-vu/16-dong-goi-cau-hinh.md](../nghiep-vu/16-dong-goi-cau-hinh.md).
+> Chưa thi công: API, kiểm tra metadata, đóng gói ZIP / METS / EAD / PREMIS — plan ở
+> [../plans/dong-goi-tt05.plan.md](../plans/dong-goi-tt05.plan.md).
 
 Nguồn: bê từ `C:\Users\Admin\workspace\ksts\.claude\docs\tt05-*.md` ngày 2026-10-21 (bản tổng hợp từ PDF chính thức
 364 trang trên `moha.gov.vn`, cập nhật 2026-09-08). Nội dung quy định giữ nguyên; chỉ tách file cho vừa 180 dòng,
 sửa link, và đổi các ghi chú gắn với kssm / KSTS sang ngữ cảnh sh.be.
 
-> 🎯 **Luật trọng tài:** khi thông tư và gói mẫu `SIP_hoso` (gói đóng bởi hệ thống của FPT) lệch nhau thì **theo gói
+> **Luật trọng tài:** khi thông tư và gói mẫu `SIP_hoso` (gói đóng bởi hệ thống của FPT) lệch nhau thì **theo gói
 > mẫu** — trừ ba lỗi của chính gói mẫu ở [04-sip-goi-mau.md](04-sip-goi-mau.md). Phần gói mẫu không có (AIP, DIP,
 > `SIP_tailieu` cấp gói) mới lấy theo `.xsd` của thông tư.
 
 **Văn bản gốc:** [tai-lieu/TT05-2025-TT-BNV.pdf](tai-lieu/TT05-2025-TT-BNV.pdf) (364 trang, tải từ `moha.gov.vn`) và
 bản chữ để tra cứu [tai-lieu/TT05-2025-TT-BNV.txt](tai-lieu/TT05-2025-TT-BNV.txt) (mỗi trang mở đầu `===== TRANG n`).
 Trang schema `.xsd` của từng phụ lục: AIP_hoso 101–106 · AIP_tailieu 173–177 · SIP_hoso 231–235 · SIP_tailieu
-284–287 · DIP 349–353.
+284–287 · DIP 348–353 (đếm lại thẻ trong bản chữ 2026-11-27).
+
+## Luật bắt buộc trước khi làm bất cứ gì về đóng gói (chốt 2026-11-27)
+
+Đây là phần lõi của đồ án. Người hay agent nào nhận task đóng gói (kiểm tra, dựng gói, METS, EAD, PREMIS) **phải**
+làm đủ 5 bước, theo thứ tự, trước khi sửa một dòng code:
+
+1. Đọc hết 10 file của bộ này, theo thứ tự 01 → 10.
+2. Mở **văn bản gốc** [tai-lieu/TT05-2025-TT-BNV.txt](tai-lieu/TT05-2025-TT-BNV.txt), đọc đúng các trang mà
+   [10-yeu-cau-tung-mau.md](10-yeu-cau-tung-mau.md) ghi cho loại gói của task. Tài liệu tổng hợp có thể sai — đã
+   từng sai (OBJID AIP, sửa 27/11) — nên **dòng nào code dựa vào phải đối chiếu lại trang gốc**.
+3. Mở **gói mẫu** [goi-mau/](goi-mau/) (bản sao trong repo), đọc tận file `METS.xml`, `EAD.xml`, vài `EAD_DOC_*.xml`,
+   `schemas/*.xsd`; đối chiếu với [09-goi-mau-chi-tiet.md](09-goi-mau-chi-tiet.md).
+4. Viết **plan** vào `.claude/be/plans/` (hoặc cập nhật plan sẵn có): mỗi luật ghi **nguồn** (gói mẫu / trang thông tư
+   / chốt của người dùng). Luật không có nguồn → **dừng, hỏi người dùng**, không tự chọn.
+5. Tự **review** plan với gói mẫu + thông tư một lượt nữa, báo người dùng duyệt, rồi mới code.
+
+Thứ tự trọng tài khi các nguồn lệch nhau: [10-yeu-cau-tung-mau.md §1](10-yeu-cau-tung-mau.md).
 
 ## Mục lục
 
@@ -30,6 +48,9 @@ Trang schema `.xsd` của từng phụ lục: AIP_hoso 101–106 · AIP_tailieu 
 | [06-aip-premis.md](06-aip-premis.md) | PREMIS v3.0 (`object`, `event`, `agent`), tài liệu liên kết của `AIP_hoso`, điều AIP không quy định |
 | [07-dip.md](07-dip.md) | DIP (Điều 42), tệp văn bản xác thực 11 thông tin, cấu trúc, METS, `EAD.xml` yêu cầu khai thác, metadata tài liệu |
 | [08-pdfa.md](08-pdfa.md) | PDF/A hai lớp: là gì, thông tư đòi tới đâu, vì sao tuỳ chọn, số đo gói mẫu (PDF/A-2b), bẫy ký số |
+| [09-goi-mau-chi-tiet.md](09-goi-mau-chi-tiet.md) | Gói mẫu đo từng file: số đo, byte XML, METS gốc / rep1 đủ thuộc tính, EAD, schema; PDF đã ký + PDF/A-2b |
+| [10-yeu-cau-tung-mau.md](10-yeu-cau-tung-mau.md) | Bảng 5 loại gói có số trang, thứ tự trọng tài, chỗ thông tư tự mâu thuẫn, câu hỏi chưa có nguồn |
+| [goi-mau/](goi-mau/) | Bản sao gói mẫu (đủ XML / XSD, 1 PDF) + [danh-sach-file.tsv](goi-mau/danh-sach-file.tsv) 285 file kèm SHA-256 |
 
 ## Thuật ngữ
 

@@ -14,7 +14,7 @@ trường không khớp rồi chấm Đạt hoặc Trả lại, xong tự sang v
 | API | `GET submission/{id}/qa` (chi tiết + người kiểm), `GET submission/{id}/qa-logs`, `PUT submission/qa` (`result` 1 Đạt / 2 Không đạt) |
 | Bố cục | `submission/submission-layout.ts`: cùng khoá localStorage với màn Nhập liệu, hai màn chia chung một bố cục |
 | Đầu / cuối bộ lọc | `isFilterEdge` trong `submission-query.ts`, dùng chung với màn Nhập liệu |
-| Thanh trên | Cùng khuôn với màn Nhập liệu từ Task 53 (cỡ, cụm ◀ ▶, dòng 2 có tên metadata qua query `documentTypeName`), không có nút Lưu. Xem [08-man-nhap-lieu.md](08-man-nhap-lieu.md#giao-diện-task-53) |
+| Thanh trên | Cùng khuôn với màn Nhập liệu từ Task 53 (cỡ, cụm nút trước / sau, dòng 2 có tên metadata qua query `documentTypeName`), không có nút Lưu. Xem [08-man-nhap-lieu.md](08-man-nhap-lieu.md#giao-diện-task-53) |
 | Hằng | `QA_RESULT`, `QA_REASON_MAX_LENGTH` (1000), `QA_QUICK_REASONS`, mã lỗi 320–345 ở `submission.constants.ts` |
 
 ## Quyết định
@@ -26,7 +26,7 @@ trường không khớp rồi chấm Đạt hoặc Trả lại, xong tự sang v
   trước thì Leader thấy nhầm câu "thiếu quyền". Banner chỉ đọc thắng banner vàng "Lần trước sai".
 - "Lần trước sai" lấy từ log QA Không đạt gần nhất; trường ẩn (`isShowListView = false`) mà bị đánh sai lần trước vẫn hiện.
   Lượt QA = số log + 1, chưa có log hiện "—".
-- Hết văn bản trong bộ lọc: **không** có trạng thái "đã chấm hết". ◀ ▶ và "Văn bản sau" chỉ **tắt** (không ẩn) theo
+- Hết văn bản trong bộ lọc: **không** có trạng thái "đã chấm hết". nút trước / sau và "Văn bản sau" chỉ **tắt** (không ẩn) theo
   `position` / `totalItems`; chấm xong mà `next` trả 317 thì ở lại văn bản vừa chấm và tải lại để thấy kết quả.
 - Dự án không bật QA / người Nhập liệu vào màn này → toast rồi về danh sách. 820 → trạng thái trống "không được giao".
 - Lỗi khi chấm 316 / 320 / 323 / 332 / 334 / 345 → tải lại dự án + văn bản (thường thành chỉ đọc), giữ nguyên đánh dấu nếu
@@ -35,11 +35,11 @@ trường không khớp rồi chấm Đạt hoặc Trả lại, xong tự sang v
 
 ## Bẫy
 
-- ⚠️ `sh-input-text` tự trim giá trị khi gõ và tự hiện lỗi "bắt buộc" trùng với dòng gợi ý → khai
+- Lưu ý: `sh-input-text` tự trim giá trị khi gõ và tự hiện lỗi "bắt buộc" trùng với dòng gợi ý → khai
   `[isShowMessageInvalid]="false"`. Bộ đếm ký tự đọc `reasonControl.value`, không tự đếm lại.
-- ⚠️ Phím tắt nghe ở `document:keydown` (lý do ở [08-man-nhap-lieu.md](08-man-nhap-lieu.md)); focus trong iframe PDF thì
+- Lưu ý: Phím tắt nghe ở `document:keydown` (lý do ở [08-man-nhap-lieu.md](08-man-nhap-lieu.md)); focus trong iframe PDF thì
   Ctrl + ↑ / ↓ / Enter không bắt được.
-- ⚠️ Test trên DB dev qua tunnel: mỗi lần mở văn bản mất 3–6 s. Bấm khi màn đang bận thì nút bị tắt, thao tác mất — đừng
+- Lưu ý: Test trên DB dev qua tunnel: mỗi lần mở văn bản mất 3–6 s. Bấm khi màn đang bận thì nút bị tắt, thao tác mất — đừng
   coi là lỗi điều hướng.
 
 > **Tiếp:** [10-man-operation.md](10-man-operation.md) — màn module Operation: Thành viên dự án.

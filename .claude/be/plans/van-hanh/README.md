@@ -1,6 +1,6 @@
 # Plan: module Operation — nhóm nhân viên, thành viên dự án, đơn giá, chia phiếu theo cây
 
-> **Trạng thái:** 🔶 làm dở — Task 9 xong 2026-10-26 (nền móng: schema, mã lỗi, quyền; đã `database update` + gán quyền Leader / Data trên DB dev);
+> **Trạng thái:** làm dở — Task 9 xong 2026-10-26 (nền móng: schema, mã lỗi, quyền; đã `database update` + gán quyền Leader / Data trên DB dev);
 > Task 10 xong 2026-10-26 (8 API nhóm nhân viên + luật `109` Data / QA); Task 11 xong 2026-10-27 (6 API thành viên dự án + luật giao phiếu
 > QA `338` / `339`) · người làm: TV2 · thay T2.2–T2.5 cũ. Đơn giá Task 12 đã làm (2026-11-12, xem [../../nghiep-vu/24-don-gia-tien-cong.md](../../nghiep-vu/24-don-gia-tien-cong.md)); **quỹ KPI Task 14 tạm lùi**.
 
@@ -40,7 +40,7 @@ Chia tự động (ngẫu nhiên, theo tiến độ) **không** nằm trong plan
 
 1. Tạo module theo [08-them-chuc-nang.md](../../architecture/08-them-chuc-nang.md): `domain/Module/Operation`,
    `applications/Module/Operation`, controller `api/v{version}/operation/...`.
-2. ✅ Entity + cấu hình EF + migration `Add_OperationModule` schema `operation`; index `(ProjectId, DocumentTypeId, Box, ProfileRange)`
+2. (xong) Entity + cấu hình EF + migration `Add_OperationModule` schema `operation`; index `(ProjectId, DocumentTypeId, Box, ProfileRange)`
    trên `Submission` (Task 9).
    Task 10 nhóm · 11 thành viên · 12 đơn giá · 13 cây + giao phiếu · 14 thu hồi / chuyển / quỹ KPI · 15 ghép với hồ sơ.
 3. Thêm quyền vào `PermissionConstants`, gán role trong seeder.

@@ -64,7 +64,7 @@ catch (Exception ex)
 - `SubmissionService.Check` từ Task 25 cũng theo mẫu trên: lưu kiểm tra → `ISubmissionAssignmentService.AssignCheckedToQaAsync`
   → lưu → commit, để lỗi phân việc rollback cả dữ liệu kiểm tra.
 
-⚠️ `UserService.Create` gửi mail **trước** `CommitAsync`: SMTP chậm thì transaction bị giữ lâu, và nếu commit
+Lưu ý: `UserService.Create` gửi mail **trước** `CommitAsync`: SMTP chậm thì transaction bị giữ lâu, và nếu commit
 lỗi sau khi mail đã đi thì người dùng nhận mail cho tài khoản không tồn tại. Đã biết, chưa sửa — hướng sửa là
 domain event / outbox, đừng chỉ đảo thứ tự mà bỏ rollback.
 

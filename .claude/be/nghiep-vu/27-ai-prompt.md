@@ -74,15 +74,15 @@ không truy cập DB — Task 22B gọi lại khi chạy OCR thật.
 - Đọc trường của metadata chỉ qua `IDocumentTypeRepository.FindByIdAsync`, `IDocumentFieldRepository.GetByDocumentTypeIdAsync` có sẵn — không
   sửa code Construction. Query đọc (`PromptTemplateQuery`) được join thẳng bảng `construction`.
 
-⚠️ **Xuất bản hai lần `SaveChanges`.** Index `UniquePublishedIndexName` chỉ cho một bản `PUBLISHED` mỗi metadata. Gộp "hạ bản cũ" và "nâng
+Lưu ý: **Xuất bản hai lần `SaveChanges`.** Index `UniquePublishedIndexName` chỉ cho một bản `PUBLISHED` mỗi metadata. Gộp "hạ bản cũ" và "nâng
 nháp" vào một lần lưu thì EF có thể gửi `UPDATE` bản mới trước và đụng index. Đừng gộp lại thành một `SaveChanges`.
 
-⚠️ **Lưu nháp: xoá cấu hình bị bỏ, `SaveChanges`, rồi mới sửa / thêm.** Unique `(PromptTemplateId, OutputKey)` và `(PromptTemplateId,
+Lưu ý: **Lưu nháp: xoá cấu hình bị bỏ, `SaveChanges`, rồi mới sửa / thêm.** Unique `(PromptTemplateId, OutputKey)` và `(PromptTemplateId,
 DocumentFieldId)` chỉ bỏ qua dòng `Deleted = 1` khi việc xoá đã xuống DB. Giới hạn còn lại: hai trường **đã cấu hình** đổi `FieldNameOcr`
 chéo nhau (A↔B) rồi lưu một lần thì hai `UPDATE` trong cùng lần lưu vẫn có thể đụng index → lỗi 500. Hiếm (phải đổi tên OCR của metadata
 giữa hai lần lưu); gặp thì bỏ một trường khỏi nháp, lưu, rồi thêm lại.
 
-⚠️ Tạo nháp mới phải `SaveChanges` trước khi dựng cấu hình trường (cần `Id` thật của nháp). `AddAuditLog` serialize ngay lúc gọi nên luôn gọi
+Lưu ý: Tạo nháp mới phải `SaveChanges` trước khi dựng cấu hình trường (cần `Id` thật của nháp). `AddAuditLog` serialize ngay lúc gọi nên luôn gọi
 sau lần lưu lấy `Id`.
 
 ## Mã lỗi
@@ -116,7 +116,7 @@ v2 xuất bản → v1 `ARCHIVED`, đúng 1 `PUBLISHED`; tắt OCR + thêm trư�
 từng ký tự; Leader / Data / QA `403` cả 7 API; `908` / `301`; metadata đã xoá chặn ghi cho đọc; 4 hành động audit.
 Bổ sung cùng ngày **6/6 đạt**: user tạm **chỉ role Admin** (không SuperAdmin) gọi được cả 7 API; bỏ nháp rồi lưu nháp mới bằng PUT ra `Version` mới.
 
-⚠️ User `admin` của DB dev có cả role `SuperAdmin` (bỏ qua kiểm quyền) — test quyền phải dùng user chỉ có role cần kiểm. DB dev dùng chung:
+Lưu ý: User `admin` của DB dev có cả role `SuperAdmin` (bỏ qua kiểm quyền) — test quyền phải dùng user chỉ có role cần kiểm. DB dev dùng chung:
 máy chạy code chưa có 4 key prompt khởi động là `SeedPermission` xoá key + quyền đã gán (gặp lúc test, [02](02-phan-quyen.md#đừng-đổi-tên-key-đã-seed)).
 
 > **Tiếp:** [28-van-ban-dang-lam.md](28-van-ban-dang-lam.md) — văn bản đang làm gần nhất và lọc trường trống (Task 42A).

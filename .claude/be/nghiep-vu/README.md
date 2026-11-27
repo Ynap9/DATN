@@ -64,7 +64,7 @@ xem [../architecture/01-api.md](../architecture/01-api.md#version-api)). Riêng 
 
 ## Giới hạn đã biết
 
-Các giới hạn và bẫy nằm ngay trong từng file, đánh dấu `⚠️`. Chưa có chức năng nào trong module này bị đánh dấu là "đã sửa";
+Các giới hạn và bẫy nằm ngay trong từng file, đánh dấu `Lưu ý:`. Chưa có chức năng nào trong module này bị đánh dấu là "đã sửa";
 mọi thay đổi hành vi đều cần hỏi trước vì ảnh hưởng tới FE và dữ liệu đang chạy.
 
 > **Tiếp:** [01-nguoi-dung.md](01-nguoi-dung.md) — vòng đời tài khoản người dùng.

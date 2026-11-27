@@ -28,9 +28,9 @@ Picker cặp dùng chung mô tả ở [10-man-operation.md](10-man-operation.md)
 - Hồ sơ của một hộp tải một lần khi mở (`pageSize 200` = trần BE), giữ qua đổi trang. `box ""` vẫn gửi lên (service không lọc bỏ).
 - Mọi đổi tick xoá kết quả xem trước; Giao chỉ bật khi đã xem trước và `canSave`. Lỗi khi Giao: `812 813 331 824 825 329` → tự xem
   trước lại; `818 805` → đóng, `reload()` picker; `811 821` → đóng, tải lại bảng. Toast lỗi là câu BE (`isResponseSucceed`).
-- ⚠️ Ô tick gốc (`<input type="checkbox">`) tự đảo trạng thái khi bấm; tick bị chặn (vượt 1000) thì binding không đổi nên Angular không
+- Lưu ý: Ô tick gốc (`<input type="checkbox">`) tự đảo trạng thái khi bấm; tick bị chặn (vượt 1000) thì binding không đổi nên Angular không
   đặt lại DOM → `syncCheckbox` gán tay `checked` / `indeterminate`. Đừng bỏ bước đó.
-- ⚠️ Hộp > 200 hồ sơ: chỉ tải 200 hồ sơ đầu, nên bỏ một hồ sơ của hộp đang tick sẽ chỉ tick lại phần đã tải. Chưa gặp trên dữ liệu
+- Lưu ý: Hộp > 200 hồ sơ: chỉ tải 200 hồ sơ đầu, nên bỏ một hồ sơ của hộp đang tick sẽ chỉ tick lại phần đã tải. Chưa gặp trên dữ liệu
   thật; nếu cần thì phân trang hồ sơ.
 - Sau lỗi `812` lúc Giao chỉ xem trước lại (đúng CASE 51.14), **không** tải lại cây: số "Chưa giao" của nút vừa bị giao còn cũ tới
   khi đổi trang / lọc.
@@ -49,7 +49,7 @@ Picker cặp dùng chung mô tả ở [10-man-operation.md](10-man-operation.md)
   Lỗi: `815 816 817` → đóng, tải lại bảng phiếu; `818 805` → đóng cả hai, `reload()` picker; mã khác giữ dialog. Bốn API ghi đặt
   `SKIP_ERROR_TOAST` → HTTP 400 báo "Dữ liệu gửi lên không hợp lệ".
 - Lệch thiết kế theo CASE: dòng phụ dialog chuyển / thu hồi chỉ "<n> văn bản" (thiết kế có thêm "x chưa kiểm").
-- ⚠️ Dev server (`ng serve`) mở lâu không thấy file mới được import lúc file đó chưa tồn tại: bấm Phiếu lại mở dialog Chia phiếu (code
+- Lưu ý: Dev server (`ng serve`) mở lâu không thấy file mới được import lúc file đó chưa tồn tại: bấm Phiếu lại mở dialog Chia phiếu (code
   bảng người cũ). Chạm lại file import (lưu lại) để build lại; `npm run build:admin` không bị.
 
 ## Đã kiểm

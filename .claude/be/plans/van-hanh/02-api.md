@@ -15,13 +15,13 @@ Tiền tố `api/v1/operation`. `{p}` = `projectId`, `{dt}` = `documentTypeId`. 
 | 5 | DELETE | `/staff-group/{id}` | Admin, chủ nhóm | Xoá mềm |
 | 6 | POST | `/staff-group/{id}/members` | Admin, chủ nhóm | Thêm `userIds` |
 | 7 | DELETE | `/staff-group/{id}/members` | Admin, chủ nhóm | Bỏ `userIds` |
-| 8 | GET | `/staff-group/candidates` | Admin, Leader | `role` bắt buộc (`Data` / `QA`): user đúng role đó để chọn (✅ Task 10) |
+| 8 | GET | `/staff-group/candidates` | Admin, Leader | `role` bắt buộc (`Data` / `QA`): user đúng role đó để chọn ((xong) Task 10) |
 
 ## Thành viên dự án (O3)
 
 | # | Method | Route | Ai | Việc |
 |---|---|---|---|---|
-| 9 | GET | `/project/{p}/member/paging` | Admin, Leader | Danh sách; lọc `documentTypeId`, `role`, từ khoá, `managedByUserId`, `isActive` (✅ Task 11) |
+| 9 | GET | `/project/{p}/member/paging` | Admin, Leader | Danh sách; lọc `documentTypeId`, `role`, từ khoá, `managedByUserId`, `isActive` ((xong) Task 11) |
 | 10 | GET | `/project/{p}/member/candidates` | Admin, Leader | User chưa có trong (dự án, loại văn bản), lọc role |
 | 11 | POST | `/project/{p}/leader` | Admin | `documentTypeId`, `userIds` |
 | 12 | POST | `/project/{p}/member` | Admin, Leader | `documentTypeId`, `users[{userId, role}]`, `staffGroupIds[]` (mỗi người nhận role hệ thống hiện tại; người không còn Data / QA → `skipped`), `managedByUserId`; trả `added`, `skipped[{userId, fullName, reason}]` |

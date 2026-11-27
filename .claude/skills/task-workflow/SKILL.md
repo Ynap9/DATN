@@ -19,6 +19,10 @@ Tri thức dự án nằm trong `.claude/` (tiếng Việt), **không** suy ra l
 3. Phần frontend `sh.fe` ⇒ [`.claude/fe/architecture/`](../../fe/architecture/README.md), quy ước ở
    [`05-conventions.md`](../../fe/architecture/05-conventions.md). Việc còn dở ở `.claude/fe/plans/` — đọc
    [`khop-voi-be.plan.md`](../../fe/plans/khop-voi-be.plan.md) trước khi làm màn hình gọi API.
+4. Việc **đóng gói TT05** (module Packaging: kiểm tra, dựng SIP / AIP / DIP, METS, EAD, PREMIS) ⇒ làm đủ 5 bước ở
+   [`.claude/be/dong-goi/README.md`](../../be/dong-goi/README.md) mục "Luật bắt buộc": đọc 10 file → đọc trang gốc
+   của thông tư (`tai-lieu/TT05-2025-TT-BNV.txt`) → đọc gói mẫu `goi-mau/` → plan có nguồn từng luật → review rồi
+   mới code. Luật không có nguồn ⇒ hỏi người dùng, **cấm tự quyết**.
 
 ## Pha 1 — Hỏi đúng một lượt
 
@@ -61,7 +65,7 @@ Rồi trong **cùng task đó**:
 
 ## Gặp bẫy thì ghi lại
 
-Bẫy phát hiện trong lúc làm hoặc lúc review được ghi thành một dòng `⚠️` **ngay trong tài liệu sở hữu chỗ đó**
+Bẫy phát hiện trong lúc làm hoặc lúc review được ghi thành một dòng `Lưu ý:` **ngay trong tài liệu sở hữu chỗ đó**
 (không có thư mục bug log riêng): hiện tượng → nguyên nhân gốc → cách tránh. Khuôn ở
 [../write-markdown/SKILL.md](../write-markdown/SKILL.md).
 
@@ -81,4 +85,4 @@ Nhét vào prompt của agent yêu cầu chạy theo **đúng khuôn này**:
 2. Đã gom và hỏi hết câu hỏi trong một lượt (hoặc xác nhận không cần hỏi)?
 3. Có task list hiện rõ, đúng một việc `in_progress`, tick khi xong từng việc?
 4. Build sạch, EF không có thay đổi ngoài ý muốn, tài liệu đã cập nhật cùng task?
-5. Gặp bẫy nào đã ghi `⚠️` vào đúng tài liệu chưa?
+5. Gặp bẫy nào đã ghi `Lưu ý:` vào đúng tài liệu chưa?

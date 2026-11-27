@@ -16,7 +16,9 @@ ngữ, cùng bố cục, cùng cách cập nhật.
 - Thuật ngữ kiến trúc giữ tiếng Anh khi đó là tên chuẩn (aggregate, repository, dependency rule), giải thích
   bằng tiếng Việt ở lần đầu xuất hiện.
 - Sửa file đã có thì **theo ngôn ngữ của file đó**, không đổi giữa dòng.
-- ⚠️ **Comment trong code repo theo mục Comment** của `be/architecture/07-conventions.md` (chỉ task từ trung bình
+- **Không dùng icon / emoji** trong file `.md` (chốt 2026-11-27): trạng thái, cảnh báo, bẫy, đánh dấu đều viết bằng
+  chữ (`Lưu ý:`, `Bẫy:`, `(xong)`, `Chưa thi công`). Mũi tên chữ `→ ⇒ ↔` là ký hiệu, được dùng.
+- Lưu ý: **Comment trong code repo theo mục Comment** của `be/architecture/07-conventions.md` (chỉ task từ trung bình
   trở lên, ngắn, đúng chỗ chủ chốt). Chú thích `//` bên trong khối code của tài liệu là lời giảng cho người đọc nên
   được phép và viết tiếng Việt.
 
@@ -61,25 +63,25 @@ Mỗi bộ file tách ra cần **cả hai**:
 ## Khuôn từng loại tài liệu
 
 **Architecture** — `.claude/<be|fe>/architecture/`: README mục lục + file đánh số, mỗi file một tầng/project:
-trách nhiệm, được tham chiếu gì, thư mục bên trong, quy tắc "được / không được", bẫy `⚠️`.
+trách nhiệm, được tham chiếu gì, thư mục bên trong, quy tắc "được / không được", bẫy (dòng mở đầu `Lưu ý:` hoặc `Bẫy:`).
 
 **Plan** — `.claude/<be|fe>/plans/<ten-viec>.plan.md`, ≤100 dòng:
 
-- **Trạng thái** ở đầu file (`✅ đã thi công` / `🔶 làm dở` / `📝 chờ duyệt` / `🔬 nghiên cứu`).
+- **Trạng thái** ở đầu file bằng chữ, không icon (`đã thi công` / `làm dở` / `chờ duyệt` / `nghiên cứu`).
 - **Input** — cái đã có, điều kiện tiên quyết.
 - **Steps** — theo thứ tự, mỗi bước tự kiểm được; bước cuối là build (xem skill `task-workflow`, Pha 3).
 - **Expected output** — kết quả cụ thể. **Điểm cần chú ý** — mỗi đánh đổi không hiển nhiên một dòng.
 
 **Tài liệu chủ đề** — quyết định đã chốt + vì sao, giới hạn đã biết. Phần **chưa thi công** gom xuống cuối file
-dưới nhãn 🔬, không trộn vào phần đang chạy.
+dưới nhãn "Nghiên cứu", không trộn vào phần đang chạy.
 
 ## Ghi lại bẫy đã sập
 
-**Không có thư mục bug log riêng**: bẫy ghi thành một dòng `⚠️` **ngay trong tài liệu sở hữu chỗ đó**, cạnh
+**Không có thư mục bug log riêng**: bẫy ghi thành một dòng mở đầu `Lưu ý:` (hoặc `Bẫy:`), không icon, **ngay trong tài liệu sở hữu chỗ đó**, cạnh
 phần mô tả cơ chế. Khuôn: hiện tượng → nguyên nhân gốc → cách tránh, và nêu rõ **đừng "sửa" theo hướng nào**.
 
 ```markdown
-⚠️ Bẫy: `ExecuteDeleteAsync` cũng bị global query filter lọc, nên bản ghi đã xoá mềm còn nằm lại và lần
+Bẫy: `ExecuteDeleteAsync` cũng bị global query filter lọc, nên bản ghi đã xoá mềm còn nằm lại và lần
 insert sau trùng khoá ghép. Xoá cứng theo khoá ghép phải gọi `IgnoreQueryFilters()` trước.
 ```
 
@@ -98,4 +100,4 @@ Bẫy lớn tới mức cần cả một mục thì mở `##` riêng trong đún
 2. Một H1, các H2 rõ, khối code có khai ngôn ngữ, link tương đối còn đúng?
 3. Plan có Input · Steps (bước build cuối) · Expected output · Điểm cần chú ý?
 4. Tài liệu nào khác đang mô tả cùng chỗ này cần sửa theo?
-5. Phát hiện bẫy nào thì đã ghi `⚠️` vào đúng tài liệu sở hữu chỗ đó chưa?
+5. Phát hiện bẫy nào thì đã ghi `Lưu ý:` vào đúng tài liệu sở hữu chỗ đó chưa?

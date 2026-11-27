@@ -70,7 +70,7 @@ Metadata hiện cho ba vai trò này nhưng chỉ đọc; DB mới do seeder c�
 
 Trước Task 57A đã gán tay trên DB dev ngày 2026-10-26 (Leader id 2, Data id 3, trước đó chưa có quyền nào); QA id 4 gán `ViewOwn` ngày 2026-11-12. `Wage.View` gán cho Leader id 2, Data id 3, QA id 4 bằng `PUT api/auth/role/permission` ngày 2026-11-13 (spec 12.2, Task 12). Admin tự có **mọi** key qua `SeedRolePermission`, kể cả `ViewOwn` — vô hại vì Admin không giữ phiếu.
 
-⚠️ Bẫy: tick một menu là `SyncChecked` cấp **mọi** con của nó. Tick `Menu.Operation.ProjectMember` cho Leader là Leader có luôn
+Bẫy: tick một menu là `SyncChecked` cấp **mọi** con của nó. Tick `Menu.Operation.ProjectMember` cho Leader là Leader có luôn
 `Price.ManageCompany`; tick `Menu.Operation.Assignment` là có `BonusPool.View`. Chỉ tick key `Function` (menu tự bật khi đủ mọi con).
 Leader vì vậy không có key hai menu này — FE phải hiện menu khi có **bất kỳ** key con, đừng đòi key `Menu.*`. Từ Task 13 QA xem đợt QA
 của mình ở `my-assignment` ([23](23-chia-phieu.md)) nên **cần** `ViewOwn` (thiếu thì QA nhận `403`; seeder đã cấp). Leader vẫn bị chặn ở service nếu không phải `ProjectMember`
@@ -83,7 +83,7 @@ vai trò `Leader` của đúng (dự án, loại văn bản) — quyền chỉ m
 - Vai trò `SuperAdmin`;
 - tài khoản `admin` (email `admin@example.com`), gán vai trò `SuperAdmin`.
 
-⚠️ **Mật khẩu của `admin` được ghi cứng trong `SeedUser`** (`"123456Aa@"`). Seeder chỉ tạo user khi chưa có, nên đổi
+Lưu ý: **Mật khẩu của `admin` được ghi cứng trong `SeedUser`** (`"123456Aa@"`). Seeder chỉ tạo user khi chưa có, nên đổi
 mật khẩu qua API không ảnh hưởng tới seed; nhưng mật khẩu mặc định vẫn nằm trong source. Trên môi trường thật phải đổi
 ngay sau khi triển khai. Đừng xoá dòng tạo user để "sạch code" — seeder sẽ không có tài khoản quản trị nào để đăng nhập.
 
@@ -93,7 +93,7 @@ ngay sau khi triển khai. Đừng xoá dòng tạo user để "sạch code" —
 - Tên vai trò **không được kiểm trùng**. Hai vai trò khác Id có thể cùng tên, và `GetRoleNames` trả về cả hai.
 - `Role.Create` luôn gán `IsSystem = 1`, nên cờ này không phân biệt được vai trò hệ thống và vai trò người dùng tạo.
 
-⚠️ Hai điểm trên là hệ quả của thiết kế hiện tại. Sửa (kiểm trùng tên, sinh Id tự động) là thay đổi schema hoặc
+Lưu ý: Hai điểm trên là hệ quả của thiết kế hiện tại. Sửa (kiểm trùng tên, sinh Id tự động) là thay đổi schema hoặc
 contract với FE — hỏi trước.
 
 ## Sửa vai trò
@@ -116,7 +116,7 @@ Xem luật chọn key tại [02-phan-quyen.md](02-phan-quyen.md#luật-chọn-qu
   nên user đang giữ vai trò đó **mất vai trò ngay** mà không cần xoá `UserRole`.
 - Không kiểm tra vai trò còn đang gán cho user nào, và không chặn xoá vai trò `SuperAdmin`.
 
-⚠️ Xoá `SuperAdmin` bằng API là có thể làm mất toàn bộ quyền quản trị, và không có đường lấy lại ngoài sửa DB tay.
+Lưu ý: Xoá `SuperAdmin` bằng API là có thể làm mất toàn bộ quyền quản trị, và không có đường lấy lại ngoài sửa DB tay.
 Đây là chỗ nên thêm kiểm tra trong `RoleDomainService` trước khi mở API này rộng hơn.
 
 ## Đọc cây quyền của vai trò

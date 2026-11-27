@@ -12,7 +12,7 @@
 - Một người chỉ một vai trò trong một (dự án, loại văn bản). Thêm trùng → bỏ qua, trả về trong danh sách `skipped` kèm lý do.
 - Thêm theo nhóm thì bung thành từng người tại lúc thêm, lưu `SourceStaffGroupId` để tra lại.
 - (2026-10-27) Nhân viên không có Leader quản lý (`ManagedByUserId = null`) thì **Admin quản lý trực tiếp**; không bắt buộc chọn Leader.
-- (2026-10-27) Gỡ người = **tự thu hồi** văn bản chưa làm (Data + QA) cùng transaction, không chặn `807`. ✅ Task 11 —
+- (2026-10-27) Gỡ người = **tự thu hồi** văn bản chưa làm (Data + QA) cùng transaction, không chặn `807`. (xong) Task 11 —
   [../../nghiep-vu/21-thanh-vien-du-an.md](../../nghiep-vu/21-thanh-vien-du-an.md).
 
 ## Nhóm nhân viên
@@ -20,11 +20,11 @@
 - Admin quản lý mọi nhóm; Leader tạo và chỉ thấy nhóm của mình (`OwnerUserId`).
 - Một người thuộc nhiều nhóm. Thành viên chỉ là user role `Data` / `QA`.
 - (2026-10-26) Nhóm thuần 1 vai trò `Data` hoặc `QA`, suy từ role thành viên (không lưu cột); 1 user không vừa Data vừa QA (`109`).
-  ✅ Task 10 — chi tiết ở [../../nghiep-vu/19-nhom-nhan-vien.md](../../nghiep-vu/19-nhom-nhan-vien.md).
+  (xong) Task 10 — chi tiết ở [../../nghiep-vu/19-nhom-nhan-vien.md](../../nghiep-vu/19-nhom-nhan-vien.md).
 
 ## Đơn giá
 
-> ✅ **Task 12 (2026-11-12) đã thay mô hình giá dưới đây:** giá nằm trên `ProjectMember` (sửa đè, không lịch sử `EffectiveFrom`), xem [../../nghiep-vu/24-don-gia-tien-cong.md](../../nghiep-vu/24-don-gia-tien-cong.md). Các bảng `ProjectPriceDefault` / `ProjectMemberPrice` bên dưới là thiết kế cũ, đã bỏ.
+> (xong) **Task 12 (2026-11-12) đã thay mô hình giá dưới đây:** giá nằm trên `ProjectMember` (sửa đè, không lịch sử `EffectiveFrom`), xem [../../nghiep-vu/24-don-gia-tien-cong.md](../../nghiep-vu/24-don-gia-tien-cong.md). Các bảng `ProjectPriceDefault` / `ProjectMemberPrice` bên dưới là thiết kế cũ, đã bỏ.
 
 | Vai trò | Tính trên |
 |---|---|
