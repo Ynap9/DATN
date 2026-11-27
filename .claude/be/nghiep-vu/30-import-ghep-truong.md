@@ -81,8 +81,8 @@ trống, trường chưa có dòng được thêm); overwrite = 1; audit 3 kiể
 `match` (gộp khoảng trắng, hai trường cùng tên cột, thử tên trường); lưu ghép (audit đúng 2 dòng, gửi lại không audit, `311`, trùng, thiếu, cùng cột, `309`, hai cột "Ghi chu" import đúng F→trường 1, H→trường 2);
 `307` thiếu cột ở 3 kiểu; `startColumn` (bỏ cột trước, `309` biến mất, `307` cột cố định, `400` hai đầu, `match` / lưu ghép).
 
-⚠️ **Chưa kiểm:** import Excel (MinIO dùng chung đầy ổ, `209`; Excel dùng chung `Load*SheetAsync` nên cùng luật), lưu ghép lúc import cùng cặp đang chạy (chờ khoá), thiếu quyền Leader dự án khác (`337`).
-⚠️ Chạy thử Excel / Google bằng body cũ (thiếu `startColumn`) vẫn đúng vì mặc định 1; `PUT field-mapping` không gửi `headers` bị `400` "Sheet chỉ có 0 cột".
-⚠️ `GET sheet-headers` với `url` rỗng bị model binding chặn `400` (HTTP) trước khi tới kiểm của service; kiểm `400` "Chưa nhập link Google Sheet" chỉ chạy với body POST.
+Lưu ý: **Chưa kiểm:** import Excel (MinIO dùng chung đầy ổ, `209`; Excel dùng chung `Load*SheetAsync` nên cùng luật), lưu ghép lúc import cùng cặp đang chạy (chờ khoá), thiếu quyền Leader dự án khác (`337`).
+Lưu ý: Chạy thử Excel / Google bằng body cũ (thiếu `startColumn`) vẫn đúng vì mặc định 1; `PUT field-mapping` không gửi `headers` bị `400` "Sheet chỉ có 0 cột".
+Lưu ý: `GET sheet-headers` với `url` rỗng bị model binding chặn `400` (HTTP) trước khi tới kiểm của service; kiểm `400` "Chưa nhập link Google Sheet" chỉ chạy với body POST.
 
 > **Tiếp:** hết — quay lại [README.md](README.md).
