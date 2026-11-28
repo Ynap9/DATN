@@ -6,7 +6,7 @@ Lưu ý: `PUT api/v1/auth/user` chỉ sửa chính người đang đăng nhập 
 
 Mỗi trang đặt tên và breadcrumb bằng `app-page-header` (`shared/components/page-header`), nút chính truyền qua `ng-content`; topbar chỉ hiện ngày.
 
-Lưu ý: Biến `--app-*` khai báo trên `.layout-wrapper`, còn dialog gắn vào `body` nên không nhận được: style trong dialog dùng token PrimeNG (`--p-text-color`, `--p-content-border-color`); JS cần màu (chart.js) đọc `getComputedStyle` trên phần tử nằm trong layout, không trên `:root`.
+Lưu ý: Token màu `--app-*` khai ở `:root` từ Task 64, dùng được cả trong dialog gắn vào `body` và khi JS (chart.js) đọc `getComputedStyle`; riêng kích thước sidebar / topbar vẫn ở `.layout-wrapper` ([05](05-conventions.md)).
 
 Lưu ý: `sh-select` phát `valueChanges` ngay lúc khởi tạo, nên lọc danh sách dùng output `(onChange)` để tránh gọi API hai lần.
 
@@ -68,7 +68,7 @@ Ghi chú riêng của từng màn module `construction` (Metadata, Dự án, Dan
 chỉ đọc. Chuẩn và sheet lấy từ `config/dropdown`, không viết cứng, không ghi lên URL. Bảng `pageSize = -1`, không phân trang.
 Dải sheet theo loại metadata dính đáy; đổi chuẩn thì giữ sheet cùng `metadataType` và xoá từ khoá. Danh mục mã / Mô tả là ô
 cắt 1 dòng + `pTooltip`. Xuất Excel gửi `metadataTypes` lặp lại (`HttpParams`), mỗi loại một sheet. Lệch quy ước: cột Bắt buộc
-dùng `STATUS` (p-tag) theo CASE 37.8, không dùng `StatusBadge`. Tên chuẩn BE có đuôi `(mã)`, FE bỏ đuôi khi hiển thị.
+dùng `STATUS` (p-tag) theo CASE 37.8, không dùng `StatusBadge`. Cột Độ dài kiểu `NUMBER`: null → "—" mờ, 1000 → "1.000" (Task 64). Tên chuẩn BE có đuôi `(mã)`, FE bỏ đuôi khi hiển thị.
 Lưu ý: PrimeNG gắn `overflow: auto` **inline** vào `.p-datatable-table-container`, nên CSS ghi đè thành `visible` không ăn. Muốn bảng
 cuộn trong khung với tiêu đề dính thì cho chính khung đó giãn flex (`min-height: 0`), đừng đẩy cuộn ra `app-data-table`.
 

@@ -58,7 +58,7 @@ export class PackageConfigComponent extends BaseComponent {
             cellStyle: `${CENTER}; white-space: nowrap`,
         },
         { header: 'Kiểu dữ liệu', field: 'dataTypeLabel', headerContainerStyle: CENTER, cellStyle: `${CENTER}; white-space: nowrap` },
-        { header: 'Độ dài', field: 'maxLength', headerContainerStyle: CENTER, cellStyle: CENTER },
+        { header: 'Độ dài', field: 'maxLength', cellViewType: CellViewTypes.NUMBER, headerContainerStyle: CENTER, cellStyle: CENTER },
         { header: 'Danh mục mã', field: 'codesText', cellViewType: CellViewTypes.CUSTOM_COMP, customComponent: PackageTextCellComponent, headerContainerStyle: CENTER, cellStyle: CENTER },
         { header: 'Mô tả', field: 'description', cellViewType: CellViewTypes.CUSTOM_COMP, customComponent: PackageTextCellComponent, headerContainerStyle: CENTER, cellStyle: CENTER },
     ];

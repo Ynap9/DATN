@@ -17,7 +17,7 @@ Task 59, 2026-11-26. Chỉ đọc: khối lượng, đơn giá, thành tiền th
 | Chế độ | Khi nào | Khác biệt |
 |---|---|---|
 | `admin` | Admin / SuperAdmin | Chip "Toàn bộ thành viên", nút Xuất Excel, nhãn "Chưa đặt giá" là link sang Thành viên dự án đúng cặp |
-| `leader` | Metadata đang chọn (hoặc một cặp bất kỳ khi "Tất cả") có `viewerRole` Leader | Chip "Người bạn quản lý" |
+| `leader` | Metadata đang chọn (hoặc một cặp bất kỳ khi "Tất cả") có `viewerRole` Leader | Chip "Người bạn quản lý", nhãn "Chưa đặt giá" là link ở dòng thuộc cặp mình là Leader |
 | `staff` | Còn lại | Tiêu đề "Tiền công của bạn", 3 ô tổng, không tab / tìm kiếm, cột Cách tính thay cột Người |
 
 - Chế độ theo `viewerRole` của cặp (`project/paging`), **không** theo dữ liệu trả về. Nhân viên lấy vai trò Data / QA theo cặp; CASE
@@ -58,6 +58,8 @@ Sau khi chỉnh giao diện theo thiết kế chạy lại cả ba bộ: 24/24, 
 
 Lưu ý: DB dev lúc test (2026-11-26) chưa có `Function.Operation.Wage.View` cho Leader / Data / QA nên họ không thấy menu. Cùng ngày đã bổ sung
 cho ba vai trò (Task 57A, [BE 03](../../be/nghiep-vu/03-vai-tro-mac-dinh.md)); DB mới do seeder cấp.
-Link "Chưa đặt giá" sang Thành viên dự án giữ chỉ ở chế độ Admin, kể cả sau Task 60 (quyết định 2026-11-27).
+Link "Chưa đặt giá" sang Thành viên dự án đúng cặp (`?projectId=&documentTypeId=` của dòng, CASE 59.11 / 64.1): có khi chế độ Admin, hoặc
+người xem là Leader của đúng cặp (dự án đang chọn, `row.documentTypeId`) tra trong `pairs` đã tải. Không xét theo chế độ `leader`: khi "Tất cả"
+có thể lẫn dòng của cặp mình chỉ là Data / QA, dòng đó không link vì màn Thành viên không nhận cặp ấy. Nhân viên: nhãn chỉ là chữ.
 
 > **Tiếp:** [15-man-bao-cao-tien-do.md](15-man-bao-cao-tien-do.md) — màn Báo cáo tiến độ: lọc, các khối, khối Năng suất (Task 71).

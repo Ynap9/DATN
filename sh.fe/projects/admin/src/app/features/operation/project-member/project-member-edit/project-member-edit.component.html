@@ -15,7 +15,7 @@
                     <div class="flex flex-col gap-1">
                         @if (isLeaderView) {
                             <label>Giá công ty</label>
-                            <span class="flex h-7 items-center justify-between rounded-md border border-[#d4dad7] bg-[#f3f5f4] px-2.5 text-xs">
+                            <span class="flex h-7 items-center justify-between rounded-md border border-[var(--app-line-strong)] bg-[var(--app-bg)] px-2.5 text-xs">
                                 <span [class.text-muted-color]="companyPriceText === null">{{ companyPriceText === null ? 'Chưa đặt' : companyPriceText + ' đ' }}</span>
                                 <i class="pi pi-lock text-xs text-muted-color"></i>
                             </span>
@@ -41,7 +41,7 @@
                     </div>
                 </div>
                 @if (isLeaderView && companyPriceText === null) {
-                    <div class="flex items-start gap-2 rounded-md bg-[#fbf2e2] px-3 py-2.5 text-[13px] text-[#8a5a12]">
+                    <div class="flex items-start gap-2 rounded-md bg-[var(--app-amber-soft)] px-3 py-2.5 text-[13px] text-[var(--app-amber)]">
                         <i class="pi pi-exclamation-triangle mt-0.5"></i>
                         <span>Admin cần đặt giá công ty trước, sau đó bạn mới đặt được giá thực nhận.</span>
                     </div>

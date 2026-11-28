@@ -283,7 +283,11 @@ export class WageListComponent extends BaseComponent {
             ...row,
             companyPrice: row.companyAmount === null ? undefined : row.companyPrice,
             documentTotal: formatWageNumber(isQa ? row.reviewDocumentCount : row.documentCount),
-            priceLink: this.viewMode === WAGE_VIEW_MODE.ADMIN ? { projectId: this.projectId!, documentTypeId: row.documentTypeId } : null,
+            priceLink:
+                this.viewMode === WAGE_VIEW_MODE.ADMIN ||
+                this.pairs!.some((pair) => pair.projectId === this.projectId && pair.documentTypeId === row.documentTypeId && pair.viewerRole === MEMBER_ROLE.LEADER)
+                    ? { projectId: this.projectId!, documentTypeId: row.documentTypeId }
+                    : null,
         };
     }
 

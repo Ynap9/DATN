@@ -1,8 +1,5 @@
-.layout-wrapper {
-    --app-sidebar-w: 248px;
-    --app-sidebar-w-collapsed: 74px;
-    --app-topbar-h: 64px;
-
+// Token màu khai ở :root để dialog (DialogService gắn thẳng vào body, ngoài .layout-wrapper) cũng dùng được
+:root {
     --app-bg: #f4f6f5;
     --app-surface: #ffffff;
     --app-ink: #16201c;
@@ -24,6 +21,12 @@
 
     --app-shadow: 0 1px 2px rgba(16, 32, 28, 0.04), 0 1px 3px rgba(16, 32, 28, 0.06);
     --app-shadow-lg: 0 4px 16px rgba(16, 32, 28, 0.08);
+}
+
+.layout-wrapper {
+    --app-sidebar-w: 248px;
+    --app-sidebar-w-collapsed: 74px;
+    --app-topbar-h: 64px;
 
     background-color: var(--app-bg);
 }

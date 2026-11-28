@@ -170,7 +170,7 @@ export class MemberCompanyPriceCellComponent {
         } @else if (priceText() !== null) {
             <span class="font-semibold tabular-nums">{{ priceText() }} đ</span>
         } @else {
-            <span class="rounded-full bg-[#fdf3e3] px-2 py-0.5 text-xs font-semibold text-[#8a5a12]">
+            <span class="rounded-full bg-[var(--app-amber-soft)] px-2 py-0.5 text-xs font-semibold text-[var(--app-amber)]">
                 {{ row().companyPrice === null ? 'Chờ Admin đặt giá công ty' : 'Chưa đặt giá' }}
             </span>
         }

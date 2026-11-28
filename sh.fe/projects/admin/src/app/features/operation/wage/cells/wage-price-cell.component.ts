@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { StatusBadge } from '@/shared/components/status-badge/status-badge.component';
 import { formatWageNumber, WageRow } from './wage-row';
 
-// data = đơn giá của cột: undefined = không thấy giá (—), null = chưa đặt giá (nhãn vàng, Admin bấm sang Thành viên dự án)
+// data = đơn giá của cột: undefined = không thấy giá (—), null = chưa đặt giá (nhãn vàng, Admin / Leader của cặp bấm sang Thành viên dự án)
 @Component({
     selector: 'app-wage-price-cell',
     imports: [RouterLink, StatusBadge],

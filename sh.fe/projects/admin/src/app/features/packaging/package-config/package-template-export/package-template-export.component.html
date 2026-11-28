@@ -11,22 +11,22 @@
 
     <div class="flex flex-col gap-2.5">
         <span class="flex items-baseline gap-2 text-sm font-bold">
-            Loại đối tượng <span class="text-xs font-normal text-[#5d6b66]">mỗi loại xuất thành một sheet riêng</span>
+            Loại đối tượng <span class="text-xs font-normal text-[var(--app-muted)]">mỗi loại xuất thành một sheet riêng</span>
         </span>
         <div class="grid grid-cols-2 gap-2">
             @for (schema of current?.schemas; track schema.packageSchemaId) {
                 @let checked = checkedTypes.has(schema.metadataType);
                 <label class="flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2.5 text-sm"
-                    [class]="checked ? 'border-[#0e7c66] bg-[#0e7c66]/[.06] font-semibold' : 'border-[#d4dad7]'">
-                    <input type="checkbox" class="size-4 accent-[#0e7c66]" [checked]="checked" (change)="toggle(schema.metadataType)" />
+                    [class]="checked ? 'border-[var(--app-accent)] bg-[var(--app-accent-soft)] font-semibold' : 'border-[var(--app-line-strong)]'">
+                    <input type="checkbox" class="size-4 accent-[var(--app-accent)]" [checked]="checked" (change)="toggle(schema.metadataType)" />
                     {{ schema.name }}
                 </label>
             }
         </div>
     </div>
 
-    <div class="flex items-center gap-2 rounded-md bg-[#f3f5f4] px-3 py-2.5 text-[13px] text-[#5d6b66]">
-        <i class="pi pi-file-excel text-[#0e7c66]"></i>
+    <div class="flex items-center gap-2 rounded-md bg-[var(--app-bg)] px-3 py-2.5 text-[13px] text-[var(--app-muted)]">
+        <i class="pi pi-file-excel text-[var(--app-accent)]"></i>
         <span>Mau metadata {{ current?.code }}_template.xlsx</span>
     </div>
 </div>
