@@ -90,6 +90,8 @@ namespace sh.be.shared.HttpRequest.Error
         public const int ConstructionErrorDocumentTypeHasSubmissions = 347;
         public const int ConstructionErrorProjectGoogleSheetNotLinked = 348;
         public const int ConstructionErrorQaSampleNotSupported = 349;
+        public const int ConstructionErrorDocumentEnumInUse = 350;
+        public const int ConstructionErrorDocumentEnumNotFound = 351;
 
         public const int DigitalSignatureErrorTemplateNotFound = 601;
         public const int DigitalSignatureErrorInvalidTemplatePositionKind = 602;

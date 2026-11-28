@@ -11,8 +11,14 @@ namespace sh.be.domain.Module.Construction.DocumentFields.Repositories
         Task<int> GetMaxOrderAsync(int documentTypeId);
         Task<List<DocumentField>> GetByDocumentTypeIdAsync(int documentTypeId);
         Task<List<DocumentField>> GetByDocumentTypeIdsAsync(IReadOnlyCollection<int> documentTypeIds);
+        Task<DocumentEnum?> FindEnumByIdAsync(int documentTypeId, int enumId);
+        Task<List<DocumentEnum>> GetEnumsByDocumentTypeIdAsync(int documentTypeId);
+        Task<bool> ExistsEnumByNameAsync(int documentTypeId, string name, int? excludedId = null);
+        Task<List<string>> GetFieldNamesByEnumIdAsync(int enumId);
         void Add(DocumentField documentField);
         void AddRange(IEnumerable<DocumentField> documentFields);
         void Update(DocumentField documentField);
+        void AddEnum(DocumentEnum documentEnum);
+        void UpdateEnum(DocumentEnum documentEnum);
     }
 }

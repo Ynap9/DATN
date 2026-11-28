@@ -64,6 +64,39 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
                 .ToListAsync();
         }
 
+        // Danh mục chưa xoá theo Id, chỉ khi thuộc đúng loại văn bản
+        public Task<DocumentEnum?> FindEnumByIdAsync(int documentTypeId, int enumId)
+        {
+            return _shDbContext.DocumentEnums.FirstOrDefaultAsync(e => e.DocumentTypeId == documentTypeId && e.Id == enumId);
+        }
+
+        // Mọi danh mục chưa xoá của loại văn bản
+        public Task<List<DocumentEnum>> GetEnumsByDocumentTypeIdAsync(int documentTypeId)
+        {
+            return _shDbContext.DocumentEnums
+                .AsNoTracking()
+                .Where(e => e.DocumentTypeId == documentTypeId)
+                .ToListAsync();
+        }
+
+        // Tên danh mục đã có trong loại văn bản (bỏ qua danh mục đang sửa)
+        public Task<bool> ExistsEnumByNameAsync(int documentTypeId, string name, int? excludedId = null)
+        {
+            return _shDbContext.DocumentEnums.AnyAsync(e => e.DocumentTypeId == documentTypeId && e.Name == name && e.Id != excludedId);
+        }
+
+        // Tên các trường chưa xoá đang trỏ tới danh mục
+        public Task<List<string>> GetFieldNamesByEnumIdAsync(int enumId)
+        {
+            return _shDbContext.DocumentFields
+                .AsNoTracking()
+                .Where(d => d.EnumId == enumId)
+                .OrderBy(d => d.OrderTableView)
+                .ThenBy(d => d.Id)
+                .Select(d => d.Name)
+                .ToListAsync();
+        }
+
         public void Add(DocumentField documentField)
         {
             _shDbContext.DocumentFields.Add(documentField);
@@ -77,6 +110,18 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
         public void Update(DocumentField documentField)
         {
             _shDbContext.DocumentFields.Update(documentField);
+        }
+
+        // Thêm danh mục vào ngữ cảnh, chờ SaveChanges
+        public void AddEnum(DocumentEnum documentEnum)
+        {
+            _shDbContext.DocumentEnums.Add(documentEnum);
+        }
+
+        // Đánh dấu danh mục đã sửa (gồm xoá mềm), chờ SaveChanges
+        public void UpdateEnum(DocumentEnum documentEnum)
+        {
+            _shDbContext.DocumentEnums.Update(documentEnum);
         }
     }
 }

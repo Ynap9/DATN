@@ -4,6 +4,7 @@ using sh.be.applications.Module.Construction.Dtos.DocumentType;
 using sh.be.applications.Module.Construction.Dtos.Project;
 using sh.be.applications.Module.Construction.Dtos.ProjectConfig;
 using sh.be.applications.Module.Construction.Dtos.QaAssignment;
+using sh.be.applications.Module.Construction.Dtos.Submission;
 using sh.be.applications.Base.Dtos.DigitalSignature;
 using sh.be.applications.Module.DigitalSignature.Dtos.SigningBatch;
 using sh.be.applications.Module.DigitalSignature.Dtos.Template;
@@ -14,6 +15,7 @@ using sh.be.domain.Module.Construction.DocumentFields.Entities;
 using sh.be.domain.Module.Construction.DocumentTypes.Entities;
 using sh.be.domain.Module.Construction.Projects.Entities;
 using sh.be.domain.Module.Construction.QaAssignments.Entities;
+using sh.be.domain.Module.Construction.Submissions.Services;
 using sh.be.domain.Module.DigitalSignature.Entities;
 using sh.be.domain.Module.Packaging.Entities;
 using System;
@@ -33,6 +35,7 @@ namespace sh.be.applications.Base
             CreateMap<DocumentType, FindDocumentTypeByIdDto>();
             CreateMap<DocumentType, GetListDocumentTypeDropDownDto>();
             CreateMap<DocumentField, GetListDocumentFieldDto>();
+            CreateMap<OutOfEnumField, OutOfEnumFieldDto>();
             CreateMap<DocumentField, FindDocumentFieldByIdDto>();
             CreateMap<DocumentField, GetListDocumentFieldDropDownDto>();
             CreateMap<DocumentField, FieldImportHeaderDto>()

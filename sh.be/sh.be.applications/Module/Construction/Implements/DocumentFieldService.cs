@@ -13,6 +13,7 @@ using sh.be.domain.Module.Construction.DocumentFields.Repositories;
 using sh.be.domain.Module.Construction.DocumentFields.Services;
 using sh.be.domain.Module.Construction.Projects.Repositories;
 using sh.be.domain.Module.Core.Repositories;
+using sh.be.shared.Constants.Construction;
 using sh.be.shared.Constants.Core;
 using sh.be.shared.HttpRequest.BaseRequest;
 using sh.be.shared.HttpRequest.Error;
@@ -92,9 +93,10 @@ namespace sh.be.applications.Module.Construction.Implements
                 await _documentFieldDomainService.LockOrderAsync(dto.DocumentTypeId);
                 await _documentFieldDomainService.EnsureDocumentTypeExistsAsync(dto.DocumentTypeId);
                 await _documentFieldDomainService.EnsureUniqueFieldAsync(dto.DocumentTypeId, dto.Field);
+                var enumId = await _documentFieldDomainService.ResolveEnumIdAsync(dto.DocumentTypeId, dto.FieldType, dto.EnumId);
                 var order = await _documentFieldDomainService.GetNextOrderAsync(dto.DocumentTypeId);
 
-                var documentField = DocumentField.Create(dto.DocumentTypeId, dto.Name, dto.Field, dto.FieldImport, dto.IsShow,
+                var documentField = DocumentField.Create(dto.DocumentTypeId, dto.Name, dto.Field, dto.FieldType, enumId, dto.FieldImport, dto.IsShow,
                     dto.IsChargeable, dto.FieldNameOcr, dto.IsFieldOcr, order, getCurrentUserId(), GetVietnamTime());
 
                 _documentFieldRepository.Add(documentField);
@@ -131,7 +133,7 @@ namespace sh.be.applications.Module.Construction.Implements
                 var now = GetVietnamTime();
 
                 var documentFields = fieldNames
-                    .Select((fieldName, index) => DocumentField.Create(dto.DocumentTypeId, fieldName, fieldName, fieldName, false,
+                    .Select((fieldName, index) => DocumentField.Create(dto.DocumentTypeId, fieldName, fieldName, DocumentFieldConst.FIELD_TYPE_STRING, null, fieldName, false,
                         false, null, false, nextOrder + index, currentUserId, now))
                     .ToList();
 
@@ -165,7 +167,8 @@ namespace sh.be.applications.Module.Construction.Implements
             {
                 await _documentFieldDomainService.LockOrderAsync(documentField.DocumentTypeId);
                 await _documentFieldDomainService.EnsureUniqueFieldAsync(documentField.DocumentTypeId, dto.Field, id);
-                documentField.Update(dto.Name, dto.Field, dto.FieldType, dto.FieldImport, dto.IsShow,
+                var enumId = await _documentFieldDomainService.ResolveEnumIdAsync(documentField.DocumentTypeId, dto.FieldType, dto.EnumId);
+                documentField.Update(dto.Name, dto.Field, dto.FieldType, enumId, dto.FieldImport, dto.IsShow,
                     dto.IsShowTableView, dto.IsShowListView, dto.Width,
                     dto.IsChargeable, dto.FieldNameOcr, dto.IsFieldOcr, currentUserId, now);
 
@@ -347,6 +350,7 @@ namespace sh.be.applications.Module.Construction.Implements
                 documentField.Name,
                 documentField.Field,
                 documentField.FieldType,
+                documentField.EnumId,
                 documentField.FieldImport,
                 documentField.IsShow,
                 documentField.OrderTableView,

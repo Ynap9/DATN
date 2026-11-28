@@ -8,5 +8,6 @@ namespace sh.be.applications.Module.Construction.Dtos.Submission
         public int TotalFieldCount { get; set; }
         public int TotalSubmission { get; set; }
         public int TotalSubmissionGoogleSheet { get; set; }
+        public List<OutOfEnumFieldDto> OutOfEnum { get; set; } = new();
     }
 }

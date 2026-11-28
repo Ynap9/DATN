@@ -187,6 +187,25 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
                 rowChanges.Count(changes => changes.IsSkippedChecked));
         }
 
+        // Gom ô sắp ghi nằm ngoài danh mục của trường kiểu danh mục (so khớp sau trim, không phân biệt hoa thường); ô trống không tính
+        public static List<OutOfEnumField> FindOutOfEnumFields(List<SubmissionData> datas, Dictionary<int, EnumFieldValues> enumFieldValues)
+        {
+            return datas
+                .Where(data => !String.IsNullOrWhiteSpace(data.Data) && enumFieldValues.ContainsKey(data.DocumentFieldId))
+                .GroupBy(data => data.DocumentFieldId)
+                .Select(group =>
+                {
+                    var enumField = enumFieldValues[group.Key];
+                    var knownValues = enumField.Values.ToHashSet(StringComparer.OrdinalIgnoreCase);
+                    var outOfEnumValues = group.Select(data => data.Data.Trim()).Where(value => !knownValues.Contains(value)).ToList();
+                    return new OutOfEnumField(group.Key, enumField.FieldName, outOfEnumValues.Count,
+                        outOfEnumValues.Distinct(StringComparer.OrdinalIgnoreCase).Take(DocumentFieldConst.ENUM_OUT_OF_ENUM_SAMPLE_COUNT).ToList());
+                })
+                .Where(outOfEnumField => outOfEnumField.Count > 0)
+                .OrderBy(outOfEnumField => outOfEnumField.DocumentFieldId)
+                .ToList();
+        }
+
         public static SubmissionImportColumns ResolveColumns(IReadOnlyList<string> headers, string fileColumn, string? profileRangeColumn,
             string? boxColumn, string? fileUrlColumn, string? pageCountColumn = null)
         {
@@ -672,14 +691,20 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
         }
     }
 
+    public record OutOfEnumField(int DocumentFieldId, string Name, int Count, List<string> Samples);
+
     public record AppendImportPlan(List<NewSubmissionDraft> NewSubmissions, int MappedFieldCount, int NewDataCount,
         int NonEmptyCellCount, int ExistingSubmissionCount, int DistinctSheetKeyCount, int PageCountCount)
     {
+        public List<SubmissionData> ChangedDatas => NewSubmissions.SelectMany(draft => draft.Datas).ToList();
+
         public bool HasChanges => NewSubmissions.Count > 0;
     }
 
     public record BlankImportPlan(List<SubmissionData> DatasToUpdate, List<SubmissionData> DatasToInsert, int MappedFieldCount)
     {
+        public List<SubmissionData> ChangedDatas => DatasToUpdate.Concat(DatasToInsert).ToList();
+
         public int ChangedDataCount => DatasToUpdate.Count + DatasToInsert.Count;
 
         public bool HasChanges => ChangedDataCount > 0;
@@ -690,6 +715,8 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
     public record OverwriteImportPlan(List<SubmissionData> DatasToUpdate, List<SubmissionData> DatasToInsert,
         List<OverwriteChange> Changes, int SkippedCheckedCount)
     {
+        public List<SubmissionData> ChangedDatas => DatasToUpdate.Concat(DatasToInsert).ToList();
+
         public int ChangedDataCount => DatasToUpdate.Count + DatasToInsert.Count;
 
         public bool HasChanges => ChangedDataCount > 0;

@@ -987,6 +987,60 @@ namespace sh.be.infrastructure.data.Migrations
                     b.ToTable("UserRole", "auth");
                 });
 
+            modelBuilder.Entity("sh.be.domain.Module.Construction.DocumentFields.Entities.DocumentEnum", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<bool>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DocumentTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ValuesJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "DocumentTypeId", "Name" }, "IX_DocumentEnum_DocumentTypeId_Name")
+                        .IsUnique()
+                        .HasFilter("[Deleted] = 0");
+
+                    b.ToTable("DocumentEnum", "construction");
+                });
+
             modelBuilder.Entity("sh.be.domain.Module.Construction.DocumentFields.Entities.DocumentField", b =>
                 {
                     b.Property<int>("Id")
@@ -1015,6 +1069,9 @@ namespace sh.be.infrastructure.data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int>("DocumentTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("EnumId")
                         .HasColumnType("int");
 
                     b.Property<string>("Field")
@@ -1072,6 +1129,8 @@ namespace sh.be.infrastructure.data.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("EnumId");
 
                     b.HasIndex(new[] { "DocumentTypeId", "Field" }, "IX_DocumentField_DocumentTypeId_Field");
 
@@ -3397,6 +3456,23 @@ namespace sh.be.infrastructure.data.Migrations
                         .HasForeignKey("DocumentTypeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("sh.be.domain.Module.Construction.DocumentFields.Entities.DocumentEnum", b =>
+                {
+                    b.HasOne("sh.be.domain.Module.Construction.DocumentTypes.Entities.DocumentType", null)
+                        .WithMany()
+                        .HasForeignKey("DocumentTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("sh.be.domain.Module.Construction.DocumentFields.Entities.DocumentField", b =>
+                {
+                    b.HasOne("sh.be.domain.Module.Construction.DocumentFields.Entities.DocumentEnum", null)
+                        .WithMany()
+                        .HasForeignKey("EnumId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("sh.be.domain.Module.Construction.QaAssignments.Entities.QaReviewerMode", b =>

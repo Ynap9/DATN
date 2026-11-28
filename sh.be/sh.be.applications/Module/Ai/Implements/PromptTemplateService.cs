@@ -9,6 +9,7 @@ using sh.be.domain.Base;
 using sh.be.domain.Module.Ai.Prompts.Repositories;
 using sh.be.domain.Module.Ai.Prompts.Services;
 using sh.be.domain.Module.Construction.DocumentFields.Repositories;
+using sh.be.domain.Module.Construction.DocumentFields.Services;
 using sh.be.domain.Module.Core.Repositories;
 using sh.be.shared.Constants.Core;
 using sh.be.shared.HttpRequest.Error;
@@ -24,10 +25,11 @@ namespace sh.be.applications.Module.Ai.Implements
         private readonly IDocumentFieldRepository _documentFieldRepository;
         private readonly IPromptTemplateQuery _promptTemplateQuery;
         private readonly PromptTemplateDomainService _promptTemplateDomainService;
+        private readonly DocumentFieldDomainService _documentFieldDomainService;
 
         public PromptTemplateService(IUnitOfWork unitOfWork, IAuditLogRepository auditLogRepository, IMapper mapper, ILogger<PromptTemplateService> logger, IRequestContext requestContext, TimeProvider timeProvider,
             IPromptTemplateRepository promptTemplateRepository, IPromptFieldConfigRepository promptFieldConfigRepository, IDocumentFieldRepository documentFieldRepository,
-            IPromptTemplateQuery promptTemplateQuery, PromptTemplateDomainService promptTemplateDomainService
+            IPromptTemplateQuery promptTemplateQuery, PromptTemplateDomainService promptTemplateDomainService, DocumentFieldDomainService documentFieldDomainService
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider)
         {
             _promptTemplateRepository = promptTemplateRepository;
@@ -35,6 +37,7 @@ namespace sh.be.applications.Module.Ai.Implements
             _documentFieldRepository = documentFieldRepository;
             _promptTemplateQuery = promptTemplateQuery;
             _promptTemplateDomainService = promptTemplateDomainService;
+            _documentFieldDomainService = documentFieldDomainService;
         }
 
         // Màn sửa prompt của metadata kèm 2 danh sách cảnh báo trường thiếu / không còn hợp lệ (21.8)
@@ -237,7 +240,8 @@ namespace sh.be.applications.Module.Ai.Implements
             var template = await _promptTemplateRepository.FindByIdAsync(id)
                 ?? throw new UserFriendlyException(ErrorCodes.AiErrorPromptTemplateNotFound);
             var composedPrompt = PromptTemplateDomainService.Compose(template, await _promptFieldConfigRepository.GetByTemplateIdAsync(template.Id),
-                await _documentFieldRepository.GetByDocumentTypeIdAsync(template.DocumentTypeId));
+                await _documentFieldRepository.GetByDocumentTypeIdAsync(template.DocumentTypeId),
+                await _documentFieldDomainService.GetEnumFieldValuesAsync(template.DocumentTypeId));
             return new ViewComposedPromptDto
             {
                 SystemPrompt = composedPrompt.SystemPrompt,

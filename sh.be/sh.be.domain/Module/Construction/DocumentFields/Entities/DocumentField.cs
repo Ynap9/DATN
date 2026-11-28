@@ -18,6 +18,7 @@ namespace sh.be.domain.Module.Construction.DocumentFields.Entities
         public string Name { get; private set; } = String.Empty;
         public string Field { get; private set; } = String.Empty;
         public string FieldType { get; private set; } = "string";
+        public int? EnumId { get; private set; }
         public string? FieldImport { get; private set; }
         public bool IsShow { get; private set; }
         public int OrderTableView { get; private set; }
@@ -40,7 +41,7 @@ namespace sh.be.domain.Module.Construction.DocumentFields.Entities
         {
         }
 
-        public static DocumentField Create(int documentTypeId, string name, string field, string? fieldImport, bool isShow,
+        public static DocumentField Create(int documentTypeId, string name, string field, string fieldType, int? enumId, string? fieldImport, bool isShow,
             bool isChargeable, string? fieldNameOcr, bool isFieldOcr, int order,
             string? createdBy, DateTime? createdDate)
         {
@@ -49,6 +50,8 @@ namespace sh.be.domain.Module.Construction.DocumentFields.Entities
                 DocumentTypeId = documentTypeId,
                 Name = name,
                 Field = field,
+                FieldType = fieldType,
+                EnumId = enumId,
                 FieldImport = fieldImport,
                 IsShow = isShow,
                 OrderTableView = order,
@@ -63,13 +66,14 @@ namespace sh.be.domain.Module.Construction.DocumentFields.Entities
             };
         }
 
-        public void Update(string name, string field, string fieldType, string? fieldImport, bool isShow,
+        public void Update(string name, string field, string fieldType, int? enumId, string? fieldImport, bool isShow,
             bool isShowTableView, bool isShowListView, int? width,
             bool isChargeable, string? fieldNameOcr, bool isFieldOcr, string? modifiedBy, DateTime modifiedDate)
         {
             Name = name;
             Field = field;
             FieldType = fieldType;
+            EnumId = enumId;
             FieldImport = fieldImport;
             IsShow = isShow;
             IsShowTableView = isShowTableView;

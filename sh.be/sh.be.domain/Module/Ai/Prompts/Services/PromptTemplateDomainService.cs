@@ -1,8 +1,10 @@
 using sh.be.domain.Module.Ai.Prompts.Entities;
 using sh.be.domain.Module.Ai.Prompts.Repositories;
 using sh.be.domain.Module.Construction.DocumentFields.Entities;
+using sh.be.domain.Module.Construction.DocumentFields.Services;
 using sh.be.domain.Module.Construction.DocumentTypes.Repositories;
 using sh.be.shared.Constants.Ai;
+using sh.be.shared.Constants.Construction;
 using sh.be.shared.HttpRequest.Error;
 using sh.be.shared.HttpRequest.Exception;
 
@@ -176,8 +178,9 @@ namespace sh.be.domain.Module.Ai.Prompts.Services
             }
         }
 
-        // Ghép prompt gửi AI (21.11): bỏ cấu hình không hợp lệ và trường tạm tắt, trường theo Order; hàm thuần để Task 22B gọi lại
-        public static ComposedPrompt Compose(PromptTemplate template, List<PromptFieldConfig> configs, List<DocumentField> documentFields)
+        // Ghép prompt gửi AI (21.11): bỏ cấu hình không hợp lệ và trường tạm tắt, trường theo Order; trường kiểu danh mục liệt kê giá trị danh mục hiện tại (Task 75); hàm thuần để Task 22B gọi lại
+        public static ComposedPrompt Compose(PromptTemplate template, List<PromptFieldConfig> configs, List<DocumentField> documentFields,
+            Dictionary<int, EnumFieldValues> enumFieldValues)
         {
             var ocrFieldById = documentFields.Where(field => field.IsFieldOcr).ToDictionary(field => field.Id);
             var lines = new List<string>();
@@ -204,6 +207,11 @@ namespace sh.be.domain.Module.Ai.Prompts.Services
                 if (!String.IsNullOrEmpty(config.Example))
                 {
                     details.Add($"Ví dụ: {config.Example}");
+                }
+                if (enumFieldValues.TryGetValue(config.DocumentFieldId, out var enumField))
+                {
+                    var enumValueText = String.Join("; ", enumField.Values.Take(DocumentFieldConst.ENUM_PROMPT_MAX_VALUES));
+                    details.Add($"Chỉ chọn một trong: {enumValueText}{(enumField.Values.Count > DocumentFieldConst.ENUM_PROMPT_MAX_VALUES ? "…" : String.Empty)}");
                 }
                 if (NormalizeRuleDescriptions.TryGetValue(config.NormalizeRule, out var ruleDescription))
                 {

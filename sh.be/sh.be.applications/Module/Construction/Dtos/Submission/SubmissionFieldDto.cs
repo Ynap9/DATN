@@ -6,6 +6,7 @@ namespace sh.be.applications.Module.Construction.Dtos.Submission
         public string Name { get; set; } = String.Empty;
         public string Field { get; set; } = String.Empty;
         public string FieldType { get; set; } = String.Empty;
+        public List<string>? EnumValues { get; set; }
         public bool IsShow { get; set; }
         public bool IsChargeable { get; set; }
         public int OrderListView { get; set; }

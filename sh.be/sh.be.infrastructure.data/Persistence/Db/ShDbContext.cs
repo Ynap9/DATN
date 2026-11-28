@@ -40,6 +40,7 @@ namespace sh.be.infrastructure.data.Persistence.Db
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<DocumentType> DocumentTypes { get; set; }
         public DbSet<DocumentField> DocumentFields { get; set; }
+        public DbSet<DocumentEnum> DocumentEnums { get; set; }
         public DbSet<Project> Projects { get; set; }
         public DbSet<ProjectConfig> ProjectConfigs { get; set; }
         public DbSet<ProjectDocumentType> ProjectDocumentTypes { get; set; }
@@ -119,6 +120,22 @@ namespace sh.be.infrastructure.data.Persistence.Db
                 entity.Property(e => e.FieldType).HasDefaultValue("string");
                 entity.Property(e => e.IsShowTableView).HasDefaultValue(true).HasSentinel(true);
                 entity.Property(e => e.IsShowListView).HasDefaultValue(true).HasSentinel(true);
+                entity.HasOne<DocumentEnum>()
+                    .WithMany()
+                    .HasForeignKey(e => e.EnumId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<DocumentEnum>(entity =>
+            {
+                entity.HasQueryFilter(e => !e.Deleted);
+                entity.Property(e => e.Deleted).HasDefaultValue(0);
+                entity.Property(e => e.CreatedDate).HasDefaultValueSql("getdate()");
+                entity.HasIndex([nameof(DocumentEnum.DocumentTypeId), nameof(DocumentEnum.Name)], DocumentEnum.UniqueNameIndexName)
+                    .HasFilter("[Deleted] = 0");
+                entity.HasOne<DocumentType>()
+                    .WithMany()
+                    .HasForeignKey(e => e.DocumentTypeId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<Project>(entity =>
             {

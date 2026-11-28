@@ -5,6 +5,8 @@ namespace sh.be.applications.Module.Construction.Dtos.DocumentField
         public int DocumentTypeId { get; set; }
         public string Name { get; set; } = String.Empty;
         public string Field { get; set; } = String.Empty;
+        public string FieldType { get; set; } = "string";
+        public int? EnumId { get; set; }
         public string? FieldImport { get; set; }
         public bool IsShow { get; set; }
         public bool IsChargeable { get; set; }

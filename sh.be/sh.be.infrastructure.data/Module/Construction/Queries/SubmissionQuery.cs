@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using sh.be.applications.Module.Construction.Dtos.DocumentField;
 using sh.be.applications.Module.Construction.Dtos.Submission;
 using sh.be.applications.Module.Construction.Interfaces.Queries;
+using sh.be.domain.Module.Construction.DocumentFields.Services;
 using sh.be.domain.Module.Construction.Submissions.Entities;
 using sh.be.domain.Module.Construction.Submissions.Services;
 using sh.be.infrastructure.data.Base;
@@ -1287,29 +1288,40 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
 
         private async Task FillFieldsAndPositionAsync(ViewSubmissionDetailDto detail, ISubmissionFilter filter, bool includePosition, string? restrictedUserId)
         {
-            detail.Fields = await (from pf in _shDbContext.ProjectDocumentTypeDocumentFields.AsNoTracking()
+            var fieldRows = await (from pf in _shDbContext.ProjectDocumentTypeDocumentFields.AsNoTracking()
                                    join d in _shDbContext.DocumentFields.AsNoTracking() on pf.DocumentFieldId equals d.Id
                                    join sd in _shDbContext.SubmissionDatas.AsNoTracking().Where(x => x.SubmissionId == detail.Id)
                                        on d.Id equals sd.DocumentFieldId into datas
                                    from sd in datas.DefaultIfEmpty()
+                                   join e in _shDbContext.DocumentEnums.AsNoTracking() on d.EnumId equals (int?)e.Id into enums
+                                   from e in enums.DefaultIfEmpty()
                                    where pf.ProjectId == detail.ProjectId && pf.DocumentTypeId == detail.DocumentTypeId
                                    orderby d.OrderListView, d.Id
-                                   select new SubmissionFieldDto
+                                   select new
                                    {
-                                       DocumentFieldId = d.Id,
-                                       Name = d.Name,
-                                       Field = d.Field,
-                                       FieldType = d.FieldType,
-                                       IsShow = d.IsShow,
-                                       IsChargeable = d.IsChargeable,
-                                       OrderListView = d.OrderListView,
-                                       IsShowListView = d.IsShowListView,
-                                       Width = d.Width,
-                                       SubmissionDataId = sd != null ? sd.Id : null,
-                                       Data = sd != null ? sd.Data : String.Empty,
-                                       IndexGoogleSheet = sd != null ? sd.IndexGoogleSheet : null,
+                                       Field = new SubmissionFieldDto
+                                       {
+                                           DocumentFieldId = d.Id,
+                                           Name = d.Name,
+                                           Field = d.Field,
+                                           FieldType = d.FieldType,
+                                           IsShow = d.IsShow,
+                                           IsChargeable = d.IsChargeable,
+                                           OrderListView = d.OrderListView,
+                                           IsShowListView = d.IsShowListView,
+                                           Width = d.Width,
+                                           SubmissionDataId = sd != null ? sd.Id : null,
+                                           Data = sd != null ? sd.Data : String.Empty,
+                                           IndexGoogleSheet = sd != null ? sd.IndexGoogleSheet : null,
+                                       },
+                                       EnumValuesJson = e != null ? e.ValuesJson : null,
                                    })
                 .ToListAsync();
+            foreach (var fieldRow in fieldRows.Where(row => row.EnumValuesJson != null))
+            {
+                fieldRow.Field.EnumValues = DocumentFieldDomainService.ParseEnumValues(fieldRow.EnumValuesJson!);
+            }
+            detail.Fields = fieldRows.Select(row => row.Field).ToList();
 
             if (detail.StatusQa == SubmissionConst.QA_FAILED)
             {

@@ -34,6 +34,9 @@ namespace sh.be.shared.Constants.Core
         public const string ACTION_DOCUMENT_FIELD_CHANGE_ORDER_LIST_VIEW = "Cập nhật thứ tự hiển thị dạng danh sách của trường";
         public const string ACTION_DOCUMENT_FIELD_DELETE = "Xóa trường của loại văn bản";
         public const string ACTION_DOCUMENT_FIELD_QUICK_DELETE = "Xóa nhanh trường của loại văn bản";
+        public const string ACTION_DOCUMENT_ENUM_CREATE = "Tạo danh mục của loại văn bản";
+        public const string ACTION_DOCUMENT_ENUM_UPDATE = "Cập nhật danh mục của loại văn bản";
+        public const string ACTION_DOCUMENT_ENUM_DELETE = "Xóa danh mục của loại văn bản";
 
         public const string ACTION_PROJECT_CREATE = "Tạo dự án";
         public const string ACTION_PROJECT_UPDATE = "Cập nhật dự án";

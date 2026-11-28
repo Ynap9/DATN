@@ -7,6 +7,7 @@ namespace sh.be.applications.Module.Construction.Dtos.DocumentField
         public string Name { get; set; } = String.Empty;
         public string Field { get; set; } = String.Empty;
         public string FieldType { get; set; } = String.Empty;
+        public int? EnumId { get; set; }
         public string? FieldImport { get; set; }
         public bool IsShow { get; set; }
         public int OrderTableView { get; set; }

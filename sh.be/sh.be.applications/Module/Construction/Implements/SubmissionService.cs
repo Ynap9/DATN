@@ -14,9 +14,11 @@ using sh.be.domain.Base;
 using sh.be.domain.Base.Models;
 using sh.be.domain.Module.Auth.Repositories;
 using sh.be.domain.Module.Auth.Services;
+using sh.be.domain.Module.Construction.DocumentFields.Services;
 using sh.be.domain.Module.Construction.Projects.Entities;
 using sh.be.domain.Module.Construction.Projects.Services;
 using sh.be.domain.Module.Construction.QaAssignments.Services;
+using sh.be.domain.Module.Construction.Submissions.Entities;
 using sh.be.domain.Module.Construction.Submissions.Repositories;
 using sh.be.domain.Module.Construction.Submissions.Services;
 using sh.be.domain.Module.Core.Repositories;
@@ -40,6 +42,7 @@ namespace sh.be.applications.Module.Construction.Implements
         private readonly IUserRepository _userRepository;
         private readonly SubmissionDomainService _submissionDomainService;
         private readonly QaAssignmentDomainService _qaAssignmentDomainService;
+        private readonly DocumentFieldDomainService _documentFieldDomainService;
         private readonly ProjectDomainService _projectDomainService;
         private readonly IDataReaderExternal _dataReaderExternal;
         private readonly IExcelReaderExternal _excelReaderExternal;
@@ -55,7 +58,7 @@ namespace sh.be.applications.Module.Construction.Implements
             SubmissionDomainService submissionDomainService, QaAssignmentDomainService qaAssignmentDomainService, ProjectDomainService projectDomainService,
             IDataReaderExternal dataReaderExternal, IExcelReaderExternal excelReaderExternal, IExcelExternal excelExternal, IBackgroundJobExternal backgroundJobExternal,
             IFileStorageExternal fileStorageExternal, ISubmissionAssignmentService submissionAssignmentService, IProjectConfigService projectConfigService,
-            IGoogleSheetExternal googleSheetExternal
+            IGoogleSheetExternal googleSheetExternal, DocumentFieldDomainService documentFieldDomainService
         ) : base(unitOfWork, auditLogRepository, mapper, logger, requestContext, timeProvider, roleRepository, projectDomainService)
         {
             _submissionQuery = submissionQuery;
@@ -65,6 +68,7 @@ namespace sh.be.applications.Module.Construction.Implements
             _userRepository = userRepository;
             _submissionDomainService = submissionDomainService;
             _qaAssignmentDomainService = qaAssignmentDomainService;
+            _documentFieldDomainService = documentFieldDomainService;
             _projectDomainService = projectDomainService;
             _dataReaderExternal = dataReaderExternal;
             _excelReaderExternal = excelReaderExternal;
@@ -985,6 +989,7 @@ namespace sh.be.applications.Module.Construction.Implements
                 TotalFieldCount = plan.MappedFieldCount,
                 TotalSubmission = plan.ExistingSubmissionCount,
                 TotalSubmissionGoogleSheet = plan.DistinctSheetKeyCount,
+                OutOfEnum = await FindOutOfEnumAsync(dto.DocumentTypeId, plan.ChangedDatas),
             };
         }
 
@@ -997,6 +1002,7 @@ namespace sh.be.applications.Module.Construction.Implements
             {
                 TotalBlankCount = plan.ChangedDataCount,
                 TotalFieldCount = plan.MappedFieldCount,
+                OutOfEnum = await FindOutOfEnumAsync(dto.DocumentTypeId, plan.ChangedDatas),
             };
         }
 
@@ -1010,7 +1016,15 @@ namespace sh.be.applications.Module.Construction.Implements
             {
                 TotalOverWriteCount = plan.ChangedDataCount,
                 TotalSkippedChecked = plan.SkippedCheckedCount,
+                OutOfEnum = await FindOutOfEnumAsync(dto.DocumentTypeId, plan.ChangedDatas),
             };
+        }
+
+        // Ô sắp ghi nằm ngoài danh mục của trường kiểu danh mục: chỉ báo ở bước chạy thử, không chặn import
+        private async Task<List<OutOfEnumFieldDto>> FindOutOfEnumAsync(int documentTypeId, List<SubmissionData> changedDatas)
+        {
+            var enumFieldValues = await _documentFieldDomainService.GetEnumFieldValuesAsync(documentTypeId);
+            return _mapper.Map<List<OutOfEnumFieldDto>>(SubmissionImportDomainService.FindOutOfEnumFields(changedDatas, enumFieldValues));
         }
 
         private async Task<ViewImportSubmissionResultDto> ImportAppendAsync(ImportSubmissionDto dto, ProjectSheetSource source, string userId, ImportAuditSource auditSource)

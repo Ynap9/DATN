@@ -75,15 +75,25 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
                 .FirstOrDefaultAsync();
         }
 
-        public Task<List<GetListDocumentFieldDto>> GetListDocumentField(int id)
+        public async Task<List<GetListDocumentFieldDto>> GetListDocumentField(int id)
         {
-            return _shDbContext.DocumentFields
+            var documentFields = await _shDbContext.DocumentFields
                 .AsNoTracking()
                 .Where(d => d.DocumentTypeId == id)
                 .OrderBy(d => d.OrderTableView)
                 .ThenBy(d => d.Id)
                 .ProjectTo<GetListDocumentFieldDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
+            var enumNames = await _shDbContext.DocumentEnums
+                .AsNoTracking()
+                .Where(e => e.DocumentTypeId == id)
+                .ToDictionaryAsync(e => e.Id, e => e.Name);
+
+            foreach (var documentField in documentFields.Where(d => d.EnumId.HasValue))
+            {
+                documentField.EnumName = enumNames.GetValueOrDefault(documentField.EnumId!.Value);
+            }
+            return documentFields;
         }
 
         public Task<List<string>> GetListTemplateHeader(int id)
