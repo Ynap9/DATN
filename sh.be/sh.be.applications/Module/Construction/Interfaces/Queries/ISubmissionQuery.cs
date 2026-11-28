@@ -27,6 +27,7 @@ namespace sh.be.applications.Module.Construction.Interfaces.Queries
             DateTime toDateExclusive, string? restrictedUserId = null);
         Task<List<GetListSubmissionTimelineDto>> FindTimeline(int submissionId);
         Task<SubmissionExportTableDto> FindExportTable(ExportSubmissionDto filter);
+        Task<SubmissionProfileSummarySourceDto> FindProfileSummarySource(ExportSubmissionDto filter);
         Task<SubmissionExportNameDto?> FindExportName(int projectId, int documentTypeId);
     }
 }

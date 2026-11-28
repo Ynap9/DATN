@@ -6,5 +6,8 @@ namespace sh.be.applications.Module.Construction.Dtos.Submission
     {
         [FromQuery(Name = "columns")]
         public List<string>? Columns { get; set; }
+
+        [FromQuery(Name = "includeProfileSummary")]
+        public bool IncludeProfileSummary { get; set; }
     }
 }

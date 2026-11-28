@@ -13,5 +13,6 @@ namespace sh.be.applications.Base.Interfaces.External.DataReader
         string ExtractSpreadsheetId(string spreadsheetUrl);
         Task<List<string>> GetSheetNamesAsync(SpreadsheetAccountDto account, string spreadsheetUrl);
         Task WriteTableAsync(SpreadsheetAccountDto account, string spreadsheetUrl, string sheetName, int startRow, List<string> headers, List<List<string>> rows);
+        Task ReplaceTableAsync(SpreadsheetAccountDto account, string spreadsheetUrl, string sheetName, List<string> headers, List<List<string>> rows);
     }
 }

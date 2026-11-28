@@ -7,5 +7,6 @@ namespace sh.be.applications.Base.Interfaces.External.DataReader
         ExportFileDto CreateTemplate(string templateName, IReadOnlyList<string> headers);
         ExportFileDto CreateMultiSheetTemplate(string templateName, IReadOnlyList<ExcelSheetTemplateDto> sheets);
         ExportFileDto CreateTable(string fileName, string sheetName, IReadOnlyList<string> headers, IEnumerable<IReadOnlyList<string>> rows);
+        ExportFileDto CreateMultiSheetTable(string fileName, IReadOnlyList<ExcelTableDto> sheets);
     }
 }

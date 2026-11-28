@@ -1133,6 +1133,43 @@ namespace sh.be.infrastructure.data.Module.Construction.Queries
             };
         }
 
+        // Dữ liệu cho bảng gộp theo hồ sơ: đúng tập văn bản của FindExportTable (cùng bộ lọc) nhưng đọc mọi trường của cặp, không phụ thuộc cột đã chọn
+        public async Task<SubmissionProfileSummarySourceDto> FindProfileSummarySource(ExportSubmissionDto filter)
+        {
+            var query = ApplyFilter(filter, filter.StatusCheck, filter.StatusQa, null);
+            var submissions = await query
+                .OrderBy(s => s.Id)
+                .Select(s => new { s.Id, s.Box, s.ProfileRange, s.PageCount })
+                .ToListAsync();
+
+            var documentFields = await (from pf in _shDbContext.ProjectDocumentTypeDocumentFields.AsNoTracking()
+                                        join d in _shDbContext.DocumentFields.AsNoTracking() on pf.DocumentFieldId equals d.Id
+                                        where pf.ProjectId == filter.ProjectId && pf.DocumentTypeId == filter.DocumentTypeId
+                                        orderby d.OrderTableView, d.Id
+                                        select new { d.Id, d.Name })
+                .ToListAsync();
+            var documentFieldIds = documentFields.Select(d => d.Id).ToList();
+            var fieldNameById = documentFields.ToDictionary(d => d.Id, d => d.Name);
+
+            var submissionIds = query.Select(s => s.Id);
+            var datasBySubmissionId = (await _shDbContext.SubmissionDatas
+                    .AsNoTracking()
+                    .Where(sd => sd.ProjectId == filter.ProjectId && sd.DocumentTypeId == filter.DocumentTypeId
+                        && documentFieldIds.Contains(sd.DocumentFieldId) && submissionIds.Contains(sd.SubmissionId))
+                    .Select(sd => new { sd.SubmissionId, sd.DocumentFieldId, sd.Data })
+                    .ToListAsync())
+                .ToLookup(sd => sd.SubmissionId);
+
+            return new SubmissionProfileSummarySourceDto
+            {
+                FieldNames = documentFields.Select(d => d.Name).ToList(),
+                Submissions = submissions
+                    .Select(s => new ProfileSummarySubmission(s.Box, s.ProfileRange, s.PageCount,
+                        datasBySubmissionId[s.Id].Select(sd => new ProfileSummaryValue(fieldNameById[sd.DocumentFieldId], sd.Data)).ToList()))
+                    .ToList(),
+            };
+        }
+
         public async Task<SubmissionExportNameDto?> FindExportName(int projectId, int documentTypeId)
         {
             return await (from p in _shDbContext.Projects.AsNoTracking()

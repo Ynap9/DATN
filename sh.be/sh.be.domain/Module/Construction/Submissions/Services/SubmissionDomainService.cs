@@ -228,6 +228,15 @@ namespace sh.be.domain.Module.Construction.Submissions.Services
             return SubmissionConst.EXPORT_COLUMNS.Where(column => requestedColumns.Contains(column, StringComparer.OrdinalIgnoreCase)).ToList();
         }
 
+        // Bật bảng gộp thì tab "Gom hồ sơ" dành riêng cho bảng gộp, không dùng làm tab xuất chính
+        public static void EnsureExportSheetNotProfileSummary(string sheetName, bool includeProfileSummary)
+        {
+            if (includeProfileSummary && string.Equals(sheetName.Trim(), ProfileSummaryConst.SHEET_NAME, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UserFriendlyException(ErrorCodes.BadRequest, $"Tab {ProfileSummaryConst.SHEET_NAME} dành cho bảng gộp, hãy chọn tab khác");
+            }
+        }
+
         public static void EnsureExportStartRowValid(int startRow)
         {
             if (startRow < 1)

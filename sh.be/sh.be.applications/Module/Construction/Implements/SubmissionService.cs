@@ -795,8 +795,20 @@ namespace sh.be.applications.Module.Construction.Implements
             _logger.LogInformation($"{nameof(ExportExcelFromJob)}, dto={JsonSerializer.Serialize(dto)}");
             await _submissionDomainService.EnsureReadableDocumentTypeAsync(dto.ProjectId, dto.DocumentTypeId);
             var table = await _submissionQuery.FindExportTable(dto);
-            return _excelExternal.CreateTable($"{table.ProjectName}_{table.DocumentTypeName}_{GetVietnamTime():yyyyMMddHHmm}", table.DocumentTypeName,
-                table.Headers, table.Rows);
+            var fileName = $"{table.ProjectName}_{table.DocumentTypeName}_{GetVietnamTime():yyyyMMddHHmm}";
+            if (!dto.IncludeProfileSummary)
+            {
+                return _excelExternal.CreateTable(fileName, table.DocumentTypeName, table.Headers, table.Rows);
+            }
+
+            // Kèm bảng gộp theo hồ sơ (Task 76): sheet thứ 2 sau sheet dữ liệu
+            var source = await _submissionQuery.FindProfileSummarySource(dto);
+            var summary = SubmissionProfileSummaryDomainService.BuildProfileSummary(source.FieldNames, source.Submissions);
+            return _excelExternal.CreateMultiSheetTable(fileName,
+            [
+                new ExcelTableDto { SheetName = table.DocumentTypeName, Headers = table.Headers, Rows = table.Rows },
+                new ExcelTableDto { SheetName = ProfileSummaryConst.SHEET_NAME, Headers = summary.Headers, Rows = summary.Rows, RightAlignedColumnIndexes = summary.NumberColumnIndexes },
+            ]);
         }
 
         // Xếp job nền xuất Excel hồ sơ theo bộ lọc, trả jobId
@@ -880,6 +892,7 @@ namespace sh.be.applications.Module.Construction.Implements
             await EnsureQaTicketFilterVisibleAsync(dto);
             dto.Columns = SubmissionDomainService.NormalizeExportColumns(dto.Columns);
             SubmissionDomainService.EnsureExportStartRowValid(dto.StartRow);
+            SubmissionDomainService.EnsureExportSheetNotProfileSummary(dto.SheetName, dto.IncludeProfileSummary);
             var sheetNames = await ReadExportSheetNamesAsync(dto.Url);
             if (!sheetNames.Contains(dto.SheetName))
             {
@@ -932,6 +945,15 @@ namespace sh.be.applications.Module.Construction.Implements
             var table = await _submissionQuery.FindExportTable(dto);
             var account = await _projectConfigService.GetSpreadsheetAccount();
             await _googleSheetExternal.WriteTableAsync(account, dto.Url, dto.SheetName, dto.StartRow, table.Headers, table.Rows);
+            if (!dto.IncludeProfileSummary)
+            {
+                return;
+            }
+
+            // Kèm bảng gộp theo hồ sơ (Task 76): ghi sau tab dữ liệu nên lỗi ở đây không làm mất tab dữ liệu đã ghi
+            var source = await _submissionQuery.FindProfileSummarySource(dto);
+            var summary = SubmissionProfileSummaryDomainService.BuildProfileSummary(source.FieldNames, source.Submissions);
+            await _googleSheetExternal.ReplaceTableAsync(account, dto.Url, ProfileSummaryConst.SHEET_NAME, summary.Headers, summary.Rows);
         }
 
         // Chặn Sheet đồng bộ của mọi dự án (kể cả dự án đang xuất) trước khi dùng tài khoản Gmail chung đọc tên tab

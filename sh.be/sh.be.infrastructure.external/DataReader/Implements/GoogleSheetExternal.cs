@@ -228,6 +228,44 @@ namespace sh.be.infrastructure.external.DataReader.Implements
             }
         }
 
+        // Ghi bảng vào tab theo kiểu thay thế: chưa có tab thì tạo, có rồi thì xoá hết nội dung (kể cả ô nhập tay) rồi ghi lại từ A1.
+        // Lỗi tạm thời của Google (429 / 5xx) ném nguyên để Hangfire thử lại
+        public async Task ReplaceTableAsync(SpreadsheetAccountDto account, string spreadsheetUrl, string sheetName, List<string> headers, List<List<string>> rows)
+        {
+            _logger.LogInformation($"{nameof(ReplaceTableAsync)}, spreadsheetUrl={spreadsheetUrl}, sheetName={sheetName}, rowCount={rows.Count}");
+            var spreadsheetId = GoogleSheetUrl.ExtractSpreadsheetId(spreadsheetUrl);
+            using var flow = GoogleOAuthFlowFactory.CreateFlow(account);
+            using var sheetsService = new SheetsService(CreateServiceInitializer(flow, account));
+            try
+            {
+                var sheets = await GetSheetsAsync(sheetsService, spreadsheetId, SheetGridFields);
+                var sheetProperties = sheets.Select(sheet => sheet.Properties).FirstOrDefault(properties => string.Equals(properties.Title, sheetName, StringComparison.OrdinalIgnoreCase));
+                if (sheetProperties == null)
+                {
+                    var addSheetRequest = new BatchUpdateSpreadsheetRequest
+                    {
+                        Requests = [new Request { AddSheet = new AddSheetRequest { Properties = new SheetProperties { Title = sheetName } } }],
+                    };
+                    sheetProperties = (await sheetsService.Spreadsheets.BatchUpdate(addSheetRequest, spreadsheetId).ExecuteAsync()).Replies[0].AddSheet.Properties;
+                }
+
+                var quotedSheetName = QuoteSheetName(sheetName);
+                await sheetsService.Spreadsheets.Values.Clear(new ClearValuesRequest(), spreadsheetId, quotedSheetName).ExecuteAsync();
+                await EnsureGridSizeAsync(sheetsService, spreadsheetId, sheetProperties, rows.Count + 1, headers.Count);
+                await WriteValuesAsync(sheetsService, spreadsheetId, quotedSheetName, 1, rows.Prepend(headers).Select(row => (IList<object>)row.Cast<object>().ToList()).ToList());
+            }
+            catch (TokenResponseException ex)
+            {
+                _logger.LogError(ex, $"{nameof(ReplaceTableAsync)}, error={ex.Error?.Error}");
+                throw new UserFriendlyException(ErrorCodes.CoreErrorAuthorizeDataSourceFailed);
+            }
+            catch (GoogleApiException ex) when (!IsTransient(ex))
+            {
+                _logger.LogError(ex, $"{nameof(ReplaceTableAsync)}, spreadsheetId={spreadsheetId}, sheetName={sheetName}");
+                throw new UserFriendlyException(ErrorCodes.CoreErrorUpdateDataSourceFailed);
+            }
+        }
+
         private static async Task<string> CreateSpreadsheetFileAsync(DriveService driveService, string title, string folderId)
         {
             var createRequest = driveService.Files.Create(new DriveFile

@@ -34,6 +34,17 @@ namespace sh.be.infrastructure.external.DataReader.Implements
             return CreateWorkbook(ExcelNaming.ToFileName(fileName), workbook => AddWorksheet(workbook, sheetName, headers, rows));
         }
 
+        public ExportFileDto CreateMultiSheetTable(string fileName, IReadOnlyList<ExcelTableDto> sheets)
+        {
+            return CreateWorkbook(ExcelNaming.ToFileName(fileName), workbook =>
+            {
+                foreach (var sheet in sheets)
+                {
+                    AddWorksheet(workbook, sheet.SheetName, sheet.Headers, sheet.Rows, sheet.RightAlignedColumnIndexes);
+                }
+            });
+        }
+
         private static ExportFileDto CreateWorkbook(string fileName, Action<XLWorkbook> addWorksheets)
         {
             using var workbook = new XLWorkbook();
@@ -49,7 +60,8 @@ namespace sh.be.infrastructure.external.DataReader.Implements
             };
         }
 
-        private static void AddWorksheet(XLWorkbook workbook, string sheetName, IReadOnlyList<string> headers, IEnumerable<IReadOnlyList<string>> rows)
+        private static void AddWorksheet(XLWorkbook workbook, string sheetName, IReadOnlyList<string> headers, IEnumerable<IReadOnlyList<string>> rows,
+            IReadOnlyList<int>? rightAlignedColumnIndexes = null)
         {
             var worksheet = workbook.Worksheets.Add(ExcelNaming.ToSheetName(sheetName));
 
@@ -66,6 +78,11 @@ namespace sh.be.infrastructure.external.DataReader.Implements
                 {
                     worksheet.Cell(rowIndex, columnIndex + 1).SetValue(row[columnIndex]);
                 }
+            }
+
+            foreach (var columnIndex in rightAlignedColumnIndexes ?? [])
+            {
+                worksheet.Column(columnIndex + 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
             }
 
             worksheet.Row(HeaderRowIndex).Style.Font.Bold = true;
