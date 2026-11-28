@@ -57,6 +57,8 @@ export class ExportPanelComponent extends BaseComponent {
     statusCheck: number | null = null;
     statusQa: number | null = null;
     selectedColumns = new Set(EXPORT_DEFAULT_COLUMNS);
+    // Kèm bảng gộp theo hồ sơ (Task 76): áp cho cả hai đích, giữ khi đổi đích, mặc định tắt
+    includeProfileSummary = false;
     // null = đang đếm
     total: number | null = null;
     isCreating = false;
@@ -141,7 +143,9 @@ export class ExportPanelComponent extends BaseComponent {
         if (!total || !sheetName || !startRow) return;
         this._confirmationService.confirm({
             header: 'Xuất ra Google Sheet?',
-            message: `Ghi ${formatNumber(total)} văn bản vào sheet ${sheetName}, bắt đầu từ dòng ${startRow}. Mọi dữ liệu từ dòng ${startRow} trở xuống của sheet này sẽ bị xoá rồi ghi lại. Không hoàn tác được.`,
+            message:
+                `Ghi ${formatNumber(total)} văn bản vào sheet ${sheetName}, bắt đầu từ dòng ${startRow}. Mọi dữ liệu từ dòng ${startRow} trở xuống của sheet này sẽ bị xoá rồi ghi lại.` +
+                `${this.includeProfileSummary ? ' Tab "Gom hồ sơ" của file cũng bị xoá hết rồi ghi lại.' : ''} Không hoàn tác được.`,
             icon: 'pi pi-exclamation-triangle',
             closable: true,
             closeOnEscape: true,
@@ -178,14 +182,21 @@ export class ExportPanelComponent extends BaseComponent {
         if (!this.total || this.isCreating) return;
         this.isCreating = true;
         this._submissionService
-            .createExportJob({ ...this.buildFilter(), columns: this.activeColumns })
+            .createExportJob({ ...this.buildFilter(), columns: this.activeColumns, includeProfileSummary: this.includeProfileSummary || undefined })
             .pipe(
                 finalize(() => (this.isCreating = false)),
                 takeUntilDestroyed(this._destroyRef),
             )
             .subscribe((res) => {
                 if (!this.isSucceed(res)) return;
-                const row: IExportJobRow = { ...res.data, target: EXPORT_TARGET.EXCEL, downloadUrl: null, errorMessage: null, readyAt: null };
+                const row: IExportJobRow = {
+                    ...res.data,
+                    target: EXPORT_TARGET.EXCEL,
+                    includeProfileSummary: this.includeProfileSummary,
+                    downloadUrl: null,
+                    errorMessage: null,
+                    readyAt: null,
+                };
                 this.jobs = [row, ...this.jobs];
                 this.pollJob(row);
             });
@@ -196,7 +207,7 @@ export class ExportPanelComponent extends BaseComponent {
         const url = this.sheetUrl.trim();
         this.isCreating = true;
         this._submissionService
-            .createExportSheetJob({ ...this.buildFilter(), columns: this.activeColumns, url, sheetName, startRow })
+            .createExportSheetJob({ ...this.buildFilter(), columns: this.activeColumns, includeProfileSummary: this.includeProfileSummary || undefined, url, sheetName, startRow })
             .pipe(
                 finalize(() => (this.isCreating = false)),
                 takeUntilDestroyed(this._destroyRef),
@@ -211,6 +222,7 @@ export class ExportPanelComponent extends BaseComponent {
                     sheetName,
                     startRow,
                     total,
+                    includeProfileSummary: this.includeProfileSummary,
                     status: res.data.status,
                     downloadUrl: null,
                     errorMessage: null,

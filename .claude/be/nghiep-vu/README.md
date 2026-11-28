@@ -42,6 +42,7 @@
 | [31-nang-suat-theo-nguoi.md](31-nang-suat-theo-nguoi.md) | Hồ sơ (Task 70): `GET progress-stats/users` — sản lượng theo người nhập (Data + QA) trong khoảng ngày, không phụ thuộc QA; người được tính là người bấm hoặc người đang giữ, dòng "Không gắn người"; số có thể lệch tiền công (cố ý) |
 | [32-dong-goi-phien-kiem.md](32-dong-goi-phien-kiem.md) | Đóng gói (Task 65): phiên tải thư mục, soi file (SHA-256, chữ ký, PDF/A), ghép cột Excel mờ, gom file vào gói, kiểm giá trị ô, job kiểm + job dọn 7 ngày, 7 API, lỗi `704`–`709` |
 | [33-dong-goi-dung-goi.md](33-dong-goi-dung-goi.md) | Đóng gói (Task 66): dựng mỗi gói không lỗi thành 1 ZIP TT05 (METS, EAD, 8 schemas, PREMIS cho AIP / DIP), job chạy nền, 3 API, cơ quan lưu trữ, khuôn byte gói mẫu, lỗi `710`–`713` |
+| [35-bang-gop-theo-ho-so.md](35-bang-gop-theo-ho-so.md) | Bảng gộp theo hồ sơ (Task 76): `includeProfileSummary` thêm sheet Excel / tab Google "Gom hồ sơ" (mục lục hồ sơ TT05), luật nhóm Hộp + Hồ sơ, đọc ngày / số, cột lấy từ trường, chặn tab chính trùng tên |
 | [34-danh-muc-truong.md](34-danh-muc-truong.md) | Trường kiểu danh mục (Task 75): danh mục theo metadata (bảng `DocumentEnum`), 4 API `document-type/{id}/enum`, trường `enum`, `enumValues` ở văn bản, dòng "Chỉ chọn một trong" của prompt OCR, `outOfEnum` khi chạy thử import, lỗi `350`–`351` |
 
 ## Thuật ngữ

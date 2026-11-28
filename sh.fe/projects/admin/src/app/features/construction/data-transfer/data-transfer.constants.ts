@@ -184,6 +184,8 @@ export interface IExportJobRow {
     sheetName?: string;
     startRow?: number;
     total?: number;
+    // Cờ lúc tạo job để hiện chip "Kèm gom hồ sơ" (BE không trả cờ)
+    includeProfileSummary: boolean;
     status: number;
     downloadUrl: string | null;
     errorMessage: string | null;

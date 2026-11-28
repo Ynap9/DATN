@@ -471,8 +471,8 @@ export interface ISubmissionImportJob {
     errorMessage: string | null;
 }
 
-// columns = mã cột thêm (EXPORT_COLUMNS), gửi lặp ?columns=a&columns=b
-export type IExportSubmission = ISubmissionFilter & { columns?: string[] };
+// columns = mã cột thêm (EXPORT_COLUMNS), gửi lặp ?columns=a&columns=b; includeProfileSummary = kèm bảng gộp theo hồ sơ (chỉ gửi khi bật)
+export type IExportSubmission = ISubmissionFilter & { columns?: string[]; includeProfileSummary?: boolean };
 
 export interface ISubmissionExportJob {
     jobId: string;

@@ -81,6 +81,14 @@
                 </div>
             }
         </div>
+
+        <div class="flex flex-col gap-1 border-t border-[#eef1ef] px-6 py-4">
+            <label class="flex cursor-pointer items-center gap-2 text-sm font-semibold" for="exportProfileSummary">
+                <p-checkbox inputId="exportProfileSummary" [binary]="true" [(ngModel)]="includeProfileSummary" />
+                Kèm bảng gộp theo hồ sơ
+            </label>
+            <span class="text-xs text-[var(--app-muted)]">Excel thêm sheet 'Gom hồ sơ'; Google Sheet ghi đè tab 'Gom hồ sơ' của file.</span>
+        </div>
     </div>
 
     <!-- Phải: tóm tắt + file đã xuất -->
@@ -118,7 +126,12 @@
                         <i class="mt-0.5 shrink-0" [class]="isSheet ? 'pi pi-table' : 'pi pi-file-excel'"></i>
                         {{ isSheet ? job.sheetName + ' · từ dòng ' + job.startRow : job.fileName }}
                     </span>
-                    <span class="text-xs text-[var(--app-muted)]">{{ isSheet ? 'Google Sheet · ' + formatNumber(job.total ?? 0) + ' văn bản' : 'File Excel' }}</span>
+                    <span class="flex flex-wrap items-center gap-2 text-xs text-[var(--app-muted)]">
+                        {{ isSheet ? 'Google Sheet · ' + formatNumber(job.total ?? 0) + ' văn bản' : 'File Excel' }}
+                        @if (job.includeProfileSummary) {
+                            <span class="rounded-full bg-[#eef1ef] px-2 py-0.5 text-[11px] font-semibold text-[#3f4b47]">Kèm gom hồ sơ</span>
+                        }
+                    </span>
                     <div class="flex items-center justify-between">
                         @switch (job.status) {
                             @case (jobStatus.DONE) {

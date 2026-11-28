@@ -4,7 +4,7 @@
 
 Task 56A (2026-11-24): tab Xuất của màn Nhập / Xuất ghi bảng hồ sơ vào **một tab có sẵn** của Google Sheet, chạy nền Hangfire đúng
 khuôn [xuất Excel chạy nền](14-ho-so-xoa-xuat.md#xuất-excel-chạy-nền). Cùng bộ lọc (`SubmissionFilterDto`), cùng cột và tiêu đề như file
-Excel vì cùng gọi `ISubmissionQuery.FindExportTable`. Không migration, không key quyền, không mã lỗi mới; API xuất Excel giữ nguyên.
+Excel vì cùng gọi `ISubmissionQuery.FindExportTable`. Không migration, không key quyền, không mã lỗi mới; API xuất Excel giữ nguyên. Task 76: `includeProfileSummary` ghi thêm tab "Gom hồ sơ" (thay thế), luật ở [35](35-bang-gop-theo-ho-so.md).
 
 ## API
 
