@@ -58,7 +58,9 @@ Checkbox "Kèm bảng gộp theo hồ sơ" dưới phần chọn cột, chi ti�
 - Luật 400 chặn tab chính: `Gom hồ sơ` và ` gom HỒ SƠ ` bị chặn khi bật cờ; tắt cờ hoặc tab khác không bị chặn bởi luật này (4/4).
 - Trình duyệt: tick checkbox, xuất Excel, dòng "Đã xuất" có chip "Kèm gom hồ sơ", file tải về có đúng 2 sheet; chuyển sang đích Google Sheet checkbox vẫn tick.
 
-Lưu ý: **Chưa kiểm** ghi thật lên Google (tạo tab, xoá nội dung, ghi đè hai lần không cộng dồn): cần tài khoản Google đã kết nối và một file Sheet để ghi, còn `GoogleSheetExternal` tự dựng client nên không giả lập được.
-Chưa kiểm cả hộp xác nhận Sheet có câu "Tab Gom hồ sơ cũng bị xoá" trên trình duyệt. Kiểm khi có tài khoản Google kết nối.
+- Google thật (2026-11-28, kiểm bù Task 72.3, đích là Sheet của dự án tạm đã xoá mềm nên không bị luật 202 chặn; file Sheet đã xoá khỏi Drive): xuất 2 lần với cờ bật → lần 1 tạo tab "Gom hồ sơ"
+  (B1/H1 5 văn bản 9 trang, B2/H2 3 văn bản, B3/H3 5 văn bản 15 trang), ghi tay "GHI TAY" vào ô H12 giữa hai lần, lần 2 tab vẫn 4 dòng và ô tay biến mất (ghi đè, không cộng dồn); chọn tab chính "Gom hồ sơ" khi bật cờ → 400.
+
+Lưu ý: Chưa bấm hộp xác nhận xuất Sheet (câu "Tab Gom hồ sơ cũng bị xoá") trên trình duyệt; luồng Sheet kiểm bằng API.
 
 > **Tiếp:** [README.md](README.md) — mục lục nghiệp vụ.
