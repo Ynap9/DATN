@@ -88,9 +88,21 @@
                                 @let note = wrongFieldNote(field);
                                 <div class="flex flex-col gap-1.25">
                                     <label class="text-xs font-medium text-gray-600" [for]="fieldElementId(field.documentFieldId)">{{ field.name }}</label>
-                                    <input pInputText class="h-9 w-full px-2.5!" [style.font-size.px]="layout.fontSize"
-                                        [id]="fieldElementId(field.documentFieldId)" [formControlName]="field.documentFieldId"
-                                        [class.border-red-600!]="note?.tone === 'red'" [class.border-amber-600!]="note?.tone === 'amber'" />
+                                    @if (field.enumValues) {
+                                        <!-- Trường danh mục: gợi ý nhưng vẫn gõ được giá trị khác, không ép chọn -->
+                                        <p-autocomplete [fluid]="true" appendTo="body" [dropdown]="true" [forceSelection]="false"
+                                            [inputId]="fieldElementId(field.documentFieldId)" [formControlName]="field.documentFieldId"
+                                            [suggestions]="suggestions[field.documentFieldId]" (completeMethod)="suggest(field, $event)"
+                                            [inputStyle]="{ 'font-size.px': layout.fontSize }"
+                                            [inputStyleClass]="'h-9 w-full px-2.5! ' + (note?.tone === 'red' ? 'border-red-600!' : note?.tone === 'amber' ? 'border-amber-600!' : '')" />
+                                    } @else {
+                                        <input pInputText class="h-9 w-full px-2.5!" [style.font-size.px]="layout.fontSize"
+                                            [id]="fieldElementId(field.documentFieldId)" [formControlName]="field.documentFieldId"
+                                            [class.border-red-600!]="note?.tone === 'red'" [class.border-amber-600!]="note?.tone === 'amber'" />
+                                    }
+                                    @if (isOutOfEnum(form.controls[field.documentFieldId].value, field.enumValues)) {
+                                        <span class="truncate text-xs leading-4 text-[var(--app-blue)]">{{ outOfEnumText }}</span>
+                                    }
                                     @if (note) {
                                         <span class="truncate text-xs leading-4" [class.text-red-700]="note.tone === 'red'"
                                             [class.text-amber-700]="note.tone === 'amber'" [title]="note.text">{{ note.text }}</span>

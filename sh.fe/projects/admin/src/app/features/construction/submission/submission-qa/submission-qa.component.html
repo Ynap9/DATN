@@ -113,12 +113,17 @@
                                             <span class="rounded bg-amber-100 px-1.5 text-[11px] text-amber-800">Lần trước sai</span>
                                         }
                                     </div>
-                                    <div class="rounded-md border px-3 py-2 break-words whitespace-pre-wrap select-text" [style.font-size.px]="layout.fontSize"
-                                        [class]="marked ? 'border-red-200 bg-white' : 'border-gray-200 bg-gray-50'">
-                                        @if (field.data.trim()) {
-                                            {{ field.data }}
-                                        } @else {
-                                            <span class="text-gray-500 italic">Trống</span>
+                                    <div class="flex min-w-0 flex-col gap-1">
+                                        <div class="rounded-md border px-3 py-2 break-words whitespace-pre-wrap select-text" [style.font-size.px]="layout.fontSize"
+                                            [class]="marked ? 'border-red-200 bg-white' : 'border-gray-200 bg-gray-50'">
+                                            @if (field.data.trim()) {
+                                                {{ field.data }}
+                                            } @else {
+                                                <span class="text-gray-500 italic">Trống</span>
+                                            }
+                                        </div>
+                                        @if (isOutOfEnum(field.data, field.enumValues)) {
+                                            <span class="text-xs leading-4 text-[var(--app-blue)]">{{ outOfEnumText }}</span>
                                         }
                                     </div>
                                     @if (canReview) {

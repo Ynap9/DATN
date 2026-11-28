@@ -20,6 +20,12 @@
     </div>
     <span class="-mt-2 text-xs text-[var(--app-muted)]">{{ note }}</span>
 
+    @for (field of view().outOfEnum; track field.documentFieldId) {
+        <div class="rounded-md border border-[#c9dcf0] bg-[var(--app-blue-soft)] p-3 text-[13px] text-[var(--app-blue)]">
+            {{ field.name }}: {{ formatNumber(field.count) }} ô ngoài danh mục (vd. {{ field.samples.join(', ') }}). Vẫn import được.
+        </div>
+    }
+
     @if (runningMessage()) {
         <div class="flex items-center gap-2 rounded-md border border-[#c9dcf0] bg-[var(--app-blue-soft)] p-3 text-[13px] text-[var(--app-blue)]">
             <i class="pi pi-spin pi-spinner"></i>

@@ -25,6 +25,7 @@ trường không khớp rồi chấm Đạt hoặc Trả lại, xong tự sang v
 - Banner chỉ đọc theo thứ tự: Leader → thiếu `Function.Construction.Submission.Qa` → dự án Xong / Hết hạn (trừ SuperAdmin)
   → chưa kiểm → đang bị trả (đỏ) → đã Đạt (xanh). **Leader xét trước quyền** vì DB dev Leader không có quyền Qa, xét quyền
   trước thì Leader thấy nhầm câu "thiếu quyền". Banner chỉ đọc thắng banner vàng "Lần trước sai".
+- Trường kiểu danh mục (Task 75): ô vẫn chỉ đọc, thêm dòng "Ngoài danh mục" màu `--app-blue` dưới giá trị khi giá trị không thuộc danh mục (cùng hàm `isOutOfEnum` với màn Nhập liệu) để QA dễ đánh sai.
 - "Lần trước sai" lấy từ log QA Không đạt gần nhất; trường ẩn (`isShowListView = false`) mà bị đánh sai lần trước vẫn hiện.
   Lượt QA = số log + 1, chưa có log hiện "—".
 - Hết văn bản trong bộ lọc: **không** có trạng thái "đã chấm hết". nút trước / sau và "Văn bản sau" chỉ **tắt** (không ẩn) theo

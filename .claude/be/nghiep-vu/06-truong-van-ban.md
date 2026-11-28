@@ -24,8 +24,8 @@ phí, tên trường OCR, cột tạo / sửa và xoá mềm.
 | Xoá | `DELETE api/construction/document-field/{id}` | `Function.Construction.DocumentField.Delete` |
 | Xoá nhanh nhiều trường | `DELETE api/construction/document-field/quick-delete` | `Function.Construction.DocumentField.Delete` |
 
-Body tạo: `documentTypeId`, `name`, `field`, `fieldImport`, `isShow`, `isChargeable`, `fieldNameOcr`, `isFieldOcr`.
-Body sửa: mọi trường trừ `documentTypeId` (kể cả `fieldType`, `isShowTableView`, `isShowListView`, `width`). Thuộc tính
+Body tạo: `documentTypeId`, `name`, `field`, `fieldType`, `enumId`, `fieldImport`, `isShow`, `isChargeable`, `fieldNameOcr`, `isFieldOcr`.
+Body sửa: mọi trường trừ `documentTypeId` (kể cả `fieldType`, `enumId`, `isShowTableView`, `isShowListView`, `width`); `fieldType` là `string` / `enum`, kiểu danh mục xem [34](34-danh-muc-truong.md). Thuộc tính
 `order` vẫn còn trong DTO cho FE cũ nhưng **bị bỏ qua** — thứ tự chỉ đổi qua hai API kéo thả.
 
 ## Luật nghiệp vụ
@@ -124,7 +124,7 @@ nên lúc hai trường đổi chỗ sẽ trùng tạm thời và báo lỗi. Gh
 
 ### Khác
 
-- Tạo: `FieldType = "string"`, `IsShowTableView`, `IsShowListView` là `true` (`1`), `Width` rỗng. Body sửa không gửi hai cờ
+- Tạo: `FieldType` mặc định `"string"`, `IsShowTableView`, `IsShowListView` là `true` (`1`), `Width` rỗng. Body sửa không gửi hai cờ
   hiển thị thì cũng nhận `true`. DB có default `1` cho hai cột, cấu hình `HasDefaultValue(true).HasSentinel(true)`: EF bỏ
   qua giá trị `true` khi insert (DB tự điền `1`) và vẫn gửi `false` khi cần. Đừng bỏ `HasSentinel` — thiếu nó thì `false`
   bị bỏ qua và thành `1` (cùng bẫy với `DocumentType.DefaultView`).

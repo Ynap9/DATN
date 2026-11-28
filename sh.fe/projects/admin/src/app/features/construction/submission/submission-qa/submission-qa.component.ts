@@ -19,6 +19,7 @@ import { ProjectService } from '@/services/project.service';
 import { SharedService } from '@/services/shared.service';
 import { SubmissionService } from '@/services/submission.service';
 import { BaseComponent } from '@/shared/base/base.component';
+import { DOCUMENT_ENUM_OUT_OF_TEXT } from '@/shared/constants/document-field.constants';
 import { PermissionConstants } from '@/shared/constants/permission.constants';
 import { PROJECT_STATUS, PROJECT_URL } from '@/shared/constants/project.constants';
 import {
@@ -36,6 +37,7 @@ import {
 } from '@/shared/constants/submission.constants';
 import { SharedImports } from '@/shared/import.shared';
 import { IBaseResponse } from '@/shared/models/request-paging.base.models';
+import { isOutOfEnum } from '@/shared/utils/enum-value';
 import { openSubmissionHistory } from '../submission-history-dialog/submission-history-dialog.component';
 import { FONT_SIZE_MAX, FONT_SIZE_MIN, ISubmissionLayout, readSubmissionLayout, writeSubmissionLayout } from '../submission-layout';
 import { SubmissionPdfCacheService } from '../submission-pdf-viewer/submission-pdf-cache.service';
@@ -115,6 +117,8 @@ export class SubmissionQaComponent extends BaseComponent {
     readonlyBanner: IQaBanner | null = null;
     // Trường hiện: isShowListView, cộng trường "Lần trước sai" dù ẩn; thứ tự BE trả (44.7)
     visibleFields: ISubmissionField[] = [];
+    readonly isOutOfEnum = isOutOfEnum;
+    readonly outOfEnumText = DOCUMENT_ENUM_OUT_OF_TEXT;
     // Trường QA đang bấm "Sai"
     markedFieldIds = new Set<number>();
     // Văn bản đã trả lại: trường QA đánh sai tô như đang đánh dấu, không có nút (44.9 e)

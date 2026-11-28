@@ -66,6 +66,7 @@ Cùng quyền `Function.Construction.Submission.Import` + Admin / Leader của d
   "Cột ghi đè {x} không phải cột đã ghép của trường {tên}. Hãy ghép ở bước Ghép trường." (không âm thầm đọc cột khác với cột người dùng chọn).
 - **Đọc lại ghép sau khoá** (Task 67): import thật (3 kiểu, Google + job Excel) gọi lại `ResolveImportMappingAsync` trong `ImportInTransactionAsync` sau `LockImportAsync`, trên cùng bảng sheet đã đọc
   (không đọc lại sheet), nên lưu ghép xong giữa lúc import chờ khoá thì import dùng ghép mới. Chạy thử không khoá nên giữ lần đọc lúc load.
+- **Ô ngoài danh mục** (Task 75): 6 API chạy thử trả thêm `outOfEnum` (trường kiểu danh mục, số ô lạ + tối đa 5 mẫu); chỉ báo, không chặn, không đổi số ô ghi ([34](34-danh-muc-truong.md)).
 - **Số chạy thử = số import ghi** (cùng kế hoạch, chỉ đếm ô có dữ liệu — số này dùng để tính tiền): append = ô trường đã ghép có giá trị ở hồ sơ sẽ tạo; blank = ô sheet có dữ liệu
   sẽ điền vào trường đang trống **hoặc chưa có dòng `SubmissionData`** (5sdb quên trường hợp sau); overwrite = ô có giá trị **khác** giá trị đang có (5sdb đếm cả ô bằng giá trị cũ).
 

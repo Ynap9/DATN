@@ -2,6 +2,7 @@ import { Location } from '@angular/common';
 import { afterNextRender, Component, DestroyRef, ElementRef, inject, Injector } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup } from '@angular/forms';
+import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
 import { SplitterModule, SplitterResizeEndEvent } from 'primeng/splitter';
 import { TagModule } from 'primeng/tag';
 import { combineLatest, finalize, startWith, Subject, switchMap } from 'rxjs';
@@ -11,6 +12,7 @@ import { ProjectService } from '@/services/project.service';
 import { SharedService } from '@/services/shared.service';
 import { SubmissionService } from '@/services/submission.service';
 import { BaseComponent } from '@/shared/base/base.component';
+import { DOCUMENT_ENUM_OUT_OF_TEXT } from '@/shared/constants/document-field.constants';
 import { PermissionConstants } from '@/shared/constants/permission.constants';
 import { PROJECT_STATUS, PROJECT_URL } from '@/shared/constants/project.constants';
 import {
@@ -25,6 +27,7 @@ import {
 } from '@/shared/constants/submission.constants';
 import { SharedImports } from '@/shared/import.shared';
 import { IBaseResponse } from '@/shared/models/request-paging.base.models';
+import { isOutOfEnum } from '@/shared/utils/enum-value';
 import { openSubmissionHistory } from './submission-history-dialog/submission-history-dialog.component';
 import { SubmissionPdfCacheService } from './submission-pdf-viewer/submission-pdf-cache.service';
 import { SubmissionPdfViewerComponent } from './submission-pdf-viewer/submission-pdf-viewer.component';
@@ -63,7 +66,7 @@ interface IWrongFieldNote {
 // Màn Nhập liệu: kiểm tra một văn bản (Task 43)
 @Component({
     selector: 'app-submission-check',
-    imports: [SharedImports, SplitterModule, TagModule, SubmissionPdfViewerComponent],
+    imports: [SharedImports, AutoCompleteModule, SplitterModule, TagModule, SubmissionPdfViewerComponent],
     templateUrl: './submission-check.component.html',
     // Phím tắt nghe ở document để vẫn chạy khi focus rơi về body (sau khi đóng hộp hỏi); đóng tab / F5 khi có sửa thì trình duyệt hỏi (43.12)
     host: { '(document:keydown)': 'onKeydown($event)', '(window:beforeunload)': 'onBeforeUnload($event)' },
@@ -96,6 +99,10 @@ export class SubmissionCheckComponent extends BaseComponent {
     isNotAssigned = false;
     // Trường hiện trong form: isShowListView, cộng trường QA đánh sai dù ẩn (43.7)
     visibleFields: ISubmissionField[] = [];
+    // Gợi ý đang hiện của từng trường kiểu danh mục, theo Id trường
+    suggestions: Record<number, string[]> = {};
+    readonly isOutOfEnum = isOutOfEnum;
+    readonly outOfEnumText = DOCUMENT_ENUM_OUT_OF_TEXT;
     // Trường QA đánh sai còn trong cấu hình (43.15)
     wrongFieldIds = new Set<number>();
     readonlyBanner: IReadonlyBanner | null = null;
@@ -276,6 +283,12 @@ export class SubmissionCheckComponent extends BaseComponent {
     isEdited(field: ISubmissionField) {
         const value = this.form.controls[field.documentFieldId]?.value ?? field.data;
         return value.trim() !== field.data.trim();
+    }
+
+    // Gõ lọc gợi ý theo danh mục của trường (chứa chuỗi gõ, không phân biệt hoa thường); ô trống hiện cả danh mục
+    suggest(field: ISubmissionField, event: AutoCompleteCompleteEvent) {
+        const query = event.query.trim().toLowerCase();
+        this.suggestions[field.documentFieldId] = field.enumValues!.filter((value) => value.toLowerCase().includes(query));
     }
 
     // Chú thích trường QA đánh sai khi văn bản đang bị trả, kể cả lúc chỉ đọc (khi đó không sửa được nên luôn đỏ) — 53.11

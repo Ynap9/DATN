@@ -1,0 +1,14 @@
+@if (canUpdate) {
+    <div class="flex justify-end mb-4">
+        <p-button label="Thêm danh mục" icon="pi pi-plus" (onClick)="openForm()" />
+    </div>
+}
+
+<app-data-table [columns]="columns" [data]="rows" [loading]="loading" [paginator]="false" (action)="onAction($event)">
+    <div tableEmpty class="flex flex-col items-center gap-3">
+        <span>Metadata này chưa có danh mục.</span>
+        @if (canUpdate) {
+            <p-button label="Thêm danh mục" icon="pi pi-plus" (onClick)="openForm()" />
+        }
+    </div>
+</app-data-table>

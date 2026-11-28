@@ -1,4 +1,4 @@
-import { IVerifyImportAppend, IVerifyImportBlank, IVerifyImportOverwrite } from '@/models/submission.model';
+import { IOutOfEnumField, IVerifyImportAppend, IVerifyImportBlank, IVerifyImportOverwrite } from '@/models/submission.model';
 import { IMPORT_KIND, IMPORT_SOURCE, ImportKind, ImportSource, SUBMISSION_ERROR_CODE } from '@/shared/constants/submission.constants';
 
 const NUMBER_FORMAT = new Intl.NumberFormat('vi-VN');
@@ -115,6 +115,8 @@ export interface IVerifyView {
     main: IVerifyMetric;
     subs: IVerifyMetric[];
     actionLabel: string;
+    // Trường kiểu danh mục có ô ngoài danh mục: chỉ báo, vẫn cho import (75.12)
+    outOfEnum: IOutOfEnumField[];
 }
 
 export const IMPORT_JOB_RUNNING_MESSAGE: Record<ImportSource, string> = {
@@ -135,6 +137,7 @@ export function getVerifyView(kind: ImportKind, result: IVerifyImportResult, has
                 ...(hasPageCountColumn ? [{ label: 'Văn bản có số trang', value: append.totalPageCount }] : []),
             ],
             actionLabel: `Import ${formatNumber(append.totalAppendRowCount)} văn bản`,
+            outOfEnum: append.outOfEnum,
         };
     }
     if (kind === IMPORT_KIND.BLANK) {
@@ -143,6 +146,7 @@ export function getVerifyView(kind: ImportKind, result: IVerifyImportResult, has
             main: { label: 'Ô có dữ liệu sẽ điền vào chỗ trống', value: blank.totalBlankCount },
             subs: [{ label: 'Trường đã ghép', value: blank.totalFieldCount }],
             actionLabel: `Điền ${formatNumber(blank.totalBlankCount)} ô`,
+            outOfEnum: blank.outOfEnum,
         };
     }
     const overwrite = result as IVerifyImportOverwrite;
@@ -150,6 +154,7 @@ export function getVerifyView(kind: ImportKind, result: IVerifyImportResult, has
         main: { label: 'Ô có dữ liệu sẽ ghi đè', value: overwrite.totalOverWriteCount },
         subs: [{ label: 'Văn bản đã kiểm bị bỏ qua', value: overwrite.totalSkippedChecked }],
         actionLabel: `Ghi đè ${formatNumber(overwrite.totalOverWriteCount)} ô`,
+        outOfEnum: overwrite.outOfEnum,
     };
 }
 

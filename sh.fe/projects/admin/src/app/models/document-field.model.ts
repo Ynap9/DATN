@@ -10,6 +10,8 @@ export interface IViewDocumentField {
     name: string;
     field: string;
     fieldType: string;
+    enumId?: number;
+    enumName?: string;
     fieldImport?: string;
     isShow: boolean;
     orderTableView: number;
@@ -31,6 +33,8 @@ export interface ICreateDocumentField {
     documentTypeId: number;
     name: string;
     field: string;
+    fieldType: string;
+    enumId?: number;
     fieldImport?: string;
     isShow: boolean;
     isChargeable: boolean;
@@ -42,6 +46,7 @@ export interface IUpdateDocumentField {
     name: string;
     field: string;
     fieldType: string;
+    enumId?: number;
     fieldImport?: string;
     isShow: boolean;
     order: number;

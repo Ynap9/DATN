@@ -1,0 +1,48 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+    @let summary = valueSummary();
+    <div class="flex flex-col gap-4">
+        <sh-input-text label="Tên danh mục" formControlName="name" [required]="true" [maxlength]="nameMaxLength.toString()" />
+
+        <div class="flex flex-col gap-2">
+            <label>Giá trị</label>
+            <p-selectbutton [formControl]="inputMode" [options]="inputModes" optionLabel="label" optionValue="value" [allowEmpty]="false" />
+        </div>
+
+        @if (inputMode.value === modeSingle) {
+            <div class="flex flex-col gap-1">
+                <input pInputText placeholder="Nhập giá trị rồi Enter" [formControl]="newValue" (keydown.enter)="addValue($event)" />
+                @if (isDuplicateInput) {
+                    <small class="text-red-600">"{{ newValue.value.trim() }}" đã có trong danh mục</small>
+                }
+            </div>
+            @if (values.length) {
+                <ul class="m-0 flex max-h-72 list-none flex-col gap-1 overflow-y-auto p-0">
+                    @for (value of values; track value; let i = $index) {
+                        <li class="flex cursor-move items-center gap-2 rounded border border-surface px-2 py-1" draggable="true" (dragstart)="startDrag(i)"
+                            (dragover)="$event.preventDefault()" (drop)="dropValue(i)">
+                            <i class="pi pi-bars text-xs text-muted-color"></i>
+                            <span class="flex-1 break-all">{{ value }}</span>
+                            <p-button icon="pi pi-times" severity="secondary" [text]="true" size="small" aria-label="Xóa giá trị" (onClick)="removeValue(i)" />
+                        </li>
+                    }
+                </ul>
+            }
+        } @else {
+            <sh-input-text [formControl]="bulkText" [textarea]="true" [rows]="10" placeholder="Mỗi dòng một giá trị" />
+        }
+
+        <div class="flex flex-col gap-1 text-xs">
+            <span [class]="summary.error ? 'text-red-600' : 'text-muted-color'">
+                {{ summary.values.length }} giá trị · tối đa {{ valuesMaxCount }}@if (summary.error) { · {{ summary.error }} }
+            </span>
+            @if (summary.duplicateCount) {
+                <span class="text-muted-color">{{ summary.duplicateCount }} dòng trùng sẽ được gộp</span>
+            }
+        </div>
+    </div>
+
+    <div class="flex justify-end gap-2 mt-6">
+        <p-button label="Hủy" severity="secondary" [outlined]="true" (onClick)="close()" />
+        <p-button type="submit" label="Lưu" [loading]="submitting" [disabled]="!!summary.error" />
+    </div>
+</form>

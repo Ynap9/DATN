@@ -3,6 +3,18 @@
         <section class="flex flex-col gap-4">
             <h3 class="text-base font-semibold m-0">Thông tin</h3>
             <sh-input-text label="Tên trường" formControlName="name" [required]="true" />
+            <div class="flex flex-col gap-2">
+                <label>Kiểu dữ liệu</label>
+                <p-selectbutton formControlName="fieldType" [options]="fieldTypes" optionLabel="label" optionValue="value" [allowEmpty]="false" />
+            </div>
+            @if (form.controls.fieldType.value === fieldTypeEnum) {
+                <div>
+                    <sh-select label="Danh mục" formControlName="enumId" [required]="true" [options]="enums" optionLabel="name" optionValue="id" placeholder="Chọn danh mục" />
+                    @if (canCreateEnum) {
+                        <p-button label="Tạo danh mục" icon="pi pi-plus" [text]="true" size="small" (onClick)="openEnumForm()" />
+                    }
+                </div>
+            }
             <div>
                 <sh-input-text label="Tên cột import" formControlName="fieldImport" />
                 <small class="text-muted-color">Tên cột trên Google Sheet / Excel khi import. Để trống thì dùng tên trường.</small>

@@ -42,6 +42,7 @@
 | [31-nang-suat-theo-nguoi.md](31-nang-suat-theo-nguoi.md) | Hồ sơ (Task 70): `GET progress-stats/users` — sản lượng theo người nhập (Data + QA) trong khoảng ngày, không phụ thuộc QA; người được tính là người bấm hoặc người đang giữ, dòng "Không gắn người"; số có thể lệch tiền công (cố ý) |
 | [32-dong-goi-phien-kiem.md](32-dong-goi-phien-kiem.md) | Đóng gói (Task 65): phiên tải thư mục, soi file (SHA-256, chữ ký, PDF/A), ghép cột Excel mờ, gom file vào gói, kiểm giá trị ô, job kiểm + job dọn 7 ngày, 7 API, lỗi `704`–`709` |
 | [33-dong-goi-dung-goi.md](33-dong-goi-dung-goi.md) | Đóng gói (Task 66): dựng mỗi gói không lỗi thành 1 ZIP TT05 (METS, EAD, 8 schemas, PREMIS cho AIP / DIP), job chạy nền, 3 API, cơ quan lưu trữ, khuôn byte gói mẫu, lỗi `710`–`713` |
+| [34-danh-muc-truong.md](34-danh-muc-truong.md) | Trường kiểu danh mục (Task 75): danh mục theo metadata (bảng `DocumentEnum`), 4 API `document-type/{id}/enum`, trường `enum`, `enumValues` ở văn bản, dòng "Chỉ chọn một trong" của prompt OCR, `outOfEnum` khi chạy thử import, lỗi `350`–`351` |
 
 ## Thuật ngữ
 
@@ -60,7 +61,7 @@
 ## Ba quy tắc xuyên suốt
 
 - Mọi thao tác ghi đều tạo `AuditLog` **trong cùng transaction** với thay đổi dữ liệu (xem [04-nhat-ky-he-thong.md](04-nhat-ky-he-thong.md)).
-- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`109` (Auth), `201`–`211` (Core), `301`–`346` (Construction), `601`–`635` (DigitalSignature), `701`–`709` (Packaging), `801`–`826` (Operation, bỏ `814`) hoặc `901`–`913` (Ai).
+- Lỗi nghiệp vụ trả về HTTP 200 với `ApiResponse.Status = 0` và mã trong dải `101`–`109` (Auth), `201`–`211` (Core), `301`–`351` (Construction), `601`–`635` (DigitalSignature), `701`–`709` (Packaging), `801`–`826` (Operation, bỏ `814`) hoặc `901`–`913` (Ai).
 - Thời gian thao tác lấy theo giờ Việt Nam, người thao tác lấy từ token đăng nhập.
 
 Route trong các file nghiệp vụ viết rút gọn `api/<module>/...`; route thật có version: `api/v1/<module>/...` (từ 2026-10-20,

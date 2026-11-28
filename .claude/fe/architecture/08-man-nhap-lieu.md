@@ -23,6 +23,7 @@ Task 43, giao diện làm lại ở Task 53 (cập nhật 2026-11-23). Màn làm
 - Chỉ đọc khi: thiếu `Function.Construction.Submission.Check` (Leader), dự án Xong / Hết hạn (trừ SuperAdmin), hoặc Data gặp văn
   bản đã QA Đạt. Câu `readonlyBanner.message` hiện ở dòng tóm tắt kèm icon khoá, không có khung riêng. QA vào màn này thì bị đẩy
   về danh sách.
+- Trường có `enumValues` (kiểu danh mục, Task 75) là `p-autocomplete` (gõ lọc gợi ý theo "chứa chuỗi", nút dropdown, `forceSelection` tắt nên gõ được giá trị khác, `appendTo="body"`, `inputId` = id ô cũ để focus tự động vẫn chạy). Giá trị khác rỗng và không thuộc danh mục (trim, không phân biệt hoa thường, `isOutOfEnum`) hiện dòng "Ngoài danh mục" màu `--app-blue` (không amber vì amber là "Đã sửa", không đỏ vì đỏ là QA sai); Lưu không bị chặn.
 - Trường hiện = `isShowListView` **hoặc** bị QA đánh sai. Lưu gửi **mọi** trường: BE **giữ nguyên** trường không gửi lên (`BuildCheckPlan` chỉ duyệt trường có trong `inputs`), nhưng FE vẫn gửi đủ để log cũ → mới đầy đủ và form khớp sau lưu.
 - Dự án đang nghiệm thu (Task 74.6): sửa văn bản đã QA Đạt giữ kết quả QA (BE `isProjectAccepting`), nên **không** hỏi, lưu thẳng; dòng tóm tắt thêm "· Dự án đang nghiệm thu: sửa
   không làm mất kết quả QA đạt" (getter `keepsQaPassed`). Dự án đang triển khai giữ hành vi dưới.
@@ -57,6 +58,7 @@ Task 43, giao diện làm lại ở Task 53 (cập nhật 2026-11-23). Màn làm
 - Lưu ý: Phím tắt (Ctrl+Enter, Ctrl+↑/↓) phải nghe ở `document:keydown`, đừng nghe ở host component. Lý do: đóng hộp hỏi xong focus
   rơi về `body`, sự kiện không đi qua host nên phím tắt chết đến khi người dùng bấm vào ô nhập. Phím đến từ trong `.p-dialog` thì
   bỏ qua, kẻo Ctrl+Enter lưu ngầm sau dialog. Focus nằm trong iframe PDF thì không bắt được, giới hạn của trình duyệt.
+- Lưu ý: Ô danh mục (`p-autocomplete`) vẫn để Ctrl + Enter / Ctrl + ↑ / ↓ lọt tới `document:keydown` khi đang mở gợi ý (kiểm Karma + trình duyệt 2026-11-28). Ctrl + ↑ / ↓ đồng thời di chuyển mục sáng của gợi ý; nếu đang có mục được sáng bằng phím mũi tên thì Ctrl + Enter có thể chọn mục đó rồi mới lưu (chưa kiểm riêng ca này). Đừng chặn phím trong ô để "sửa" — mất phím tắt Lưu khi con trỏ ở ô danh mục.
 - Lưu ý: `SubmissionPdfViewerComponent` inject `SubmissionPdfCacheService` (không `providedIn`), nên màn nào dùng `app-submission-pdf-viewer` phải khai `providers: [SubmissionPdfCacheService]`, thiếu thì lỗi NullInjector. Viewer bị huỷ không thu hồi objectUrl vì cache giữ; đừng thêm `revokeObjectURL` vào viewer.
 - Lưu ý: Kéo thanh chia mà iframe nuốt sự kiện chuột thì thanh "dính". Lúc kéo phải gắn `pointer-events-none` lên khung PDF.
 - Lưu ý: Nút ← cạnh khối tên bị co còn 21–29px khi tên file dài. Nguyên nhân: nút trong flex mặc định `shrink: 1`. Cách tránh: thêm

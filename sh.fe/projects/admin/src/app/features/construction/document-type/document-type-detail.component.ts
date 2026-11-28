@@ -22,9 +22,11 @@ import { PermissionConstants } from '@/shared/constants/permission.constants';
 import { IColumn, ITableAction, ITableEvent, ITableRowReorder } from '@/shared/models/data-table.models';
 import { SharedImports } from '@/shared/import.shared';
 import { readErrorResponse } from '@/shared/utils/file-response';
+import { DocumentFieldNameCellComponent } from './document-field-name-cell/document-field-name-cell.component';
 import { DocumentFieldFormComponent } from './document-field-form/document-field-form.component';
 import { DocumentFieldQuickCreateComponent } from './document-field-quick-create/document-field-quick-create.component';
 import { DocumentFieldSheetCheckComponent } from './document-field-sheet-check/document-field-sheet-check.component';
+import { DocumentTypeEnumComponent } from './document-type-enum/document-type-enum.component';
 import { DocumentTypeFormComponent } from './document-type-form/document-type-form.component';
 import { DocumentTypePromptComponent } from './document-type-prompt/document-type-prompt.component';
 
@@ -41,7 +43,7 @@ const CENTER = 'text-align: center';
 
 @Component({
     selector: 'app-document-type-detail',
-    imports: [SharedImports, DialogModule, SelectButtonModule, TabsModule, DataTable, PageHeader, DocumentTypePromptComponent],
+    imports: [SharedImports, DialogModule, SelectButtonModule, TabsModule, DataTable, PageHeader, DocumentTypeEnumComponent, DocumentTypePromptComponent],
     templateUrl: './document-type-detail.component.html',
     styleUrl: './document-type-detail.component.scss',
 })
@@ -60,6 +62,7 @@ export class DocumentTypeDetailComponent extends BaseComponent {
     readonly canCreateField = this._sharedService.isGranted(PermissionConstants.FUNCTION_DOCUMENT_FIELD_CREATE);
     readonly canUpdateField = this._sharedService.isGranted(PermissionConstants.FUNCTION_DOCUMENT_FIELD_UPDATE);
     readonly canDeleteField = this._sharedService.isGranted(PermissionConstants.FUNCTION_DOCUMENT_FIELD_DELETE);
+    readonly canViewEnum = this._sharedService.isGranted(PermissionConstants.FUNCTION_DOCUMENT_TYPE_VIEW);
     readonly canViewPrompt = this._sharedService.isGranted(PermissionConstants.FUNCTION_AI_PROMPT_TEMPLATE_VIEW);
 
     readonly views = DOCUMENT_TYPE_VIEWS;
@@ -74,9 +77,14 @@ export class DocumentTypeDetailComponent extends BaseComponent {
     selectedFields: DocumentFieldRow[] = [];
     viewHelpVisible = false;
     downloadingTemplate = false;
-    // Không có quyền xem prompt thì luôn ở tab Trường dù URL ghi ?tab=prompt
+    // Không có quyền xem tab nào thì luôn ở tab Trường dù URL ghi ?tab=
+    private readonly _queryTab = this._activatedRoute.snapshot.queryParamMap.get('tab');
     activeTab: string =
-        this.canViewPrompt && this._activatedRoute.snapshot.queryParamMap.get('tab') === METADATA_TAB.PROMPT ? METADATA_TAB.PROMPT : METADATA_TAB.FIELDS;
+        this._queryTab === METADATA_TAB.PROMPT && this.canViewPrompt
+            ? METADATA_TAB.PROMPT
+            : this._queryTab === METADATA_TAB.ENUMS && this.canViewEnum
+              ? METADATA_TAB.ENUMS
+              : METADATA_TAB.FIELDS;
 
     private readonly _fieldActions: ITableAction[] = [
         ...(this.canUpdateField ? [{ type: DOCUMENT_FIELD_ACTIONS.EDIT, label: 'Sửa', icon: 'pi pi-pencil' }] : []),
@@ -85,7 +93,7 @@ export class DocumentTypeDetailComponent extends BaseComponent {
 
     readonly columns: IColumn<DocumentFieldRow>[] = [
         { header: 'Thứ tự', field: 'order', headerContainerStyle: `width: 88px; ${CENTER}`, cellStyle: CENTER },
-        { header: 'Tên trường', field: 'name' },
+        { header: 'Tên trường', field: 'name', cellViewType: CellViewTypes.CUSTOM_COMP, customComponent: DocumentFieldNameCellComponent },
         { header: 'Tên cột import', field: 'fieldImport' },
         {
             header: 'Hiển thị',
@@ -178,12 +186,16 @@ export class DocumentTypeDetailComponent extends BaseComponent {
         return this._prompt()?.isDirty ? this.confirmDiscardPrompt() : true;
     }
 
-    // Ghi tab lên URL thay cho lịch sử hiện tại để tải lại trang vẫn ở tab đó mà nút Back không đi qua từng lần đổi tab
+    // Ghi tab lên URL thay cho lịch sử hiện tại để tải lại trang vẫn ở tab đó mà nút Back không đi qua từng lần đổi tab;
+    // về tab Trường thì tải lại để thấy tên danh mục / OCR vừa sửa ở tab khác
     private applyTab(tab: string) {
         this.activeTab = tab;
+        if (tab === METADATA_TAB.FIELDS) {
+            this.loadFields();
+        }
         this.router.navigate([], {
             relativeTo: this._activatedRoute,
-            queryParams: { tab: this.activeTab === METADATA_TAB.PROMPT ? METADATA_TAB.PROMPT : null },
+            queryParams: { tab: this.activeTab === METADATA_TAB.FIELDS ? null : this.activeTab },
             queryParamsHandling: 'merge',
             replaceUrl: true,
         });

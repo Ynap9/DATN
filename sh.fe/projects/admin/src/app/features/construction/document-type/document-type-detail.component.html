@@ -1,5 +1,5 @@
 @if (documentType) {
-    <app-page-header class="metadata-header" [class.metadata-header-tabbed]="canViewPrompt" [title]="documentType.name" [breadcrumbs]="breadcrumbs">
+    <app-page-header class="metadata-header metadata-header-tabbed" [title]="documentType.name" [breadcrumbs]="breadcrumbs">
         <!-- Nút phụ bên trái, vạch ngăn, nút thêm bên phải; Thêm trường là thao tác chính. Chỉ thuộc tab Trường -->
         @if (activeTab === tabs.FIELDS) {
             <div class="metadata-actions">
@@ -17,28 +17,38 @@
         }
     </app-page-header>
 
-    <!-- Không có quyền xem prompt thì không hiện thanh tab, màn giữ nguyên như trước -->
-    @if (canViewPrompt) {
-        <p-tabs class="metadata-tabs" [value]="activeTab" (valueChange)="onTabChange($event)">
-            <p-tablist>
-                <p-tab [value]="tabs.FIELDS">Trường</p-tab>
+    <p-tabs class="metadata-tabs" [value]="activeTab" (valueChange)="onTabChange($event)">
+        <p-tablist>
+            <p-tab [value]="tabs.FIELDS">Trường</p-tab>
+            @if (canViewEnum) {
+                <p-tab [value]="tabs.ENUMS">Danh mục</p-tab>
+            }
+            @if (canViewPrompt) {
                 <p-tab [value]="tabs.PROMPT">Prompt OCR</p-tab>
-            </p-tablist>
-            <p-tabpanels>
-                <p-tabpanel [value]="tabs.FIELDS">
-                    <ng-container [ngTemplateOutlet]="fieldsTab" />
+            }
+        </p-tablist>
+        <p-tabpanels>
+            <p-tabpanel [value]="tabs.FIELDS">
+                <ng-container [ngTemplateOutlet]="fieldsTab" />
+            </p-tabpanel>
+            @if (canViewEnum) {
+                <p-tabpanel [value]="tabs.ENUMS">
+                    <!-- Dựng lại mỗi lần mở tab để luôn thấy danh mục và trường đang dùng mới nhất -->
+                    @if (activeTab === tabs.ENUMS) {
+                        <app-document-type-enum [documentTypeId]="documentType.id" />
+                    }
                 </p-tabpanel>
+            }
+            @if (canViewPrompt) {
                 <p-tabpanel [value]="tabs.PROMPT">
                     <!-- Dựng lại mỗi lần mở tab để luôn thấy trạng thái mới nhất (vd. vừa tắt OCR ở tab Trường) -->
                     @if (activeTab === tabs.PROMPT) {
                         <app-document-type-prompt [documentTypeId]="documentType.id" (openFieldsTab)="onTabChange(tabs.FIELDS)" />
                     }
                 </p-tabpanel>
-            </p-tabpanels>
-        </p-tabs>
-    } @else {
-        <ng-container [ngTemplateOutlet]="fieldsTab" />
-    }
+            }
+        </p-tabpanels>
+    </p-tabs>
 
     <ng-template #fieldsTab>
         <div class="field-toolbar">

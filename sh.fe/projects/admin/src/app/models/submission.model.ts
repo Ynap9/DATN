@@ -105,6 +105,7 @@ export interface ISubmissionField {
     name: string;
     field: string;
     fieldType: string;
+    enumValues: string[] | null;
     isShow: boolean;
     isChargeable: boolean;
     orderListView: number;
@@ -418,7 +419,19 @@ export interface IUploadImportExcelResult {
     sheets: ISheetHeader[];
 }
 
-export interface IVerifyImportAppend {
+// Ô sắp ghi nằm ngoài danh mục của trường kiểu danh mục (chỉ báo, không chặn import)
+export interface IOutOfEnumField {
+    documentFieldId: number;
+    name: string;
+    count: number;
+    samples: string[];
+}
+
+export interface IVerifyImportBase {
+    outOfEnum: IOutOfEnumField[];
+}
+
+export interface IVerifyImportAppend extends IVerifyImportBase {
     totalDataFields: number;
     totalAppendRowCount: number;
     totalPageCount: number;
@@ -427,12 +440,12 @@ export interface IVerifyImportAppend {
     totalSubmissionGoogleSheet: number;
 }
 
-export interface IVerifyImportBlank {
+export interface IVerifyImportBlank extends IVerifyImportBase {
     totalBlankCount: number;
     totalFieldCount: number;
 }
 
-export interface IVerifyImportOverwrite {
+export interface IVerifyImportOverwrite extends IVerifyImportBase {
     totalOverWriteCount: number;
     totalSkippedChecked: number;
 }

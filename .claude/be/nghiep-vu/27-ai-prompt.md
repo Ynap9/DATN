@@ -64,13 +64,13 @@ Lưu ý: nháp tạo bằng Khôi phục có `ModifiedDate` trống (chưa `Upda
 <InstructionPrompt>                         ← rỗng thì bỏ cả dòng này lẫn dòng trống sau
 
 Trích xuất các trường sau và trả về DUY NHẤT một JSON object, không giải thích thêm:
-- "<OutputKey>" (<Tên trường>)[, bắt buộc][: <Description> | Ví dụ: <Example> | Định dạng: <mô tả rule>]   (chỉ ghép phần có giá trị)
+- "<OutputKey>" (<Tên trường>)[, bắt buộc][: <Description> | Ví dụ: <Example> | Chỉ chọn một trong: a; b; c | Định dạng: <mô tả rule>]   (chỉ ghép phần có giá trị)
 Trường không tìm thấy trong văn bản thì để chuỗi rỗng "".
 ```
 
 Mô tả rule: `TRIM` "bỏ khoảng trắng thừa", `DIGITS` "chỉ gồm chữ số", `NUMBER` "số, không dấu phân cách", `DATE_DMY` "ngày dạng dd/MM/yyyy",
 `UPPER` "chữ in hoa"; `NONE` không ghi. Xuống dòng `\n`, trường theo `Order`. `PromptTemplateDomainService.Compose` là hàm static thuần,
-không truy cập DB — Task 22B gọi lại khi chạy OCR thật.
+không truy cập DB — Task 22B gọi lại khi chạy OCR thật. Dòng "Chỉ chọn một trong" (Task 75) chỉ có ở trường kiểu danh mục, đọc danh mục **hiện tại** nên sửa danh mục thì prompt của bản đã xuất bản đổi theo, không tăng phiên bản ([34](34-danh-muc-truong.md)).
 
 ## Cách lưu và bẫy
 
