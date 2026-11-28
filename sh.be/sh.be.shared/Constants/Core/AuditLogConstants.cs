@@ -43,6 +43,7 @@ namespace sh.be.shared.Constants.Core
         public const string ACTION_PROJECT_ACCEPTANCE_START = "Bắt đầu nghiệm thu";
         public const string ACTION_PROJECT_ACCEPTANCE_FINISH = "Hoàn tất nghiệm thu";
         public const string ACTION_PROJECT_ACCEPTANCE_REOPEN = "Trả dự án về đang triển khai";
+        public const string ACTION_PROJECT_ACCEPTANCE_EXPIRE = "Chuyển hết hạn khi nghiệm thu";
 
         public const string ACTION_PROJECT_CONFIG_CREATE = "Tạo cấu hình dự án";
         public const string ACTION_PROJECT_CONFIG_UPDATE = "Cập nhật cấu hình dự án";

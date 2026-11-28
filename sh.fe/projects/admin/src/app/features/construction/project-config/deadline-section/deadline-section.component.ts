@@ -1,6 +1,7 @@
 import { Component, DestroyRef, effect, inject, input, output, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { CheckboxModule } from 'primeng/checkbox';
 import { finalize } from 'rxjs';
 import { ProjectConfigService } from '@/services/project-config.service';
@@ -8,13 +9,14 @@ import { SharedService } from '@/services/shared.service';
 import { BaseComponent } from '@/shared/base/base.component';
 import { PermissionConstants } from '@/shared/constants/permission.constants';
 import { DEADLINE_WARNING_DAYS_DEFAULT, PROJECT_CONFIG_NAME } from '@/shared/constants/project-config.constants';
+import { PROJECT_DEADLINE_URL } from '@/shared/constants/project-deadline.constants';
 import { SharedImports } from '@/shared/import.shared';
 import { getSaveErrorMessage, IProjectConfigChange, ProjectConfigMap, saveProjectConfigs } from '../project-config-save';
 
 // Khối Hạn dự án: số ngày báo trước + bật / tắt mail báo hạn (50.8)
 @Component({
     selector: 'app-deadline-section',
-    imports: [SharedImports, CheckboxModule],
+    imports: [SharedImports, CheckboxModule, RouterLink],
     templateUrl: './deadline-section.component.html',
 })
 export class DeadlineSectionComponent extends BaseComponent {
@@ -27,6 +29,9 @@ export class DeadlineSectionComponent extends BaseComponent {
     saved = output<void>();
 
     readonly warningDaysDefault = DEADLINE_WARNING_DAYS_DEFAULT;
+    readonly deadlineUrl = PROJECT_DEADLINE_URL;
+    // Màn Hạn dự án cần quyền Project.Deadline (73.8)
+    readonly canViewDeadline = this._sharedService.isGranted(PermissionConstants.FUNCTION_PROJECT_DEADLINE);
     readonly canUpdate = this._sharedService.isGranted(PermissionConstants.FUNCTION_PROJECT_CONFIG_UPDATE);
     private readonly _canCreate = this._sharedService.isGranted(PermissionConstants.FUNCTION_PROJECT_CONFIG_CREATE);
 

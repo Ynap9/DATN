@@ -145,7 +145,8 @@ export class SubmissionCheckComponent extends BaseComponent {
                 ? { tone: 'red', text: `Còn ${remaining} / ${this.wrongFields.length} trường QA đánh sai` }
                 : { tone: 'amber', text: 'Đã sửa hết trường sai — Lưu để gửi QA lại' };
         }
-        return { tone: 'gray', text: `${this.visibleFields.length} trường` };
+        const fieldCount = `${this.visibleFields.length} trường`;
+        return { tone: 'gray', text: this.keepsQaPassed ? `${fieldCount} · Dự án đang nghiệm thu: sửa không làm mất kết quả QA đạt` : fieldCount };
     }
 
     get isBusy() {
@@ -223,10 +224,15 @@ export class SubmissionCheckComponent extends BaseComponent {
             });
     }
 
-    // Lưu = Kiểm tra (43.10); Quản lý sửa văn bản đã QA đạt thì hỏi trước vì văn bản phải QA lại
+    // Dự án đang nghiệm thu: sửa văn bản đã QA đạt giữ kết quả QA đạt, không phải QA lại (74.6)
+    get keepsQaPassed() {
+        return this.project?.status === PROJECT_STATUS.ACCEPTING && this.submission?.statusQa === SUBMISSION_QA_STATUS.PASSED;
+    }
+
+    // Lưu = Kiểm tra (43.10); Quản lý sửa văn bản đã QA đạt thì hỏi trước vì văn bản phải QA lại, trừ khi dự án đang nghiệm thu (74.6)
     save() {
         if (!this.submission || this.readonlyBanner || this.isBusy) return;
-        if (this.submission.statusQa !== SUBMISSION_QA_STATUS.PASSED || !this.hasChanges()) {
+        if (this.submission.statusQa !== SUBMISSION_QA_STATUS.PASSED || !this.hasChanges() || this.keepsQaPassed) {
             this.submitCheck();
             return;
         }

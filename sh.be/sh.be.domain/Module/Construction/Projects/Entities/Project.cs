@@ -107,7 +107,8 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
 
         public bool Expire(DateTime today, string expiredBy, DateTime expiredDate)
         {
-            if (!ProjectConst.ACTIVE_STATUSES.Contains(Status) || !EndedAt.HasValue || EndedAt.Value.Date >= today.Date)
+            // Dự án đang nghiệm thu quá hạn không tự chuyển Hết hạn, Admin tự chuyển (Task 74)
+            if (Status != ProjectConst.DOING || !EndedAt.HasValue || EndedAt.Value.Date >= today.Date)
             {
                 return false;
             }
@@ -131,6 +132,23 @@ namespace sh.be.domain.Module.Construction.Projects.Entities
         public void ReopenFromAcceptance(string? modifiedBy, DateTime modifiedDate)
         {
             TransitionStatus([ProjectConst.ACCEPTING], ProjectConst.DOING, modifiedBy, modifiedDate);
+        }
+
+        // Admin chuyển dự án đang nghiệm thu đã quá ngày kết thúc sang Hết hạn; PUT project vẫn không cho chọn tay Hết hạn
+        public void ExpireAccepting(DateTime today, string? modifiedBy, DateTime modifiedDate)
+        {
+            if (Status != ProjectConst.ACCEPTING)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectStatusTransitionInvalid, "Chỉ chuyển Hết hạn khi dự án đang nghiệm thu");
+            }
+            if (!EndedAt.HasValue || EndedAt.Value.Date >= today.Date)
+            {
+                throw new UserFriendlyException(ErrorCodes.ConstructionErrorProjectStatusTransitionInvalid, "Dự án chưa quá ngày kết thúc");
+            }
+
+            Status = ProjectConst.EXPIRED;
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
         }
 
         public void EnsureImportable()

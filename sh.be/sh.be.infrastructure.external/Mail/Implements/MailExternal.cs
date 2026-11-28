@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using sh.be.applications.Base.Interfaces.External.Mail;
 using sh.be.infrastructure.external.Mail.Templates;
+using sh.be.shared.Constants.Construction;
 using sh.be.shared.Constants.Mail;
 using sh.be.shared.Settings;
 using System.Net;
@@ -52,9 +53,12 @@ namespace sh.be.infrastructure.external.Mail.Implements
             return SendAsync(toAddress, MailTemplateConstants.SUBJECT_ACCOUNT_CREATED, AccountCreatedMailTemplate.Build(userName, password));
         }
 
-        public Task SendProjectDeadlineAsync(string toAddress, string subject, string projectName, DateTime endedAt, int daysLeft, bool isExpired)
+        public Task SendProjectDeadlineAsync(string toAddress, string subject, string projectName, DateTime endedAt, int daysLeft, int notificationType)
         {
-            return SendAsync(toAddress, subject, ProjectDeadlineMailTemplate.Build(projectName, endedAt, daysLeft, isExpired));
+            var body = notificationType == ProjectDeadlineConst.NOTIFICATION_ACCEPTING_OVERDUE
+                ? ProjectAcceptingOverdueMailTemplate.Build(projectName, endedAt, daysLeft)
+                : ProjectDeadlineMailTemplate.Build(projectName, endedAt, daysLeft, notificationType == ProjectDeadlineConst.NOTIFICATION_EXPIRED);
+            return SendAsync(toAddress, subject, body);
         }
     }
 }

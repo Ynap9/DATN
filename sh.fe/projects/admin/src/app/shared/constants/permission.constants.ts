@@ -17,6 +17,7 @@ export const PermissionConstants = {
     FUNCTION_PROJECT_UPDATE: 'Function.Construction.Project.Update',
     FUNCTION_PROJECT_DELETE: 'Function.Construction.Project.Delete',
     FUNCTION_PROJECT_ACCEPT: 'Function.Construction.Project.Accept',
+    FUNCTION_PROJECT_DEADLINE: 'Function.Construction.Project.Deadline',
     MENU_PROJECT_CONFIG: 'Menu.Construction.ProjectConfig',
     FUNCTION_PROJECT_CONFIG_VIEW: 'Function.Construction.ProjectConfig.View',
     FUNCTION_PROJECT_CONFIG_CREATE: 'Function.Construction.ProjectConfig.Create',

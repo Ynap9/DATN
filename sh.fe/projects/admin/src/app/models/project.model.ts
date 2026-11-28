@@ -128,3 +128,7 @@ export interface ITransitionAcceptance {
 export interface IReopenAcceptance {
     reason: string;
 }
+
+export interface IExpireAcceptance {
+    reason: string;
+}

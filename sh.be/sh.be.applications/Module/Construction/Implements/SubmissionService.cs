@@ -444,7 +444,7 @@ namespace sh.be.applications.Module.Construction.Implements
                 var now = GetVietnamTime();
                 var inputs = dto.Datas.Select(data => new SubmissionDataInput(data.DocumentFieldId, data.Data)).ToList();
                 var plan = SubmissionDomainService.BuildCheckPlan(submission, inputs, mappings, existingDatas, currentUserId, now);
-                var log = submission.Check(currentUserId, userName, dto.Note, plan.Changes, now);
+                var log = submission.Check(currentUserId, userName, dto.Note, plan.Changes, now, project.Status == ProjectConst.ACCEPTING);
 
                 _submissionRepository.AddDatas(plan.DatasToInsert);
                 _submissionRepository.AddLog(log);

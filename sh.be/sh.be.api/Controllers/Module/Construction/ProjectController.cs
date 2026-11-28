@@ -207,6 +207,21 @@ namespace sh.be.api.Controllers.Module.Construction
             }
         }
 
+        [HttpPost("{id:int}/acceptance/expire")]
+        [Permission(PermissionConstants.FUNCTION_PROJECT_ACCEPT)]
+        public async Task<ApiResponse> ExpireAcceptance([FromRoute] int id, [FromBody] ExpireAcceptanceProjectDto dto)
+        {
+            try
+            {
+                var data = await _projectService.ExpireAcceptance(id, dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
         [HttpPost("{id:int}/acceptance/reopen")]
         [Permission(PermissionConstants.FUNCTION_PROJECT_ACCEPT)]
         public async Task<ApiResponse> ReopenAcceptance([FromRoute] int id, [FromBody] ReopenAcceptanceProjectDto dto)

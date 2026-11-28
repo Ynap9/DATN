@@ -1,4 +1,5 @@
-import { Component, DestroyRef, inject, input, output } from '@angular/core';
+import { formatDate } from '@angular/common';
+import { Component, DestroyRef, inject, input, LOCALE_ID, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Utils } from '@sh/ui';
 import { finalize, Observable } from 'rxjs';
@@ -42,6 +43,7 @@ export class ReportAcceptanceComponent extends BaseComponent {
     private readonly _downloadService = inject(DownloadService);
     private readonly _sharedService = inject(SharedService);
     private readonly _destroyRef = inject(DestroyRef);
+    private readonly _locale = inject(LOCALE_ID);
 
     project = input.required<IViewProject>();
     acceptance = input.required<IViewProjectAcceptance>();
@@ -59,6 +61,11 @@ export class ReportAcceptanceComponent extends BaseComponent {
 
     get canFinish() {
         return this.canAccept && this.project().status === PROJECT_STATUS.ACCEPTING;
+    }
+
+    // Admin chuyển dự án đang nghiệm thu đã quá ngày kết thúc sang Hết hạn (cùng điều kiện nút Trả về đang triển khai, thêm quá hạn)
+    get canExpire() {
+        return this.canFinish && this.acceptance().canForce && (this.daysLeft ?? 0) < 0;
     }
 
     get canReport() {
@@ -115,16 +122,21 @@ export class ReportAcceptanceComponent extends BaseComponent {
 
     // Còn N ngày tới hạn / Quá hạn N ngày; dự án đã xong hoặc không có hạn thì không hiện
     get deadlineBadge(): ITableBadge | null {
+        const days = this.daysLeft;
+        if (days === null || this.project().status === PROJECT_STATUS.DONE) return null;
+        return days >= 0 ? { label: `Còn ${days} ngày tới hạn`, tone: 'amber' } : { label: `Quá hạn ${-days} ngày`, tone: 'red' };
+    }
+
+    // Số ngày từ hôm nay tới ngày kết thúc (âm = đã quá hạn); null khi dự án không có hạn
+    private get daysLeft() {
         const endedAt = this.project().endedAt;
-        if (!endedAt || this.project().status === PROJECT_STATUS.DONE) return null;
+        if (!endedAt) return null;
         const today = new Date();
         const end = new Date(endedAt);
-        const days = Math.round(
-            (new Date(end.getFullYear(), end.getMonth(), end.getDate()).getTime() -
-                new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()) /
+        return Math.round(
+            (new Date(end.getFullYear(), end.getMonth(), end.getDate()).getTime() - new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()) /
                 DAY_MS,
         );
-        return days >= 0 ? { label: `Còn ${days} ngày tới hạn`, tone: 'amber' } : { label: `Quá hạn ${-days} ngày`, tone: 'red' };
     }
 
     startAcceptance() {
@@ -138,6 +150,17 @@ export class ReportAcceptanceComponent extends BaseComponent {
     reopenAcceptance() {
         this.openReasonDialog('Trả về đang triển khai', 'Trả dự án về đang triển khai để tiếp tục kiểm / QA.', true, (reason) =>
             this.transition(this._projectService.reopenAcceptance(this.project().id, { reason })),
+        );
+    }
+
+    expireAcceptance() {
+        const endedAt = formatDate(this.project().endedAt!, 'dd/MM/yyyy', this._locale);
+        this.openReasonDialog(
+            'Chuyển dự án sang Hết hạn?',
+            `Dự án đã quá ngày kết thúc ${endedAt}. Sau khi chuyển, muốn làm tiếp phải gia hạn rồi bắt đầu nghiệm thu lại.`,
+            true,
+            (reason) => this.transition(this._projectService.expireAcceptance(this.project().id, { reason }), 'Đã chuyển dự án sang Hết hạn'),
+            'Chuyển Hết hạn',
         );
     }
 
@@ -168,20 +191,20 @@ export class ReportAcceptanceComponent extends BaseComponent {
         );
     }
 
-    private openReasonDialog(header: string, message: string, isRequired: boolean, onConfirm: (reason: string) => void) {
+    private openReasonDialog(header: string, message: string, isRequired: boolean, onConfirm: (reason: string) => void, confirmLabel = header) {
         this._dialogService
             .open(AcceptanceReasonComponent, {
                 header,
                 width: '32rem',
                 modal: true,
                 closable: true,
-                data: { message, isRequired, confirmLabel: header },
+                data: { message, isRequired, confirmLabel },
             })
             ?.onClose.pipe(takeUntilDestroyed(this._destroyRef))
             .subscribe((reason?: string) => reason !== undefined && onConfirm(reason));
     }
 
-    private transition(request$: Observable<IBaseResponseWithData<IViewProjectAcceptance>>) {
+    private transition(request$: Observable<IBaseResponseWithData<IViewProjectAcceptance>>, successMessage = 'Cập nhật nghiệm thu thành công') {
         this.submitting = true;
         request$
             .pipe(
@@ -189,7 +212,7 @@ export class ReportAcceptanceComponent extends BaseComponent {
                 takeUntilDestroyed(this._destroyRef),
             )
             .subscribe((res) => {
-                if (this.isResponseSucceed(res, true, 'Cập nhật nghiệm thu thành công')) {
+                if (this.isResponseSucceed(res, true, successMessage)) {
                     this.changed.emit();
                 }
             });

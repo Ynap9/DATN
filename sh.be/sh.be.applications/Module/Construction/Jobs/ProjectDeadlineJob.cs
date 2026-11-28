@@ -13,7 +13,6 @@ using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.BackgroundJob;
 using sh.be.shared.Constants.Construction;
 using sh.be.shared.Constants.Core;
-using sh.be.shared.Constants.Mail;
 
 namespace sh.be.applications.Module.Construction.Jobs
 {
@@ -117,11 +116,10 @@ namespace sh.be.applications.Module.Construction.Jobs
                 {
                     var endedAt = project.EndedAt!.Value.Date;
                     var daysLeft = ProjectDomainService.CalculateDeadlineDaysLeft(endedAt, today);
-                    var isExpired = notificationType == ProjectDeadlineConst.NOTIFICATION_EXPIRED;
-                    var subject = string.Format(isExpired ? MailTemplateConstants.SUBJECT_PROJECT_EXPIRED : MailTemplateConstants.SUBJECT_PROJECT_DEADLINE_WARNING, project.Name);
+                    var subject = ProjectDomainService.BuildDeadlineMailSubject(notificationType!.Value, project.Name);
                     foreach (var recipient in recipients)
                     {
-                        if (!sentKeys.Add(ProjectDomainService.BuildDeadlineSentKey(project.Id, notificationType!.Value, endedAt, recipient)))
+                        if (!sentKeys.Add(ProjectDomainService.BuildDeadlineSentKey(project.Id, notificationType.Value, endedAt, recipient)))
                         {
                             continue;
                         }
@@ -130,7 +128,7 @@ namespace sh.be.applications.Module.Construction.Jobs
                             recipient, subject, BackgroundJobConst.SYSTEM_USER, GetVietnamTime());
                         try
                         {
-                            await _mailExternal.SendProjectDeadlineAsync(recipient, subject, project.Name, endedAt, daysLeft, isExpired);
+                            await _mailExternal.SendProjectDeadlineAsync(recipient, subject, project.Name, endedAt, daysLeft, notificationType.Value);
                             sentMailCount++;
                         }
                         catch (Exception ex)

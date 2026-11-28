@@ -1,3 +1,5 @@
+export const PROJECT_CONFIG_URL = '/admin/construction/project-config';
+
 // Khớp ProjectConfigConst của BE: tên dòng là khoá BE tra cứu
 export const PROJECT_CONFIG_NAME = {
     GOOGLE_CLIENT_ID: 'GoogleClientId',

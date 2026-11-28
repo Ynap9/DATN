@@ -5,7 +5,7 @@
 Mỗi ngày job nền `ProjectDeadlineJob` (Hangfire, [../architecture/05-infrastructure-external.md](../architecture/05-infrastructure-external.md#backgroundjob--hangfire))
 xét các dự án có `EndedAt`: dự án đã quá ngày kết thúc chuyển sang **hết hạn** (`EXPIRED = 5`), dự án sắp tới hạn được báo mail
 cho SuperAdmin và Admin. Bản gốc `nhaplieu.be` có job tương tự nhưng bị comment, gửi mail lặp mỗi lần chạy; sh.be làm lại.
-Cập nhật 2026-11-27 (gia hạn dự án, Task 68).
+Cập nhật 2026-11-28 (gia hạn dự án Task 68; dự án đang nghiệm thu quá hạn, mail loại 3, Task 74).
 
 ## Các chức năng
 
@@ -13,7 +13,7 @@ Gốc `api/v1/construction/project`, mọi API cần `Function.Construction.Proj
 
 | Endpoint | Việc |
 |---|---|
-| `GET deadline` | Dự án sắp / đã hết hạn, phân trang; lọc `notificationType` (`1` sắp, `2` đã hết hạn, khác → `400`), `keyword` theo tên |
+| `GET deadline` | Dự án sắp / đã hết hạn, phân trang; lọc `notificationType` (`1` sắp, `2` đã hết hạn, `3` đang nghiệm thu quá hạn, khác → `400`), `keyword` theo tên |
 | `POST deadline-check/run` | Chạy job ngay (không chờ lịch), trả `{ jobId }`; chưa đăng ký job → `400` |
 | `GET deadline-check/status` | `{ job, warningDays, mailEnabled, recipients[] }`; `job` = `null` khi chưa đăng ký |
 | `GET deadline-notification/paging` | Lịch sử gửi mail; lọc `projectId`, `notificationType`, `isSuccess`, `fromDate` / `toDate`, `keyword` (tên dự án, email) |
@@ -29,11 +29,14 @@ Gốc `api/v1/construction/project`, mọi API cần `Function.Construction.Proj
 
 | Điều kiện | Việc | Loại mail |
 |---|---|---|
-| `daysLeft < 0` hoặc đã `EXPIRED` | Dự án đang hoạt động chuyển `EXPIRED` (`Project.Expire`), audit người thao tác `system` | `2` đã hết hạn |
+| `ACCEPTING` và `daysLeft < 0` (xét trước) | Không đổi trạng thái, chỉ báo mail (Task 74) | `3` quá hạn khi đang nghiệm thu |
+| `daysLeft < 0` hoặc đã `EXPIRED` | Dự án `DOING` chuyển `EXPIRED` (`Project.Expire` chỉ nhận `DOING`), audit người thao tác `system` | `2` đã hết hạn |
 | `0 ≤ daysLeft ≤ warningDays` | Không đổi trạng thái | `1` sắp hết hạn |
 | `daysLeft > warningDays` | Không làm gì | – |
 
 - Ngày kết thúc vẫn được làm việc: hết hạn từ ngày **sau** `EndedAt`.
+- Job **không** chuyển dự án `ACCEPTING` sang `EXPIRED` (Task 74, trước đó có): người dùng đã chốt giữ trạng thái nghiệm thu, Admin tự chuyển bằng
+  `POST project/{id}/acceptance/expire` khi dự án quá ngày kết thúc ([22](22-nghiem-thu-du-an.md)); sau đó gia hạn rồi bắt đầu nghiệm thu lại.
 - Job **không** tự mở lại dự án. Người quản lý mở lại bằng `PUT project/{id}` dời `EndedAt` từ hôm nay trở đi ([Gia hạn dự án](#gia-hạn-dự-án--task-68)).
   `PUT` dự án không bị chặn khi dự án hết hạn.
 - Dự án `EXPIRED`: import (6 API) → `323`; check, QA, xoá hồ sơ → `323`, trừ SuperAdmin (`Project.EnsureEditable`); xem
@@ -67,7 +70,9 @@ trạng thái hiện tại của dự án).
 - Mỗi bộ `(dự án, loại mail, EndedAt, email)` chỉ gửi **một lần thành công**: bảng `construction.ProjectDeadlineNotification`
   có unique index lọc `[IsSuccess] = 1 AND [Deleted] = 0` (cờ xoá mềm chỉ bật khi Admin xoá dự án kèm dữ liệu, [25](25-xoa-du-an-danh-sach-cap.md)). Gửi lỗi thì lưu `IsSuccess = 0` + `ErrorMessage`, lần chạy sau gửi lại.
 - Gia hạn (đổi `EndedAt`) sinh khoá mới nên được báo lại. Mail sắp hết hạn gửi một lần cho mỗi `EndedAt`, không gửi mỗi ngày.
-- Template `Mail/Templates/ProjectDeadline.html`: HTML thuần, không màu. Tiêu đề `Dự án {tên} sắp hết hạn` / `đã hết hạn`.
+- Template `Mail/Templates/ProjectDeadline.html`: HTML thuần, không màu. Tiêu đề `Dự án {tên} sắp hết hạn` / `đã hết hạn`. Loại `3` có template riêng
+  `ProjectAcceptingOverdue.html` (số ngày quá hạn, vẫn Đang nghiệm thu, ba cách xử lý) và tiêu đề `Dự án {tên} đã quá hạn khi đang nghiệm thu`;
+  `IMailExternal.SendProjectDeadlineAsync` nhận loại mail để chọn template. `FindPaging` tính `deadlineType` bằng SQL riêng nhưng cùng luật `ClassifyDeadline`.
 - Bảng là nhật ký: không xoá mềm, không có API xoá. Lưu kèm `ProjectName` lúc gửi, `DaysLeft`, `Subject`.
 
 ## Cấu hình

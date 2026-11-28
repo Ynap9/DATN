@@ -69,7 +69,7 @@ Body: `{ id, projectId, documentTypeId, datas: [{ documentFieldId, data }], note
 - Hồ sơ luôn chuyển sang `CHECKED`, kể cả đã `CHECKED` (tái kiểm tra) hoặc đang `RETURNED`. Mỗi lần bấm sinh đúng **một** `SubmissionLog` + **một** `AuditLog`, kể cả không sửa ô nào.
 - `Description` của log: `Người dùng: {UserName} đã kiểm tra hồ sơ.`, `... đã tái kiểm tra hồ sơ.` hoặc `... đã kiểm tra lại hồ sơ bị trả lại.`.
 - Hồ sơ bị trả lại: `StatusQa` về `0`, xoá `QaReason` để QA chấm lại. Tái kiểm tra hồ sơ đã QA mà sửa ≥ 1 ô cũng về `0` (log "… sửa N
-  trường sau QA — cần QA lại.", 18C R9); không sửa ô nào thì giữ `StatusQa`. Kết quả trả thêm `statusQa` ([13-ho-so-qa.md](13-ho-so-qa.md)).
+  trường sau QA — cần QA lại.", 18C R9); không sửa ô nào thì giữ `StatusQa`. Dự án `ACCEPTING` + `QA_PASSED` thì giữ QA đạt (không về `0`, không vào đợt / phiếu, log "… giữ kết quả QA đạt.", Task 74.5). Kết quả trả thêm `statusQa` ([13-ho-so-qa.md](13-ho-so-qa.md)).
 - Dữ liệu:
   - trường đã có dữ liệu → so sau khi trim, khác thì ghi (cho phép xoá trắng); giữ nguyên `IndexGoogleSheet`, `IndexRow`;
   - trường chưa có dữ liệu → giá trị rỗng thì bỏ qua, khác rỗng thì thêm mới (`IndexRow` = `OrderFieldImport`, `IndexGoogleSheet` rỗng);

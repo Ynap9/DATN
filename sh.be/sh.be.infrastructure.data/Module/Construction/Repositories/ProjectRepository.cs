@@ -167,12 +167,13 @@ namespace sh.be.infrastructure.data.Module.Construction.Repositories
                 .ToListAsync();
         }
 
-        // Các dự án đang gắn loại văn bản (cặp chưa gỡ, dự án chưa xoá)
+        // Các dự án đang gắn loại văn bản (cặp chưa gỡ, dự án chưa xoá) và còn nhận trường mới (Đang triển khai / Hết hạn)
         public Task<List<ProjectDocumentType>> GetDocumentTypesByDocumentTypeIdAsync(int documentTypeId)
         {
             return _shDbContext.ProjectDocumentTypes
                 .AsNoTracking()
-                .Where(pd => pd.DocumentTypeId == documentTypeId && _shDbContext.Projects.Any(p => p.Id == pd.ProjectId))
+                .Where(pd => pd.DocumentTypeId == documentTypeId
+                    && _shDbContext.Projects.Any(p => p.Id == pd.ProjectId && ProjectConst.NEW_FIELD_STATUSES.Contains(p.Status)))
                 .ToListAsync();
         }
 

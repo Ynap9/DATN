@@ -8,8 +8,9 @@ namespace sh.be.shared.Constants.Construction
         public const int EXPIRED = 5;
 
         public static readonly IReadOnlyList<int> STATUSES = [DOING, ACCEPTING, DONE, EXPIRED];
-        public static readonly IReadOnlyList<int> ACTIVE_STATUSES = [DOING, ACCEPTING];
         public static readonly IReadOnlyList<int> DEADLINE_STATUSES = [DOING, ACCEPTING, EXPIRED];
+        // Dự án nhận trường mới của metadata; Đang nghiệm thu / Đã xong đã chốt nên bỏ qua (Task 74.7)
+        public static readonly IReadOnlyList<int> NEW_FIELD_STATUSES = [DOING, EXPIRED];
         public static readonly IReadOnlyList<int> ACCEPTANCE_START_STATUSES = [DOING];
 
         public const int DEFAULT_DEADLINE_WARNING_DAYS = 3;

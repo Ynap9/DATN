@@ -1,0 +1,81 @@
+@if (status(); as check) {
+    @if (check.job; as job) {
+        <section class="overflow-hidden rounded-xl border border-[var(--app-line)] bg-[var(--app-surface)]" aria-labelledby="deadlineStatusTitle">
+            <div class="flex flex-wrap items-start justify-between gap-x-4 gap-y-1 border-b border-[var(--app-line)] px-5 py-4">
+                <div class="flex flex-col gap-0.5">
+                    <h2 id="deadlineStatusTitle" class="m-0! text-[15px]! font-semibold!">Kiểm hạn tự động</h2>
+                    <span class="text-[13px] text-[var(--app-muted)]">Job chuyển dự án quá ngày kết thúc sang Hết hạn và gửi mail cho SuperAdmin, Admin.</span>
+                </div>
+                @if (canOpenConfig) {
+                    <a class="text-[13px] font-semibold text-[var(--app-accent)] no-underline hover:underline" [routerLink]="configUrl">Sửa ở Cấu hình</a>
+                }
+            </div>
+
+            <dl class="m-0 grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-x-5 gap-y-3 p-5">
+                <div class="flex min-w-0 flex-col gap-0.5">
+                    <dt class="text-xs text-[var(--app-muted)]">Lịch chạy</dt>
+                    <dd class="m-0 font-semibold">{{ cron() }}</dd>
+                </div>
+                <div class="flex min-w-0 flex-col gap-0.5">
+                    <dt class="text-xs text-[var(--app-muted)]">Lần chạy gần nhất</dt>
+                    <dd class="m-0 flex flex-wrap items-center gap-1.5 font-semibold">
+                        @if (job.lastExecution) {
+                            <span>{{ job.lastExecution | date: 'dd/MM/yyyy HH:mm' }}</span>
+                        }
+                        <p-tag [value]="jobStateTag().label" [severity]="jobStateTag().severity" [rounded]="true" />
+                    </dd>
+                    @if (isJobFailed() && job.error) {
+                        <span class="text-xs text-[var(--app-red)]">{{ job.error }}</span>
+                    }
+                </div>
+                <div class="flex min-w-0 flex-col gap-0.5">
+                    <dt class="text-xs text-[var(--app-muted)]">Lần kế</dt>
+                    <dd class="m-0 font-semibold">{{ (job.nextExecution | date: 'dd/MM/yyyy HH:mm') || '—' }}</dd>
+                </div>
+                <div class="flex min-w-0 flex-col gap-0.5">
+                    <dt class="text-xs text-[var(--app-muted)]">Báo trước</dt>
+                    <dd class="m-0 font-semibold">{{ check.warningDays }} ngày</dd>
+                </div>
+                <div class="flex min-w-0 flex-col gap-0.5">
+                    <dt class="text-xs text-[var(--app-muted)]">Mail báo hạn</dt>
+                    <dd class="m-0 font-semibold">{{ check.mailEnabled ? 'Đang bật' : 'Đang tắt' }}</dd>
+                </div>
+                <div class="flex min-w-0 flex-col gap-0.5">
+                    <dt class="text-xs text-[var(--app-muted)]">Người nhận</dt>
+                    <dd class="m-0 font-semibold">
+                        @if (check.recipients.length) {
+                            <button type="button" class="cursor-pointer border-0 bg-transparent p-0 font-semibold text-[var(--app-accent)] hover:underline"
+                                (click)="recipientsPopover.toggle($event)">
+                                {{ check.recipients.length }} người
+                            </button>
+                            <p-popover #recipientsPopover appendTo="body">
+                                <div class="flex max-w-80 flex-col gap-1 text-xs">
+                                    <b>Người nhận mail báo hạn</b>
+                                    @for (email of check.recipients; track email) {
+                                        <span class="break-all">{{ email }}</span>
+                                    }
+                                </div>
+                            </p-popover>
+                        } @else {
+                            <span class="text-[var(--app-red)]">Chưa có Admin nào có email</span>
+                        }
+                    </dd>
+                </div>
+            </dl>
+        </section>
+    } @else {
+        <div class="flex items-start gap-2.5 rounded-[10px] border border-[var(--app-amber-soft)] bg-[var(--app-amber-soft)] px-3.5 py-2.5 text-[13px] text-[var(--app-amber)]" role="alert">
+            <i class="pi pi-exclamation-triangle mt-0.5"></i>
+            <span>Job kiểm hạn chưa được đăng ký trên máy chủ</span>
+        </div>
+    }
+
+    @if (!check.mailEnabled) {
+        <div class="mt-3 flex items-start gap-2.5 rounded-[10px] border border-[var(--app-blue-soft)] bg-[var(--app-blue-soft)] px-3.5 py-2.5 text-[13px] text-[var(--app-blue)]" role="status">
+            <i class="pi pi-info-circle mt-0.5"></i>
+            <span>Mail báo hạn đang tắt: dự án quá hạn vẫn chuyển Hết hạn nhưng không gửi mail</span>
+        </div>
+    }
+} @else {
+    <p-skeleton height="150px" borderRadius="12px" />
+}

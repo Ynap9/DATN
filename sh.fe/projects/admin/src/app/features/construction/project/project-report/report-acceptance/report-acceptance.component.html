@@ -57,6 +57,9 @@
     @if (canFinish && acceptance().canForce) {
         <p-button label="Trả về đang triển khai" severity="secondary" [outlined]="true" [disabled]="submitting" (onClick)="reopenAcceptance()" />
     }
+    @if (canExpire) {
+        <p-button label="Chuyển Hết hạn" severity="danger" [outlined]="true" [disabled]="submitting" (onClick)="expireAcceptance()" />
+    }
     <span [pTooltip]="canReport ? '' : 'Có khi dự án đang nghiệm thu hoặc đã xong'" tooltipPosition="top">
         <p-button label="Tải biên bản PDF" severity="secondary" [outlined]="true" [disabled]="!canReport" (onClick)="downloadReport()" />
     </span>

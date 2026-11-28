@@ -25,6 +25,7 @@ thêm cột `int NOT NULL` default `0` nên hồ sơ có từ trước là "Chư
 | Kiểm tra | 0 / 0 | 1 / 0 | |
 | Tái kiểm tra không đổi ô nào | 1 / x | 1 / x | |
 | Tái kiểm tra có sửa ô, đã QA | 1 / 1 | 1 / 0 | Cần QA lại (18C R9): xoá `QaReason`, giữ `QaBy` / `QaDate` |
+| Như trên, dự án `ACCEPTING`, `StatusQa = 1` (Task 74.5) | 1 / 1 | 1 / 1 | Giữ QA đạt, không đụng phiếu / đợt QA; Trả lại / Không đạt giữ luật cũ |
 | QA Đạt | 1 / 0, 1 | 1 / 1 | Xoá `QaReason`; lý do gửi kèm bị bỏ qua |
 | QA Không đạt | 1 / 0, 1 | 2 / 2 | Lưu `QaReason` đã trim |
 | Kiểm tra lại hồ sơ bị trả lại | 2 / 2 | 1 / 0 | Xoá `QaReason` (còn trong lịch sử QA), giữ `QaBy` / `QaDate` |
