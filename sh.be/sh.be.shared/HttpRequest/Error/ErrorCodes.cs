@@ -136,6 +136,10 @@ namespace sh.be.shared.HttpRequest.Error
         public const int PackagingErrorSessionNotPending = 707;
         public const int PackagingErrorUploadFileCountInvalid = 708;
         public const int PackagingErrorRelativePathsRequired = 709;
+        public const int PackagingErrorBuildInvalid = 710;
+        public const int PackagingErrorBuildRunning = 711;
+        public const int PackagingErrorFondsCodeInvalid = 712;
+        public const int PackagingErrorArchiveInvalid = 713;
 
         public const int OperationErrorStaffGroupNotFound = 801;
         public const int OperationErrorStaffGroupNameExists = 802;

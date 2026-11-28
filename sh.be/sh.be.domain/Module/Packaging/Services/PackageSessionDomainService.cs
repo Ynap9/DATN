@@ -77,9 +77,14 @@ namespace sh.be.domain.Module.Packaging.Services
                 : new PackageUploadCheck(relativePath, fileName, extension, PackageSessionConst.FILE_ROLE_DATA, null, false);
         }
 
-        public static string BuildSourceObjectKey(int sessionId, int sequence, string extension)
+        public static string BuildSourceObjectKey(int sessionId, string extension)
         {
-            return $"{BuildSessionObjectKeyPrefix(sessionId)}source/{sequence:D6}{extension}";
+            return $"{BuildSessionObjectKeyPrefix(sessionId)}source/{Guid.NewGuid():N}{extension}";
+        }
+
+        public static string BuildPackagesObjectKeyPrefix(int sessionId)
+        {
+            return $"{BuildSessionObjectKeyPrefix(sessionId)}{PackageBuildConst.PACKAGES_FOLDER}/";
         }
 
         public static string BuildSessionObjectKeyPrefix(int sessionId)
@@ -459,6 +464,31 @@ namespace sh.be.domain.Module.Packaging.Services
                 documentChecks.Any(c => c.Dossier == null && c.Errors.Count > 0));
         }
 
+        // AIP: urn:{mã phông}:uuid:{UUID HOA} (tr.38, 115); SIP, DIP: uuid-{UUID HOA} (GM, tr.187, 244, 297)
+        public static string BuildPackageObjid(int packageType, string fondsCode, Guid uuid)
+        {
+            var upperUuid = uuid.ToString().ToUpperInvariant();
+            return PackageBuildConst.AIP_PACKAGE_TYPES.Contains(packageType) ? $"urn:{fondsCode}:uuid:{upperUuid}" : $"uuid-{upperUuid}";
+        }
+
+        // SIP_hoso cấp gói + văn bản phát đúng thứ tự thẻ gói mẫu, thẻ gói mẫu không có xếp sau theo SortOrder; loại khác giữ SortOrder (= thứ tự .xsd)
+        public static List<PackageSchemaField> ResolveArchiveFields(int packageType, PackageVerifySchema schema)
+        {
+            if (packageType != PackageConst.SIP_HOSO || !PackageBuildConst.SIP_HOSO_ELEMENT_ORDERS.TryGetValue(schema.MetadataType, out var elementOrder))
+            {
+                return schema.Fields;
+            }
+
+            var positions = elementOrder.Select((elementName, index) => (elementName, index)).ToDictionary(e => e.elementName, e => e.index);
+            return schema.Fields.OrderBy(f => positions.GetValueOrDefault(f.ElementName, int.MaxValue)).ToList();
+        }
+
+        public static SheetRow FindDocumentRow(PackageSheetMatch match, IReadOnlyList<SheetRow> rows, string docKey)
+        {
+            return rows.FirstOrDefault(r => string.Equals(ResolveDocKey(match, r).Normalize(NormalizationForm.FormC), docKey, StringComparison.OrdinalIgnoreCase))
+                ?? throw new UserFriendlyException(ErrorCodes.BadRequest, $"File Excel không còn dòng metadata của mã \"{docKey}\"");
+        }
+
         private static (PackageDossierCheck? DossierCheck, string? Error) FindDossier(PackageExcelContext context, PackageVerifySchema packageSchema, PackageSheetMatch match,
             SheetRow row, string docKey)
         {
@@ -489,7 +519,7 @@ namespace sh.be.domain.Module.Packaging.Services
         public bool IsAccepted => FileRole != null;
     }
 
-    public record PackageVerifySchema(int MetadataType, string Name, List<PackageSchemaField> Fields);
+    public record PackageVerifySchema(int MetadataType, string Name, string XsdFileName, string MetadataFilePrefix, List<PackageSchemaField> Fields);
 
     public record PackageVerifyConfig(List<PackageVerifySchema> Schemas, Dictionary<string, HashSet<string>> CodesByGroup);
 

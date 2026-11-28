@@ -103,6 +103,7 @@ using sh.be.infrastructure.external.Ai.Implements;
 using sh.be.shared.Constants.Auth;
 using sh.be.shared.Constants.BackgroundJob;
 using sh.be.shared.Constants.DigitalSignature;
+using sh.be.shared.Constants.Packaging;
 using sh.be.shared.Constants.SignalR;
 using sh.be.shared.Constants.Swagger;
 using sh.be.shared.Constants.Versioning;
@@ -209,6 +210,7 @@ builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Emai
 builder.Services.Configure<GoogleSheetSettings>(builder.Configuration.GetSection("GoogleSheet"));
 builder.Services.Configure<S3Settings>(builder.Configuration.GetSection("S3"));
 builder.Services.Configure<PluginSettings>(builder.Configuration.GetSection(PluginConst.CONFIG_SECTION));
+builder.Services.Configure<PackagingSettings>(builder.Configuration.GetSection(PackageBuildConst.CONFIG_SECTION));
 
 builder.Services.AddOpenIddict()
     .AddCore(opt =>
@@ -405,6 +407,7 @@ builder.Services.AddScoped<ISigningBatchService, SigningBatchService>();
 builder.Services.AddScoped<IPluginService, PluginService>();
 builder.Services.AddScoped<IPackageConfigService, PackageConfigService>();
 builder.Services.AddScoped<IPackageSessionService, PackageSessionService>();
+builder.Services.AddScoped<IPackageBuildService, PackageBuildService>();
 builder.Services.AddScoped<IStaffGroupService, StaffGroupService>();
 builder.Services.AddScoped<IProjectMemberService, ProjectMemberService>();
 builder.Services.AddScoped<IWageService, WageService>();
@@ -421,6 +424,7 @@ builder.Services.AddScoped<SubmissionImportJob>();
 builder.Services.AddScoped<SubmissionExportCleanupJob>();
 builder.Services.AddScoped<PackageVerifyJob>();
 builder.Services.AddScoped<PackageSessionCleanupJob>();
+builder.Services.AddScoped<PackageBuildJob>();
 
 // third-party services
 builder.Services.AddScoped<IMailExternal, MailExternal>();
@@ -433,6 +437,7 @@ builder.Services.AddScoped<IGoogleSheetExternal, GoogleSheetExternal>();
 builder.Services.AddScoped<IFileDownloadExternal, HttpFileDownloadExternal>();
 builder.Services.AddScoped<IFileStorageExternal, S3FileStorageExternal>();
 builder.Services.AddScoped<ISampleFileExternal, SampleFileExternal>();
+builder.Services.AddScoped<IPackageArchiveExternal, PackageArchiveExternal>();
 builder.Services.AddScoped<IPluginSetupExternal, PluginSetupExternal>();
 builder.Services.AddSingleton<ICertificateValidatorExternal, CertificateValidatorExternal>();
 builder.Services.AddSingleton<ISigningQueueExternal, SigningQueueExternal>();

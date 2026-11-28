@@ -8,7 +8,6 @@ namespace sh.be.domain.Module.Packaging.Repositories
         Task<string?> GetStatusAsync(int id);
         void Add(PackageSession session);
         void Update(PackageSession session);
-        Task<int> CountAllDocumentsAsync(int sessionId);
         Task<int> CountDocumentsByRoleAsync(int sessionId, string fileRole);
         Task<List<PackageDocument>> GetDocumentsAsync(int sessionId);
         void AddDocuments(List<PackageDocument> documents);

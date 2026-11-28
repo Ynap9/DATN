@@ -7,6 +7,7 @@ using sh.be.applications.Module.Construction.Dtos.QaAssignment;
 using sh.be.applications.Base.Dtos.DigitalSignature;
 using sh.be.applications.Module.DigitalSignature.Dtos.SigningBatch;
 using sh.be.applications.Module.DigitalSignature.Dtos.Template;
+using sh.be.applications.Module.Packaging.Dtos.PackageBuild;
 using sh.be.applications.Module.Packaging.Dtos.PackageSession;
 using sh.be.shared.Constants.Construction;
 using sh.be.domain.Module.Construction.DocumentFields.Entities;
@@ -68,6 +69,9 @@ namespace sh.be.applications.Base
                 .ForMember(d => d.Excels, o => o.Ignore());
             CreateMap<PackageDossier, GetListPackageDossierDto>();
             CreateMap<PackageDocument, GetListPackageDocumentDto>();
+            CreateMap<PackageSession, PackageBuildProgressDto>();
+            CreateMap<PackageDossier, GetListPackageBuildDto>()
+                .ForMember(d => d.DownloadUrl, o => o.Ignore());
         }
     }
 }

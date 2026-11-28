@@ -5,6 +5,7 @@ using sh.be.shared.HttpRequest.Exception;
 using sh.be.shared.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.RegularExpressions;
 
 namespace sh.be.domain.Module.Packaging.Entities
 {
@@ -41,6 +42,10 @@ namespace sh.be.domain.Module.Packaging.Entities
         public string? FondsCode { get; private set; }
         [MaxLength(256)]
         public string? BuiltBy { get; private set; }
+        [MaxLength(PackageBuildConst.ARCHIVE_MAX_LENGTH)]
+        public string? ArchiveCode { get; private set; }
+        [MaxLength(PackageBuildConst.ARCHIVE_MAX_LENGTH)]
+        public string? ArchiveName { get; private set; }
         public string? CreatedBy { get; private set; }
         public DateTime? CreatedDate { get; private set; }
         public string? ModifiedBy { get; private set; }
@@ -142,6 +147,69 @@ namespace sh.be.domain.Module.Packaging.Entities
 
             Status = PackageSessionConst.CANCELLED;
             FinishedDate = modifiedDate;
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
+        }
+
+        // Mã phông bắt buộc (nằm trong OBJID urn nên cấm ":"); mã + tên cơ quan lưu trữ trim, chuỗi trắng = không nhập, phải đủ cặp hoặc bỏ cả hai
+        public void StartBuild(string? fondsCode, string? archiveCode, string? archiveName, int buildTotal, string builtBy, string? modifiedBy, DateTime modifiedDate)
+        {
+            if (!PackageBuildConst.BUILDABLE_STATUSES.Contains(Status) || buildTotal == 0)
+            {
+                throw new UserFriendlyException(ErrorCodes.PackagingErrorBuildInvalid);
+            }
+            if (BuildStatus == PackageSessionConst.RUNNING)
+            {
+                throw new UserFriendlyException(ErrorCodes.PackagingErrorBuildRunning);
+            }
+
+            var normalizedFondsCode = fondsCode?.Trim() ?? String.Empty;
+            if (normalizedFondsCode.Length == 0 || normalizedFondsCode.Length > PackageBuildConst.FONDS_CODE_MAX_LENGTH
+                || !Regex.IsMatch(normalizedFondsCode, PackageBuildConst.FONDS_CODE_PATTERN))
+            {
+                throw new UserFriendlyException(ErrorCodes.PackagingErrorFondsCodeInvalid);
+            }
+            var normalizedArchiveCode = String.IsNullOrWhiteSpace(archiveCode) ? null : archiveCode.Trim();
+            var normalizedArchiveName = String.IsNullOrWhiteSpace(archiveName) ? null : archiveName.Trim();
+            if ((normalizedArchiveCode == null) != (normalizedArchiveName == null)
+                || normalizedArchiveCode?.Length > PackageBuildConst.ARCHIVE_MAX_LENGTH
+                || normalizedArchiveName?.Length > PackageBuildConst.ARCHIVE_MAX_LENGTH)
+            {
+                throw new UserFriendlyException(ErrorCodes.PackagingErrorArchiveInvalid);
+            }
+
+            FondsCode = normalizedFondsCode;
+            ArchiveCode = normalizedArchiveCode;
+            ArchiveName = normalizedArchiveName;
+            BuiltBy = builtBy;
+            BuildStatus = PackageSessionConst.RUNNING;
+            BuildTotal = buildTotal;
+            BuildDone = 0;
+            BuildFailReason = null;
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
+        }
+
+        public void AddBuildProgress(string? modifiedBy, DateTime modifiedDate)
+        {
+            BuildDone++;
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
+        }
+
+        public void FinishBuild(List<PackageDossier> dossiers, string? modifiedBy, DateTime modifiedDate)
+        {
+            var hasPackage = dossiers.Any(d => d.PackageObjectKey != null);
+            BuildStatus = hasPackage ? PackageBuildConst.DONE : PackageSessionConst.FAILED;
+            BuildFailReason = hasPackage ? null : PackageBuildConst.ALL_PACKAGES_FAILED_MESSAGE;
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
+        }
+
+        public void FailBuild(string failReason, string? modifiedBy, DateTime modifiedDate)
+        {
+            BuildStatus = PackageSessionConst.FAILED;
+            BuildFailReason = failReason.Length > 2000 ? failReason[..2000] : failReason;
             ModifiedBy = modifiedBy;
             ModifiedDate = modifiedDate;
         }

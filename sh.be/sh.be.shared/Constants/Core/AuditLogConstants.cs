@@ -81,6 +81,7 @@ namespace sh.be.shared.Constants.Core
         public const string ACTION_PACKAGE_SESSION_ADD_FILES = "Tải file lên phiên đóng gói";
         public const string ACTION_PACKAGE_SESSION_START = "Bắt đầu kiểm phiên đóng gói";
         public const string ACTION_PACKAGE_SESSION_CANCEL = "Hủy phiên đóng gói";
+        public const string ACTION_PACKAGE_SESSION_BUILD = "Dựng gói TT05";
 
         public const string ACTION_STAFF_GROUP_CREATE = "Tạo nhóm nhân viên";
         public const string ACTION_STAFF_GROUP_UPDATE = "Cập nhật nhóm nhân viên";

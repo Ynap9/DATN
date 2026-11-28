@@ -4,13 +4,13 @@
 > [../plans/dong-goi-tt05-thi-cong-65.plan.md](../plans/dong-goi-tt05-thi-cong-65.plan.md). Bộ trường dùng để kiểm: [16](16-dong-goi-cau-hinh.md).
 
 Người dùng tải cả thư mục (Excel mẫu Task 37 + file tài liệu), BE soi từng file, ghép cột Excel, gom file vào gói, kiểm giá trị
-ô rồi trả kết quả theo gói / file. Dựng ZIP là Task 66, dùng lại kết quả này.
+ô rồi trả kết quả theo gói / file. Dựng ZIP là Task 66 ([33](33-dong-goi-dung-goi.md)), dùng lại kết quả này.
 
 ## Mô hình — 3 bảng schema `packaging`, quan hệ mềm theo Id
 
 | Bảng | Một dòng là | Cột chính |
 |---|---|---|
-| `PackageSession` | Một phiên | `PackageType`, `MetadataTypes` ("1,2"), `Status`, `Total/Done/Error/WarningDocument`, `MatchReport` (JSON), `ExpiredDate` = tạo + 7 ngày, `FailReason` (chỉ lỗi hệ thống); cột `Build*`, `FondsCode`, `BuiltBy` để Task 66 |
+| `PackageSession` | Một phiên | `PackageType`, `MetadataTypes` ("1,2"), `Status`, `Total/Done/Error/WarningDocument`, `MatchReport` (JSON), `ExpiredDate` = tạo + 7 ngày, `FailReason` (chỉ lỗi hệ thống); cột `Build*`, `FondsCode`, `BuiltBy`, `ArchiveCode`, `ArchiveName` của Task 66 |
 | `PackageDossier` | Một gói sẽ dựng = một dòng sheet cấp gói | `ExcelDocumentId`, `PackageCode`, `RowIndex`, `FolderName`, `Status`, `ErrorSummary` (lỗi + cảnh báo), `DocumentCount`; cột `Package*` để Task 66 |
 | `PackageDocument` | Một file tải lên | `FileRole` (`data` / `excel` / `dip-auth`), `RelativePath`, `ObjectKey`, `Sha256` (HOA), `IsSigned`, `PdfAPart` ("2B"), `PageCount`, `DossierId`, `MetadataType`, `DocKey`, `Status`, `Reason` |
 
@@ -40,7 +40,8 @@ Lỗi nghiệp vụ của gói / file **không** ném exception, ghi vào `Error
 - MimeType theo [03 §8](../dong-goi/03-sip-metadata.md); `.wav` → `audio/wav` (bảng 03 §8 không có, PM chốt kỹ thuật).
 - Soi lúc nhận (`IPackageFileInspectExternal`): SHA-256 viết HOA mọi file; PDF thêm số trang (PDFsharp), có chữ ký (dùng chung
   `PdfSignatureReader.HasSignature`), PDF/A từ XMP `pdfaid:part` + `pdfaid:conformance`. Rồi `UploadPrivateAsync`
-  `packaging/{sessionId}/source/{seq:D6}{ext}` (`seq` = số file của phiên kể cả đã xoá). Bước kiểm chỉ tải lại Excel.
+  `packaging/{sessionId}/source/{Guid N}{ext}` (Task 66 sửa M2-G19: số thứ tự đếm cũ trùng khoá khi 2 đợt tải song song). Bước kiểm
+  chỉ tải lại Excel.
 
 ## Kiểm — `PackageSessionDomainService.BuildVerifyPlan` (65.6–65.15)
 
@@ -68,7 +69,8 @@ Lỗi nghiệp vụ của gói / file **không** ném exception, ghi vào `Error
    lỗi, hoặc có file / Excel lỗi mà không thuộc gói nào (để lỗi không bị giấu); `warning` khi có gói cảnh báo; còn lại `passed`.
 
 Job (`VerifyFromJob`): đọc bộ trường + mã **1 lần** (`IPackageConfigQuery.GetVerifyConfig`), tính kế hoạch trong RAM, lưu gói, rồi ghi
-file theo lô 200 (`AddProgress` + `SaveChanges` mỗi lô, đọc lại `Status` trước mỗi lô). Lỗi bất ngờ → phiên `failed` + `FailReason`.
+file theo lô 200 (`AddProgress` + `SaveChanges` mỗi lô, đọc lại `Status` trước mỗi lô). Lỗi bất ngờ → phiên `failed` + `FailReason`,
+trừ khi phiên đã `cancelled` (huỷ xoá file làm job đọc Excel lỗi; Task 66 sửa M2-G18: catch đọc lại trạng thái rồi thôi).
 
 ## Dọn hết hạn (65.19)
 

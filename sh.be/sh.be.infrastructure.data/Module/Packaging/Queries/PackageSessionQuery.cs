@@ -1,6 +1,7 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
+using sh.be.applications.Module.Packaging.Dtos.PackageBuild;
 using sh.be.applications.Module.Packaging.Dtos.PackageSession;
 using sh.be.applications.Module.Packaging.Interfaces.Queries;
 using sh.be.infrastructure.data.Base;
@@ -83,6 +84,26 @@ namespace sh.be.infrastructure.data.Module.Packaging.Queries
                 Items = documents,
                 TotalItems = totalCount,
             };
+        }
+
+        public Task<PackageBuildProgressDto?> FindBuildProgress(int id)
+        {
+            return _shDbContext.PackageSessions
+                .AsNoTracking()
+                .Where(ps => ps.Id == id)
+                .ProjectTo<PackageBuildProgressDto>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync();
+        }
+
+        public Task<List<GetListPackageBuildDto>> GetPackages(int sessionId)
+        {
+            return _shDbContext.PackageDossiers
+                .AsNoTracking()
+                .Where(pd => pd.SessionId == sessionId && pd.PackageObjectKey != null)
+                .OrderBy(pd => pd.ExcelDocumentId)
+                .ThenBy(pd => pd.RowIndex)
+                .ProjectTo<GetListPackageBuildDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
         }
     }
 }

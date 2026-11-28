@@ -51,6 +51,20 @@ namespace sh.be.infrastructure.external.Storage.Implements
             }
         }
 
+        public async Task DownloadToAsync(string objectKey, Stream destination, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                using var response = await _client.Value.GetObjectAsync(_s3Settings.Bucket, objectKey, cancellationToken);
+                await response.ResponseStream.CopyToAsync(destination, cancellationToken);
+            }
+            catch (AmazonS3Exception ex)
+            {
+                _logger.LogError(ex, $"{nameof(DownloadToAsync)}, objectKey={objectKey}");
+                throw new UserFriendlyException(ErrorCodes.CoreErrorDownloadFileFailed);
+            }
+        }
+
         public string GetTemporaryUrl(string objectKey, string fileName, TimeSpan lifetime)
         {
             var request = new GetPreSignedUrlRequest

@@ -8,6 +8,9 @@ namespace sh.be.applications.Module.Packaging.Dtos.PackageSession
         public string? RootFolderName { get; set; }
         public string Status { get; set; } = String.Empty;
         public string? FailReason { get; set; }
+        public string? FondsCode { get; set; }
+        public string? ArchiveCode { get; set; }
+        public string? ArchiveName { get; set; }
         public List<GetListPackageDossierDto> Dossiers { get; set; } = new();
         public List<ViewPackageExcelReportDto> Excels { get; set; } = new();
     }

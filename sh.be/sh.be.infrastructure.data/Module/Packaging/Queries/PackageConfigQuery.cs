@@ -156,7 +156,7 @@ namespace sh.be.infrastructure.data.Module.Packaging.Queries
                 .ToListAsync();
 
             return new PackageVerifyConfig(
-                schemas.Select(s => new PackageVerifySchema(s.MetadataType, s.Name, fields.Where(f => f.PackageSchemaId == s.Id).ToList())).ToList(),
+                schemas.Select(s => new PackageVerifySchema(s.MetadataType, s.Name, s.XsdFileName, s.MetadataFilePrefix, fields.Where(f => f.PackageSchemaId == s.Id).ToList())).ToList(),
                 codeValues.GroupBy(c => c.CodeGroup).ToDictionary(g => g.Key, g => g.Select(c => c.Code).ToHashSet()));
         }
     }

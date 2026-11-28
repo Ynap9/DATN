@@ -41,6 +41,7 @@
 | [30-import-ghep-truong.md](30-import-ghep-truong.md) | Import (Task 63A): đọc đúng link Sheet gửi lên (chặn Sheet dự án khác), 3 API `sheet-headers` / `field-mapping/match` / lưu ghép trường theo dự án + loại, bắt buộc ghép đủ, `startColumn`, chữ "null" / "undefined" là dữ liệu, ghi đè đọc đúng cột đã ghép, đọc lại ghép sau khoá, đếm chạy thử đúng số ghi |
 | [31-nang-suat-theo-nguoi.md](31-nang-suat-theo-nguoi.md) | Hồ sơ (Task 70): `GET progress-stats/users` — sản lượng theo người nhập (Data + QA) trong khoảng ngày, không phụ thuộc QA; người được tính là người bấm hoặc người đang giữ, dòng "Không gắn người"; số có thể lệch tiền công (cố ý) |
 | [32-dong-goi-phien-kiem.md](32-dong-goi-phien-kiem.md) | Đóng gói (Task 65): phiên tải thư mục, soi file (SHA-256, chữ ký, PDF/A), ghép cột Excel mờ, gom file vào gói, kiểm giá trị ô, job kiểm + job dọn 7 ngày, 7 API, lỗi `704`–`709` |
+| [33-dong-goi-dung-goi.md](33-dong-goi-dung-goi.md) | Đóng gói (Task 66): dựng mỗi gói không lỗi thành 1 ZIP TT05 (METS, EAD, 8 schemas, PREMIS cho AIP / DIP), job chạy nền, 3 API, cơ quan lưu trữ, khuôn byte gói mẫu, lỗi `710`–`713` |
 
 ## Thuật ngữ
 

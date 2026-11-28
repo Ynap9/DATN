@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using sh.be.api.Attributes;
 using sh.be.api.Base;
+using sh.be.applications.Module.Packaging.Dtos.PackageBuild;
 using sh.be.applications.Module.Packaging.Dtos.PackageSession;
 using sh.be.applications.Module.Packaging.Interfaces.Services;
 using sh.be.shared.Constants.Auth;
@@ -20,9 +21,11 @@ namespace sh.be.api.Controllers.Module.Packaging
     public class PackageSessionController : BaseController
     {
         private readonly IPackageSessionService _packageSessionService;
-        public PackageSessionController(ILogger<PackageSessionController> logger, IPackageSessionService packageSessionService) : base(logger)
+        private readonly IPackageBuildService _packageBuildService;
+        public PackageSessionController(ILogger<PackageSessionController> logger, IPackageSessionService packageSessionService, IPackageBuildService packageBuildService) : base(logger)
         {
             _packageSessionService = packageSessionService;
+            _packageBuildService = packageBuildService;
         }
 
         [HttpPost]
@@ -124,6 +127,51 @@ namespace sh.be.api.Controllers.Module.Packaging
             try
             {
                 var data = await _packageSessionService.Cancel(id);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpPost("{id}/build")]
+        [Permission(PermissionConstants.FUNCTION_PACKAGE_BUILD)]
+        public async Task<ApiResponse> Build([FromRoute] int id, [FromBody] BuildPackageSessionDto dto)
+        {
+            try
+            {
+                var data = await _packageBuildService.Build(id, dto);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("{id}/build-progress")]
+        [Permission(PermissionConstants.FUNCTION_PACKAGE_BUILD)]
+        public async Task<ApiResponse> GetBuildProgress([FromRoute] int id)
+        {
+            try
+            {
+                var data = await _packageBuildService.GetBuildProgress(id);
+                return new(data);
+            }
+            catch (Exception ex)
+            {
+                return OkException(ex);
+            }
+        }
+
+        [HttpGet("{id}/packages")]
+        [Permission(PermissionConstants.FUNCTION_PACKAGE_BUILD)]
+        public async Task<ApiResponse> GetPackages([FromRoute] int id)
+        {
+            try
+            {
+                var data = await _packageBuildService.GetPackages(id);
                 return new(data);
             }
             catch (Exception ex)

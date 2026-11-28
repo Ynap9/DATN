@@ -1,6 +1,6 @@
 # Thi công Task 66 — dựng gói TT05 (Bước 0)
 
-> Trạng thái: **đã duyệt 28/11** (viết 2026-11-28, chưa code; chốt ở mục "PM chốt 28/11"). Tách từ [dong-goi-tt05.plan.md](dong-goi-tt05.plan.md). Phần dưới bổ sung
+> Trạng thái: **(xong) đã thi công 28/11**, test đủ bảng kiểm thử của task: [../nghiep-vu/33-dong-goi-dung-goi.md](../nghiep-vu/33-dong-goi-dung-goi.md). Tách từ [dong-goi-tt05.plan.md](dong-goi-tt05.plan.md). Phần dưới bổ sung
 > metsHdr / dmdSec / fileSec cho AIP + DIP mà [11](../dong-goi/11-premis-amdsec-structmap.md) chưa rà. Nguồn: `tr.N` = trang thông tư,
 > `GM` = gói mẫu, `C13` = khuôn gói mẫu áp cho 5 loại. Đã đọc lại tr.37–62, 114–133, 296–313 và 2 METS của `goi-mau/`.
 
@@ -75,9 +75,9 @@
 | Tầng | Class |
 |---|---|
 | shared | `PackageBuildConst` (trạng thái dựng, PROFILE, namespace, hằng METS); `PackagingSettings` (`SoftwareName`, `SoftwareVersion`); lỗi `710`–`713` (dựng sai điều kiện, đang dựng, `fondsCode` sai, cơ quan lưu trữ thiếu một nửa) |
-| domain | `PackageSession.StartBuild` / `AddBuildProgress` / `FinishBuild`; `PackageDossier.CompleteBuild` / `FailBuild`; `PackageSessionDomainService.EnsureValidFondsCode`, `BuildArchivePlan` (OBJID, đường dẫn, thứ tự thẻ EAD, ID) |
-| applications | `IPackageBuildService` + `PackageBuildService`, `PackageBuildJob`, DTO `Dtos/PackageBuild/`; `IPackageArchiveExternal` (`Storage`) |
-| infrastructure.external | `Storage/Implements/PackageArchiveExternal`: ghi cây ra thư mục tạm, sinh METS / EAD / `ead*.xsd` / PREMIS bằng `XmlWriter` (UTF-8 không BOM, LF, thụt 4), băm, tự kiểm checksum, nén ZIP |
+| domain | `PackageSession.StartBuild` (kiểm `710`–`713` luôn trong entity) / `AddBuildProgress` / `FinishBuild` / `FailBuild`; `PackageDossier.ResetBuild` / `CompleteBuild` / `FailBuild`; `PackageSessionDomainService.BuildPackageObjid`, `ResolveArchiveFields` (thứ tự thẻ EAD), `FindDocumentRow`, `BuildPackagesObjectKeyPrefix` |
+| applications | `IPackageBuildService` + `PackageBuildService`, `PackageBuildJob`, DTO `Dtos/PackageBuild/`; `IPackageArchiveExternal` + `PackageArchiveDto` (`Storage`); `IFileStorageExternal.DownloadToAsync` |
+| infrastructure.external | `Storage/Implements/PackageArchiveExternal`: tự tải file nguồn, ghi cây ra thư mục tạm, sinh METS / EAD / `ead*.xsd` / PREMIS bằng `Storage/Base/PackageXmlBuilder`, băm, tự kiểm checksum, nén ZIP, tự tải ZIP lên |
 | api | 3 action trong `PackageSessionController`; `Packaging` trong `appsettings.json`; DI |
 
 ## Expected output
@@ -85,5 +85,14 @@
 Mỗi gói không lỗi ra 1 ZIP `packaging/{id}/packages/{guid}.zip`; SIP_hoso dựng lại từ dữ liệu gói mẫu trùng cây, bộ thẻ, thứ tự thẻ
 (66.10); 2 METS qua `mets1_12.xsd`; PREMIS đúng khuôn 11; build sạch, `has-pending-model-changes` sạch sau migration 2 cột,
 comment theo 07.
+
+## Lệch so với plan khi thi công
+
+- Không dùng `XmlWriter`: nó ghi `encoding="utf-8"` và `<x />` có cách, lệch byte gói mẫu; thay bằng `PackageXmlBuilder` (StringBuilder).
+- Không có `BuildArchivePlan` một khối: OBJID + thứ tự thẻ ở domain, đường dẫn + ID trong external (chỉ external cần). `fondsCode` kiểm
+  trong `StartBuild` thay `EnsureValidFondsCode`.
+- External tự tải file nguồn (`DownloadToAsync`, ghi thẳng ra đĩa) và tự đẩy ZIP lên, như `ExcelReaderExternal` tự đọc MinIO: service
+  không phải giữ file lớn trong RAM.
+- `ead*.xsd` thẻ theo `SortOrder`, không theo thứ tự EAD của gói mẫu: `ead.xsd` gói mẫu khác thứ tự `EAD.xml` (phát hiện khi test 66.10).
 
 > **Tiếp:** [dong-goi-tt05.plan.md](dong-goi-tt05.plan.md) — luật gốc C / N / D.

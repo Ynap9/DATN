@@ -71,6 +71,7 @@ namespace sh.be.applications.Module.Packaging.Implements
             };
         }
 
+        // Nhận một đợt file của phiên đang chờ: soi từng file, đẩy MinIO với khoá Guid (2 đợt song song không trùng khoá), lưu danh sách file
         public async Task<ViewAddFilesPackageSessionDto> AddFiles(int id, AddFilesPackageSessionDto dto)
         {
             _logger.LogInformation($"{nameof(AddFiles)}, id={id}, fileCount={dto.Files.Count}");
@@ -85,13 +86,10 @@ namespace sh.be.applications.Module.Packaging.Implements
                 .Select((file, index) => (File: file, Check: PackageSessionDomainService.CheckUploadFile(session.PackageType, metadataTypes, relativePaths[index], file.Length)))
                 .ToList();
 
-            var sequence = await _packageSessionRepository.CountAllDocumentsAsync(id);
-            var uploads = new List<(IFormFile File, PackageUploadCheck Check, string ObjectKey)>();
-            foreach (var (file, check) in checks.Where(c => c.Check.IsAccepted))
-            {
-                sequence++;
-                uploads.Add((file, check, PackageSessionDomainService.BuildSourceObjectKey(id, sequence, check.Extension)));
-            }
+            var uploads = checks
+                .Where(c => c.Check.IsAccepted)
+                .Select(c => (c.File, c.Check, ObjectKey: PackageSessionDomainService.BuildSourceObjectKey(id, c.Check.Extension)))
+                .ToList();
 
             var documents = new PackageDocument[uploads.Count];
             await Parallel.ForEachAsync(Enumerable.Range(0, uploads.Count), new ParallelOptions { MaxDegreeOfParallelism = PackageSessionConst.UPLOAD_PARALLELISM },
@@ -197,6 +195,7 @@ namespace sh.be.applications.Module.Packaging.Implements
             return await GetProgress(id);
         }
 
+        // Job kiểm phiên: đọc Excel, ghép file với dòng metadata, ghi kết quả theo lô; dừng khi phiên bị huỷ giữa chừng
         public async Task VerifyFromJob(int id, string userId)
         {
             _logger.LogInformation($"{nameof(VerifyFromJob)}, id={id}, userId={userId}");
@@ -269,6 +268,11 @@ namespace sh.be.applications.Module.Packaging.Implements
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"{nameof(VerifyFromJob)}, id={id}");
+                // Phiên bị huỷ trong lúc job chạy thì giữ cancelled, không ghi đè thành failed
+                if (await _packageSessionRepository.GetStatusAsync(id) != PackageSessionConst.RUNNING)
+                {
+                    return;
+                }
                 session.Fail(ex is UserFriendlyException ? ex.Message : PackageSessionConst.VERIFY_FAILED_MESSAGE, userId, GetVietnamTime());
                 await _unitOfWork.SaveChangesAsync();
             }

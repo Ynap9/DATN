@@ -38,13 +38,6 @@ namespace sh.be.infrastructure.data.Module.Packaging.Repositories
             _shDbContext.PackageSessions.Update(session);
         }
 
-        public Task<int> CountAllDocumentsAsync(int sessionId)
-        {
-            return _shDbContext.PackageDocuments
-                .IgnoreQueryFilters()
-                .CountAsync(pd => pd.SessionId == sessionId);
-        }
-
         public Task<int> CountDocumentsByRoleAsync(int sessionId, string fileRole)
         {
             return _shDbContext.PackageDocuments.CountAsync(pd => pd.SessionId == sessionId && pd.FileRole == fileRole);

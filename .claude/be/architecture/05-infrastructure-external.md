@@ -15,7 +15,7 @@ Service và external chỉ nối qua interface: đổi nhà cung cấp không ch
 | `DigitalSignature` | `IPdfSignerExternal`, `ISigningQueueExternal`, `ITimestampExternal`, `ICertificateValidatorExternal` → `...External` cùng tên (singleton). Xem [09-chu-ky-so.md](09-chu-ky-so.md) |
 | `Mail` | `IMailExternal` → `MailExternal`; HTML ở `Mail/Templates/` (embedded resource: `AccountCreated`, `ProjectDeadline`), đọc qua `Base/MailTemplateLoader` |
 | `SignalR` | `ISignalRExternal` → `SignalRExternal` (singleton); hub, tracker, cấu hình ở `Base/` |
-| `Storage` | `IFileStorageExternal` → `S3FileStorageExternal` (MinIO); `IFileDownloadExternal` → `HttpFileDownloadExternal`; `ISampleFileExternal` → `SampleFileExternal` (PDF nhúng `Storage/Files/*.pdf`); `IPluginSetupExternal` → `PluginSetupExternal` |
+| `Storage` | `IFileStorageExternal` → `S3FileStorageExternal` (MinIO); `IFileDownloadExternal` → `HttpFileDownloadExternal`; `ISampleFileExternal` → `SampleFileExternal` (PDF nhúng `Storage/Files/*.pdf`); `IPluginSetupExternal` → `PluginSetupExternal`; `IPackageArchiveExternal` → `PackageArchiveExternal` (dựng ZIP TT05: tự tải file nguồn, ghi XML bằng `Base/PackageXmlBuilder`, 4 xsd nhúng `Storage/Files/*.xsd`, tự tải ZIP lên — [../nghiep-vu/33-dong-goi-dung-goi.md](../nghiep-vu/33-dong-goi-dung-goi.md)) |
 
 - Mỗi mục: `Implements/` (lớp implement cổng ra), `Base/` (lớp nền, helper, cấu hình). Không có `Models/`: class dữ liệu nội bộ đặt cuối file sinh ra / dùng nó (vd `PdfRect` trong `PdfPreparer.cs`).
   DTO ở `applications/Base/Dtos/<Muc>/`. Tên: `I<Ten>External` → `<NhaCungCap><Ten>External`, field trong service `_<ten>External`.
@@ -82,12 +82,12 @@ Lưu ý: Ghi bằng service account thì Google trả `403 storageQuotaExceeded`
 ## Storage, Mail
 
 - `IFileStorageExternal`: `UploadAsync` `PublicRead` trả URL công khai (ảnh mẫu chữ ký), `UploadPrivateAsync` cho file nguồn / bản ký; lỗi
-  `209`. `DownloadAsync` lỗi `210`. `GetTemporaryUrl` = link ký sẵn kèm tên gốc. `Delete*` chỉ log khi lỗi. Section `S3`; thiếu URL / bucket →
+  `209`. `DownloadAsync` (nạp RAM) / `DownloadToAsync` (chép thẳng vào stream đích, cho file lớn) lỗi `210`. `GetTemporaryUrl` = link ký sẵn kèm tên gốc. `Delete*` chỉ log khi lỗi. Section `S3`; thiếu URL / bucket →
   `208`; `ForcePathStyle = true`. Lưu ý: Bucket phải tạo sẵn, thiếu thì upload `209`.
 - `IFileDownloadExternal.OpenPdfAsync`: trả **stream** (không nạp RAM); không phải http(s), lỗi mạng / HTTP, `Content-Type` lạ → `315`.
 - `IPluginSetupExternal`: whitelist `PluginSettings.SupportedVersions` (`IOptionsMonitor`, sửa appsettings không cần build) + bộ cài
   `sh.be.api/Plugins/` đúng tên `PluginConst.SETUP_FILE_NAME`. Lưu ý: Exe ~160 MB trong `.gitignore`: máy chủ phải chép tay, thiếu thì `613`.
-- `IMailExternal`: `SendAsync`, `SendAccountCreatedAsync`, `SendProjectDeadlineAsync`; tiêu đề + HTML ở tầng ngoài; section `Email`. Lưu ý: Đổi chỗ embedded resource (`Mail/Templates`, `Storage/Files`) phải sửa cả csproj và `SampleFileExternal.FilesNamespace` — build qua nhưng đọc ra `null`.
+- `IMailExternal`: `SendAsync`, `SendAccountCreatedAsync`, `SendProjectDeadlineAsync`; tiêu đề + HTML ở tầng ngoài; section `Email`. Lưu ý: Đổi chỗ embedded resource (`Mail/Templates`, `Storage/Files`) phải sửa cả csproj và `FilesNamespace` của `SampleFileExternal` / `PackageArchiveExternal` — build qua nhưng đọc ra `null`. Bẫy: Git Windows (`autocrlf`) checkout `.xsd` thành CRLF nên file nhúng lệch byte gói mẫu (LF); `PackageArchiveExternal.ReadResource` bỏ `\r` khi đọc, đừng xoá bước đó hay "sửa" bằng cách lưu file CRLF.
 
 ## Thêm một dịch vụ ngoài
 

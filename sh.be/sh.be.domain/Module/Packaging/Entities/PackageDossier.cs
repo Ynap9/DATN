@@ -74,6 +74,45 @@ namespace sh.be.domain.Module.Packaging.Entities
             ModifiedDate = modifiedDate;
         }
 
+        // Dựng lại: bỏ ZIP cũ và lỗi dựng lần trước (đứng sau BUILD_ERROR_PREFIX), giữ nguyên lỗi / cảnh báo của bước kiểm
+        public void ResetBuild(string? modifiedBy, DateTime modifiedDate)
+        {
+            PackageObjid = null;
+            PackageObjectKey = null;
+            PackageFileName = null;
+            PackageSize = null;
+            var buildErrorIndex = ErrorSummary?.IndexOf(PackageBuildConst.BUILD_ERROR_PREFIX, StringComparison.Ordinal) ?? -1;
+            if (buildErrorIndex >= 0)
+            {
+                var verifySummary = ErrorSummary![..buildErrorIndex].TrimEnd(' ', ';');
+                ErrorSummary = verifySummary.Length == 0 ? null : verifySummary;
+            }
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
+        }
+
+        public void CompleteBuild(string packageObjid, string packageObjectKey, string packageFileName, long packageSize, string? modifiedBy, DateTime modifiedDate)
+        {
+            PackageObjid = packageObjid;
+            PackageObjectKey = packageObjectKey;
+            PackageFileName = packageFileName;
+            PackageSize = packageSize;
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
+        }
+
+        // Lỗi dựng nối sau lỗi / cảnh báo bước kiểm; cắt bớt phần cũ để lỗi dựng không bị mất khi chạm trần 4000 ký tự
+        public void FailBuild(string reason, string? modifiedBy, DateTime modifiedDate)
+        {
+            var buildError = $"{PackageBuildConst.BUILD_ERROR_PREFIX}{(reason.Length > PackageBuildConst.BUILD_ERROR_MAX_LENGTH ? reason[..PackageBuildConst.BUILD_ERROR_MAX_LENGTH] : reason)}";
+            var maxVerifyLength = 4000 - buildError.Length - 2;
+            ErrorSummary = ErrorSummary == null
+                ? buildError
+                : $"{(ErrorSummary.Length > maxVerifyLength ? ErrorSummary[..maxVerifyLength] : ErrorSummary)}; {buildError}";
+            ModifiedBy = modifiedBy;
+            ModifiedDate = modifiedDate;
+        }
+
         public void Delete(string? deletedBy, DateTime deletedDate)
         {
             Deleted = true;
