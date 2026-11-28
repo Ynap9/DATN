@@ -58,5 +58,12 @@ Ngày 2026-11-28, Chrome thật + API thật trên DB dev, dự án tạm ZZTEST
   sai hiện chữ đỏ; F5 giữ tab + bộ lọc ở cả hai tab. Banner "Mail báo hạn đang tắt" hiện đúng. Link ở màn Cấu hình mở được màn này.
 - Task 74 (2026-11-28, SMTP giả cục bộ): dòng mail loại 3 của `ZZTEST74B` hiện nhãn "Nghiệm thu quá hạn", "Quá 2 ngày", tiêu đề "… đã quá hạn khi đang nghiệm thu"; chọn Loại "Nghiệm thu quá hạn" ghi `type=3` lên URL và lọc đúng.
 - Chỉ đọc code: người nhận 0 (DB có Admin có email nên không tạo được ca), nhánh `job = null`, job Failed, hết 15 lần hỏi.
+- Chạy lại checklist 73 ngày 2026-11-28 trên môi trường riêng (LocalDB `ZZTEST73`, SMTP giả cục bộ từ chối địa chỉ có "bad" nên có dòng mail Lỗi thật, BE / FE thật; dự án tạm ZZTEST73A–D, user tạm, role tạm `ZZ73Only` chỉ có `Project.Deadline`; DB đã drop):
+  khớp biên bản trên ở thẻ job (popover 3 email), Kiểm hạn ngay (73A Hết hạn, 73B / 73C đúng nhãn, không có 73D), Gia hạn 73A (gợi ý `endedAtHint`, về Đang triển khai), quyền (user chỉ có Deadline chỉ thấy "Xem mail", không có link Cấu hình; Leader không có menu, dán URL bị chặn), lịch sử mail
+  (lọc Lỗi 3 dòng + popover "Mailbox unavailable", tìm email, khoảng ngày, chip + ×, F5 giữ tab và bộ lọc), banner mail tắt, người nhận 0 (chữ đỏ, tái hiện được bằng cách bỏ email Admin), loại 3 (tab 1, lọc, 3 mail).
+- Lệch 1 (chưa sửa): `deadline-attention-tab` gọi `GET document-type/dropdown` ngay khi mở tab, nên user chỉ có `Project.Deadline` (không có `DocumentType.View`) nhận 403 và toast "Bạn không có quyền thực hiện thao tác này" mỗi lần tải màn. Đề xuất chỉ gọi khi có `Project.Update` hoặc khi mở form Gia hạn.
+- Lệch 2 (chưa sửa): job lỗi mà Hangfire đang tự thử lại có state `Scheduled`, `error` rỗng, nên thẻ hiện "Chưa chạy" thay vì "Lỗi" và người dùng không thấy job đang hỏng; chỉ `Failed` (hết lần thử) mới ra tag Lỗi. Tái hiện bằng cách đổi tên tạm bảng `core.AuditLog` rồi chạy job với dự án quá hạn. Spec 73.4 không có state này.
+- Kiểm bù cùng ngày (DB `ZZTEST73` dựng lại, đã drop): hết 15 lần hỏi (khoá bảng `ProjectDeadlineNotification` 90 giây bằng SQL, sau ~30 giây toast "Job vẫn đang chạy, bấm Làm mới sau ít phút", nút bật lại, job xong thì thẻ về Thành công); job `Failed` (chèn state Failed vào Hangfire): tag "Lỗi" đỏ, thêm `Error` của recurring job thì hiện câu lỗi đỏ dưới tag.
+- Vẫn chỉ đọc code: nhánh `job = null` (BE tự đăng ký lại job khi xoá, không tái hiện được) và toast "Đã kiểm hạn xong" (hiện dưới 4 giây).
 
 > **Tiếp:** hết bộ tài liệu — quay lại [README.md](README.md).
